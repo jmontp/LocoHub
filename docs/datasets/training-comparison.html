@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Training data vs the new LocoHub 2021 datasets</title>
+<style>
+:root { color-scheme: light dark; --bg:#fff; --fg:#1d2329; --muted:#5b6672; --line:#d5dbe1; --head:#eef2f6; --warn:#fff4dc; }
+@media (prefers-color-scheme: dark) { :root { --bg:#14181c; --fg:#e4e8ec; --muted:#a2adb8; --line:#33404b; --head:#1e262d; --warn:#3a301a; } }
+body { background:var(--bg); color:var(--fg); font:16px/1.5 system-ui,sans-serif; max-width:70rem; margin:1.5rem auto; padding:0 1rem; }
+h1 { font-size:1.6rem; margin:.2rem 0; } h2 { margin-top:2.2rem; border-top:1px solid var(--line); padding-top:1rem; } h3 { margin-bottom:.2rem; }
+.note { color:var(--muted); font-size:.9rem; }
+.box { background:var(--warn); border:1px solid var(--line); border-radius:4px; padding:.6rem .9rem; }
+.scroll { overflow-x:auto; }
+table { border-collapse:collapse; width:100%; min-width:48rem; font-size:.9rem; }
+th,td { text-align:left; vertical-align:top; padding:.4rem .6rem; border-bottom:1px solid var(--line); }
+th { background:var(--head); position:sticky; top:0; }
+td:first-child { font-weight:600; white-space:nowrap; }
+li { margin:.25rem 0; }
+code { font-size:.88em; }
+.unk { color:var(--muted); font-style:italic; }
+</style>
+</head>
+<body>
+<h1>Your training data vs the new LocoHub 2021 datasets</h1>
+<p class="note">Written 25 Nov 2026 from code, docs and handoffs only. No data file was opened. All LocoHub numbers are from local, unreleased, not-scientifically-approved rebuilds. "Unknown" means the sources do not say.</p>
+
+<div class="box">
+<strong>Short version.</strong>
+(1) UM21 package v4 has no ground force and no time table (phase strides only, treadmill only), so your trainer cannot use it as it is.
+(2) GT21 rebuild has force, time tables and 22 participants (you use 15), but its angle zero, segment angles, CoP origin and metadata rules all differ from your file.
+(3) Your loader fixes (UM21 pelvis sign, GT21 force sidecar, CoP sidecars) are made redundant for GT21 and partly for UM21, but the UM21 CoP rule conflicts with your held-out-moment rule.
+</div>
+
+<h2>What your training loads now</h2>
+<ul>
+<li><strong>Entry point.</strong> The <code>es_walters</code> objective requires <code>LOCOHUB_CONVERTED_DATASETS</code> to point at <code>LocoHub/es_prepared/&lt;partition&gt;/</code> (<code>train.py</code>, <code>_check_es_prepared_source</code>). Partitions: <code>gate</code>, <code>fold1</code> to <code>fold5</code>, all written 29 Sep to 1 Oct 2026 by <code>ankle_expressivity/prepare_datasets.py</code>.</li>
+<li><strong>Raw inputs of that step</strong> (<code>es_data.SOURCE_FILES</code>, all in <code>LocoHub/converted_datasets/</code>, all dated 23 Jul 2026): <code>umich_2021_time_e57fc694.parquet</code>, <code>gtech_2021_time_eed50313.parquet</code>, <code>gtech_2023_time_7831f73d.parquet</code>. These are old time-indexed, 200 Hz files. A newer-looking <code>gtech_2021_time.parquet</code> (12 Aug) sits in the same folder but no code reads it.</li>
+<li><strong>Side files.</strong> UM21 CoP: <code>LocoHub/cop_reference/&lt;partition&gt;/umich_2021_cop_ankle.parquet</code> (25 to 29 Sep). GT21 force and CoP: <code>LocoHub/gt21_force/gtech_2021_force.parquet</code> (30 Sep), built from the raw Camargo files.</li>
+<li><strong>Size in the gate partition</strong> (from its manifest): UM21 10 subjects, 1.88 M rows; GT21 15 subjects, 6.91 M rows in 11,790 recordings; GT23 11 subjects, 0.56 M rows (sit-to-stand only).</li>
+<li><strong>Inputs and target.</strong> Ankle, shank and foot angles, vertical force (BW), CoP (m from the ankle joint centre along the foot), target = ankle moment (Nm/kg). Rates are your own backward differences and a 15 Hz low-pass; dataset velocities are ignored.</li>
+<li><strong>Fixes and filters you apply.</strong>
+ <ul>
+ <li>UM21: shank and foot angle minus 2 x pelvis tilt (converter pelvis sign). Recording AB01 Tread_i5 dropped (byte copy of i10, 21,651 rows). Foot-flat check: level foot angle near 0 (UM21 was +0.22 to +0.90 rad before, -0.07 to +0.03 after).</li>
+ <li>UM21 CoP: your own registration, leave-subject-out median plate offset from other subjects' moments (error median 4 to 11 mm, p95 34 mm). Recordings with fewer than the minimum donors have no CoP (Tread_i5 for five gate training subjects, accepted 29 Sep). Stairs get no loss rows (0 of 524 k).</li>
+ <li>GT21: force, shears, CoP and foot heading replaced by your sidecar (each plate assigned to the nearer foot; <code>fz_measured</code> false in stance off the plates); trial recordings that abut are joined; CoP rows beyond 0.10 m lateral set to NaN.</li>
+ <li>GT23: sit-to-stand only, GT23_AB03 dropped (reason not recorded in your files).</li>
+ <li>All: rows need finite angles, force, moment; CoP measured or vGRF below 0.2 BW; plate dropout (vGRF = 0 and |moment| above 0.3 Nm/kg) removed; 40-sample history window plus 20 samples filter warm-up must be contiguous and finite; swing = vGRF below 0.03 BW gets weight 48.</li>
+ </ul></li>
+<li><strong>Not in your code but relevant:</strong> your GT21 event table (<code>gtech_2021_gait_events.csv</code>) is built from the same gait tables whose left treadmill toe-off is a copy of the right one (see GT21 below). Effect on your flags: not checked.</li>
+</ul>
+
+<h2>Summary table</h2>
+<div class="scroll"><table>
+<thead><tr><th></th><th>Your training now</th><th>UM21, LocoHub package v4</th><th>GT21, LocoHub rebuild (RB05 r2, RB07 in progress)</th></tr></thead>
+<tbody>
+<tr><td>Status</td><td>Old LocoHub time files (Jul 2026) plus your own fixes</td><td>Local review package, not released</td><td>Local exports of all 22 participants; not reviewed; left treadmill toe-off fix still running</td></tr>
+<tr><td>Participants</td><td>UM21 10; GT21 15</td><td>10</td><td>22 (adds AB12, AB15, AB17, AB19, AB23, AB27, AB28 to your 15). AB27 treadmill_06_01 excluded.</td></tr>
+<tr><td>Tasks</td><td>UM21: level, incline, decline, transition, run, stair up, stair down. GT21: level, incline, decline, transition, stairs.</td><td>Treadmill level, 5 and 10 deg incline and decline, plus speed/slope transitions. No run, no stairs. Six of 50 recordings left out (wrong clock or copy).</td><td>Overground level (with turns), ramps, stairs, treadmill. Labels follow the authors' STRIDES.m rule.</td></tr>
+<tr><td>Amount</td><td>Continuous 200 Hz rows</td><td>44 recordings, 7,545 strides (7,523 after filtering), 1,131,750 phase rows</td><td>81,647 phase strides (both legs) and 3,146 continuous recordings (14.4 M frames); 25,720 steps and 1 recording listed as exclusions. 22 participants.</td></tr>
+<tr><td>Representation</td><td>Time, 200 Hz, one reference leg per row</td><td>Phase only (150 samples, 0 to 100 %). No time table.</td><td>Both: phase files and one continuous 200 Hz observation per recording with left and right columns (per its README).</td></tr>
+<tr><td>Vertical and shear force</td><td>Yes (GT21 from your sidecar)</td><td><strong>None.</strong></td><td>Yes, ipsi and contra, re-derived from the 1 kHz plates. Missing (never 0) in stance where no owned plate carries 20 N. A foot owning no loaded plate reads 0 (a stated choice).</td></tr>
+<tr><td>Angle source and zero</td><td>UM21 Plug-in Gait (pelvis-corrected by you). GT21 authors' static-pose-relative angles; foot-flat foot angle mean -0.134 rad.</td><td>Markers, in each leg's own side-view plane, from gravity (thigh and shank from straight down, foot and pelvis from forward horizontal). Ankle = foot minus shank.</td><td>Same standard, from markers and scaled models. Frames where a rigid-fit residual is above 20 mm or the knee axis is more than 45 deg off the knee marker are held (angles, speeds, CoP missing; force and moment kept): 3.9 % of leg-frames, AB27 12.6 %.</td></tr>
+<tr><td>Segment angles</td><td>As in the old files (GT21 built on a pelvis tilt now known to be wrong)</td><td>Measured, not built from joint angles</td><td>Pelvis from markers (medians -9 to -18 deg, AB28 about -24 deg); others measured</td></tr>
+<tr><td>Hip standing offset (about +10 deg)</td><td>Not an input</td><td>Applies by design; not checked against a standing trial</td><td>Applies by design</td></tr>
+<tr><td>CoP</td><td>m from ankle joint centre along foot axis, 0 and <code>cop_ok</code> = 0 where missing</td><td>Foot frame, origin 100 mm forward of ankle joint centre. Estimated plate position. 60 of 88 legs published (68 % of strides have a value). Held: AB01, AB02, AB03 i10; AB04 d10; AB10 d5 and other legs that fail the gate.</td><td>Foot frame with the same 100 mm origin, from plates and the scaled-model ankle centre; missing under 0.2 BW and beyond limits</td></tr>
+<tr><td>Moment, power</td><td>Moment as in old files; power is not used (you compute P-bar)</td><td>Moments carried unchanged; power = moment x LocoHub joint speed (old gap median 9 to 15 %)</td><td>Authors' moments; power = moment x speed row by row</td></tr>
+<tr><td>Mass normalisation</td><td>As in old files</td><td>Per kg as published (unchanged)</td><td>Weight is in kg (RB01 export reads the unit); BW = kg x 9.81</td></tr>
+<tr><td>Bad data</td><td>Your row rule, dropout rule, exclusions</td><td>Structured assessment; <code>quality_status</code>, <code>failed_limits</code>; 22 strides failed. Filtered file removes them, full keeps them flagged.</td><td>Held frames, force mask, <code>incomplete_stance_force</code>, exclusions with reasons. Quality profile not yet applied.</td></tr>
+</tbody></table></div>
+
+<h2>UM21 (package v4)</h2>
+<h3>What to change in your loader</h3>
+<ol>
+<li><strong>Cannot train on it yet.</strong> Your inputs need vertical force, your swing mask, CoP-measured rule and window_ok all use it. v4 has no force and no time table. Keep the old UM21 time file for training until a time table with force exists (not planned in the docs read).</li>
+<li>If a time table appears: drop <code>fix_um21_pelvis_sign</code> (LocoHub now measures thigh, shank and foot from markers; the old build error was twice the pelvis tilt, 2 to 58 deg on average, which is what your fix targets). Keep <code>check_foot_flat</code> and see whether the new zero passes; the v4 page says that was not checked.</li>
+<li>Keep or drop your AB01 Tread_i5 exclusion: v4 already leaves out AB01 5 deg incline (the copy) and five other recordings with clock problems (AB01 10 and 5 deg decline, AB08 and AB09 10 deg incline, AB10 level).</li>
+<li>CoP: shift by the origin. Your value is measured from the ankle joint centre, LocoHub's from a point 100 mm ahead of it, so roughly your s = LocoHub forward + 0.100 m, if both use the same ankle centre. The ankle centres differ in definition (yours: malleolar midpoint + 35.7 mm down the shank, borrowed from GT23); the size of that gap is unknown.</li>
+<li><strong>Conflict with your held-out rule.</strong> LocoHub's UM21 plate position is fitted per recording to the hip and knee moments, and a leg is published only if the held-out ankle moment is reproduced (r at least 0.95). Using it would put a held-out subject's own moments into an input. Your sidecar avoids this by design.</li>
+<li>Rates: the phase export is 150 samples per stride, so your 200 Hz backward differences and the 15 Hz filter cannot be reproduced. Stride duration is not stated as a column in the docs read (source clocks are optional); unknown.</li>
+<li>Read missing CoP columns as missing, not 0 (28 of 88 legs are held, each with a reason in <code>held_signals</code>).</li>
+</ol>
+<h3>Values that would shift</h3>
+<ul>
+<li>Ankle angle: published Plug-in Gait vs markers differed by a median 0.3 to 6.5 deg in three probed recordings, varying by leg and trial (AB06 5 deg incline: 4.7 deg right, 6.1 deg left). Size across all recordings: unknown.</li>
+<li>Shank and foot versus your pelvis-corrected values: unknown (v4 compares to the earlier formula, not to your fix).</li>
+<li>Power, if you ever use it: median 12 % hip, 9 % knee, 15 % ankle of the new power.</li>
+<li>Moment (your target): unchanged.</li>
+</ul>
+<h3>Gain and loss</h3>
+<p><strong>Gain:</strong> measured angles in each leg's own plane, documented zero, structured quality flags, explicit held-back list. <strong>Loss:</strong> run, stairs, force, time table, 6 recordings, and CoP on 28 of 88 legs (yours covers more recordings, but is estimated differently).</p>
+
+<h2>GT21 (rebuild, export r2)</h2>
+<h3>What to change in your loader</h3>
+<ol>
+<li><strong>Retire your force sidecar for this file.</strong> LocoHub now does the same job (every plate assigned per contact, summed per foot, vertical, anterior, lateral over kg x 9.81, 20 N stance mask). Whether it agrees with your sidecar sample by sample: not compared. Run one comparison on shared recordings before switching.</li>
+<li><strong>Missing force is NaN.</strong> Your <code>fz_measured = isfinite(vGRF)</code> already handles it, and the plate-dropout rule becomes unnecessary for GT21. Keep it only as a safety net.</li>
+<li><strong>Task label per row will not exist.</strong> The contract requires metadata constant within an observation, and a continuous recording covers idle, walking, stairs and transitions. Per-sample <code>task</code> (used by <code>wc_weight</code> and subject x task balancing) must come from the phase table's step windows or the recording mode. How the README maps this: not stated; unknown.</li>
+<li><strong>Recording keys.</strong> Your 11,790 cut recordings were joined by trial; the new continuous observations are 3,146 whole source recordings. Drop <code>recording_joins</code> if confirmed. Identity is (subject, source_recording_id, observation_id, reference_side); continuous recordings carry left and right columns, so build ipsi and contra yourself. Exact column names in the time file: not verified.</li>
+<li><strong>Held frames break windows.</strong> 3.9 % of leg-frames have angles and CoP missing in runs; your 60-sample contiguous window rule will drop more rows around them, especially AB27 (12.6 %), AB12 (6.9 %), AB30 (7.9 %).</li>
+<li><strong>CoP.</strong> Add 0.100 m to your convention (same caveat as UM21), and expect different foot-axis and ankle-centre definitions. Your lateral-offset cut at 0.10 m has no equivalent; the LocoHub limit is its own and not documented here.</li>
+<li><strong>Left leg on the treadmill.</strong> The source copies the right toe-off into the left in 157 of 157 treadmill recordings (0 of 2,990 others). Left stance came out near 0.08 to 0.14 of the cycle instead of about 0.58 to 0.63. In r2 left treadmill stance is "unavailable" (no invented timing); left-foot force there is unmasked. GT21-RB07 rebuilds left toe-off as the first sample after a left heel strike with the left belt force below 20 N; the same rule on the right foot reproduced the source right toe-off with median error 0 ms, 74 % exact, worst 195 ms over 20,447 strides. AB06 to AB19 are re-exported; AB20 to AB30 are blocked on disk space. Do not take left treadmill stance fields until RB07 is verified.</li>
+<li>Apply your own exclusions only if needed; LocoHub lists 1 recording and 25,720 steps (authors' rule discards, left-leg steps with no matching case, treadmill steps with more than two speeds) with reasons.</li>
+</ol>
+<h3>Values that would shift</h3>
+<ul>
+<li><strong>Shank and foot angles</strong> in your file were built on the old pelvis tilt, which does not follow the marker tilt (stride-average agreement 0.03 to 0.81 across 8 sampled recordings; marker tilt about 16 to 19 deg from the model zero). New values come from markers. Size per sample: unknown; expect a level change of the order of the documented zero offset plus shape changes.</li>
+<li><strong>Foot-flat foot angle</strong> was -0.134 rad mean in your data (static-pose zero); under the gravity zero it should move toward 0. This is an inference from your own check, not a LocoHub measurement.</li>
+<li><strong>Ankle angle</strong>: old zero was the participant's static-pose average (authors' 2024 files); new is foot minus shank from markers. Size not measured by LocoHub.</li>
+<li><strong>Force:</strong> overground feet that your sidecar or the old converter left missing may now have values (LocoHub recovered about 90,000 level and 98,100 ramp pairs in AB06 versus the old MATLAB pass). Treadmill CoP under 0.2 BW is missing.</li>
+<li><strong>Moments (target):</strong> authors' values, same source. Two AB17 ramp moment files differ between the 2021 and 2024 releases (cause not decoded; other participants not compared).</li>
+</ul>
+<h3>Gain and loss</h3>
+<p><strong>Gain:</strong> 7 more participants, ipsi and contra force on every mode, documented zero and frames, mass unit confirmed in kg, no sidecar to maintain, exclusions listed. <strong>Loss:</strong> per-sample task labels, your joined-trial recordings, any left-treadmill stance until RB07 is done, and rows around held frames. Known odd points: 475,592 phase force samples are missing without being masked (45 deg heading gate or no plate); AB28 pelvis angle is about -24 deg in every mode (not corrected); AB27 right thigh markers leave the rigid fit in about 22 % of frames.</p>
+
+<h2>GT23, briefly</h2>
+<p>You use sit-to-stand only, without AB03. The LocoHub GT23 page found AB03's body-weight mass wrong in the old local table (82.18 kg vs about 113.5 kg, so forces in BW were 1.38 times too large). That may be why AB03 behaved oddly, but your files do not say so, so treat it as a lead. The page also rescaled per-kg moments and powers in 52 of 488 recordings (factors 0.70 to 1.59) for level walking; whether sit-to-stand is among them: unknown. Both pages are local review versions, so nothing needs to change until you move to them.</p>
+
+<h2>Not known from the sources</h2>
+<ul class="unk">
+<li>Exact column names and task labels in the GT21 continuous files.</li>
+<li>Whether the UM21 source also holds run and stair recordings (your old file has them; v4 does not list them).</li>
+<li>Per-sample size of the GT21 shank, foot and ankle shifts, and of the UM21 shank and foot shift against your fix.</li>
+<li>Agreement between your GT21 force sidecar and the LocoHub forces.</li>
+<li>Whether your GT21 flags on left treadmill recordings are affected by the copied toe-off.</li>
+</ul>
+<p class="note">Sources: training code under <code>esml_research/code/training</code> (es_data.py, prepare_datasets.py, gt21_force.py, cop_reference*.py, recording_exclusions.py) and its es_prepared manifest; LocoHub docs/reference/index.md, DATA_CONTRACT.md, um21 and gt23 dataset pages, gt21 problems page (older than the rebuild: it still says 16 participants and 102 rebuilt recordings), handoffs GT21-RB01 to RB06, backlog task GT21-RB07, ESML-crosswalk.json, UM21 package v4 README and limitations.</p>
+</body>
+</html>

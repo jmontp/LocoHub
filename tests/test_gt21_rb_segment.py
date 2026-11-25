@@ -358,23 +358,92 @@ def test_left_toe_off_copy_is_detected_only_for_treadmill_and_only_when_identica
     assert not sg.left_toe_off_copied_from_right('treadmill', gc['left'], gc['right'])
 
 
-def test_treadmill_left_stance_unavailable_when_copied_and_right_unchanged(tmp_path):
-    row = {'subject': 'ABxx', 'session': 's', 'mode': 'treadmill', 'recording': 'tm', 'source': 'synthetic'}
-    out = {}
-    for tag, mode, copy in (('copy', 'treadmill', True), ('own', 'treadmill', False), ('copy_overground', 'levelground', True)):
-        gc, table = _treadmill_recording(copy)
-        f = io.StringIO()
-        entry = rn.segment_recording({**row, 'mode': mode}, None, gc, table, 700.0, tmp_path / tag, f, io.StringIO())
-        out[tag] = (entry, [json.loads(x) for x in f.getvalue().splitlines()])
-    entry, steps = out['copy']
+def _loaded_from_heel_strike(table, load=200, left_starts=(550, 850, 1150, 1450, 1750, 2050)):
+    """Synthetic left belt force: 1 BW from each left heel strike sample for ``load`` samples, then 0 (belt unloaded)."""
+    v = np.zeros(len(table['time_s']))
+    for a in left_starts[:-1]:
+        v[a:a + load] = 1.0
+    table['grf_vertical_left_BW'] = v
+    return table
+
+
+def _segment(tmp_path, tag, mode, copy, table_fn=None):
+    row = {'subject': 'ABxx', 'session': 's', 'mode': mode, 'recording': 'tm', 'source': 'synthetic'}
+    gc, table = _treadmill_recording(copy)
+    if table_fn:
+        table = table_fn(table)
+    f = io.StringIO()
+    entry = rn.segment_recording(row, None, gc, table, 700.0, tmp_path / tag, f, io.StringIO())
+    return entry, [json.loads(x) for x in f.getvalue().splitlines()]
+
+
+def test_toe_off_rule_synthetic_first_sample_below_20_n_after_heel_strike():
+    t = np.arange(100) * 0.005
+    v = np.full(100, 700.0)
+    v[40:] = 19.9                                    # 19.9 N is below 20 N: first such sample is index 40
+    assert sg.toe_off_from_force(t, v, t[10], t[90]) == 40
+    v[40] = 20.0                                     # exactly 20 N is not below
+    assert sg.toe_off_from_force(t, v, t[10], t[90]) == 41
+    assert sg.toe_off_from_force(t, v, t[10], t[40]) is None              # stride ends before any sample below 20 N
+    v[:] = np.nan
+    assert sg.toe_off_from_force(t, v, t[10], t[90]) is None              # missing force never counts
+    v[:] = 700.0
+    v[10] = 0.0                                      # the heel strike sample itself is not "after" the heel strike
+    assert sg.toe_off_from_force(t, v, t[10], t[90]) is None
+
+
+def test_left_treadmill_toe_off_rebuilt_from_left_belt_synthetic(tmp_path):
+    entry, steps = _segment(tmp_path, 'a', 'treadmill', True, _loaded_from_heel_strike)
     left = [s for s in steps if s['leg'] == 'left']
-    assert entry['stance_unavailable'] == {'left': sg.STANCE_UNAVAILABLE_LEFT_TREADMILL}
-    assert left and all(s['stance_samples'] is None and s['force_missing_stance_samples'] is None for s in left)
-    assert all('toe_off_offset_ms' not in s['force_check'] for s in left)
-    assert entry['force_mask']['left']['masked'] == 0 and entry['force_mask']['left']['stance_samples'] == 0
+    assert entry['left_toe_off_rebuilt'] == {'rule': sg.LEFT_TOE_OFF_RULE, 'strides': 5, 'rebuilt': 5, 'unavailable': 0}
+    assert 'stance_unavailable' not in entry
+    # loaded from heel strike sample for 200 samples: toe off at heel strike + 200; stance 200 samples (+1: next heel strike
+    # sample is in the step window, the pass's counting convention), no force missing
+    for s in left[:5]:
+        assert s['toe_off_s'] == s['start_s'] + 200 * 0.005 and s['toe_off_rule'] == sg.LEFT_TOE_OFF_RULE
+        assert s['stance_samples'] in (200, 201) and s['force_missing_stance_samples'] == 0
+    assert entry['force_mask']['left']['masked'] == 0 and entry['force_mask']['left']['stance_samples'] == 5 * 200
+
+
+def test_left_treadmill_stride_without_unloading_stays_unavailable_synthetic(tmp_path):
+    def never_unloaded(table):
+        _loaded_from_heel_strike(table)
+        table['grf_vertical_left_BW'][1150:1450] = 1.0                      # the stride from 1150 to 1450 never unloads
+        return table
+    entry, steps = _segment(tmp_path, 'b', 'treadmill', True, never_unloaded)
+    left = [s for s in steps if s['leg'] == 'left']
+    assert entry['left_toe_off_rebuilt']['rebuilt'] == 4 and entry['left_toe_off_rebuilt']['unavailable'] == 1
+    bad = [s for s in left if s['stance_samples'] is None]
+    assert len(bad) == 1 and bad[0]['stance_unavailable'] == sg.STANCE_UNAVAILABLE_NO_UNLOAD
+    assert bad[0]['force_missing_stance_samples'] is None and 'toe_off_s' not in bad[0]
+
+
+def test_rule_on_right_foot_reproduces_source_right_toe_off_synthetic():
+    # made-up right foot: source toe off 1 sample before the belt force falls through 20 N, so the rule is 1 sample (5 ms) late
+    n = 400
+    t = np.arange(n) * 0.005
+    v = np.zeros(n)
+    v[100:180] = 700.0
+    got = sg.toe_off_from_force(t, v, t[100], t[300])
+    assert got == 180 and abs((t[got] - t[179]) * 1000 - 5.0) < 1e-9
+
+
+def test_treadmill_left_stance_rebuilt_when_copied_and_right_unchanged(tmp_path):
+    out = {tag: _segment(tmp_path, tag, mode, copy, _loaded_from_heel_strike)
+           for tag, mode, copy in (('copy', 'treadmill', True), ('own', 'treadmill', False), ('copy_overground', 'levelground', True))}
+    entry, steps = out['copy']
+    assert entry['left_toe_off_copied_from_right'] is True
     for tag in ('own', 'copy_overground'):                                     # no detection: left stance as before
-        assert 'stance_unavailable' not in out[tag][0]
+        assert 'left_toe_off_rebuilt' not in out[tag][0] and 'stance_unavailable' not in out[tag][0]
         assert all(s['stance_samples'] in (180, 181) for s in out[tag][1] if s['leg'] == 'left')
     # right leg identical in every case
     assert [s for s in steps if s['leg'] == 'right'] == [s for s in out['own'][1] if s['leg'] == 'right']
     assert entry['force_mask']['right'] == out['own'][0]['force_mask']['right']
+
+
+def test_no_table_keeps_left_stance_unavailable_synthetic(tmp_path):
+    row = {'subject': 'ABxx', 'session': 's', 'mode': 'treadmill', 'recording': 'tm', 'source': 'synthetic'}
+    gc, _ = _treadmill_recording(True)
+    f = io.StringIO()
+    entry = rn.segment_recording(row, None, gc, None, 700.0, tmp_path / 'n', f, io.StringIO())
+    assert entry['stance_unavailable'] == {'left': sg.STANCE_UNAVAILABLE_LEFT_TREADMILL}

@@ -1,0 +1,1186 @@
+{
+  "schema": "locohub.guarded_launcher.receipt/2",
+  "job_id": "gt21-rb07-seg-AB28",
+  "status": "completed",
+  "scientific_approval": false,
+  "envelope": {
+    "path": "docs/quality/audits/pm01-um21-tread-pilot-handoff.json",
+    "reviewed_sha256": "9f204cfd9ba6b2beb256e4d962778183ec2dd4895fd5009591680cb479a8dee9",
+    "limits": {
+      "timeout_seconds_max": 3600,
+      "kill_after_seconds_max": 30,
+      "poll_seconds_max": 15,
+      "startup_memory_mib_min": {
+        "linux": 3584,
+        "windows": 2816
+      },
+      "runtime_memory_mib_min": {
+        "linux": 2048,
+        "windows": 2048
+      },
+      "output_volume_free_mib_min": 5120,
+      "c_drive_free_mib_min": 1024,
+      "c_drive_path": "/mnt/c",
+      "address_space_mib_max": 768
+    },
+    "sha256": "9f204cfd9ba6b2beb256e4d962778183ec2dd4895fd5009591680cb479a8dee9"
+  },
+  "spec": {
+    "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+    "kill_after_seconds": 30,
+    "poll_seconds": 15,
+    "disk_admission": [
+      {
+        "path": "/mnt/s/workspace/locomotion-data-standardization/converted_datasets",
+        "min_free_mib": 15360
+      }
+    ],
+    "thread_env": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "ARROW_NUM_THREADS": "1",
+      "NUMEXPR_NUM_THREADS": "1"
+    },
+    "expected_output_names": [
+      "run_summary.json",
+      "ledger.jsonl"
+    ],
+    "address_space_mib": 768,
+    "job_id": "gt21-rb07-seg-AB28",
+    "command": [
+      "python3",
+      "contributor_tools/run_gt21_rb_segment.py",
+      "run",
+      "--out-root",
+      "converted_datasets/reconversion_v2/gt21_rb07_segment_AB28",
+      "--subject",
+      "AB28"
+    ],
+    "output_root": "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt21_rb07_segment_AB28",
+    "receipt_path": "/mnt/s/workspace/locomotion-data-standardization/docs/quality/audits/gt21-rb07-seg-AB28-launcher-receipt.json",
+    "bindings": {
+      "contributor_tools/gt21_rb_segment.py": "40685b64065b2481b1bd050d343b39cdd20c3d1b2e6791236b4319040d66219e",
+      "contributor_tools/run_gt21_rb_segment.py": "490826bdf84673acdc27fae1e9ad410477527fd4111e22d6d99fb7874efa4649",
+      "contributor_tools/gt21_numeric_source.py": "23f7b5a05a75464efd3d2f0ac3f767c927a31411af5941c339924fc5034a8917",
+      "contributor_tools/gt21_rb_pass.py": "b199962c508e05c12fdd376175a15acd5d8ad92c622ce74196044d1857db39eb",
+      "contributor_tools/run_gt21_rb_pass.py": "50f61989fcde730a49d68a40d6b8f7f3d306e6ba8311327041238af142c619b6",
+      "contributor_tools/guarded_launcher.py": "372519f9dd1f52510f747eed3779044765fdc158b08ca007deb8d6d8708c844f",
+      "converted_datasets/reconversion_v2/gt21_rb01_inventory_20261123/recording_ledger.jsonl": "907b26763b1293a872794df3ceb90f2bc8ceec710e62c6e9b43ea49936a52f92",
+      "converted_datasets/reconversion_v2/gt21_rb03_authors_fields_20261125/AB28/labels_AB28.jsonl": "baee780a5ba45693b42ea305d6b450a95350788d41e881bd2ebe556765abe807",
+      "converted_datasets/reconversion_v2/gt21_rb_pass_batch_AB28_20261124/ledger.jsonl": "a514931b08650799a0ca8efed9e1e0df9e3e27159ecc27347b0caecfb7cf17e6"
+    },
+    "timeout_seconds": 3600,
+    "startup_memory_mib": {
+      "linux": 3584,
+      "windows": 2816
+    },
+    "runtime_memory_mib": {
+      "linux": 2048,
+      "windows": 2048
+    }
+  },
+  "spec_sha256": "ebd24b25f0015c9fce4b9a7b4068de3a70a2c96c4750fc4ba1e2cfe02629cf80",
+  "launcher_sha256": "372519f9dd1f52510f747eed3779044765fdc158b08ca007deb8d6d8708c844f",
+  "checked_at_utc": "2026-11-25T19:29:18+00:00",
+  "chaining": "none; no successor is started",
+  "bindings_before": {
+    "contributor_tools/gt21_rb_segment.py": {
+      "expected": "40685b64065b2481b1bd050d343b39cdd20c3d1b2e6791236b4319040d66219e",
+      "actual": "40685b64065b2481b1bd050d343b39cdd20c3d1b2e6791236b4319040d66219e",
+      "bytes": 30680,
+      "matches": true
+    },
+    "contributor_tools/run_gt21_rb_segment.py": {
+      "expected": "490826bdf84673acdc27fae1e9ad410477527fd4111e22d6d99fb7874efa4649",
+      "actual": "490826bdf84673acdc27fae1e9ad410477527fd4111e22d6d99fb7874efa4649",
+      "bytes": 20992,
+      "matches": true
+    },
+    "contributor_tools/gt21_numeric_source.py": {
+      "expected": "23f7b5a05a75464efd3d2f0ac3f767c927a31411af5941c339924fc5034a8917",
+      "actual": "23f7b5a05a75464efd3d2f0ac3f767c927a31411af5941c339924fc5034a8917",
+      "bytes": 4374,
+      "matches": true
+    },
+    "contributor_tools/gt21_rb_pass.py": {
+      "expected": "b199962c508e05c12fdd376175a15acd5d8ad92c622ce74196044d1857db39eb",
+      "actual": "b199962c508e05c12fdd376175a15acd5d8ad92c622ce74196044d1857db39eb",
+      "bytes": 47471,
+      "matches": true
+    },
+    "contributor_tools/run_gt21_rb_pass.py": {
+      "expected": "50f61989fcde730a49d68a40d6b8f7f3d306e6ba8311327041238af142c619b6",
+      "actual": "50f61989fcde730a49d68a40d6b8f7f3d306e6ba8311327041238af142c619b6",
+      "bytes": 11739,
+      "matches": true
+    },
+    "contributor_tools/guarded_launcher.py": {
+      "expected": "372519f9dd1f52510f747eed3779044765fdc158b08ca007deb8d6d8708c844f",
+      "actual": "372519f9dd1f52510f747eed3779044765fdc158b08ca007deb8d6d8708c844f",
+      "bytes": 51512,
+      "matches": true
+    },
+    "converted_datasets/reconversion_v2/gt21_rb01_inventory_20261123/recording_ledger.jsonl": {
+      "expected": "907b26763b1293a872794df3ceb90f2bc8ceec710e62c6e9b43ea49936a52f92",
+      "actual": "907b26763b1293a872794df3ceb90f2bc8ceec710e62c6e9b43ea49936a52f92",
+      "bytes": 1179769,
+      "matches": true
+    },
+    "converted_datasets/reconversion_v2/gt21_rb03_authors_fields_20261125/AB28/labels_AB28.jsonl": {
+      "expected": "baee780a5ba45693b42ea305d6b450a95350788d41e881bd2ebe556765abe807",
+      "actual": "baee780a5ba45693b42ea305d6b450a95350788d41e881bd2ebe556765abe807",
+      "bytes": 6037983,
+      "matches": true
+    },
+    "converted_datasets/reconversion_v2/gt21_rb_pass_batch_AB28_20261124/ledger.jsonl": {
+      "expected": "a514931b08650799a0ca8efed9e1e0df9e3e27159ecc27347b0caecfb7cf17e6",
+      "actual": "a514931b08650799a0ca8efed9e1e0df9e3e27159ecc27347b0caecfb7cf17e6",
+      "bytes": 1085055,
+      "matches": true
+    }
+  },
+  "disk_admission": [
+    {
+      "path": "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt21_rb07_segment_AB28",
+      "min_free_mib": 5120,
+      "source": "envelope: output volume (S:)",
+      "free_mib": 28748.96875,
+      "passes": true
+    },
+    {
+      "path": "/mnt/c",
+      "min_free_mib": 1024,
+      "source": "envelope: C:",
+      "free_mib": 21354.83203125,
+      "passes": true
+    },
+    {
+      "path": "/mnt/s/workspace/locomotion-data-standardization/converted_datasets",
+      "min_free_mib": 15360,
+      "source": "spec",
+      "free_mib": 28748.96875,
+      "passes": true
+    }
+  ],
+  "census_before": {
+    "linux": {
+      "checked_at_utc": "2026-11-25T19:29:19+00:00",
+      "boot_id": "a81def3c-fa85-4161-b227-f59ffadc384d",
+      "process_count": 177,
+      "exempt": [
+        {
+          "pid": 9741,
+          "start_ticks": 126143046,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1795464455432-zuopx8.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'which'; \\builtin unset -f -- 'which'; } >/dev/null 2>&1 || true && { \\builtin unalias -- 'un",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 9742,
+          "start_ticks": 126143048,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "python3 -m contributor_tools.guarded_launcher run docs/quality/audits/gt21-rb07-seg-AB28-spec.json",
+          "why": "launcher itself (CLI)"
+        },
+        {
+          "pid": 1697587,
+          "start_ticks": 99403742,
+          "cwd": "/home/jmontp",
+          "cmdline": "/home/jmontp/.local/bin/pretty daemon",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1697596,
+          "start_ticks": 99403750,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "-zsh",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 2354851,
+          "start_ticks": 109454620,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "claude --resume",
+          "why": "non-interpreter ancestor"
+        }
+      ],
+      "workers": []
+    },
+    "windows": {
+      "checked_at_utc": "2026-11-25T19:29:19+00:00",
+      "last_boot_utc": "2026-09-07T21:16:10.5000000Z",
+      "process_count": 326,
+      "free_physical_mib": 6678.61328125,
+      "workers": []
+    }
+  },
+  "startup_memory": {
+    "linux": {
+      "available_mib": 9982.3671875,
+      "reserve_mib": 3584,
+      "passes": true
+    },
+    "windows": {
+      "available_mib": 6678.61328125,
+      "reserve_mib": 2816,
+      "passes": true
+    }
+  },
+  "launch_ledger": {
+    "parent": {
+      "pid": 9741,
+      "ppid": 2354851,
+      "start_ticks": 126143046,
+      "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1795464455432-zuopx8.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'which'; \\builtin unset -f -- 'which'; } >/dev/null 2>&1 || true && { \\builtin unalias -- 'un",
+      "interactive_terminal": false
+    },
+    "claimed": true,
+    "entries": [
+      "/tmp/locohub_guarded_launcher_uid1000/a81def3c-fa85-4161-b227-f59ffadc384d/9741-126143046.json"
+    ],
+    "keys": [
+      {
+        "pid": 9741,
+        "ppid": 2354851,
+        "start_ticks": 126143046,
+        "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1795464455432-zuopx8.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'which'; \\builtin unset -f -- 'which'; } >/dev/null 2>&1 || true && { \\builtin unalias -- 'un",
+        "interactive_terminal": false
+      }
+    ]
+  },
+  "launched": true,
+  "process_identity": {
+    "leader_pid": 9767,
+    "launched_at_utc": "2026-11-25T19:29:19+00:00",
+    "argv": [
+      "timeout",
+      "--signal=TERM",
+      "--kill-after=30s",
+      "3600",
+      "nice",
+      "-n",
+      "19",
+      "ionice",
+      "-c",
+      "3",
+      "python3",
+      "contributor_tools/run_gt21_rb_segment.py",
+      "run",
+      "--out-root",
+      "converted_datasets/reconversion_v2/gt21_rb07_segment_AB28",
+      "--subject",
+      "AB28"
+    ],
+    "log_path": "/mnt/s/workspace/locomotion-data-standardization/docs/quality/audits/gt21-rb07-seg-AB28-launcher-receipt.log",
+    "parent_death_signal": "SIGTERM",
+    "parent_death_signal_set": true,
+    "pgid": 9767,
+    "sid": 9767,
+    "own_session_verified": true,
+    "boot_id": "a81def3c-fa85-4161-b227-f59ffadc384d",
+    "leader_start_ticks": 126143146
+  },
+  "job_outcome": "completed",
+  "finished_at_utc": "2026-11-25T19:29:28+00:00",
+  "exit_code": 0,
+  "wall_time_seconds": 9.014,
+  "peak_rss_kib_largest_process": 186228,
+  "peak_group_rss_kib_sampled": 0,
+  "runtime_guard": {
+    "poll_seconds": 15,
+    "reserve_mib": {
+      "linux": 2048,
+      "windows": 2048
+    },
+    "polls": 0,
+    "min_linux_available_mib": null,
+    "min_windows_free_mib": null,
+    "breach": null,
+    "observed_address_space_limits": [
+      "805306368"
+    ],
+    "observed_address_space_by_process": [
+      {
+        "pid": 9767,
+        "start_ticks": 126143146,
+        "limit": "805306368",
+        "cmdline": "timeout --signal=TERM --kill-after=30s 3600 nice -n 19 ionice -c 3 python3 contributor_tools/run_gt21_rb_segment.py run --out-root converted_datasets/reconversion_v2/gt21_rb07_segment_AB28 --subject A"
+      },
+      {
+        "pid": 9768,
+        "start_ticks": 126143147,
+        "limit": "805306368",
+        "cmdline": "python3 contributor_tools/run_gt21_rb_segment.py run --out-root converted_datasets/reconversion_v2/gt21_rb07_segment_AB28 --subject AB28"
+      }
+    ]
+  },
+  "stop_actions": [],
+  "orphans_at_leader_exit": [],
+  "launcher_errors": [],
+  "finalisation_errors": [],
+  "clean_success": true,
+  "retry": "never automatic",
+  "cleanup_proof": {
+    "checked_at_utc": "2026-11-25T19:29:28+00:00",
+    "basis": "same_boot_proc_scan",
+    "proven": true,
+    "boot_id_now": "a81def3c-fa85-4161-b227-f59ffadc384d",
+    "pgid_members": [],
+    "leader_pid_with_same_start_ticks_present": false,
+    "attempts": 1
+  },
+  "census_after": {
+    "linux": {
+      "checked_at_utc": "2026-11-25T19:29:29+00:00",
+      "boot_id": "a81def3c-fa85-4161-b227-f59ffadc384d",
+      "process_count": 173,
+      "exempt": [
+        {
+          "pid": 9741,
+          "start_ticks": 126143046,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1795464455432-zuopx8.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'which'; \\builtin unset -f -- 'which'; } >/dev/null 2>&1 || true && { \\builtin unalias -- 'un",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 9742,
+          "start_ticks": 126143048,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "python3 -m contributor_tools.guarded_launcher run docs/quality/audits/gt21-rb07-seg-AB28-spec.json",
+          "why": "launcher itself (CLI)"
+        },
+        {
+          "pid": 1697587,
+          "start_ticks": 99403742,
+          "cwd": "/home/jmontp",
+          "cmdline": "/home/jmontp/.local/bin/pretty daemon",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1697596,
+          "start_ticks": 99403750,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "-zsh",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 2354851,
+          "start_ticks": 109454620,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "claude --resume",
+          "why": "non-interpreter ancestor"
+        }
+      ],
+      "workers": []
+    },
+    "windows": {
+      "checked_at_utc": "2026-11-25T19:29:29+00:00",
+      "last_boot_utc": "2026-09-07T21:16:10.5000000Z",
+      "process_count": 326,
+      "free_physical_mib": 6688.09375,
+      "workers": []
+    }
+  },
+  "windows_new_workers": [],
+  "bindings_after": {
+    "contributor_tools/gt21_rb_segment.py": {
+      "expected": "40685b64065b2481b1bd050d343b39cdd20c3d1b2e6791236b4319040d66219e",
+      "actual": "40685b64065b2481b1bd050d343b39cdd20c3d1b2e6791236b4319040d66219e",
+      "bytes": 30680,
+      "matches": true
+    },
+    "contributor_tools/run_gt21_rb_segment.py": {
+      "expected": "490826bdf84673acdc27fae1e9ad410477527fd4111e22d6d99fb7874efa4649",
+      "actual": "490826bdf84673acdc27fae1e9ad410477527fd4111e22d6d99fb7874efa4649",
+      "bytes": 20992,
+      "matches": true
+    },
+    "contributor_tools/gt21_numeric_source.py": {
+      "expected": "23f7b5a05a75464efd3d2f0ac3f767c927a31411af5941c339924fc5034a8917",
+      "actual": "23f7b5a05a75464efd3d2f0ac3f767c927a31411af5941c339924fc5034a8917",
+      "bytes": 4374,
+      "matches": true
+    },
+    "contributor_tools/gt21_rb_pass.py": {
+      "expected": "b199962c508e05c12fdd376175a15acd5d8ad92c622ce74196044d1857db39eb",
+      "actual": "b199962c508e05c12fdd376175a15acd5d8ad92c622ce74196044d1857db39eb",
+      "bytes": 47471,
+      "matches": true
+    },
+    "contributor_tools/run_gt21_rb_pass.py": {
+      "expected": "50f61989fcde730a49d68a40d6b8f7f3d306e6ba8311327041238af142c619b6",
+      "actual": "50f61989fcde730a49d68a40d6b8f7f3d306e6ba8311327041238af142c619b6",
+      "bytes": 11739,
+      "matches": true
+    },
+    "contributor_tools/guarded_launcher.py": {
+      "expected": "372519f9dd1f52510f747eed3779044765fdc158b08ca007deb8d6d8708c844f",
+      "actual": "372519f9dd1f52510f747eed3779044765fdc158b08ca007deb8d6d8708c844f",
+      "bytes": 51512,
+      "matches": true
+    },
+    "converted_datasets/reconversion_v2/gt21_rb01_inventory_20261123/recording_ledger.jsonl": {
+      "expected": "907b26763b1293a872794df3ceb90f2bc8ceec710e62c6e9b43ea49936a52f92",
+      "actual": "907b26763b1293a872794df3ceb90f2bc8ceec710e62c6e9b43ea49936a52f92",
+      "bytes": 1179769,
+      "matches": true
+    },
+    "converted_datasets/reconversion_v2/gt21_rb03_authors_fields_20261125/AB28/labels_AB28.jsonl": {
+      "expected": "baee780a5ba45693b42ea305d6b450a95350788d41e881bd2ebe556765abe807",
+      "actual": "baee780a5ba45693b42ea305d6b450a95350788d41e881bd2ebe556765abe807",
+      "bytes": 6037983,
+      "matches": true
+    },
+    "converted_datasets/reconversion_v2/gt21_rb_pass_batch_AB28_20261124/ledger.jsonl": {
+      "expected": "a514931b08650799a0ca8efed9e1e0df9e3e27159ecc27347b0caecfb7cf17e6",
+      "actual": "a514931b08650799a0ca8efed9e1e0df9e3e27159ecc27347b0caecfb7cf17e6",
+      "bytes": 1085055,
+      "matches": true
+    }
+  },
+  "outputs": [
+    {
+      "path": "authors_intervals.jsonl",
+      "bytes": 1082643,
+      "sha256": "df983ad48ff46e2d6adc846204d781c2fa9af2d041b3c9dfcbdf83c19b1b9960"
+    },
+    {
+      "path": "force_mask/AB28/levelground/LevelGround_ccw_fast_01_01.parquet",
+      "bytes": 9839,
+      "sha256": "451a71454dc7f1e4be54801b8153959caf7e168bb06f4e0e377e5d8bec689168"
+    },
+    {
+      "path": "force_mask/AB28/levelground/LevelGround_ccw_fast_01_02.parquet",
+      "bytes": 9631,
+      "sha256": "ab9f5b2471e2f0bc48181399ab26885f942728c25cd8378b6ab9f6ba5cda3e82"
+    },
+    {
+      "path": "force_mask/AB28/levelground/LevelGround_ccw_fast_01_03.parquet",
+      "bytes": 11084,
+      "sha256": "6c5dc219b7ca398de43df5c9fd47e1c47229ee32c927ede5b8c37522f12c77ec"
+    },
+    {
+      "path": "force_mask/AB28/levelground/LevelGround_ccw_fast_01_04.parquet",
+      "bytes": 9249,
+      "sha256": "a9a058d7e66a0c822ead9089b4fa69853c4c637e1afd8693326345865410a51d"
+    },
+    {
+      "path": "force_mask/AB28/levelground/LevelGround_ccw_fast_01_05.parquet",
+      "bytes": 9584,
+      "sha256": "9a55d1f661fb284315d15030d4536b48b060971a33c177e6d6e5a2d387110bac"
+    },
+    {
+      "path": "force_mask/AB28/levelground/LevelGround_ccw_normal_01_01.parquet",
+      "bytes": 14651,
+      "sha256": "f0b5c212c2d330911758d738898c6cc90a9758e8812d852c9cc117ff708dbf50"
+    },
+    {
+      "path": "force_mask/AB28/levelground/LevelGround_ccw_normal_01_02.parquet",
+      "bytes": 12302,
+      "sha256": "7a0c58abed675407a7e7467e6040981bf41e64c2ab2c878bca0f6d5ac0fa0dd8"
+    },
+    {
+      "path": "force_mask/AB28/levelground/LevelGround_ccw_normal_01_03.parquet",
+      "bytes": 12082,
+      "sha256": "b0fb8c125b3c84cee02206daf4e4f3615c3bdf397d0deccade026acce684551a"
+    },
+    {
+      "path": "force_mask/AB28/levelground/LevelGround_ccw_normal_01_04.parquet",
+      "bytes": 11373,
+      "sha256": "b66546616d81fbb603285d339b1f905fdb46397660b18cf9707dacebac7e5faa"
+    },
+    {
+      "path": "force_mask/AB28/levelground/LevelGround_ccw_normal_01_05.parquet",
+      "bytes": 11264,
+      "sha256": "359f29a48b57aa8f769d6038060783785a37700780b1601dee04df8a17664b2c"
+    },
+    {
+      "path": "force_mask/AB28/levelground/LevelGround_ccw_slow_01_01.parquet",
+      "bytes": 20380,
+      "sha256": "a1456b1fac67ad77bcd98363472216704b2cb9513e0f36bca91bdc152292a2c3"
+    },
+    {
+      "path": "force_mask/AB28/levelground/LevelGround_ccw_slow_01_02.parquet",
+      "bytes": 14810,
+      "sha256": "19cc8e5937088f1303b068a839468f8598855d1992db486514ee12109e76c528"
+    },
+    {
+      "path": "force_mask/AB28/levelground/LevelGround_ccw_slow_01_03.parquet",
+      "bytes": 14953,
+      "sha256": "9f7fd7531799914a3d6e6ac6f06a0cdbe677c669789c88a997dd12fb3515226c"
+    },
+    {
+      "path": "force_mask/AB28/levelground/LevelGround_ccw_slow_01_04.parquet",
+      "bytes": 14494,
+      "sha256": "5b7bd37c858a2ca8a7ec9f157c4d0578fbc554aff3100429671935e2c5f8d443"
+    },
+    {
+      "path": "force_mask/AB28/levelground/LevelGround_ccw_slow_01_05.parquet",
+      "bytes": 14464,
+      "sha256": "827986f56c683a10f5303619fc43b97826d01cb279746212cc51b50f5a946bba"
+    },
+    {
+      "path": "force_mask/AB28/levelground/LevelGround_cw_normal_01_01.parquet",
+      "bytes": 18330,
+      "sha256": "72b7ff19cfe2a598a7f9bdef98ccfd213e21c92c233b31ae5343043c27022d0b"
+    },
+    {
+      "path": "force_mask/AB28/levelground/LevelGround_cw_normal_01_02.parquet",
+      "bytes": 14778,
+      "sha256": "b7b46824a2191cea57250c8a18b2e743f339359f66b6ceac2075426df7371e7d"
+    },
+    {
+      "path": "force_mask/AB28/levelground/LevelGround_cw_normal_01_03.parquet",
+      "bytes": 14127,
+      "sha256": "310d707c25af32e2f43de43242bbf72bf5f43c1b6b5862f4ec1b60e1e27a6c76"
+    },
+    {
+      "path": "force_mask/AB28/levelground/LevelGround_cw_normal_01_04.parquet",
+      "bytes": 11337,
+      "sha256": "f0ef0c4368b47056cf474f9aa9dbc010f0fa3828dd52778d487f2987b4a9ccf9"
+    },
+    {
+      "path": "force_mask/AB28/levelground/LevelGround_cw_normal_01_05.parquet",
+      "bytes": 11740,
+      "sha256": "9ee91ab6c8c61e04f2116e79e992e63b628dab2cd586d67b48c70de09b554b25"
+    },
+    {
+      "path": "force_mask/AB28/levelground/LevelGround_cw_slow_01_01.parquet",
+      "bytes": 26856,
+      "sha256": "5be6b2967f1abf5f5bd1df8fb72e079f705fd5920bccbf40b30903b38b924f5c"
+    },
+    {
+      "path": "force_mask/AB28/levelground/LevelGround_cw_slow_01_02.parquet",
+      "bytes": 18343,
+      "sha256": "ab8ed1f4257810076a7db574dfc097971dfa80bda8e1ea6f4c5fb83868d8e357"
+    },
+    {
+      "path": "force_mask/AB28/levelground/LevelGround_cw_slow_01_03.parquet",
+      "bytes": 18041,
+      "sha256": "28072a6ad9a660c3d0dc0538385a9e940269de35b9a9701f7359404ca240ed7d"
+    },
+    {
+      "path": "force_mask/AB28/levelground/LevelGround_cw_slow_01_04.parquet",
+      "bytes": 17016,
+      "sha256": "94518cfa59fc22e19df1a69a6ba91faaa081248231931400dabef2a7d793d242"
+    },
+    {
+      "path": "force_mask/AB28/levelground/LevelGround_cw_slow_01_05.parquet",
+      "bytes": 17025,
+      "sha256": "a3e0976430178766ae9c2f8740c7438a0199c938a51597ded8de7913a0006e9c"
+    },
+    {
+      "path": "force_mask/AB28/levelground/levelground_cw_fast_01_01.parquet",
+      "bytes": 16144,
+      "sha256": "44d116f4c9081908a2b5ae7faf54f1177c7c65977d719988b8a304b859552b10"
+    },
+    {
+      "path": "force_mask/AB28/levelground/levelground_cw_fast_01_02.parquet",
+      "bytes": 10324,
+      "sha256": "9297bd14c4553a334b5a6abcfc03eae19ecca77596ae61afd3d996056d1e11b5"
+    },
+    {
+      "path": "force_mask/AB28/levelground/levelground_cw_fast_01_03.parquet",
+      "bytes": 9777,
+      "sha256": "922a3d860ce9f8b82339a3e17dce59cf75a44a184f060b8e471865a12e161bca"
+    },
+    {
+      "path": "force_mask/AB28/levelground/levelground_cw_fast_01_04.parquet",
+      "bytes": 14529,
+      "sha256": "f86d605d3f9116869ef98e2825f0eb17c66dc58d3186e5788a399536a27533b8"
+    },
+    {
+      "path": "force_mask/AB28/levelground/levelground_cw_fast_01_05.parquet",
+      "bytes": 10268,
+      "sha256": "281af15f00abb6e185f390929b94f1dffa03c839be81bad7930dbcb8fd860142"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_1_L_01_01.parquet",
+      "bytes": 12114,
+      "sha256": "2b5938aaaabea309e87c0193364226365f11532949dfde83513587837c0f103e"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_1_L_01_02.parquet",
+      "bytes": 11698,
+      "sha256": "cea33987a0a92256947c968cbcd366e8369e3f2bd31d789029638b9654e24466"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_1_L_01_03.parquet",
+      "bytes": 11768,
+      "sha256": "1aab5838164ee964df672d7d72b695c8f000fcf9efec5b52d78448b1073fcfd1"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_1_L_01_04.parquet",
+      "bytes": 12891,
+      "sha256": "3b4b2c66a6735af15fddb51ec376b9f9513718bb3f4ae39ac1eadb8c8a400c32"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_1_L_01_05.parquet",
+      "bytes": 11185,
+      "sha256": "caddc761f5d816b0da72435a483df69eccd96862debbd01e13e946e287a0d056"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_1_R_01_01.parquet",
+      "bytes": 11487,
+      "sha256": "035fcc5b335ef44103c899c7bbd372624f86057ad4283d971a473871446fd035"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_1_R_01_02.parquet",
+      "bytes": 11333,
+      "sha256": "930158b69839182757a614e307f2dc414aceefa8fc445e4fe4194acd19f5b2c2"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_1_R_01_03.parquet",
+      "bytes": 11733,
+      "sha256": "d432d79638948f7203f80e7fda69a5eccc3795b8d8a1d0095da949ef726f1686"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_1_R_01_04.parquet",
+      "bytes": 14911,
+      "sha256": "31d26b718dbad20e99ecd1449114ecc88e8dd82576156529afc053abb4c5082c"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_1_R_01_05.parquet",
+      "bytes": 11532,
+      "sha256": "01ca0544354878050f8d6f01eba577e9d24309f951182f88c6157c7f41f2f484"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_2_L_01_01.parquet",
+      "bytes": 11926,
+      "sha256": "554cc06b046a9a9db0e28ebf412b761d30e6114c1209ee09d7ad512bd64cadf3"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_2_L_01_02.parquet",
+      "bytes": 11236,
+      "sha256": "a0a652fab4a9331f4027575d6dfda0cd43478d898eedd61f602567e91e587f58"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_2_L_01_03.parquet",
+      "bytes": 11077,
+      "sha256": "2a6dfdb041d5f3c59ad9811e03d034a489d95010b39312b772b070bc2fb73a67"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_2_L_01_04.parquet",
+      "bytes": 10931,
+      "sha256": "f3ad4e165d546ae00970c753cf8eda12dba1cc5b1fb23f40cce54692f945e1c1"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_2_L_01_05.parquet",
+      "bytes": 10630,
+      "sha256": "c11f2d9d18693a585f09b9e9cc2286c8a4877f6d9c0c4c76552d530641d9edad"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_2_R_01_01.parquet",
+      "bytes": 12312,
+      "sha256": "5be688e7014639ac72b6b860dac03b2f53bb5b4fb86d3cafd04f82c3a561a23f"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_2_R_01_02.parquet",
+      "bytes": 10951,
+      "sha256": "978e81a8f788133a266e6cd12fdbf90f0c74de7e03b7a1a39519143eb5a327a2"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_2_R_01_03.parquet",
+      "bytes": 10922,
+      "sha256": "7e12b07a90d8f31cec62db3f65494b8663991dae422f56741e0213e902bacdb5"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_2_R_01_04.parquet",
+      "bytes": 10645,
+      "sha256": "d4933c3a75c8f610e78d1df324dfb991168b2385f2b030ff4ce90c1d28dc3c81"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_2_R_01_05.parquet",
+      "bytes": 10888,
+      "sha256": "b924d32238567a109b1c14cdda7434cd4576c996a3bb4341e9aea0274b1aa714"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_2_R_01_06.parquet",
+      "bytes": 10483,
+      "sha256": "49091d24862327be23f651d5b79286b27c08b5a842bb6e91855247dc986e0699"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_3_L_01_01.parquet",
+      "bytes": 11418,
+      "sha256": "a1c4481a07d7750f579fa2982fa9e3bd6181bf5c2138373107b95ad904b58dd8"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_3_L_01_02.parquet",
+      "bytes": 10859,
+      "sha256": "0204d45536c8e83ba5981f0e42b90ed7d53f156244092284c2b99681c8ea9d82"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_3_L_01_03.parquet",
+      "bytes": 10834,
+      "sha256": "edda14f307c9c764d93f3b5a5cf121b40ffff32a6ffb70124c10a540152cac25"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_3_L_01_04.parquet",
+      "bytes": 10687,
+      "sha256": "c0470fdb35999eac50b3b440f8fde8a844376d17ed932137eace0a4f8046a06e"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_3_L_01_05.parquet",
+      "bytes": 10894,
+      "sha256": "0dc604eb0179b461756193b43b098147fde1c93d0ef80011f3bad824161b7b4c"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_3_R_01_01.parquet",
+      "bytes": 11398,
+      "sha256": "8dbc1d2f60438c706a607d5d33985fbd0adb52bbec96ca7bc5d0fff593640dae"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_3_R_01_02.parquet",
+      "bytes": 10997,
+      "sha256": "ac60efef0eef5b08f583256a444d1f10fc0869284ae2c101ce353f7dc0dff500"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_3_R_01_03.parquet",
+      "bytes": 12013,
+      "sha256": "9c1d2877eb8111e344a76aa73bb647e891ac02df5f0a03e5072cf57240002ef9"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_3_R_01_04.parquet",
+      "bytes": 10766,
+      "sha256": "f4062622bfe44d12e95cdf280ece5053867db062b3cf19b752d7bc9b0c794a82"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_3_R_01_05.parquet",
+      "bytes": 10620,
+      "sha256": "1b2881b2e8f0d01a623cf5adea0464ae26028b42e5643e7f7ea5cf1074bdfdcf"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_3_R_01_06.parquet",
+      "bytes": 10768,
+      "sha256": "fd9f99da6d87c3d614db028b75a2c67408a534c878e524295b60f1d0e60e8d52"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_4_L_01_01.parquet",
+      "bytes": 11477,
+      "sha256": "f7302562a77887c603a4d943fb7126514448bce3be13e3fd9fe2e69732107175"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_4_L_01_02.parquet",
+      "bytes": 10883,
+      "sha256": "5e1b6290451ab712f35b321d1e2f7da8b05c1ea023249131481cd7093ac4be85"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_4_L_01_03.parquet",
+      "bytes": 11002,
+      "sha256": "e701b4104b8e3a921d0e91211eada846e4f3f6f0c687f978adc73551947e845e"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_4_L_01_04.parquet",
+      "bytes": 10611,
+      "sha256": "626c04ab8ff47a9f82a8e245735999935071e1cfbe7f0f5fe89964c6c6f5a5d3"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_4_L_01_05.parquet",
+      "bytes": 10743,
+      "sha256": "abd44b041552a75b820413f1e60694ca1b1f62e3a7ef462c241079d7f5f389ca"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_4_R_01_01.parquet",
+      "bytes": 11207,
+      "sha256": "65a81be9986865705ea505933ffe0fbe9a0dc7dd090bf454b1dcc96905e269a7"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_4_R_01_02.parquet",
+      "bytes": 10709,
+      "sha256": "4d1bf54b1c329386090c33d9872fae9c28cae80ec2a5fd3224c519d7b82d5cea"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_4_R_01_03.parquet",
+      "bytes": 10920,
+      "sha256": "6f8574597dca2e1fd83f179a18f43c57155a97f082458c2512b36212f9adc76a"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_4_R_01_04.parquet",
+      "bytes": 10772,
+      "sha256": "167201254570b24bafcac2754f95f6ee1406b8b3e0db5a6d192946f40428de85"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_4_R_01_05.parquet",
+      "bytes": 10634,
+      "sha256": "7b219fe781da626e7ee10d7dbdbb7f54dcdc06350044ba4e850c8d523e735eff"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_5_L_01_01.parquet",
+      "bytes": 11297,
+      "sha256": "2a02cd49153a1c5588e357d8797a13a4b9a28fe3c686a2eca8900826a8188251"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_5_L_01_02.parquet",
+      "bytes": 10622,
+      "sha256": "a90a8d62cb7a3747cdb9097b02c73139abb3f1a03b332964990ea555e9a4f9c6"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_5_L_01_03.parquet",
+      "bytes": 10578,
+      "sha256": "1ad8bcdd14aa815bd800dfbde989125e949b2e4b09c2f943c024c6eab77c25d2"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_5_L_01_04.parquet",
+      "bytes": 10693,
+      "sha256": "089ac539dfbf9264bbc5e2d738b5c23f3299ba2c317cdad9a4e404d7c6ae299b"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_5_L_01_05.parquet",
+      "bytes": 10473,
+      "sha256": "f10c2ba386666ce02bb84ab1d276c33b911d5cee5bd59e3cd0074594fb2e4083"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_5_L_01_06.parquet",
+      "bytes": 10427,
+      "sha256": "9779ba3d32f092c2f399081d4fdbd9e40e20be4317334c889fcc4e67b9755e1d"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_5_R_01_01.parquet",
+      "bytes": 11077,
+      "sha256": "a82c2275d1a68a88eb1e68d2ac80405958c31330bd3904d9fe8811891f1628be"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_5_R_01_02.parquet",
+      "bytes": 10584,
+      "sha256": "5bacf5c0c7166e5fd64c7c415f742e75a6de445e16523f90d0ba4e977bba90d0"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_5_R_01_03.parquet",
+      "bytes": 10492,
+      "sha256": "76c6970e869f106ddff4908a4df84729acb7c29b809a6fb408d52997809665da"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_5_R_01_04.parquet",
+      "bytes": 10536,
+      "sha256": "cf170d4bebe59bbed5c11fbf07ee9c319b6bfaf72046add47cd1ef4bcfc64c42"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_5_R_01_05.parquet",
+      "bytes": 10179,
+      "sha256": "16ae337d4aa2f8ad098803cb5dc04e5f70f88fbace27b64d8b5469e4327b0d89"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_6_L_01_01.parquet",
+      "bytes": 11021,
+      "sha256": "305ef07245603dcd9087eb1d78394b26832316fe51a2a92f3fde241862c66fc6"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_6_L_01_02.parquet",
+      "bytes": 10190,
+      "sha256": "1f953e66ec2b87871f9c0e8f2b1f4a7c6bbf8b5782842267cfb14eabedd2ed7f"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_6_L_01_03.parquet",
+      "bytes": 10210,
+      "sha256": "b66e87b0c306c4ec136b59d1c850aabf990c412b02000142b2de08be737d9126"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_6_L_01_04.parquet",
+      "bytes": 9754,
+      "sha256": "6de453db3e503ffac2a2398c75280a21282a647ac4b9801bfcb19273e1c5067a"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_6_L_01_05.parquet",
+      "bytes": 9611,
+      "sha256": "4b5cca7459a8781bab05629dbaf26a2cc22bf96137867cf83135d7ba8465b120"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_6_R_01_01.parquet",
+      "bytes": 12076,
+      "sha256": "739df58944410d3bc21c7900bc993d60bfb21d9a119155211eec10f6b578190e"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_6_R_01_02.parquet",
+      "bytes": 10429,
+      "sha256": "50a42d2b61b5c848a9e409c7879725f5368449e8fd579b6e45494fc2fdf36d2b"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_6_R_01_03.parquet",
+      "bytes": 10210,
+      "sha256": "ecb758766a1972865fdea95132acbf9054526a66f8d85577c8bba4eaa1742b63"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_6_R_01_04.parquet",
+      "bytes": 10289,
+      "sha256": "fea22a614041e81b1df8d7d57c237ac73a8419338d2126f1da4f4ed32600cb06"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_6_R_01_05.parquet",
+      "bytes": 9971,
+      "sha256": "57527cff8af61b9e65d35e2b93d781487a30441a4f3d8f856ccf5fe8cbcece0d"
+    },
+    {
+      "path": "force_mask/AB28/ramp/Ramp_6_R_01_06.parquet",
+      "bytes": 10014,
+      "sha256": "7d8931f1fe8dd93d3e1757ed04c60c707a97312b5b63a1bdb1bfcf809a81321d"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_1_L_01_01.parquet",
+      "bytes": 8590,
+      "sha256": "b0d97a9b33064a59dd0d20ae43ab228e1c1ed3a922b98ce6cafff4a177eafba5"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_1_L_01_02.parquet",
+      "bytes": 7854,
+      "sha256": "5569bbdfe30669648292c12689406070b9d327daedee84ef5b3970412f7d8dac"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_1_L_01_03.parquet",
+      "bytes": 7606,
+      "sha256": "756cc84f429e7635115e852b71cd39da0b9157fe8de4916cac70d3c9a6b77c2c"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_1_L_01_04.parquet",
+      "bytes": 7790,
+      "sha256": "e1232abbf412ebaaa7df798e27d9d3810d4d49b5851de6543ccf61c2359e8e9f"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_1_L_01_05.parquet",
+      "bytes": 7464,
+      "sha256": "c42d3a607b5043fc3002e95f6f140ef8d99b0daf9480050b28d83c40ff13983a"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_1_R_01_01.parquet",
+      "bytes": 8751,
+      "sha256": "26117e0a8c242b6b25bfd27e575f24900df4c555671d442ee99bfb6f1da00172"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_1_R_01_02.parquet",
+      "bytes": 8601,
+      "sha256": "7561ed9a46e2e86126eca38dcf40ef6b667b2d73e8c713f9911318e976600ba1"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_1_R_01_03.parquet",
+      "bytes": 7933,
+      "sha256": "e3f59293e74882542a36ecbc73afc757d443999760c9a97a0b3ed681b254a705"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_1_R_01_04.parquet",
+      "bytes": 8168,
+      "sha256": "0679d1e75d5291a1423d662b41e47bcb7e6794d87ab99ad16ebec1cff3d5d1d7"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_1_R_01_05.parquet",
+      "bytes": 7537,
+      "sha256": "258d4c00a8c1575268c60a6eb5fdea51dd1fac0bc2db1601777b1850a71d72f2"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_2_L_01_01.parquet",
+      "bytes": 7575,
+      "sha256": "562bdebbea662318171348c6a377852c9f062793ad218a7d0e2ad9a75e47b6a1"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_2_L_01_02.parquet",
+      "bytes": 8135,
+      "sha256": "2099997924a3c2eabeebd64a316f49c7da407508ac9c2d0da2b703795dbb814e"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_2_L_01_03.parquet",
+      "bytes": 7941,
+      "sha256": "b1a9c0fa019087f2d03f7181a0a26c7ea515f0759046979ba5bb7ca13f25e6e0"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_2_L_01_04.parquet",
+      "bytes": 7857,
+      "sha256": "a6d016fc534f63dc0a171931e822e0e490418cdc75d2e5f459997a62fbaa290e"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_2_L_01_05.parquet",
+      "bytes": 6939,
+      "sha256": "83edc433427a13fd26eee4dee068c437db0ddc0e7dffe4d38bb7dcf4596b3abc"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_2_R_01_01.parquet",
+      "bytes": 7834,
+      "sha256": "a5511e615b18f6f5daaf8afb55339716afb60c658c7401c36347ba9e617bf155"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_2_R_01_02.parquet",
+      "bytes": 7628,
+      "sha256": "ca128b29a8fc7b93797bf2b8bf127a0fb876943d6f4e0d9873165282e4c777d4"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_2_R_01_03.parquet",
+      "bytes": 7584,
+      "sha256": "8cdb3572b8a52d6a9005303fe3952e57fec00987128390cffa023e7963ab2bd9"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_2_R_01_04.parquet",
+      "bytes": 7416,
+      "sha256": "6ec541c8bd192b9d9684f20558a8481f22214f9459a84efda9c488b9bf7eff01"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_2_R_01_05.parquet",
+      "bytes": 7624,
+      "sha256": "da95a5fc2defcdf6ca279651ccf50f42316ef4d6ce7e2f0549a81bfb71fbe9b8"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_2_R_01_06.parquet",
+      "bytes": 7429,
+      "sha256": "906906683b34747b67322bc5d321d009826aea1923bd8c9e59596ae4d68feeab"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_3_L_01_01.parquet",
+      "bytes": 7268,
+      "sha256": "3f58fa1bb8d8347b5d7ab565f4e01f3470a0984bf637062a6ef9c1c501ce8375"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_3_L_01_02.parquet",
+      "bytes": 7571,
+      "sha256": "37fde9164fe214e062295fa7c2e645e529353e63d5845baa88ebf38af1a8031d"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_3_L_01_03.parquet",
+      "bytes": 7390,
+      "sha256": "2c77a38903e860eba2ee48c0e63fa5399bac14831410173dfd5eb912ea3f3f06"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_3_L_01_04.parquet",
+      "bytes": 7266,
+      "sha256": "d5e46494af93ca13845d89f40f6161c6143214cd2a7d422089a2d00f919b1b10"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_3_L_01_05.parquet",
+      "bytes": 7039,
+      "sha256": "4c6627ed9b684ffdaa7823d5ed95883d7acf0124044eea0522852eb310e884c6"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_3_R_01_01.parquet",
+      "bytes": 7990,
+      "sha256": "ace78b4a2322b91a4844a321ad701d543d4ed5f5a9b27c69bb3f119db391f2e7"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_3_R_01_02.parquet",
+      "bytes": 7554,
+      "sha256": "52e7109845ceaff5270667dc11948ded5b18a77056762654c8fec93eb3f54396"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_3_R_01_03.parquet",
+      "bytes": 7253,
+      "sha256": "f31686d80ea820755f0d5fe5eac17bb6252faad5736f9b21576427fe36221364"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_3_R_01_04.parquet",
+      "bytes": 7507,
+      "sha256": "2600e57635b8b04c06dd9e3e5f6905210acaf133e315ad39657c4e0ea5842dfa"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_3_R_01_05.parquet",
+      "bytes": 7506,
+      "sha256": "4fd5d984a1c87499404f6aae1cdf5273bd503d92dfe7bf6826011a1a4bd17b49"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_4_L_01_01.parquet",
+      "bytes": 7785,
+      "sha256": "eefab16c9ba2e59fbed5efc45e3ab9f0e4c1b9fc27f0c867cf6ad65eb72fca4d"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_4_L_01_02.parquet",
+      "bytes": 7986,
+      "sha256": "1257f90acf2fe36a1e5bb1df2bf7011027bd85008b3429b53947e01822449c9a"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_4_L_01_03.parquet",
+      "bytes": 7824,
+      "sha256": "cab2cfe03dafd5224826135c7e8459d91f0ee4c8c3141b8755390651ee18170a"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_4_L_01_04.parquet",
+      "bytes": 7792,
+      "sha256": "96d2a0ac2363d54c865e41f4a19d16dbf036c15dfe71fb28f69d02b77f3aad95"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_4_L_01_05.parquet",
+      "bytes": 7178,
+      "sha256": "55b80080ffd4fe92952e2e7ef14f001a34f70796b075d90e66f8968bbdce7a99"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_4_R_01_01.parquet",
+      "bytes": 8285,
+      "sha256": "9e074ee28305de75985f65d270afc385fa340fa2a9bd35db13a5374ff2168d3b"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_4_R_01_02.parquet",
+      "bytes": 7993,
+      "sha256": "b6ca94be6f9a7b4c896ff0199a17545753aa8a8514f299b6048a3e61dab74427"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_4_R_01_03.parquet",
+      "bytes": 7739,
+      "sha256": "e6666b81f3eb0b75b1e3c80a8238fc85155e7fe49a83117ad48302676aa0fb5c"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_4_R_01_04.parquet",
+      "bytes": 7778,
+      "sha256": "251eaa1ab626b2794fdd3d60f69a25d8306222f4da9dd0e3faef582d6592548b"
+    },
+    {
+      "path": "force_mask/AB28/stair/Stair_4_R_01_05.parquet",
+      "bytes": 8321,
+      "sha256": "567374982e0e3885888804691b8e06a8085efd68b7139eef92d64bafa2fa5672"
+    },
+    {
+      "path": "force_mask/AB28/treadmill/Treadmill_01_01.parquet",
+      "bytes": 80768,
+      "sha256": "0d8bc2a409b5282573180cd85c8a6d8d804d023fabdf830ad5a0bb9b371b2ccb"
+    },
+    {
+      "path": "force_mask/AB28/treadmill/Treadmill_02_01.parquet",
+      "bytes": 80892,
+      "sha256": "89938753c0d289d445041b6bc6aa7f77015220b7b03d03ad3dd41edf478820f4"
+    },
+    {
+      "path": "force_mask/AB28/treadmill/Treadmill_03_01.parquet",
+      "bytes": 81082,
+      "sha256": "269045ce422a79c082e6682369b27e16448cbf1f7a43d0c84c328414df34a2d1"
+    },
+    {
+      "path": "force_mask/AB28/treadmill/Treadmill_04_01.parquet",
+      "bytes": 81354,
+      "sha256": "d20234067d0bb71fbc2f1685d8be75a2d269b0320a449320b2be710254a76aa6"
+    },
+    {
+      "path": "force_mask/AB28/treadmill/Treadmill_05_01.parquet",
+      "bytes": 81774,
+      "sha256": "13977d44943d79db4101bec54a79644f61a253961e5ced685bb7f9babb83be55"
+    },
+    {
+      "path": "force_mask/AB28/treadmill/Treadmill_06_01.parquet",
+      "bytes": 81840,
+      "sha256": "f191d79c224af0ed542139fd39f78d4d7d34654337f66812401fbf47ad2e53b6"
+    },
+    {
+      "path": "force_mask/AB28/treadmill/Treadmill_07_01.parquet",
+      "bytes": 81930,
+      "sha256": "b730caa5a5554857b1b0a20f59888ea8d0e2c77f4899351642d4aa46cb87b1ca"
+    },
+    {
+      "path": "ledger.jsonl",
+      "bytes": 157199,
+      "sha256": "b66a8509f8cb46771d99e28c1d4d01248e9ec57d0dc9276568ca2f812b990970"
+    },
+    {
+      "path": "run_summary.json",
+      "bytes": 829,
+      "sha256": "4863f8d07cea779e0c541a9b1a6219e840605febc1182ccd45c3e75e046c8047"
+    },
+    {
+      "path": "steps.jsonl",
+      "bytes": 6379330,
+      "sha256": "996e06d65785a6d88bb874dbc16a790627b7366eef5d0ede09c03e993842d5d5"
+    }
+  ],
+  "expected_outputs_missing": [],
+  "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "checks": {
+    "cleanup_proven": true,
+    "bindings_unchanged": true,
+    "envelope_unchanged": true,
+    "linux_no_new_worker": true,
+    "windows_no_new_worker": true,
+    "no_orphans_at_leader_exit": true,
+    "outputs_hashed": true,
+    "expected_outputs_present": true
+  }
+}

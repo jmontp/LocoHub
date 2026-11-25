@@ -60,7 +60,7 @@ pa.set_io_thread_count(1)
 BASE = 'converted_datasets/reconversion_v2'
 AUTHORS = f'{BASE}/gt21_rb03_authors_fields_20261125'
 PASS_ROOT = f'{BASE}/gt21_rb_pass_batch_{{subject}}_20261124'
-SEG_ROOT = f'{BASE}/gt21_rb_segment_batch_{{subject}}_20261126'
+SEG_ROOT = f'{BASE}/gt21_rb07_segment_{{subject}}'   # GT21-RB07: left treadmill toe off rebuilt from the left belt force
 CODE = ('contributor_tools/gt21_rb_export.py', 'contributor_tools/run_gt21_rb_export.py', 'contributor_tools/gt21_rb_pass.py',
         'contributor_tools/run_gt21_rb_pass.py', 'contributor_tools/gt21_numeric_source.py')
 SCHEMA_ID = 'locohub.gt21_rb05/1'
@@ -451,6 +451,9 @@ def readme_text(subject):
         'exports only. Left-leg steps use the same rule (flag authors_rule_extended_to_left_leg).', '',
         '## Flags and limits (task_info)',
         '- incomplete_stance_force: at least half of the step\'s stance samples have no force.',
+        '- Georgia Tech 2021 treadmill files copy the right foot toe off into the left. Left treadmill stance runs from the left '
+        'heel strike to the first sample where the left belt vertical force is below 20 N (GT21-RB07); a stride with no such sample '
+        'has no left stance (stance fields empty).',
         f'- {ex.LIMIT_AB28}', f'- {ex.LIMIT_AB27}', '',
         '`held_signals` lists every column with no finite value in the observation and why. Held (bad-fit) frames are missing '
         'inside observations; `geometry_held_fraction_*` in task_info gives the share.'

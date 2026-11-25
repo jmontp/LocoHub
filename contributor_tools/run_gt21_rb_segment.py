@@ -84,13 +84,35 @@ def segment_recording(row, meta, gc, table, bw_n, mask_dir, steps_f, auth_f, out
              'resets': {}, 'steps_by_disposition': {}, 'steps_by_reason': {}, 'table_available': table is not None}
     span = (float(table['time_s'][0]), float(table['time_s'][-1])) if table is not None else None
     masks, mask_stats, vertical_n = {}, {}, {}
-    # GT21-RB06: a treadmill gcLeft ToeOff column that is the right leg's copy gives no left stance (nothing is invented)
-    no_stance = {'left': sg.STANCE_UNAVAILABLE_LEFT_TREADMILL} if sg.left_toe_off_copied_from_right(mode, gc['left'], gc['right']) else {}
+    # GT21-RB06: a treadmill gcLeft ToeOff column that is the right leg's copy is not a left measurement.
+    # GT21-RB07 (blatant source-copy fix, José D-GT21-RB06-1 A): left treadmill toe off is rebuilt from the left belt's vertical
+    # force, first sample after each left heel strike inside the stride below 20 N. Strides with none keep stance unavailable.
+    copied = sg.left_toe_off_copied_from_right(mode, gc['left'], gc['right'])
+    left_toe = {}                                   # step index k of the left leg -> toe off table index or None
+    if copied:
+        entry['left_toe_off_copied_from_right'] = True
+        if table is not None:
+            gl = gc['left']
+            hl, pl = np.asarray(gl['Header'], float), np.asarray(gl['HeelStrike'], float)
+            rl = sg.resets(pl)
+            pairs = [(float(hl[rl[k]]), float(hl[rl[k + 1]])) for k in range(len(rl) - 1)]
+            vn = np.asarray(table['grf_vertical_left_BW'], float) * bw_n
+            left_stance, toes = sg.left_treadmill_stance_from_force(table['time_s'], vn, pairs)
+            left_toe = dict(enumerate(toes))
+            entry['left_toe_off_rebuilt'] = {'rule': sg.LEFT_TOE_OFF_RULE, 'strides': len(toes),
+                                             'rebuilt': sum(k is not None for k in toes),
+                                             'unavailable': sum(k is None for k in toes)}
+    no_stance = {'left': sg.STANCE_UNAVAILABLE_LEFT_TREADMILL} if copied and not left_toe else {}
     if no_stance:
         entry['stance_unavailable'] = dict(no_stance)
     if table is not None:
         for leg in LEGS:
-            stance_in = np.zeros(len(table['time_s']), bool) if leg in no_stance else table[f'stance_{leg}']
+            if leg in no_stance:
+                stance_in = np.zeros(len(table['time_s']), bool)
+            elif copied and leg == 'left':
+                stance_in = left_stance
+            else:
+                stance_in = table[f'stance_{leg}']
             m, st = sg.force_missing_mask(stance_in, table[f'grf_vertical_{leg}_BW'], bw_n)
             if leg in no_stance:
                 st['stance_unavailable'] = no_stance[leg]
@@ -125,12 +147,20 @@ def segment_recording(row, meta, gc, table, bw_n, mask_dir, steps_f, auth_f, out
                 if leg in no_stance:
                     step['stance_samples'] = step['force_missing_stance_samples'] = None
                     step['stance_unavailable'] = no_stance[leg]
+                elif copied and leg == 'left' and left_toe.get(k) is None:
+                    step['stance_samples'] = step['force_missing_stance_samples'] = None
+                    step['stance_unavailable'] = sg.STANCE_UNAVAILABLE_NO_UNLOAD
+                elif copied and leg == 'left':
+                    step['stance_samples'] = int(left_stance[i0:i1].sum())
+                    step['force_missing_stance_samples'] = int(masks[leg][i0:i1].sum())
+                    step['toe_off_s'] = float(t[left_toe[k]])
+                    step['toe_off_rule'] = sg.LEFT_TOE_OFF_RULE
                 else:
                     step['stance_samples'] = int(np.asarray(table[f'stance_{leg}'], bool)[i0:i1].sum())
                     step['force_missing_stance_samples'] = int(masks[leg][i0:i1].sum())
                 step['force_check'] = sg.force_check(t, vertical_n[leg], t0, t0, t1)
                 to_in = toe[(toe > t0) & (toe < t1)]
-                if to_in.size and leg not in no_stance:
+                if to_in.size and not (copied and leg == 'left'):
                     crossing = _falling(t, vertical_n[leg], float(to_in[0]))
                     step['force_check']['toe_off_offset_ms'] = crossing
             steps.append(step)

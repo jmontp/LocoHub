@@ -8405,6 +8405,78 @@
         "verified": "Independent verifier confirmed the copy (157/157 treadmill, 0/2,990 other), clean receipts, bit-identity outside left-foot treadmill force, unchanged counts, 43 tests pass. r2 replaces r1 as current RB05 export.",
         "verify_file": "docs/maintainers/handoffs/GT21-RB06-verify.json"
       }
+    },
+    {
+      "id": "GT21-RB07",
+      "priority": "P1",
+      "dataset": "gt21",
+      "title": "Rebuild left treadmill toe-off from the left belt force",
+      "status": "done",
+      "stage": "source_readback",
+      "question": "Can left-foot treadmill toe-off be recovered from the left belt's vertical force dropping below 20 N, replacing the copied source value?",
+      "scope": "All 157 Georgia Tech 2021 treadmill recordings, left foot only. Changes left treadmill toe-off, stance length, the stance force mask and incomplete_stance_force; strides, heel strikes, angles, moments and counts must not change.",
+      "depends_on": [
+        "GT21-RB06"
+      ],
+      "inputs": [
+        "docs/maintainers/handoffs/GT21-RB06.json",
+        "docs/maintainers/handoffs/GT21-RB06-verify.json",
+        "docs/quality/audits/gt21-rb06-belt-evidence.json",
+        "contributor_tools/gt21_rb_segment.py",
+        "contributor_tools/gt21_rb_export.py"
+      ],
+      "deliverables": [
+        "Left toe-off rule in the segmentation code (first sample after each left heel strike where left belt vertical force < 20 N, within that stride), logged as a blatant source-copy fix",
+        "Pilot on one participant, then RB03 and RB05 reruns for all 22 under the guarded launcher, with readback",
+        "Before/after audit: only left treadmill toe-off, stance fields and force masks change; right foot and all other activities bit-identical",
+        "Left vs right treadmill stance fractions per participant, plus a check of the rule on the right foot against the source right toe-off"
+      ],
+      "acceptance": [
+        "Rule applied to right-foot treadmill strides reproduces the source right toe-off closely (report median and worst error); no threshold tuning.",
+        "Strides with no sub-20 N sample in the stride keep toe-off unavailable, counted per participant.",
+        "Counts and all non-left-treadmill fields unchanged; independent verifier passes."
+      ],
+      "next_action": "None; done. Short-stance strides listed in docs/quality/audits/gt21-rb07-short-left-stances.json.",
+      "resource_class": "numerical",
+      "evidence_paths": [
+        "docs/maintainers/handoffs/GT21-RB07.json",
+        "docs/quality/audits/gt21-rb07-right-foot-rule.json",
+        "docs/quality/audits/gt21-rb07-seg-before-after.json",
+        "docs/quality/audits/gt21-rb07-export-before-after-AB12-AB30.json",
+        "docs/quality/audits/gt21-rb07-export-compare-partial.log",
+        "docs/quality/audits/gt21-rb07-export-compare-AB12-AB30.log",
+        "docs/quality/audits/gt21-rb07-short-left-stances.json",
+        "docs/quality/audits/gt21-rb07-code-sha256.txt"
+      ],
+      "handoff": {
+        "last_checked_at_utc": "2026-11-25T20:39:08+00:00",
+        "summary": "Left treadmill toe-off rebuilt from the left belt force below 20 N for all 22 participants (20,431 strides rebuilt, 2 stay unavailable, 20 have stance of 5 samples or fewer). Right-foot check: median error 0 ms, worst 195 ms. Only left treadmill stance fields changed; counts and exclusions identical; readback passed.",
+        "checks": [
+          "48 tests pass",
+          "right-foot rule check, 20,447 strides",
+          "seg before/after, 22 participants, no unexpected change",
+          "export compare, 22 participants, 0 unexpected column changes, 84,793 observations equal",
+          "readback c1-c5 passed, zero failures"
+        ],
+        "remaining": [
+          "Open follow-up: 20 left treadmill strides have stance of 5 samples or fewer because the source heel-strike time is early; heel-strike timing question, not a toe-off one."
+        ],
+        "evidence": [
+          "docs/maintainers/handoffs/GT21-RB07.json",
+          "docs/quality/audits/gt21-rb07-right-foot-rule.json",
+          "docs/quality/audits/gt21-rb07-seg-before-after.json",
+          "docs/quality/audits/gt21-rb07-export-before-after-AB12-AB30.json",
+          "docs/quality/audits/gt21-rb07-export-compare-partial.log",
+          "docs/quality/audits/gt21-rb07-export-compare-AB12-AB30.log",
+          "docs/quality/audits/gt21-rb07-short-left-stances.json",
+          "docs/quality/audits/gt21-rb07-code-sha256.txt"
+        ],
+        "verified": true,
+        "verify_file": "docs/maintainers/handoffs/GT21-RB07-verify.json"
+      },
+      "legacy_ids": [],
+      "owner": "worker agent (claude)",
+      "started_at_utc": "2026-11-25T16:44:37+00:00"
     }
   ],
   "decisions": [
@@ -9583,6 +9655,34 @@
       "answer": "A",
       "answered_at_utc": "2026-11-24T00:00:00Z",
       "note": "José in chat: 'A, follow the authors' rule'."
+    },
+    {
+      "id": "D-GT21-RB06-1",
+      "task_id": "GT21-RB07",
+      "status": "answered",
+      "question": "The Georgia Tech 2021 treadmill files copy the right foot's toe-off into the left. How should left treadmill toe-off be handled?",
+      "options": [
+        {
+          "key": "A",
+          "label": "Rebuild left toe-off from the left belt force dropping below 20 N",
+          "consequence": "Left treadmill stance timing becomes available, using the threshold already used elsewhere. Reversible."
+        },
+        {
+          "key": "B",
+          "label": "Keep left treadmill stance timing unavailable",
+          "consequence": "No new rule; left treadmill toe-off, stance length and the stance force mask stay empty. Reversible."
+        }
+      ],
+      "options_order": "By how much is kept, most first.",
+      "decide_before_recommendation": false,
+      "cost_of_waiting": "GT21 quality check waits.",
+      "recommended": "A",
+      "confidence": "medium",
+      "why": "Each belt has its own plate; the 20 N rule is our existing contact rule, so nothing is invented.",
+      "check": "Left toe-off equals right toe-off in all 157 treadmill recordings and in none of the 2,990 others.",
+      "answer": "A",
+      "answered_at_utc": "2026-11-25T00:00:00Z",
+      "note": "José in chat: 'yeah do option A'."
     }
   ]
 }

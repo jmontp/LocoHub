@@ -97,6 +97,36 @@ def left_toe_off_copied_from_right(mode, gc_left, gc_right):
 
 
 STANCE_UNAVAILABLE_LEFT_TREADMILL = 'source_left_toe_off_is_copy_of_right_toe_off'
+STANCE_UNAVAILABLE_NO_UNLOAD = 'left_belt_force_never_below_20_N_after_heel_strike_inside_stride'
+LEFT_TOE_OFF_RULE = 'left_belt_vertical_force_first_sample_below_20_N_after_heel_strike'
+
+
+def toe_off_from_force(t, vertical_n, t0, t1, threshold_n=FORCE_MASK_N):
+    """GT21-RB07 rule (José, D-GT21-RB06-1 option A; a blatant source-copy fix, no tuning). Index into the table clock of the
+    first sample after the heel strike sample (the first sample at or after ``t0``) and not after ``t1`` where the foot's own
+    belt vertical force is below ``threshold_n`` newtons (the same 20 N contact rule as the stance force mask). A force that is
+    not finite never counts. None when no such sample exists: the toe off stays unavailable. ``vertical_n`` in newtons."""
+    t, v = np.asarray(t, float), np.asarray(vertical_n, float)
+    i0 = int(np.searchsorted(t, t0 - TOL))
+    i1 = int(np.searchsorted(t, t1 + TOL, side='right'))
+    seg = v[i0 + 1:i1]
+    with np.errstate(invalid='ignore'):
+        hit = np.flatnonzero(np.isfinite(seg) & (seg < threshold_n))
+    return int(i0 + 1 + hit[0]) if hit.size else None
+
+
+def left_treadmill_stance_from_force(t, vertical_n, strides, threshold_n=FORCE_MASK_N):
+    """Stance (heel strike sample up to, not including, the rebuilt toe off sample; the pass's stance convention) for the
+    given (t0, t1) heel-strike pairs of one leg. Returns (stance bool array, list of per-stride toe off index or None)."""
+    t = np.asarray(t, float)
+    stance = np.zeros(len(t), bool)
+    toes = []
+    for t0, t1 in strides:
+        k = toe_off_from_force(t, vertical_n, t0, t1, threshold_n)
+        toes.append(k)
+        if k is not None:
+            stance[int(np.searchsorted(t, t0 - TOL)):k] = True
+    return stance, toes
 
 
 def phase_issues(phase, start, end):
