@@ -23,7 +23,7 @@
  },
  "bad_fit_rule": {
   "recomputed": "Residual over 20 mm (pelvis, femur or tibia) or knee axis over 45 deg off the lateral knee marker. Held frames equal the stored hold code on every frame of all 8 recordings, both legs (1,3 or 2 bits identical). Force and moments are kept: my force sums ignore the hold and equal the stored force on every loaded sample (no finite/NaN mismatch), and the stored moments equal id/Weight on every finite pair.",
-  "AB27_right_leg": "In AB27 levelground_cw_fast_01_05 the right leg is held on 24.7 percent of frames (988 of 3,999; 988 by residual, 5 by axis) and the left on 4.7 percent. Cause found: the R_Thigh_Upper marker leaves the rigid thigh. In held frames its distance to the other three thigh markers differs from the model by 29-53 mm (median), against 1.3 mm in kept frames, while the other three markers stay rigid with each other (1.8-8 mm) in both groups. Femur residual p95 is 41.6 mm; pelvis and tibia are 5.8 and 4.7 mm. Held frames come in 34 short runs. Ledger-wide AB27 right is 22.1 percent, left 3.0 percent. So the hold is a real bad fit (a marker that moved or was mislabeled), not a threshold artifact. The three remaining thigh markers fit consistently, so a refit without R_Thigh_Upper could recover those frames; that is a method change and is left to the owner and Jos\u00e9, not done here."
+  "AB27_right_leg": "In AB27 levelground_cw_fast_01_05 the right leg is held on 24.7 percent of frames (988 of 3,999; 988 by residual, 5 by axis) and the left on 4.7 percent. Cause found: the R_Thigh_Upper marker leaves the rigid thigh. In held frames its distance to the other three thigh markers differs from the model by 29-53 mm (median), against 1.3 mm in kept frames, while the other three markers stay rigid with each other (1.8-8 mm) in both groups. Femur residual p95 is 41.6 mm; pelvis and tibia are 5.8 and 4.7 mm. Held frames come in 34 short runs. Ledger-wide AB27 right is 22.1 percent, left 3.0 percent. So the hold is a real bad fit (a marker that moved or was mislabeled), not a threshold artifact. The three remaining thigh markers fit consistently, so a refit without R_Thigh_Upper could recover those frames; that is a method change and is left to the owner and José, not done here."
  },
  "esml_comparison": {
   "what_the_csv_counts": "Per segment (ESML rows, ipsi leg) counts against the OLD converter's single plate: reassigned (converter plate loaded but not this foot's), recovered (this foot loads another plate), flagged (no measured force for this foot), changed. They are differences from the old converter, which our outputs do not carry, so plate reassignment counts cannot be compared one for one.",
@@ -61,7 +61,7 @@
  "decision": {
   "RB02": "ready",
   "RB04": "ready",
-  "reasons": "Numbers in the tables are correct as far as an independent derivation can tell, but three acceptance items written into the tasks were never run (MATLAB-pilot 1e-9, six-participant sign test, pelvis range check). They are comparisons against references; a failure there would change the tables only if it exposes a systematic error. Suggest RB03 may start on these tables while the three items run, since RB03 reads the same Parquet and nothing found here changes them. That is a scope call for Jos\u00e9."
+  "reasons": "Numbers in the tables are correct as far as an independent derivation can tell, but three acceptance items written into the tasks were never run (MATLAB-pilot 1e-9, six-participant sign test, pelvis range check). They are comparisons against references; a failure there would change the tables only if it exposes a systematic error. Suggest RB03 may start on these tables while the three items run, since RB03 reads the same Parquet and nothing found here changes them. That is a scope call for José."
  },
  "evidence_paths": [
   "docs/quality/audits/gt21-rb02-rb04-verify-results.json",
@@ -95,12 +95,50 @@
   "new_finding_zero_fill": {
    "what": "In stance with no loaded plate the stored vertical force is exactly 0, not missing. Checked on 12 recordings of the six new participants: every stance-without-plate sample is 0 (e.g. AB12 levelground right 1,597 of 1,597, AB23 levelground right 3,112 of 3,112), none NaN. That is 29-67 percent of stance samples overground (earlier probe: 53-67 percent for the AB27, AB09, AB10 ramps and stairs).",
    "why_it_matters": "Acceptance for RB02 says unassigned legs stay missing, the pass module says missing stays missing, and AGENTS.md says unavailable measurements are never invented and a missing signal is not evidence. A zero looks like a measured unloaded foot. The columns stance_* and plate_loaded_* can recover the distinction, but plate_loaded is unreliable in levelground trials (true on every sample in AB30 levelground_cw_slow_01_01) because the treadmill plates carry about 13 N of offset.",
-   "cheapest_fix": "No rerun needed: RB03/RB05 can set force (and CoP, already missing) to missing wherever event stance is true and no plate above a stated threshold (for example 50 N) is owned by the foot, and use the same rule instead of plate_loaded. Or rerun the pass with NaN. This is the owner's choice and Jos\u00e9's if it changes what a release states."
+   "cheapest_fix": "No rerun needed: RB03/RB05 can set force (and CoP, already missing) to missing wherever event stance is true and no plate above a stated threshold (for example 50 N) is owned by the foot, and use the same rule instead of plate_loaded. Or rerun the pass with NaN. This is the owner's choice and José's if it changes what a release states."
   },
   "decision": {
    "RB04": "done",
    "RB02": "ready",
    "reasons": "RB04: all its acceptance items now have evidence (hold rule, composition, CoP, mass, sign tests, pelvis range, listed exclusion), scientific approval not implied. RB02: the 1e-9 item is settled by the resampling explanation, but the criterion 'unassigned legs stay missing' is not met as stored (zero, not missing, in stance without a plate). Set done once the masking rule above exists with a test and one re-check on a few recordings."
   }
+ },
+ "v3": {
+  "verified_at_utc": "2026-11-25T00:01:04+00:00",
+  "scope": "RB02 force-mask fix only (stance with no plate under the foot stored as 0 instead of missing). Own code: docs/quality/audits/gt21-rb03-verify-scripts/mask.py, tm.py, tmscan.py, tm2.py, steps_tm.py. Probes under prlimit 600 MiB address space, one Arrow thread, nice 19; peak 133 MiB RSS (mask.py) and 120 MiB (tmscan.py). Worker code not imported; data read with pyarrow only.",
+  "verdict": "done: mask is correct on the sample and the full treadmill scan; one claim of the brief (treadmill masking touches only edge samples) is false and goes to RB05 as a flag, not a fix",
+  "sample": {
+   "seed": 20261209,
+   "method": "random.Random(20261209): one recording per mode (levelground, ramp, stair, treadmill) from the 3,146 segmented recordings in sorted order, then two more drawn from the rest",
+   "recordings": [
+    "AB15/levelground/levelground_ccw_normal_01_01",
+    "AB18/ramp/ramp_1_r_01_02",
+    "AB16/stair/stair_2_r_01_01",
+    "AB27/treadmill/Treadmill_03_01",
+    "AB30/ramp/ramp_1_r_01_05",
+    "AB13/stair/stair_2_r_01_02"
+   ]
+  },
+  "rule_recomputed": "mine = stance_<leg> true and grf_vertical_<leg>_BW x body_weight_N (from the pass ledger) below 20. Compared sample by sample with force_mask layer force_missing_<leg>, both legs of all 6 recordings (12 leg-recordings, 2,368 to 28,655 samples each).",
+  "results": {
+   "layer_vs_mine_mismatches": 0,
+   "masked_samples_outside_stance": 0,
+   "masked_samples_with_force_at_or_above_20N": 0,
+   "stance_samples_below_20N_left_unmasked": 0,
+   "stance_samples_with_unowned_foot_left_unmasked": 0,
+   "stance_samples_with_unowned_foot_left_as_exact_zero": 0,
+   "stance_samples_with_all_three_force_channels_exactly_zero_left_unmasked": 0,
+   "time_axis": "layer time_s equals pass time_s exactly in all 6",
+   "per_recording_masked": "AB15 lg 1060 L / 800 R; AB18 ramp 1266 / 1472; AB16 stair 1114 / 1025; AB27 treadmill 0 / 113; AB30 ramp 1097 / 1604; AB13 stair 616 / 691. In every case masked equals stance-with-unowned-foot (plate_loaded false), except AB27 treadmill right (113 masked, 112 unowned, the one extra sample has the plate loaded and force under 20 N, presumably an edge sample (not inspected))."
+  },
+  "treadmill_edge_claim": {
+   "verdict": "not true as stated",
+   "sample": "AB27 Treadmill_03_01 right leg: 113 masked samples in one stance (rows 243-355 of a 527-sample stance starting at row 0). Contiguous, force 0 to 0.03 BW, other leg loaded. That is the first stance of the recording (the stance flag is true from the first row, before any heel strike), not an edge sample.",
+   "full_scan": "All 156 treadmill layers (one recording at a time): 17,643 masked stance samples. 15,803 sit in the row-0 stance fragment of 180 stance runs (before the first heel strike, so outside every step); 1,677 sit inside 26 other stance runs where the foot is flagged in stance for about 90 samples but the left plate is unloaded for 40 to 75 of them (AB12 left leg 17 runs, AB27 3, AB21 2, AB08, AB16, AB23, AB30 one or more); only 163 are pure edge samples. The mask follows the stated rule in all of them and equals the layer.",
+   "effect_on_steps": "22 eligible treadmill steps (all left leg; AB12 16, AB21 2, AB27 3, AB30 1) have between 42 and 73 of 73 to 84 stance samples missing (up to 94 percent). They are eligible by Rule A but have almost no stance force. Probable cause is the left stance event or plate ownership in those recordings (AB12 treadmill_05/06/07 left, AB27 Treadmill_02 left); not diagnosed here.",
+   "action": "Not a mask error. RB05 must carry force_missing_stance_samples into the observation and not export a stance force profile when most of the stance is missing; the 22 steps are a candidate follow-up for the left-leg stance events on treadmill. Listed in the task note."
+  },
+  "tooling_note": "First tmscan run aborted with 'cannot allocate memory for thread-local data' under the 600 MiB cap (the same Arrow thread-pool problem as the worker's AB06 r1); fixed in my script with one Arrow CPU and I/O thread.",
+  "left_running": "nothing"
  }
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "updated_at_utc": "2026-11-24T22:41:02+00:00",
+  "updated_at_utc": "2026-11-25T00:01:19+00:00",
   "snapshot_notice": "Reviewed planning snapshot for sequential agent handoffs. All 33 replacement watchers are stopped; prepared work needs a fresh reviewed handoff. No dataset has final scientific approval. Task states are not live process monitoring.",
   "previous_snapshot": "docs/maintainers/backlog-history/pre-handoff-refresh-2026-10-27.json",
   "next_task_id": "UM21-X01",
@@ -7802,7 +7802,7 @@
       "priority": "P1",
       "dataset": "gt21",
       "title": "Assign force plates and fix force signs on every source step",
-      "status": "review",
+      "status": "done",
       "stage": "pilot",
       "question": "Does every leg-step of all 22 participants have the right plate, force sign and outward sideways sign, or an honest gap?",
       "scope": "37 guarded jobs: 4 mode pilots plus 33 batches of at most 100 recordings, over every heel-strike-to-heel-strike step of both legs. Python port of the checked plate assignment (markers close to the plate, more than 2/3, over 100 N; named treadmill plates) and the force-sign fix; sideways force positive outward for each leg.",
@@ -7835,7 +7835,7 @@
         "Memory: pilot shows the launcher peak under its cap (expected 150-300 MiB); one job at a time.",
         "Per-recording plate counts compared with the prior per-recording counts CSV (read as an independent comparison, not imported); differences listed, not tuned away"
       ],
-      "next_action": "Make unassigned stance force missing instead of 0 (mask in RB03/RB05 by event stance and an owned plate above a stated force threshold, with a test, or rerun with NaN); then re-check a few recordings. The 1e-9 MATLAB comparison is settled (resampling difference, verified).",
+      "next_action": "Done (second verification, GT21-RB02-RB04-verify.json v3: force mask). Does not imply scientific approval. RB05 must carry force_missing_stance_samples; 22 eligible treadmill left-leg steps have most of the stance missing.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/GT21-rebuild-plan.json",
@@ -7871,15 +7871,16 @@
       },
       "notes": [
         "Prior-work port rule (José, 2026-11-23): write LocoHub code with its own tests; credit each source file in the module docstring; never import from the energy-shaping-ML project and never open its parquets; its published per-recording counts are an independent comparison only.",
-        "Force mask built in GT21-RB03 as a derived layer (stance and owned force below 20 N -> missing); verified by readback; see docs/maintainers/handoffs/GT21-RB03.json. Awaits second verification."
+        "Force mask built in GT21-RB03 as a derived layer (stance and owned force below 20 N -> missing); verified by readback; see docs/maintainers/handoffs/GT21-RB03.json. Awaits second verification.",
+        "Verifier v3 (2026-11-25): treadmill masking is not edge-only (15,803 of 17,643 masked samples are in the row-0 stance fragment; 1,677 in 26 other stances, mostly AB12 left). Mask follows the rule; 22 eligible treadmill steps have 42-73 stance samples missing. Follow-up for RB05 and left-leg treadmill stance events."
       ],
       "owner": "claude-worker-gt21-rb02-rb04",
       "started_at_utc": "2026-11-24T20:00:37+00:00",
       "merged_pass_note": "Merged pass RB02+RB04 (one read per recording), code in contributor_tools/gt21_rb_pass.py and run_gt21_rb_pass.py; no job run yet.",
       "verifier": {
-        "checked_at_utc": "2026-11-24T22:41:02+00:00",
-        "verdict": "ready: zero-filled stance without plate contradicts \"unassigned stays missing\"",
-        "evidence": "docs/maintainers/handoffs/GT21-RB02-RB04-verify.json"
+        "checked_at_utc": "2026-11-25T00:01:19+00:00",
+        "verdict": "done: force mask checked with independent code on 6 seeded recordings and all treadmill layers",
+        "evidence": "docs/maintainers/handoffs/GT21-RB02-RB04-verify.json (v3)"
       }
     },
     {
@@ -7887,7 +7888,7 @@
       "priority": "P1",
       "dataset": "gt21",
       "title": "Segment steps of both legs with strict terrain labels and account for every step",
-      "status": "blocked",
+      "status": "done",
       "stage": "conversion",
       "question": "Which source steps become observations, and why is every other step left out?",
       "scope": "8 guarded jobs: 4 mode pilots (the stair pilot includes the failed recording stair_1_l_01_02) plus 4 per-mode bookkeeping jobs. Both legs from their own heel-strike resets; strict terrain fix (no default ascent, height or whole-recording fallback); a recording with no eligible step becomes a listed exclusion instead of stopping the batch.",
@@ -7917,12 +7918,13 @@
         "Every source step and recording has exactly one disposition; counts sum to source totals.",
         "If stair steps that straddle two label windows would be excluded in large numbers, stop and put the measured counts to José as a scope question."
       ],
-      "next_action": "Verifier: check acceptance against docs/quality/audits/gt21-rb03-ruleA-readback.json and handoffs/GT21-RB03.json (rule_A).",
+      "next_action": "Done (second verification, handoffs/GT21-RB03-verify.json). Does not imply scientific approval. Acceptance item 1 numbers (1,654/616) are superseded by rule A (D-GT21-RB03-1).",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/GT21-rebuild-plan.json",
         "docs/quality/audits/gt21-event-eligibility.json",
-        "docs/quality/audits/pm01-stopped-jobs-review.json"
+        "docs/quality/audits/pm01-stopped-jobs-review.json",
+        "docs/maintainers/handoffs/GT21-RB03-verify.json"
       ],
       "handoff": {
         "last_checked_at_utc": "2026-11-24T23:46:59+00:00",
@@ -7951,7 +7953,11 @@
       },
       "owner": "claude-worker-gt21-rb03",
       "started_at_utc": "2026-11-24T22:54:57+00:00",
-      "blocked_reason": "Deliverables done and read back; waits for the independent verification of GT21-RB02 (force mask), then RB03 can enter review."
+      "verifier": {
+        "checked_at_utc": "2026-11-25T00:01:19+00:00",
+        "verdict": "done: rule A reproduced on all steps by an independent STRIDES.m translation; 0 disagreements",
+        "evidence": "docs/maintainers/handoffs/GT21-RB03-verify.json"
+      }
     },
     {
       "id": "GT21-RB04",

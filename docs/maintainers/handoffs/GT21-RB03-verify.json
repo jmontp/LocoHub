@@ -1,0 +1,68 @@
+{
+ "task_id": "GT21-RB03 (+ RB02 force-mask close-out)",
+ "role": "independent verifier",
+ "verified_at_utc": "2026-11-25T00:01:04+00:00",
+ "scientific_approval": false,
+ "verdict": "RB03 done; RB02 done (force mask)",
+ "scripts": "docs/quality/audits/gt21-rb03-verify-scripts/ (copies of my scratch scripts; they expect to run from a copy in /tmp/vrb)",
+ "independence": "Rule A re-implemented by translating the if/elseif chain of STRIDES.m (contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/scripts (1)/STRIDES.m) with my own regex translator (rulea.py: 19 levelground, 16 ramp, 24 stair branches, counts checked by hand against the .m), applied to my own overlap of label windows with each step's start and end. Worker code (gt21_rb_segment*.py) read only to find field names; not imported. Inputs of record: steps.jsonl, authors_intervals.jsonl and the label export (MATLAB output). The authors' own kept strides are not available, so 'authors-kept' means kept by their rule on their cutting as reproduced by the worker.",
+ "receipts": {
+  "authors_fields_export": "22 native receipts: status completed, job_outcome completed, clean_success true, all checks true, launcher_errors/orphans/missing outputs empty. Native schema has no exit_code field (None is not a fault). Bindings (label export .m 4336c742, native launcher 250e57fe, launcher 372519f9) match the files on disk today.",
+  "pilot": "gt21-rb03-pilot-ruleA: exit 0, clean, 2026-11-24 23:35:08-23:35:11 UTC, before the first batch (23:35:29).",
+  "batches": "22 gt21-rb03-ruleA-batch receipts: completed, exit 0, clean_success true, all 8 checks true, no errors, bindings before = after = frozen. Segmenter d47255fe, runner ba9460f2, pass code b199962c/50f61989, reader 23f7b5a0, launcher 372519f9 are identical in the pilot and all 22 batches and equal the files on disk now. Every bound label file and pass ledger equals the current file. All 3,234 output files (3,146 mask layers plus 22 x 4) exist and hash to the receipt values.",
+  "peak_rss": "batches largest 191.6 MiB (192 MiB reported)",
+  "superseded": "20261124 batches not used."
+ },
+ "force_mask": "See GT21-RB02-RB04-verify.json v3. Sample seed 20261209, 6 recordings: 0 mismatches against my 20 N recomputation, no unmasked stance sample below 20 N, none left as 0 with an unowned foot. Treadmill masking is not edge-only (see v3); mask itself correct.",
+ "rule_A": {
+  "all_steps": "Over all 107,367 steps (251 treadmill steps of the unconverted AB27 Treadmill_06_01 skipped), my classifier and the worker's disposition agree on every step: 0 disagreements. Eligible per mode 14,252 / 19,953 / 10,059 / 37,383 (levelground, ramp, stair, treadmill), excluded 1,952 / 12,960 / 7,034 / 3,523 (+251 not converted); all equal the worker's totals. For eligible ramp/stair/levelground steps the class name equals the stored authors_class too.",
+  "interval_inclusion": "I take label rows with Header in the closed interval [start, end]. That is what Topics.cut does (Header>=start & Header<=end in EpicToolbox/+Topics/cut.m), and the speed table is cut the same way. A half-open reading changes results, so this choice matters and is supported by the authors' code.",
+  "sample_8": "Six seeded recordings plus AB06 stair_1_l_01_02 and AB17 stair_4_r_01_04 (seed 20261209+17, drawn from AB17 levelground/ramp/stair): 0 mismatches on classes, dispositions and flags. AB06 stair_1_l_01_02 now has 19 steps: 12 eligible, 7 discarded, none not-found.",
+  "agreement_table": "Recomputed from authors_intervals.jsonl with my own classes on the 106,818 matched interior intervals: kept and eligible 7,120 levelground, 10,446 ramp, 5,497 stair, 18,716 treadmill; dropped and excluded 1,060, 5,766, 2,932, 1,744; kept and not eligible 124, all AB27 Treadmill_06_01 (reason: recording not converted in the pass). No authors-dropped interval is eligible. My classes equal the stored authors_class everywhere.",
+  "caveat_partial_intervals": "3,390 authors intervals with no counterpart step are the partial first/last cuts at trial edges (not heel-strike to heel-strike steps). By my classification 109 of them (9 levelground, 1 ramp, 99 treadmill) would be kept by the authors' rule. They are outside the step definition, so not a defect, but 'every authors-kept interval matched' holds only for complete (interior) intervals.",
+  "circularity_note": "The authors' kept/dropped here are the authors' rule applied to the authors' cutting as reproduced by the worker, not the authors' published stride files; agreement shows our steps follow that cutting and rule, which my independent rule check confirms, but it is not a comparison against published outputs."
+ },
+ "left_leg_extension": "All 53,958 left-leg steps carry rule_origin authors_rule_extended_to_left_leg; all 53,409 right-leg steps carry authors_right_leg. All 2,076 authors_rule_case_not_found steps (52 levelground, 758 ramp, 1,266 stair) are left-leg steps and my chain also falls through to the else branch on exactly those; no right-leg step falls through. Left-leg classification is the same rule unchanged (my classifier uses one rule for both legs).",
+ "treadmill": "AB27 Treadmill_03_01: speed table has 11,003 runs; 244 steps have exactly 1 distinct speed in the closed step interval and are eligible; the 22 steps in the acceleration ramp have 170 to 1,456 distinct values and are excluded as more than 2 speeds; 0 disagreements. Speed values are the 15-digit jsonencode text of the export; not checked against the raw speed table.",
+ "identity_36": {
+  "levelground_30": "Old window rule: 227 eligible and 479 outside reproduce with 0 disagreements (window_rule field). Under Rule A the same 706 steps are 606 eligible (227 + 379 newly eligible crossing steps) and 100 excluded.",
+  "treadmill_6": "Old run exported or listed as opposite-reference 1,427 of 1,564 steps; the 137 outside-window steps are all still excluded. Under Rule A eligible is 1,421: six old-eligible steps (treadmill_01_01 two, 03_01 one, 04_01 one, 06_01 two) now have more than 2 speeds. All 1,564 steps are present once.",
+  "reading": "Acceptance item 1 as worded (856 + 798 = 1,654 exported and 616 listed) was written for the window rule and is superseded by decision D-GT21-RB03-1 = A; the old-rule identity is still reproduced step by step. New totals on the 36 recordings: 2,027 eligible, 243 excluded."
+ },
+ "counts_and_accounting": "Ledger 3,147 recordings: 3,146 segmented, 1 excluded (AB27 Treadmill_06_01, not converted, 251 steps listed). Local 16 participants reproduce 83,206 resets and 78,604 steps (worker readback; not recounted by me). My per-step recount of 107,367 steps found one disposition each and the stated per-mode totals.",
+ "tests_and_backlog": {
+  "pytest": "tests/test_gt21_rb_segment.py: 22 passed in 2.7 s (not reviewed line by line; includes a test that compares the rules with STRIDES.m text on random sequences, and mask tests with synthetic fixtures)",
+  "backlog_check": "python3 contributor_tools/build_backlog_page.py --check: Backlog valid; HTML current (122 tasks), run before my edits"
+ },
+ "acceptance_status": {
+  "met": [
+   "Every source step and recording has exactly one disposition; counts sum to source totals (recount by me)",
+   "Rule A: classes and dispositions equal my text-derived STRIDES.m classifier on all steps",
+   "Stair failure cause on stair_1_l_01_02: it now has eligible steps under Rule A",
+   "Stair yield: 916 of 916 stair recordings have eligible steps (10,059 of 17,093 steps), worker readback; I recounted the totals",
+   "Terrain, incline and stair height equal the source labels: worker readback 0 mismatches over 30,012 eligible ramp/stair steps; I did not recompute it",
+   "No scope question needed: straddle steps are decided by rule A (D-GT21-RB03-1)",
+   "RB02 force mask: unassigned stance force is missing, not 0 (v3)"
+  ],
+  "not_checked_by_me": [
+   "Reproduction of 83,206 resets and 78,604 steps (worker readback only)",
+   "Terrain values against source scalars (worker readback only)",
+   "Previously exported observations identical outside the force columns (no export exists to compare in this layer; identity shown at step level only)"
+  ],
+  "superseded": [
+   "Acceptance item 1 numbers 1,654 / 616 (window rule); see identity_36"
+  ]
+ },
+ "open_for_other_tasks": [
+  "RB05: carry force_missing_stance_samples; do not export a stance force profile where most of the stance is missing (22 eligible treadmill left-leg steps, mostly AB12).",
+  "Treadmill left-leg stance events or plate ownership in AB12 treadmill_05/06/07 and AB27 Treadmill_02: stance flagged while the left plate is unloaded; not diagnosed.",
+  "109 authors-kept partial edge intervals are not steps and are not exported."
+ ],
+ "evidence_paths": [
+  "docs/maintainers/handoffs/GT21-RB03.json",
+  "docs/quality/audits/gt21-rb03-ruleA-readback.json",
+  "docs/maintainers/handoffs/GT21-RB02-RB04-verify.json",
+  "docs/quality/audits/gt21-rb03-verify-scripts/"
+ ],
+ "left_running": "nothing; all probes ran alone under prlimit 600 MiB, nice 19; no launcher jobs were needed"
+}
