@@ -24,3 +24,9 @@ Each row: what was decided, what else was possible, and how to undo it.
 | 16 | 2026-11-25 | GT21 | Package uses the GT23 layout (one phase and one time file per variant, not split by participant) | Split by participant | Rebuild package (~25 min) |
 | 17 | 2026-11-25 | GT21 | Flagged items (plate dropout, held frames, short stances, no-toe-off strides) stay in both full and filtered files; only quality failures leave filtered | Remove flagged items from filtered | Rebuild package |
 | 18 | 2026-11-25 | all | Shared package builder writes larger file chunks to fit the memory cap, instead of raising the cap; UM21/GT23 output unchanged | Raise the cap | Revert two lines |
+| 19 | 2026-11-26 | UM21 | Kept the whole-recording 30° jump rule for time files: 1 of 44 recordings fails (AB05 d10) | Mark only the jump samples | Rebuild package v5 |
+| 20 | 2026-11-26 | UM21 | AB04 i10 right-leg CoP kept, flagged as plate-noise-limited (time vs stride values differ by median 2.8 mm) | Hold that leg's CoP (60 -> 59 legs) | Rebuild package v5 |
+| 21 | 2026-11-26 | UM21 | Time files use task = continuous_recording, as GT21 does (a recording spans several tasks) | One task per recording | Rebuild package v5 |
+| 22 | 2026-11-26 | UM21 | Velocity agreement gated pooled over all strides; pelvis velocity and power reported, not gated | Per-recording gate | Re-run readback |
+| 23 | 2026-11-26 | UM21 | Force also held for AB04 i5 (fails the 95% plate-loaded gate), in addition to the 5 held recordings | Publish it | Rebuild package v5 |
+| 24 | 2026-11-26 | UM21 vs GT21 | Small difference kept and to be documented: GT21 marks force missing when the foot should be in stance but the plate reads under 20 N; UM21 has no independent stance timing, so under 20 N is always 0 | Use source gait events to mask UM21 the same way | New code + rebuild v5 |

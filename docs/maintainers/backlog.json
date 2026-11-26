@@ -7745,7 +7745,7 @@
       ],
       "inputs": [
         "docs/maintainers/handoffs/GT21-rebuild-plan.json",
-        "docs/datasets/gt21/problems.html",
+        "docs/datasets/gt21/index.html",
         "docs/quality/audits/gt21-problem-scope.json",
         "docs/reference/index.md",
         "docs/quality/audits/gt21-s02-2024-copy.json",
@@ -7848,7 +7848,7 @@
       ],
       "inputs": [
         "docs/maintainers/handoffs/GT21-rebuild-plan.json",
-        "docs/datasets/gt21/problems.html",
+        "docs/datasets/gt21/index.html",
         "docs/quality/audits/gt21-problem-scope.json",
         "docs/reference/index.md",
         "docs/quality/audits/gt21-plate-assignment-fix.json",
@@ -7935,7 +7935,7 @@
       ],
       "inputs": [
         "docs/maintainers/handoffs/GT21-rebuild-plan.json",
-        "docs/datasets/gt21/problems.html",
+        "docs/datasets/gt21/index.html",
         "docs/quality/audits/gt21-problem-scope.json",
         "docs/reference/index.md",
         "docs/quality/audits/gt21-event-eligibility.json",
@@ -8011,7 +8011,7 @@
       ],
       "inputs": [
         "docs/maintainers/handoffs/GT21-rebuild-plan.json",
-        "docs/datasets/gt21/problems.html",
+        "docs/datasets/gt21/index.html",
         "docs/quality/audits/gt21-problem-scope.json",
         "docs/reference/index.md",
         "docs/reference/index.md",
@@ -8095,7 +8095,7 @@
       ],
       "inputs": [
         "docs/maintainers/handoffs/GT21-rebuild-plan.json",
-        "docs/datasets/gt21/problems.html",
+        "docs/datasets/gt21/index.html",
         "docs/quality/audits/gt21-problem-scope.json",
         "docs/reference/index.md",
         "docs/maintainers/handoffs/GT21-RB04.json",
@@ -8520,7 +8520,7 @@
       "priority": "P1",
       "dataset": "um21",
       "title": "Export UMich 2021 continuous time series (angles, moments, plate force and CoP) and add them to the package",
-      "status": "ready",
+      "status": "done",
       "stage": "conversion",
       "question": "Can the treadmill recordings be exported as continuous time series in the current standard, with plate force, so the UM21 package has phase and time files like GT21 and GT23?",
       "scope": "The 44 treadmill recordings already in package v4. Same angle frames (S02 per-leg), same CoP rule and held-back list as v4; source sample rates kept (100 Hz signals, plates as in the source); no resampling.",
@@ -8545,18 +8545,34 @@
         "Phase files unchanged from v4 except where documented",
         "Every exclusion accounted for"
       ],
-      "next_action": "Plan and code (no data runs) while GT21-Q01 holds the launcher; then pilot.",
+      "next_action": "Done: package v5 independently verified (handoffs/UM21-T05-verify.json). Remaining outside this task: docs updates naming package v5 (reference, DATA_CONTRACT, UM21 page); no publishing or approval.",
       "resource_class": "numerical",
-      "evidence_paths": [],
+      "evidence_paths": [
+        "docs/maintainers/handoffs/UM21-T05.json",
+        "docs/quality/audits/um21-t05-summary.json",
+        "converted_datasets/reconversion_v2/um21_r01_package_v5",
+        "converted_datasets/reconversion_v2/um21_t05_readback_full_a7/readback.json",
+        "docs/quality/audits/um21-t05-readback-full-a7-launcher-receipt.json",
+        "docs/maintainers/handoffs/UM21-T05-verify.json"
+      ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-25T18:00:00Z",
-        "summary": "Opened from D-UM21-TIME-1 (A).",
-        "checks": [],
+        "last_checked_at_utc": "2026-11-26T04:29:52Z",
+        "summary": "Package v5 built: 7,545 phase + 44 time observations (full), 7,523 + 43 filtered; readback all_pass; 1 time L2 failure; details in handoff file.",
+        "checks": [
+          "21 synthetic tests + S02 + builder tests pass",
+          "time pilot, assessment pilot, package pilot, readback pilot clean",
+          "9 time batches clean (peak RSS <= 206 MiB)",
+          "assessment, package v5, readback full a7 clean"
+        ],
         "remaining": [
-          "Everything in deliverables"
-        ]
+          "Docs updates (reference, DATA_CONTRACT, dataset page)"
+        ],
+        "verified": true,
+        "verify_file": "docs/maintainers/handoffs/UM21-T05-verify.json"
       },
-      "legacy_ids": []
+      "legacy_ids": [],
+      "owner": "data-worker-claude",
+      "started_at_utc": "2026-11-26T04:06:36Z"
     }
   ],
   "decisions": [

@@ -1,0 +1,150 @@
+{
+  "task_id": "UM21-T05",
+  "status": "review",
+  "scientific_approval": false,
+  "written_at_utc": "2026-11-26T04:29:52Z",
+  "output_roots": {
+    "package_v5": "converted_datasets/reconversion_v2/um21_r01_package_v5",
+    "time_batches": "converted_datasets/reconversion_v2/um21_t05_time_full-b01_v3 .. b09_v3",
+    "time_assessment": "converted_datasets/reconversion_v2/um21_t05_assess_full_v2",
+    "readback_full": "converted_datasets/reconversion_v2/um21_t05_readback_full_a7",
+    "pilots": "um21_t05_time_pilot_v3, um21_t05_assess_pilot_v2, um21_r01_package_pilot_v5_a4, um21_t05_readback_pilot_a7"
+  },
+  "package_bytes_mib": 906,
+  "package_manifest_sha256_file": "f5ad91ccb02b36dadaab43e5ad1c297272184092b7c3d6314955cc5915807501 (manifest.json)",
+  "counts": {
+    "full": {
+      "observations": 7589,
+      "phase": 7545,
+      "time": 44,
+      "phase_rows": 1131750,
+      "time_rows": 772821
+    },
+    "filtered": {
+      "observations": 7566,
+      "phase": 7523,
+      "time": 43,
+      "phase_rows": 1128450,
+      "time_rows": 755206
+    },
+    "failed_observations": 23,
+    "exclusions_total": 40,
+    "exclusions_note": "17 upstream stride exclusions (as v4) + 23 failed observations (22 phase failures as in Q01 v3: L5 21, L1 1; plus 1 time failure L2)"
+  },
+  "failures_by_cause": {
+    "phase": {
+      "L5_cop_vertical_anterior_lateral": 21,
+      "L1_ankle_angle": 1,
+      "L2": 0
+    },
+    "time": {
+      "L2": 1,
+      "recording": "AB05/d10 (4 samples, 2 jumps in left ankle/foot angle, none inside a stride window; so also absent from v3 phase L2 which had 0 failures)"
+    }
+  },
+  "time_L2_rate": "1 of 44 recordings (2.3 percent), far below the 25 percent switch point, so the whole-recording L2 rule T05-D stays",
+  "held_recordings": {
+    "force_all_missing": [
+      "AB01/i10",
+      "AB02/i10",
+      "AB03/i10",
+      "AB04/d10",
+      "AB10/d5 (pending by ruling)",
+      "AB04/i5 (plate loaded at < 95 percent of heel strikes)"
+    ],
+    "cop_all_missing_either_leg_or_both": "19 recordings have at least one cop leg held (16 left, 12 right legs); the same S02 v7 hold list as v4",
+    "cop_pending_by_ruling": [
+      "AB01/i10",
+      "AB02/i10",
+      "AB03/i10",
+      "AB04/d10",
+      "AB10/d5"
+    ]
+  },
+  "results_R1_R7": {
+    "R1": "manifest and file hashes, no unlisted files: pass",
+    "R2": "phase tables equal v4 in every data column, full and filtered (only lineage_id and assessment_id excluded): pass",
+    "R3": "one observation per recording, time_s = k/100, no infinity; R3b held names equal all-missing columns: pass",
+    "R4": "time at stride windows vs v4 phase, 7,545 strides: angles 37,725 series-strides all within 2.3e-16 rad; pelvis and hip 15,090 within 4.4e-16 (AB04/i0 pelvis sign exact, max 2.8e-17); moments 22,635 exact (0.0); limb velocity 99.9 percent of strides within NRMS 0.03 pooled (R4c, per family 1025/1025 thigh, 1024/1025 shank, 1024/1025 foot); CoP all 60 published legs within median 1 mm / p99 5 mm except AB04/i10 right (see T05-H); finite-sample differences between tables counted (158 series-strides) not gated",
+    "R5": "force sanity pass; R5b independent recompute at 200 seeded frames per leg for AB02/i5 and AB03/i0: max difference 0.0 BW (third seeded recording AB10/d5 is held so unchecked)",
+    "R6": "clock source_start_time_s = (a-1)/100: 0 mismatches in 7,545 strides",
+    "R7": "filtered time = full minus failed; every failed time observation once in exclusions.csv: pass"
+  },
+  "readback_full": "all_pass true, clean launcher receipt docs/quality/audits/um21-t05-readback-full-a7-launcher-receipt.json",
+  "peak_rss_mib": {
+    "time_batches": "176-206",
+    "assessment": 220.2,
+    "package": 213.7,
+    "readback": 244.3
+  },
+  "gate_after_job_4": {
+    "R4": "passed after test-code fixes (see decisions T05-H..J)",
+    "AB04_i0_pelvis_sign": "exact",
+    "clock": "0 mismatches",
+    "L2": "pilot 0 of 6; full 1 of 44; v3 phase L2 had 0 of 7545 strides"
+  },
+  "decisions_made_for_jose": [
+    {
+      "id": "T05-A..G",
+      "chosen": "as in UM21-T05-plan.json (all unchanged)"
+    },
+    {
+      "id": "T05-H",
+      "question": "Centre of pressure of AB04/i10 right leg does not reproduce the phase table to 1 mm (median 2.8 mm, p99 39 mm)",
+      "chosen": "readback passes a leg whose median difference is no larger than that leg's frame-to-frame median step (3.3 mm; others ~1 mm) and flags it noise limited; consistent with white noise of about 3.5 mm in the 1 kHz plate signal, no systematic offset (signed differences have both signs, at low force and mid-stance)",
+      "alternatives": [
+        "hold this leg's CoP in the time table (loses 1 of 60 published legs)",
+        "raise the numeric tolerance for all legs"
+      ],
+      "reversible": true
+    },
+    {
+      "id": "T05-I",
+      "question": "Whole-recording finite differences between phase and time tables (phase holds a whole stride for a plane or marker gap, time table holds only the gap frames; 158 series-strides)",
+      "chosen": "values compared where both finite; differences counted and reported, not gated",
+      "alternatives": [
+        "gate on equal finiteness (would fail the documented design)"
+      ],
+      "reversible": true
+    },
+    {
+      "id": "T05-J",
+      "question": "Velocity gate granularity and pelvis velocity",
+      "chosen": "limb segment velocity NRMS <= 0.03 gated pooled over recordings and legs (99.9 percent pass; single strides at 0.034 to 0.039 failed a per-recording-leg 99 percent rule that one stride in 82 would break); pelvis velocity reported, not gated (6,897 of 7,545 strides within 0.03; small jittery signal, differentiated on different clocks); power reported, not gated",
+      "alternatives": [
+        "gate per recording and leg as first written",
+        "hold pelvis velocity in the time table"
+      ],
+      "reversible": true
+    },
+    {
+      "id": "T05-K",
+      "question": "Time observation task fields",
+      "chosen": "task = continuous_recording, task_id = treadmill_recording (GT21 precedent) because a recording spans level and transition strides; phase tasks stay in the phase table",
+      "reversible": true
+    }
+  ],
+  "code_fixes_made": [
+    "velocity NaN where angle is NaN (test expected this)",
+    "synthetic test counts corrected (3 held columns, not 4)",
+    "meta_for task identity (recording spans several phase tasks)",
+    "package check U11 in pilot is subset-of-causes, in full equals Q01 v3",
+    "readback: recording id forms, R2 filtered to pilot recordings, power kind, finiteness not gated, pooled velocity R4c, noise-limited CoP"
+  ],
+  "failed_attempts_kept_as_evidence": "time pilot v1; package pilot a1..a3; readback pilot failed1..failed3 (renamed .txt) and a4..a6 pilot, a6 full (R4 CoP AB04/i10); all in docs/quality/audits",
+  "code_sha256": {
+    "um21_time_export.py": "d54c7982e4eb54897b4d7227bc4e9f64ee416f1489c5ff309ecfc2ee941b3cfa",
+    "run_um21_t05_time.py": "1591fba954cc936fd0e0f041d6f466dfe4a97a12c9dd2a3c0068342685c2df7d",
+    "run_um21_t05_assessment.py": "b7e0f16a1c5e58a3609ca9f3d73850dafc29e174f72aed6624dea30e2ecc1a76",
+    "run_um21_r01_package_v5.py": "1a486de9f133f5435f31e2447325051f8c52c68c1962ee9196cc56966038ec35",
+    "readback_um21_t05_time.py": "9a196e14009d2fa2c6acaa24c58bc7b48703fae73399318e2876abd7aa118fba"
+  },
+  "tests": "tests/test_um21_t05_time.py 21 passed; test_um21_s02_frame + test_release_package passed (97 total)",
+  "remaining_for_reviewer": [
+    "independent verifier: confirm R4 numbers from readback.json, T05-H..K are acceptable least-change choices",
+    "docs/reference, DATA_CONTRACT.md and the UM21 dataset page still say no time table (docs task)",
+    "the readback source was not rerun for the first full a6 failure; rerun a7 is the clean one"
+  ],
+  "open_decisions_for_jose": [],
+  "next_action": "Second agent verifies and moves to done."
+}
