@@ -272,6 +272,190 @@ def failures_table(al):
     return '\n'.join(out)
 
 
+# ------------------------------------------------------------------------------------------------ wrap section
+WRAP_SUBJECTS = sorted(GT21_SRC)
+WRAP_ANGLES = ('ankle_angle', 'shank_angle', 'foot_angle')
+WRAP_VARIANT_LABEL = {'all': 'All samples', 'non_wrapped': 'Wrapped samples removed', 'corrected_360': 'Whole turns corrected (half-turn flips left out)',
+                      'corrected_all': 'Whole turns and half turns corrected'}
+AFFECTED_CSV = AUD / 'training-compare-wrap-affected-recordings.csv'
+
+
+def wrap_dir(dataset, subject=None):
+    return AUD / (f'training-compare-wrap-gt21-{subject}' if dataset == 'gt21' else 'training-compare-wrap-um21')
+
+
+def wrap_read(dataset, name):
+    if dataset == 'um21':
+        return read(wrap_dir('um21') / name)
+    out = []
+    for s in WRAP_SUBJECTS:
+        out += read(wrap_dir('gt21', s) / name)
+    return out
+
+
+def wrap_pool(dataset, stats, col, variant):
+    """GT21: exact pooled mean/RMS/share over participant rows, median (range) over participants for correlation and 95th percentile.
+    UM21: the single job's dataset row."""
+    if dataset == 'um21':
+        rs = [r for r in stats if r['scope'] == 'dataset' and r['column'] == col and r['variant'] == variant]
+    else:
+        rs = [r for r in stats if r['scope'] == 'subject' and r['column'] == col and r['variant'] == variant]
+    rs = [r for r in rs if int(r['n_matched']) > 0]
+    n = sum(int(r['n_matched']) for r in rs)
+    if not n:
+        return None
+    out = {'n': n, 'bias': sum(f(r['bias']) * int(r['n_matched']) for r in rs) / n,
+           'rms': math.sqrt(sum(f(r['rms']) ** 2 * int(r['n_matched']) for r in rs) / n),
+           'exceed': sum(f(r['frac_exceed']) * int(r['n_matched']) for r in rs) / n, 'single': dataset == 'um21'}
+    cs = [f(r['corr']) for r in rs if math.isfinite(f(r['corr']))]
+    ps = [f(r['p95_abs']) for r in rs if math.isfinite(f(r['p95_abs']))]
+    out['corr'] = (statistics.median(cs), min(cs), max(cs)) if cs else None
+    out['p95'] = (statistics.median(ps), min(ps), max(ps)) if ps else None
+    out['p95_inf'] = len(rs) - len(ps)
+    out['n_subjects'] = len(rs)
+    return out
+
+
+def wrap_cell(v, key):
+    if v is None:
+        return '&ndash;'
+    if v['single']:
+        return fmt(v[key][0])
+    return f'{fmt(v[key][0])} <span class="muted">({fmt(v[key][1])} to {fmt(v[key][2])})</span>'
+
+
+def wrap_table(dataset, stats, counts):
+    h = ['Column', 'Wrapped share of matched samples', 'Samples used', 'Mean difference (deg)', 'RMS difference (deg)',
+         '95th percentile of |difference| (deg)', 'Correlation', 'Past 2 deg']
+    out = ['<table><thead><tr>' + ''.join(f'<th>{x}</th>' for x in h) + '</tr></thead><tbody>']
+    keyed = {}
+    for name in WRAP_ANGLES:
+        crow = [r for r in counts if r['scope'] == 'dataset' and r['column'] == name]
+        if dataset == 'gt21':
+            crow = [{'n_matched': sum(int(r['n_matched']) for r in counts if r['scope'] == 'subject' and r['column'] == name),
+                     'n_wrapped': sum(int(r['n_wrapped']) for r in counts if r['scope'] == 'subject' and r['column'] == name),
+                     'n_whole_turn': sum(int(r['n_whole_turn']) for r in counts if r['scope'] == 'subject' and r['column'] == name),
+                     'n_half_turn': sum(int(r['n_half_turn']) for r in counts if r['scope'] == 'subject' and r['column'] == name)}]
+        c = crow[0]
+        nm, nw = int(c['n_matched']), int(c['n_wrapped'])
+        keyed[name] = {'n': nm, 'wrapped': nw, 'whole': int(c['n_whole_turn']), 'half': int(c['n_half_turn'])}
+        share = (f'{pct(nw / nm)} <span class="muted">({nw:,} of {nm:,}; {int(c["n_whole_turn"]):,} whole-turn, {int(c["n_half_turn"]):,} half-turn)</span>')
+        first = True
+        for var in WRAP_VARIANTS_PAGE:
+            v = wrap_pool(dataset, stats, name, var)
+            keyed[name][var] = v
+            if v is None:
+                continue
+            lead = (f'<td rowspan="{len(WRAP_VARIANTS_PAGE)}">{LABEL[name]}</td><td rowspan="{len(WRAP_VARIANTS_PAGE)}" class="n">{share}</td>' if first else '')
+            first = False
+            out.append(f'<tr>{lead}<td>{WRAP_VARIANT_LABEL[var]}: <span class="n">{v["n"]:,}</span></td><td class="n">{fmt(v["bias"])}</td>'
+                       f'<td class="n">{fmt(v["rms"])}</td><td class="n">{wrap_cell(v, "p95")}</td><td class="n">{wrap_cell(v, "corr")}</td>'
+                       f'<td class="n">{pct(v["exceed"])}</td></tr>')
+    out.append('</tbody></table>')
+    return '\n'.join(out), keyed
+
+
+WRAP_VARIANTS_PAGE = ('all', 'non_wrapped', 'corrected_360', 'corrected_all')
+
+
+def wrap_velocity_table(dataset, stats):
+    h = ['Ankle velocity', 'Samples used', 'Mean difference (deg/s)', 'RMS difference (deg/s)', '95th percentile of |difference| (deg/s)', 'Correlation', 'Past 20 deg/s']
+    out = ['<table><thead><tr>' + ''.join(f'<th>{x}</th>' for x in h) + '</tr></thead><tbody>']
+    res = {}
+    for var, lab in (('all', 'All samples'), ('excluding_near_wrap', 'Samples within 2 of an ankle-angle wrap removed')):
+        v = wrap_pool(dataset, stats, 'ankle_velocity', var)
+        res[var] = v
+        if v is None:
+            out.append(f'<tr><td>{lab}</td><td colspan="6" class="muted">no LocoHub velocity to compare</td></tr>')
+            continue
+        out.append(f'<tr><td>{lab}</td><td class="n">{v["n"]:,}</td><td class="n">{fmt(v["bias"])}</td><td class="n">{fmt(v["rms"])}</td>'
+                   f'<td class="n">{wrap_cell(v, "p95")}</td><td class="n">{wrap_cell(v, "corr")}</td><td class="n">{pct(v["exceed"])}</td></tr>')
+    out.append('</tbody></table>')
+    return '\n'.join(out), res
+
+
+def wrap_affected(recs):
+    """Group wrap_recordings rows by recording; keep those with any wrapped sample."""
+    g = defaultdict(dict)
+    for r in recs:
+        g[(r['dataset'], r['subject'], r['his_recording'])][r['column']] = r
+    rows = []
+    for (ds, sub, rid), cols in g.items():
+        if not any(int(c['n_wrapped']) > 0 for c in cols.values()):
+            continue
+        worst = max(cols.values(), key=lambda c: (f(c['wrapped_share']), int(c['n_wrapped'])))
+        row = {'dataset': ds, 'participant': sub, 'task': worst['task'], 'recording_id': rid, 'worst_column': worst['column'],
+               'worst_wrapped_share': f(worst['wrapped_share']), 'typical_wrapped_offset_deg_worst_column': f(worst['median_wrapped_offset_deg']),
+               'matched_samples_worst_column': int(worst['n_matched'])}
+        for name in WRAP_ANGLES:
+            c = cols.get(name)
+            row[f'{name}_n_wrapped'] = int(c['n_wrapped']) if c else 0
+            row[f'{name}_wrapped_share'] = f(c['wrapped_share']) if c else math.nan
+            row[f'{name}_typical_wrapped_offset_deg'] = f(c['median_wrapped_offset_deg']) if c else math.nan
+        rows.append(row)
+    rows.sort(key=lambda r: (-r['worst_wrapped_share'], -max(r[f'{n}_n_wrapped'] for n in WRAP_ANGLES), r['recording_id']))
+    return rows, len(g)
+
+
+def write_affected_csv(rows):
+    if not rows:
+        return
+    with open(AFFECTED_CSV, 'w', newline='') as fh:
+        w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
+        w.writeheader()
+        for r in rows:
+            w.writerow(r)
+
+
+def affected_table(rows, k=20):
+    h = ['Participant', 'Task (training label)', 'Training recording', 'Worst column', 'Wrapped share (ankle / shank / foot)', 'Typical offset in the worst column (deg)']
+    out = ['<table class="small"><thead><tr>' + ''.join(f'<th>{x}</th>' for x in h) + '</tr></thead><tbody>']
+    for r in rows[:k]:
+        shares = ' / '.join(pct(r[f'{n}_wrapped_share']) for n in WRAP_ANGLES)
+        out.append(f'<tr><td>{r["participant"]}</td><td>{html.escape(r["task"])}</td><td>{html.escape(r["recording_id"].split("|")[-1])}</td>'
+                   f'<td>{LABEL[r["worst_column"]]}</td><td class="n">{shares}</td><td class="n">{r["typical_wrapped_offset_deg_worst_column"]:.0f}</td></tr>')
+    out.append('</tbody></table>')
+    return '\n'.join(out)
+
+
+def wrap_section():
+    summ = json.load(open(wrap_dir('um21') / 'summary.json'))
+    rule = html.escape(summ['settings']['wrap_rule'])
+    g_stats, g_counts = wrap_read('gt21', 'wrap_stats.csv'), wrap_read('gt21', 'wrap_counts.csv')
+    u_stats, u_counts = wrap_read('um21', 'wrap_stats.csv'), wrap_read('um21', 'wrap_counts.csv')
+    g_tab, g_k = wrap_table('gt21', g_stats, g_counts)
+    u_tab, u_k = wrap_table('um21', u_stats, u_counts)
+    g_vel, g_v = wrap_velocity_table('gt21', g_stats)
+    u_vel, u_v = wrap_velocity_table('um21', u_stats)
+    recs = wrap_read('gt21', 'wrap_recordings.csv') + wrap_read('um21', 'wrap_recordings.csv')
+    aff, n_rec = wrap_affected(recs)
+    write_affected_csv(aff)
+    n_aff_by_sub = Counter(r['participant'] for r in aff)
+    subs = ', '.join(f'{s} ({c})' for s, c in sorted(n_aff_by_sub.items()))
+    a = g_k['ankle_angle']
+    head = (f'<div class="card"><b>Summary.</b> In GT21, {pct(a["wrapped"] / a["n"])} of matched ankle-angle samples, '
+            f'{pct(g_k["shank_angle"]["wrapped"] / g_k["shank_angle"]["n"])} of shank and {pct(g_k["foot_angle"]["wrapped"] / g_k["foot_angle"]["n"])} of foot samples are wrapped under the rule below. '
+            f'Removing them changes the ankle mean difference from {fmt(a["all"]["bias"])}&deg; to {fmt(a["non_wrapped"]["bias"])}&deg; and the RMS from {fmt(a["all"]["rms"])}&deg; to {fmt(a["non_wrapped"]["rms"])}&deg;; '
+            f'wraps are therefore a small part of the pooled numbers (a few recordings, mostly AB24, AB07, AB16 and AB25); what is left after removing them is a difference between the two files that is not a wrap. UM21 has no wrapped samples. '
+            f'{len(aff)} of {n_rec:,} compared training recordings have at least one wrapped sample (participants: {subs}).</div>')
+    return f"""<h2>7. Wrap errors vs real offsets</h2>
+{head}
+<p><b>Rule (fixed in advance, not tuned to reach any result).</b> {rule}</p>
+<p class="muted">Pooling is the same as above: GT21 mean, RMS and share past 2&deg; are exact over all matched samples; correlation and 95th percentile are the median over participants
+(range in brackets; the percentile of each participant comes from a histogram with 0.01&deg; bins, so it is approximate). UM21 is one job. Source: <code>wrap_stats.csv</code>, <code>wrap_counts.csv</code> and
+<code>wrap_recordings.csv</code> in <code>docs/quality/audits/training-compare-wrap-gt21-AB*/</code> and <code>training-compare-wrap-um21/</code>.</p>
+<h3>GT21 angles</h3>{g_tab}
+<h3>UM21 angles</h3>{u_tab}
+<h3>GT21 ankle velocity</h3>{g_vel}
+<h3>UM21 ankle velocity</h3>{u_vel}
+<p class="muted">UM21 phase package v4 has no velocity column, so there is nothing to compare there.</p>
+<h3>Most affected training recordings (top 20 by wrapped share)</h3>
+<p>{len(aff)} recordings in all; ranked by the largest wrapped share of the three angle columns. The full list (one row per recording, with all three columns) is
+<code>docs/quality/audits/training-compare-wrap-affected-recordings.csv</code>. Recordings with a share of 100% are wrapped from start to end; lower shares are wraps that come and go inside a recording.</p>
+{affected_table(aff)}
+"""
+
+
 CSS = """
 :root{color-scheme:light dark;--bg:#fff;--fg:#1d2330;--mut:#5d6677;--line:#d6dbe4;--card:#f5f7fa;--acc:#1b5fb0}
 @media (prefers-color-scheme:dark){:root{--bg:#14171d;--fg:#e4e8ef;--mut:#9aa4b5;--line:#2c3340;--card:#1c212b;--acc:#7db3f0}}
@@ -305,7 +489,7 @@ def main():
     lh_unmapped_note = ('LocoHub columns not compared (hip, knee, thigh, pelvis, power, lateral and anterior forces, held signals) are listed in each '
                         '<code>summary.json</code> under <code>mapping.locohub_unmapped</code>.')
     page = f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Training files vs LocoHub rebuilds, column by column</title><style>{CSS}</style></head><body>
+<title>Training files vs LocoHub rebuilds, column by column</title><style>{CSS}</style></head><body><main id="main">
 <h1>Training files vs LocoHub rebuilds, column by column</h1>
 <div class="card"><b>What this is.</b> For each signal the ankle model reads, how far the number in the training file is from the same sample
 in the rebuilt LocoHub data. Descriptive only: the &ldquo;reporting sizes&rdquo; (2&deg;, 20&deg;/s, 0.05 Nm/kg, 0.05 BW, 0.02 m) only decide which
@@ -317,7 +501,7 @@ Differences are <i>training minus LocoHub</i>. Unreviewed.</div>
 GT21 vertical force RMS {fmt(g_data['vertical_force']['rms'])} BW. UM21 ankle moment RMS {fmt(u_data['ankle_moment']['rms'])} Nm/kg (the training value is read between 100 Hz frames).</li>
 <li><b>Angles differ, and for some participants by whole turns.</b> GT21 ankle angle averages {fmt(g_data['ankle_angle']['bias'])}&deg; apart (RMS {fmt(g_data['ankle_angle']['rms'])}&deg;),
 shank {fmt(g_data['shank_angle']['bias'])}&deg; (RMS {fmt(g_data['shank_angle']['rms'])}&deg;), foot {fmt(g_data['foot_angle']['bias'])}&deg; (RMS {fmt(g_data['foot_angle']['rms'])}&deg;).
-Where the RMS is far above the mean (for example AB24, AB07, AB16), a read-only look at AB24 found training angles near &plusmn;350&deg; against LocoHub angles within &plusmn;30&deg; (section 3). UM21 angles are much closer: {fmt(u_data['ankle_angle']['bias'])}&deg;, {fmt(u_data['shank_angle']['bias'])}&deg;, {fmt(u_data['foot_angle']['bias'])}&deg; mean difference.</li>
+Where the RMS is far above the mean (for example AB24, AB07, AB16), a read-only look at AB24 found training angles near &plusmn;350&deg; against LocoHub angles within &plusmn;30&deg; (section 3); section 7 separates such wrapped samples from the remaining offsets (they are only a small share of samples). UM21 angles are much closer: {fmt(u_data['ankle_angle']['bias'])}&deg;, {fmt(u_data['shank_angle']['bias'])}&deg;, {fmt(u_data['foot_angle']['bias'])}&deg; mean difference.</li>
 <li><b>Velocity and centre of pressure</b> differ by method and origin (see caveats).</li>
 </ul>
 <h2>1. GT21 (training time file against rb07 exports)</h2>
@@ -337,7 +521,7 @@ are shown as the median over participants of each participant's own value, with 
 <div class="card"><b>Why AB24 tops the list.</b> A read-only probe of AB24 (output: <code>docs/quality/audits/training-compare-probe-ab24-angle-range.txt</code>) compared the eight AB24
 recordings with the largest ankle-angle RMS and two typical ones. In the eight, the training ankle angle lies in roughly &minus;445 to &minus;343&deg; or 286 to 395&deg; while the LocoHub angle lies in about &minus;26 to 24&deg;;
 foot angle is similarly out by about 180&deg; or 360&deg; in most of them. The two typical recordings differ by about 13&deg; (ankle) and 19&deg; (foot) with both series in a normal range.
-This probe covers AB24 only; the pooled tables above do not separate such recordings, and I did not check the other participants recording by recording.</div>
+This probe covers AB24 only; section 7 applies a fixed rule to every compared recording and separates wrapped samples from real offsets.</div>
 <h3>GT21</h3>{top_table(g_task, 'gt21')}
 <h3>UM21</h3>{top_table(u_task, 'um21')}
 <h2>4. Alignment</h2>
@@ -359,8 +543,9 @@ whether two recordings are the same recording.</p>
 <li><b>Angles</b>: the training UM21 shank/foot values include its own &minus;2&times; pelvis tilt correction; the training GT21 values were built on the old pelvis tilt, and the angle zero differs between the two (static pose vs gravity).</li>
 <li><b>Coverage</b> is the fraction of compared positions with a value in each series; a missing value in either series removes that sample from every statistic of that column.</li>
 <li>Training recordings with too little finite ankle moment to align are listed, not compared; every skipped recording is counted in section 4.</li>
-<li>GT21 jobs were run two participants at a time to stay under the memory cap; pooled values merge those jobs. Reconstructed from <code>docs/quality/audits/training-compare-*</code>.</li>
-</ul></body></html>"""
+<li>GT21 jobs were run two participants at a time (wrap analysis in section 7: one participant per job) to stay under the memory cap; pooled values merge those jobs. Reconstructed from <code>docs/quality/audits/training-compare-*</code>.</li>
+</ul>
+{wrap_section()}</main></body></html>"""
     OUT.write_text(page)
     print('wrote', OUT)
 

@@ -335,3 +335,89 @@ def test_name_match_ignores_letter_case_of_the_recording_name():
     assert cmp.name_match('treadmill_Treadmill_01_01_speed_0.50_seg01', 'Treadmill_01_01')
     assert cmp.name_match('ramp_Ramp_2_R_01_01_rampascent_seg01+1', 'Ramp_2_R_01_01')
     assert not cmp.name_match('ramp_Ramp_2_R_01_01_rampascent_seg01', 'Ramp_2_R_01_02')
+
+
+# ------------------------------------------------------------------------------------------------ wrap classifier (SYNTHETIC)
+def test_classify_wrap_rule_on_made_up_offsets():
+    # SYNTHETIC: offsets (training minus LocoHub) with known classes under the stated rule
+    y = np.zeros(12)
+    d = np.array([0.0, 5.0, 80.0, 89.0, 120.0, 150.0, 170.0, 200.0, 360.0, 350.0, -340.0, 720.0 + 15.0])
+    w, k, diff = cmp.classify_wrap(d, y)
+    #            0     5     80    89    120   150    170   200   360   350  -340  735
+    assert list(w) == [False, False, False, False, False, False, True, True, True, True, True, True]
+    assert list(k[6:]) == [1, 1, 2, 2, -2, 4]
+    # exactly 20 degrees from a multiple counts, 21 does not; exactly 90 is not past 90
+    w2, _, _ = cmp.classify_wrap(np.array([160.0, 159.0, 90.0, 91.0]), np.zeros(4))
+    assert list(w2) == [True, False, False, False]      # 91 is 89 from 180: not within 20
+    w3, _, _ = cmp.classify_wrap(np.array([np.nan, 360.0]), np.array([0.0, np.nan]))
+    assert not w3.any()
+
+
+def test_widen_marks_two_samples_each_side():
+    m = np.zeros(12, bool)
+    m[5] = True
+    assert list(np.flatnonzero(cmp.widen(m))) == [3, 4, 5, 6, 7]
+    m2 = np.zeros(6, bool)
+    m2[0] = True
+    assert list(np.flatnonzero(cmp.widen(m2))) == [0, 1, 2]
+    assert not cmp.widen(np.zeros(4, bool)).any()
+
+
+def test_wrap_variants_correct_by_known_multiples():
+    # SYNTHETIC: 100 clean samples with a 3 degree offset, 10 whole-turn wraps (+360), 5 half-turn flips (+180), 4 odd large offsets (+130)
+    rng = np.random.default_rng(7)
+    y = rng.normal(0, 10, 119)
+    x = y + 3.0
+    x[100:110] += 360.0
+    x[110:115] += 180.0
+    x[115:119] += 130.0
+    w, k, v = cmp.wrap_variants(x, y)
+    assert int(w.sum()) == 15 and not w[115:].any()
+    nx, ny = v['non_wrapped']
+    assert len(nx) == 104 and np.mean(nx[:100] - ny[:100]) == pytest.approx(3.0)
+    c360x, c360y = v['corrected_360']
+    assert len(c360x) == 114       # the 5 half-turn flips are left out of the whole-turn-only correction
+    assert np.abs(c360x[:110] - c360y[:110] - 3.0).max() < 1e-9
+    callx, cally = v['corrected_all']
+    assert len(callx) == 119 and np.abs(callx[:115] - cally[:115] - 3.0).max() < 1e-9
+    assert np.mean(callx[115:] - cally[115:]) == pytest.approx(133.0)    # untouched: not a wrap under the rule
+
+
+def test_gt21_wrap_analysis_end_to_end_on_made_up_wraps(tmp_path):
+    # SYNTHETIC: training ankle angle gets +360 on rows 100-199 and +180 on rows 400-449; velocity gets a spike at the first wrap row
+    his_path, lh_path, off = write_gt21_inputs(tmp_path)
+    t = pq.read_table(his_path).to_pandas()
+    t.loc[100:199, 'ankle_dorsiflexion_angle_ipsi_rad'] += 2 * math.pi
+    t.loc[400:449, 'ankle_dorsiflexion_angle_ipsi_rad'] += math.pi
+    vel = t['dtheta_raw'].to_numpy().copy()
+    vel[100] += 1000.0 / (180 / math.pi)
+    t['dtheta_raw'] = vel
+    pq.write_table(pa.Table.from_pandas(t, preserve_index=False), tmp_path / 'his2.parquet', row_group_size=300)
+    col = cmp.Collector('gt21', MAPS, tmp_path)
+    col.wrap = cmp.WrapCollector('gt21', MAPS)
+    cmp.compare_gt21_subject(tmp_path / 'his2.parquet', lh_path, 'AB06', cmp.Cfg(rss_cap_mib=1e6, wrap_analysis=True), col, MAPS, 'synthetic')
+    stats, counts, recs = col.wrap.rows()
+    c = {(r['scope'], r['column']): r for r in counts}
+    assert c[('dataset', 'ankle_angle')]['n_wrapped'] == 150 and c[('dataset', 'ankle_angle')]['n_whole_turn'] == 100
+    assert c[('dataset', 'ankle_angle')]['n_half_turn'] == 50 and c[('subject', 'ankle_angle')]['n_wrapped'] == 150
+    assert c[('dataset', 'shank_angle')]['n_wrapped'] == 0
+    s = {(r['scope'], r['column'], r['variant']): r for r in stats}
+    bias = 0.01 * 180 / math.pi
+    assert s[('dataset', 'ankle_angle', 'non_wrapped')]['n_matched'] == 850
+    assert s[('dataset', 'ankle_angle', 'non_wrapped')]['bias'] == pytest.approx(bias, abs=1e-9)
+    assert s[('dataset', 'ankle_angle', 'corrected_all')]['bias'] == pytest.approx(bias, abs=1e-9)
+    assert s[('dataset', 'ankle_angle', 'corrected_all')]['n_matched'] == 1000
+    assert s[('dataset', 'ankle_angle', 'corrected_360')]['n_matched'] == 950
+    assert s[('dataset', 'ankle_angle', 'all')]['rms'] > 50
+    # the existing, default statistics are unchanged by the flag
+    assert {r['column']: r for r in col.overall_rows()}['ankle_angle']['n_matched'] == 1000
+    # velocity: samples 98..102 are widened out (and none else are flagged around row 400-449 beyond 398..451)
+    v_all, v_ex = s[('dataset', 'ankle_velocity', 'all')], s[('dataset', 'ankle_velocity', 'excluding_near_wrap')]
+    kept = 1000 - (len(set(range(98, 202)) | set(range(398, 452))))
+    assert v_ex['n_matched'] == kept
+    assert v_ex['rms'] < 1e-6 < v_all['rms']
+    (rec,) = [r for r in recs if r['column'] == 'ankle_angle']
+    assert rec['n_wrapped'] == 150 and rec['wrapped_share'] == pytest.approx(0.15) and rec['his_recording'] == 'AB06|lg_01'
+    assert rec['median_all_offset_deg'] == pytest.approx(bias, abs=1e-6)       # 850 of 1000 samples are unwrapped
+    assert rec['median_wrapped_offset_deg'] == pytest.approx(360 + bias, abs=1e-6)     # 100 whole-turn vs 50 half-turn samples
+    assert [r['n_wrapped'] for r in recs if r['column'] == 'foot_angle'] == [0]

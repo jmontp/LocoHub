@@ -415,6 +415,148 @@ class Acc:
                 'his_mean': self.mx if n else nan, 'lh_mean': self.my if n else nan}
 
 
+# ------------------------------------------------------------------------------------------------ wrap analysis (opt-in)
+WRAP_COLS = ('ankle_angle', 'shank_angle', 'foot_angle')
+WRAP_MIN_OFFSET_DEG = 90.0
+WRAP_TOL_DEG = 20.0
+WRAP_NEAR_SAMPLES = 2
+WRAP_RULE = ('A matched angle sample is called "wrapped" when the training value is more than 90 degrees away from the LocoHub value '
+             'AND the difference (training minus LocoHub) is within 20 degrees of a multiple of 180 degrees. Multiples that are '
+             'even (0, 360, 720 ...) are "whole-turn wraps"; odd multiples (180, 540 ...) are "half-turn flips". Corrected value = '
+             'training value minus that multiple of 180 degrees. Both numbers (90 and 20) were fixed in advance, not tuned. '
+             'Velocity: the ankle-angle wrap flags are widened by 2 samples on each side and velocity samples inside the widened '
+             'flags are left out (neighbours are neighbours in the compared sample order; for UM21 this also reaches across stride joins).')
+WRAP_VARIANTS = ('all', 'non_wrapped', 'corrected_360', 'corrected_all')
+WRAP_STAT_FIELDS = ['dataset', 'scope', 'subject', 'column', 'unit', 'reporting_size', 'variant', 'n_matched', 'bias', 'rms', 'p95_abs',
+                    'p95_exact', 'corr', 'frac_exceed']
+WRAP_COUNT_FIELDS = ['dataset', 'scope', 'subject', 'column', 'n_matched', 'n_wrapped', 'n_whole_turn', 'n_half_turn', 'wrapped_share']
+WRAP_REC_FIELDS = ['dataset', 'subject', 'task', 'his_recording', 'column', 'n_matched', 'n_wrapped', 'wrapped_share', 'n_whole_turn',
+                   'n_half_turn', 'median_wrapped_offset_deg', 'median_all_offset_deg']
+WRAP_OFFSET_KEEP = 50000
+
+
+def classify_wrap(x, y, min_offset=WRAP_MIN_OFFSET_DEG, tol=WRAP_TOL_DEG):
+    """Return (wrapped, multiple_of_180, difference) for training x and LocoHub y (same units, degrees). NaN pairs: not wrapped."""
+    d = np.asarray(x, float) - np.asarray(y, float)
+    fin = np.isfinite(d)
+    k = np.zeros(len(d))
+    k[fin] = np.rint(d[fin] / 180.0)
+    resid = np.where(fin, d - 180.0 * k, np.inf)
+    wrapped = fin & (np.abs(d) > min_offset) & (np.abs(resid) <= tol)
+    return wrapped, k, d
+
+
+def widen(mask, n=WRAP_NEAR_SAMPLES):
+    """True where the mask is true within n samples (either side)."""
+    if not mask.any():
+        return mask.copy()
+    return np.convolve(mask.astype(np.int8), np.ones(2 * n + 1, np.int8), mode='same') > 0
+
+
+def wrap_variants(x, y):
+    """Samples (x, y) for each variant; wrapped = flags."""
+    x, y = np.asarray(x, float), np.asarray(y, float)
+    w, k, _ = classify_wrap(x, y)
+    xc = np.where(w, x - 180.0 * k, x)
+    even = (np.abs(k) % 2) == 0
+    keep360 = ~w | even
+    return w, k, {'all': (x, y), 'non_wrapped': (x[~w], y[~w]),
+                  'corrected_360': (xc[keep360], y[keep360]), 'corrected_all': (xc, y)}
+
+
+class WrapCollector:
+    def __init__(self, dataset, maps):
+        self.dataset = dataset
+        self.size = {m.name: m.size for m in maps}
+        self.unit = {m.name: m.unit for m in maps}
+        self.names = WRAP_COLS + ('ankle_velocity',)
+        self.var = {}      # (scope key, column, variant) -> Acc; scope key None = dataset
+        self.cnt = {}      # (subject or None, column) -> [n_matched, n_wrapped, n_whole, n_half]
+        self.rec = {}      # (subject, rid, column) -> dict
+        self.done = {'stats': [], 'counts': []}
+
+    def _acc(self, subject, col, variant):
+        return self.var.setdefault((subject, col, variant), Acc(self.size[col], hist=True))
+
+    def add(self, subject, task, rid, pairs):
+        wflag = None
+        for col in WRAP_COLS:
+            if col not in pairs:
+                continue
+            x, y = pairs[col]
+            w, k, variants = wrap_variants(x, y)
+            both = np.isfinite(x) & np.isfinite(y)
+            if col == 'ankle_angle':
+                wflag = w
+            for v, (vx, vy) in variants.items():
+                self._acc(None, col, v).add(vx, vy)
+                self._acc(subject, col, v).add(vx, vy)
+            nm, nw = int(both.sum()), int(w.sum())
+            n_whole = int((w & ((np.abs(k) % 2) == 0)).sum())
+            for key in ((None, col), (subject, col)):
+                c = self.cnt.setdefault(key, [0, 0, 0, 0])
+                c[0] += nm
+                c[1] += nw
+                c[2] += n_whole
+                c[3] += nw - n_whole
+            r = self.rec.setdefault((subject, rid, col), {'n': 0, 'w': 0, 'whole': 0, 'tasks': {}, 'off_w': [], 'off_a': []})
+            r['n'] += nm
+            r['w'] += nw
+            r['whole'] += n_whole
+            r['tasks'][task] = r['tasks'].get(task, 0) + nm
+            d = (np.asarray(x, float) - np.asarray(y, float))
+            for key, arr in (('off_w', d[w]), ('off_a', d[both])):
+                if len(arr) > 0:
+                    step = max(1, len(arr) // 2000)
+                    r[key].append(arr[::step])
+        if 'ankle_velocity' in pairs and wflag is not None:
+            x, y = pairs['ankle_velocity']
+            if len(x) == len(wflag):
+                keep = ~widen(wflag)
+                for v, (vx, vy) in (('all', (x, y)), ('excluding_near_wrap', (x[keep], y[keep]))):
+                    self._acc(None, 'ankle_velocity', v).add(vx, vy)
+                    self._acc(subject, 'ankle_velocity', v).add(vx, vy)
+
+    def flush_subject(self, subject):
+        keys = [k for k in self.var if k[0] == subject]
+        for k in keys:
+            self.done['stats'].append(self._stat_row('subject', k, self.var.pop(k)))
+        for k in [k for k in self.cnt if k[0] == subject]:
+            self.done['counts'].append(self._count_row('subject', k, self.cnt.pop(k)))
+        for k in [k for k in self.rec if k[0] == subject]:
+            r = self.rec[k]
+            for key in ('off_w', 'off_a'):
+                r[key] = np.concatenate(r[key])[:WRAP_OFFSET_KEEP] if r[key] else np.zeros(0)
+
+    def _stat_row(self, scope, key, acc):
+        subject, col, variant = key
+        a = acc.row()
+        return {'dataset': self.dataset, 'scope': scope, 'subject': subject or '', 'column': col, 'unit': self.unit[col],
+                'reporting_size': self.size[col], 'variant': variant, 'n_matched': a['n_matched'], 'bias': a['bias'], 'rms': a['rms'],
+                'p95_abs': a['p95_abs'], 'p95_exact': a['p95_exact'], 'corr': a['corr'], 'frac_exceed': a['frac_exceed']}
+
+    def _count_row(self, scope, key, c):
+        return {'dataset': self.dataset, 'scope': scope, 'subject': key[0] or '', 'column': key[1], 'n_matched': c[0], 'n_wrapped': c[1],
+                'n_whole_turn': c[2], 'n_half_turn': c[3], 'wrapped_share': c[1] / c[0] if c[0] else float('nan')}
+
+    def rows(self):
+        stats = [self._stat_row('dataset', k, a) for k, a in self.var.items() if k[0] is None] + self.done['stats']
+        counts = [self._count_row('dataset', k, c) for k, c in self.cnt.items() if k[0] is None] + self.done['counts']
+        recs = []
+        for (subject, rid, col), r in sorted(self.rec.items(), key=lambda kv: (kv[0][0], kv[0][1], kv[0][2])):
+            if subject is None:
+                continue
+            ow = r['off_w'] if isinstance(r['off_w'], np.ndarray) else (np.concatenate(r['off_w']) if r['off_w'] else np.zeros(0))
+            oa = r['off_a'] if isinstance(r['off_a'], np.ndarray) else (np.concatenate(r['off_a']) if r['off_a'] else np.zeros(0))
+            task = max(r['tasks'], key=r['tasks'].get) if r['tasks'] else ''
+            recs.append({'dataset': self.dataset, 'subject': subject, 'task': task, 'his_recording': rid, 'column': col,
+                         'n_matched': r['n'], 'n_wrapped': r['w'], 'wrapped_share': r['w'] / r['n'] if r['n'] else float('nan'),
+                         'n_whole_turn': r['whole'], 'n_half_turn': r['w'] - r['whole'],
+                         'median_wrapped_offset_deg': float(np.median(ow)) if len(ow) else float('nan'),
+                         'median_all_offset_deg': float(np.median(oa)) if len(oa) else float('nan')})
+        return stats, counts, recs
+
+
 ROW_FIELDS = ['dataset', 'scope', 'subject', 'task', 'column', 'unit', 'reporting_size', 'n_positions', 'n_matched',
               'coverage_his', 'coverage_lh', 'n_his_only', 'n_lh_only', 'bias', 'rms', 'p95_abs', 'p95_exact', 'corr',
               'frac_exceed', 'his_mean', 'lh_mean']
@@ -432,8 +574,11 @@ class Collector:
         self.rows, self.align, self.unmatched = [], [], []
         self.unavailable = {}
         self.out = out_dir
+        self.wrap = None
 
-    def add_pairs(self, subject, task, pairs):
+    def add_pairs(self, subject, task, pairs, rid=''):
+        if self.wrap is not None:
+            self.wrap.add(subject, task, rid, pairs)
         for name, (x, y) in pairs.items():
             m = self.maps[name]
             self.overall[name].add(x, y)
@@ -446,6 +591,8 @@ class Collector:
                 'reporting_size': m.size, **acc.row()}
 
     def flush_subject(self, subject):
+        if self.wrap is not None:
+            self.wrap.flush_subject(subject)
         for key in [k for k in self.subj if k[0] == subject]:
             self.rows.append(self._row('subject', subject, '', key[1], self.subj.pop(key)))
         for key in [k for k in self.cell if k[0] == subject]:
@@ -711,7 +858,7 @@ def compare_gt21_subject(his_path, lh_path, subject, cfg, col, maps, root_label=
             continue
         for code in np.unique(b['task']):
             sel = b['task'] == code
-            col.add_pairs(subject, str(h['task_names'][code]), {k: (x[sel], y[sel]) for k, (x, y) in b['pairs'].items()})
+            col.add_pairs(subject, str(h['task_names'][code]), {k: (x[sel], y[sel]) for k, (x, y) in b['pairs'].items()}, rid)
     col.flush_subject(subject)
 
 
@@ -846,7 +993,7 @@ def compare_um21_subject(his_path, lh_path, subject, cfg, col, maps):
                         ys[m.name].append(s['vals'][m.name])
             col.align.append({**row, 'strides': n_in, 'rows_compared': 150 * n_in, 'note': ''})
             if n_in:
-                col.add_pairs(subject, modal_task(h), {k: (np.concatenate(xs[k]), np.concatenate(ys[k])) for k in xs if xs[k]})
+                col.add_pairs(subject, modal_task(h), {k: (np.concatenate(xs[k]), np.concatenate(ys[k])) for k in xs if xs[k]}, rid)
         left = int((~covered).sum())
         if left:
             col.align.append({'dataset': 'um21', 'subject': subject, 'lh_recording': str(key), 'status': 'strides_not_in_a_matched_segment',
@@ -868,6 +1015,7 @@ class Cfg:
     min_overlap_n: int = 100
     rss_cap_mib: float = 290.0
     um21_side: str = 'right'
+    wrap_analysis: bool = False
 
 
 def resolve_inputs(args):
@@ -904,13 +1052,15 @@ def run(args):
     if out.exists() and any(out.iterdir()):
         raise SystemExit(f'{out} is not empty; outputs go to a new directory')
     out.mkdir(parents=True, exist_ok=True)
-    cfg = Cfg(args.align_rms_tol, 0.30, 100, args.rss_cap_mib, args.um21_side)
+    cfg = Cfg(args.align_rms_tol, 0.30, 100, args.rss_cap_mib, args.um21_side, bool(args.wrap_analysis))
     maps = column_maps(args.cop_shift_m)
     his, lh = resolve_inputs(args)
     started = time.time()
     his_names = pq.ParquetFile(str(his)).schema_arrow.names
     his_subjects = sorted({norm_subject(s) for s in list_subjects(his)})
     col = Collector(args.dataset, maps, out)
+    if cfg.wrap_analysis:
+        col.wrap = WrapCollector(args.dataset, maps)
     subjects = args.subject or (his_subjects if args.dataset == 'um21' else [])
     status, error, per_subject, lh_names = 'complete', None, {}, {}
     try:
@@ -940,6 +1090,11 @@ def run(args):
         write_csv(out / 'comparison.csv', ROW_FIELDS, col.overall_rows() + col.rows)
         write_csv(out / 'alignment.csv', ALIGN_FIELDS, col.align)
         write_csv(out / 'unmatched.csv', UNMATCHED_FIELDS, col.unmatched)
+        if col.wrap is not None:
+            w_stats, w_counts, w_recs = col.wrap.rows()
+            write_csv(out / 'wrap_stats.csv', WRAP_STAT_FIELDS, w_stats)
+            write_csv(out / 'wrap_counts.csv', WRAP_COUNT_FIELDS, w_counts)
+            write_csv(out / 'wrap_recordings.csv', WRAP_REC_FIELDS, w_recs)
         summary = {
             'schema': SCHEMA_ID, 'status': status, 'error': error, 'scientific_approval': False, 'dataset': args.dataset,
             'partition': args.partition, 'training_file': str(his), 'training_file_bytes': his.stat().st_size,
@@ -949,6 +1104,7 @@ def run(args):
             'mapping': mapping_report(maps, his_names, lh_names),
             'settings': {'align_rms_tol_Nm_kg': cfg.align_rms_tol, 'min_overlap_fraction': cfg.min_overlap_frac,
                          'min_overlap_n': cfg.min_overlap_n, 'cop_origin_shift_m': args.cop_shift_m, 'um21_side': cfg.um21_side,
+                         'wrap_analysis': cfg.wrap_analysis, 'wrap_rule': WRAP_RULE if cfg.wrap_analysis else None,
                          'hist_bin_width_rule': f'reporting size / {HIST_WIDTH_DIVISOR:g}, {HIST_BINS} bins'},
             'counts': {'alignment_rows_by_status': _count(r['status'] for r in col.align),
                        'unmatched_by_reason': _count(r['reason'] for r in col.unmatched)},
@@ -983,12 +1139,14 @@ def make_spec(args):
     command = ['python3', 'contributor_tools/compare_training_vs_locohub.py', 'run', '--dataset', args.dataset,
                '--partition', args.partition, '--out-dir', args.out_dir, '--his-file', str(his),
                '--cop-shift-m', str(args.cop_shift_m), '--align-rms-tol', str(args.align_rms_tol)]
+    if args.wrap_analysis:
+        command.append('--wrap-analysis')
     for s in args.subject or []:
         command += ['--subject', s]
     spec = {'job_id': args.job_id, 'command': command, 'cwd': str(ROOT), 'output_root': args.out_dir, 'receipt_path': args.receipt,
             'bindings': bindings, 'timeout_seconds': 3600, 'kill_after_seconds': 30, 'poll_seconds': 15,
             'startup_memory_mib': {'linux': 3584, 'windows': 2816}, 'runtime_memory_mib': {'linux': 2048, 'windows': 2048},
-            'expected_output_names': ['summary.json', 'comparison.csv'], 'address_space_mib': 768,
+            'expected_output_names': ['summary.json', 'comparison.csv'] + (['wrap_stats.csv'] if args.wrap_analysis else []), 'address_space_mib': 768,
             'disk_admission': [{'path': str(ROOT / 'docs'), 'min_free_mib': 5120}]}
     with open(args.spec_out, 'x') as f:
         json.dump(spec, f, indent=2)
@@ -1012,6 +1170,7 @@ def build_parser():
         s.add_argument('--cop-shift-m', type=float, default=0.100)
         s.add_argument('--align-rms-tol', type=float, default=0.10)
         s.add_argument('--out-dir', required=True)
+        s.add_argument('--wrap-analysis', action='store_true', help='also split angle samples into wrapped / non-wrapped (see WRAP_RULE); default off')
         if name == 'run':
             s.add_argument('--rss-cap-mib', type=float, default=290.0)
         else:
