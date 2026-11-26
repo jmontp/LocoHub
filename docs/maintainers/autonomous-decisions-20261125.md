@@ -20,3 +20,7 @@ Each row: what was decided, what else was possible, and how to undo it.
 | 12 | 2026-11-25 | GT21 | Plate dropout (force 0 while ankle moment > 0.3 Nm/kg; 689 observations) flagged only, not failed or removed | Fail or remove them | Re-run assessment |
 | 13 | 2026-11-25 | GT21 | ~20 strides with early source heel strikes and 2 with no toe-off kept and flagged, not dropped | Drop them | Re-run assessment |
 | 14 | 2026-11-25 | GT21 | Leg-plane glitch check (P1) left unchecked: the export has no per-frame leg plane | Recompute from markers | New code + re-run |
+| 15 | 2026-11-25 | all | Freed 44 GB: GT21 r2 export, 2 failed GT21 test packages, GT23 in-between step data (José approved) | Free space elsewhere | Rebuild from code if needed |
+| 16 | 2026-11-25 | GT21 | Package uses the GT23 layout (one phase and one time file per variant, not split by participant) | Split by participant | Rebuild package (~25 min) |
+| 17 | 2026-11-25 | GT21 | Flagged items (plate dropout, held frames, short stances, no-toe-off strides) stay in both full and filtered files; only quality failures leave filtered | Remove flagged items from filtered | Rebuild package |
+| 18 | 2026-11-25 | all | Shared package builder writes larger file chunks to fit the memory cap, instead of raising the cap; UM21/GT23 output unchanged | Raise the cap | Revert two lines |

@@ -1,0 +1,97 @@
+{
+  "task_id": "GT21-R01",
+  "status": "review",
+  "scientific_approval": false,
+  "last_checked_at_utc": "2026-11-26T01:30:00+00:00",
+  "summary": "Local review package built with the shared builder: converted_datasets/reconversion_v2/gt21_r01_package_v1 (16.07 GB, 22 participants, full/filtered x phase/time). Full: 84,793 observations (81,647 phase cycles, 3,146 continuous recordings), 12,247,050 phase rows, 14,415,683 time rows. Filtered: 83,547 observations (81,145 phase, 2,402 time), 12,171,750 phase rows, 11,621,500 time rows. 1,246 observations failed the assessment (502 phase, 744 time) and are only in full. exclusions.csv has 26,967 rows: 25,721 upstream (authors_rule_discard 23,393; authors_rule_case_not_found 2,076; recording_not_converted_in_pass 251; recording_excluded_marker_fit 1) and 1,246 assessment failures. Builder checks all pass (including the verified chain totals). Independent readback passes every check. scientific_approval false, local only.",
+  "power_rule": "The GT21 export already follows D-REF-5 (README says so; probe of AB06 showed zero difference). No value is changed. A read-only part transform checks every row of every export file against moment x joint speed and build check G4 requires zero deviations; the pilot found zero in all 12 columns of both tables.",
+  "changed_files": [
+    "contributor_tools/run_gt21_r01_package.py",
+    "contributor_tools/readback_gt21_r01_package.py",
+    "tests/test_gt21_r01_package.py",
+    "contributor_tools/common/release_package.py"
+  ],
+  "code_sha256": {
+    "contributor_tools/run_gt21_r01_package.py": "a9ef3ee2d30c181bd570da810e8e646d30f0ef70829a9834f568d629f3aa0acd",
+    "contributor_tools/readback_gt21_r01_package.py": "1f5f0872d8026211dcb3c8159d592d102ac2f10b61f808f709419e96febf6fd4",
+    "contributor_tools/common/release_package.py": "044914a596b3b62e9a9c8c637c8a95d633f6760201e97329af2e8bdac34ee4d7",
+    "contributor_tools/common/joint_power.py": "afa4e63de9ca92b96f6221ff99836328c61b30f8b700d2c1fbe0e296a9c684af"
+  },
+  "checks": [
+    "tests: 23 passed (test_release_package, test_gt21_r01_package, test_um21_r01_package, test_gt23_r01_bundle).",
+    "Pilot a6 (AB12, AB27) clean, then full a6 (job GT21-R01-full-v1-a6) clean_success true, 1,290 s wall, peak RSS 491.7 MiB under the 768 MiB cap; builder tests_pass true, no failed checks; pilot receipt bound the same code (gt21-r01-pilot-launcher-receipt-v1-a6).",
+    "Readback (job GT21-R01-readback-v1, clean, 905 s, peak 493 MiB): manifest and file hashes, binding, 150-sample grid and time order, full = filtered + failed, observation set equals the exports' own observations.jsonl and recordings.jsonl, upstream exclusions equal exports' exclusions.jsonl by id and reason text, held columns empty, L1/L5 recomputed from the full tables equal the assessment, seeded sample (seed 20261207; AB10, AB09, AB28; 30 phase observations and 3 time recordings each; 5,544 column comparisons) equal to the export value for value, power = moment x joint speed on every sampled row, required limitations present with the right-foot accuracy numbers.",
+    "Power: the export already follows D-REF-5; the build compared every row of every export file (both tables, 12 columns) and found zero deviations (power_rule_check.csv).",
+    "Inputs: every export and Q01 file hashed against its launcher receipt and the exports' run_summary hashes."
+  ],
+  "disk": {
+    "package_bytes": 16067197284,
+    "free_after_gb": 35,
+    "note": "estimate was 15.6 GB; actual 16.07 GB"
+  },
+  "evidence_paths": [
+    "converted_datasets/reconversion_v2/gt21_r01_package_v1",
+    "converted_datasets/reconversion_v2/gt21_r01_readback_v1/readback.json",
+    "docs/quality/audits/gt21-r01-readback.json",
+    "docs/quality/audits/gt21-r01-full-launcher-receipt-v1-a6.json",
+    "docs/quality/audits/gt21-r01-pilot-launcher-receipt-v1-a6.json",
+    "docs/quality/audits/gt21-r01-readback-launcher-receipt-v1.json",
+    "docs/quality/audits/gt21-r01-full-spec-v1-a6.json",
+    "docs/quality/audits/gt21-r01-disk-estimate.json"
+  ],
+  "expected_full_totals": {
+    "observations": 84793,
+    "phase_observations": 81647,
+    "continuous_recordings": 3146,
+    "phase_rows": 12247050,
+    "time_rows": 14415683,
+    "failed": 1246,
+    "failed_phase": 502,
+    "failed_time": 744,
+    "filtered_observations": 83547,
+    "upstream_exclusions": 25721,
+    "upstream_by_reason": {
+      "authors_rule_discard": 23393,
+      "authors_rule_case_not_found": 2076,
+      "recording_not_converted_in_pass": 251,
+      "recording_excluded_marker_fit": 1
+    },
+    "exclusion_rows_total": 26967,
+    "note": "upstream_by_reason sums from the export exclusions.jsonl of the 22 participants; encoded as builder checks V.* and verified by the readback"
+  },
+  "decisions_made_for_jose": [
+    {
+      "decision": "Larger Parquet row groups (40,000 rows) for the GT21 files and memory-only changes in the shared builder, so the 26.7 M-row package fits the 768 MiB cap.",
+      "alternative": "Keep 12,000-row groups and raise the memory cap; not done (limits are not raised).",
+      "reversible": "yes (rebuild)"
+    },
+    {
+      "decision": "Same layout as GT23: one phase file and one time file per variant, not split per participant.",
+      "alternative": "Split per participant (more files, easier to move piecewise).",
+      "reversible": "yes"
+    },
+    {
+      "decision": "No value change: the export already follows moment x joint speed, so the package only verifies it.",
+      "alternative": "Recompute power through Part.transform as GT23 v11; gives identical values here.",
+      "reversible": "yes"
+    },
+    {
+      "decision": "Plate dropout, held frames, short left stances and the 2 left strides without toe-off stay in both variants (flagged); only assessment failures leave the filtered variant, as the assessment decided.",
+      "alternative": "Also drop plate-dropout (689 observations) or short stances (20).",
+      "reversible": "yes"
+    },
+    {
+      "decision": "Limitation about the source: the task text says '7 of 22 participants with no 2021 publisher checksum'. The evidence in GT21-S01/S02 says the source files of ALL 22 are the authors' 2024 copy without publisher checksums, with a file comparison against the 2021 archive for AB17 only (1,464 of 1,466 files identical). The limitation states that, not '7 of 22'.",
+      "alternative": "State '7 of 22' as in the task text; not supported by the handoffs I read.",
+      "reversible": "yes, text only"
+    }
+  ],
+  "remaining": [
+    "Independent review (second agent) of acceptance criteria against the evidence.",
+    "Catalog, download variant and preview still refer to legacy GT21 artifacts until a release step; publishing is separate."
+  ],
+  "next_action": "Independent review of GT21-R01.",
+  "shared_builder_changes": "Two memory-only changes to release_package.py, behaviour-neutral for other datasets (23 tests of GT21, UM21, GT23 and the builder pass): repeated strings are interned in slim() and the assessment entry's own key object is reused in stream_part; and an optional adapter attribute resident_attribute_keys (default None keeps all attributes, GT21 sets an empty tuple so column ranges and missing-sample ranges go to assessment.jsonl only). GT21 also sets group_rows = 40000. Output of the pilot was identical in assessment.jsonl and exclusions.csv before and after the first change; GT23 and UM21 packages were not rebuilt and still carry their own bound hashes.",
+  "limitations_in_package": "limitations.json lists, with counts: held frames in angles 35,959 observations; plate dropout flags 689; early source heel strikes 18; left strides with no toe-off 2; left treadmill toe-off rebuilt from belt force < 20 N 18,667 (right-foot accuracy: median 0 ms, p95 15 ms, worst 195 ms); stance force masked 27,260; authors rule applied to the left leg 39,868; AB27 right thigh 3,570; AB28 pelvis offset 4,137; P1 unchecked (all); ankle zero offset unreviewed (ankle L1 failures); source is the authors' 2024 copy without publisher checksums (compared with the 2021 archive for AB17 only); power rule; export exclusions. Plain-words limitations are also in the README.",
+  "history": "Earlier full attempts failed and are kept as evidence: a3 (out of memory writing assessment.jsonl; attributes were kept in memory), a4 (builder RSS guard at 452 MiB), a5 (footer of 12,000-row groups too large at close). Their partial roots are renamed gt21_r01_package_v1_failed_a3_partial, _a4_partial, _a5_partial (112 MB, 6.1 GB, 7.6 GB) and are NOT part of the package; they can be deleted by José when he wants the 13.8 GB back. Pilot roots a3-a6 (1.3 GB each) are superseded the same way."
+}

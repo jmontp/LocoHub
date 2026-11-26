@@ -35,6 +35,7 @@ import hashlib
 import json
 from pathlib import Path
 import resource
+import sys
 import time
 from typing import Any, Iterable, Iterator, Optional
 
@@ -227,11 +228,12 @@ def slim(e):
     missing = [k for k in ASSESSMENT_REQUIRED if k not in e]
     if missing:
         raise PackageError(f"assessment entry lacks {missing}")
-    return {"key": (e["observation_id"], e["reference_side"]), "table": e["table"], "type": e["observation_type"],
-            "subject": e["subject"], "task": e["task"], "task_id": e["task_id"], "rec": e["source_recording_id"],
-            "rows": int(e["rows"]), "overall": e["status"], "causes": list(e["failed_limits"]),
-            "failed_channels": list(e["failed_channels"]), "failed_samples": e["failed_samples"],
-            "limitations": list(e["limitations"]), "flight": e["flight"], "attributes": dict(e["attributes"])}
+    s = sys.intern  # repeated strings are stored once (85,000 entries would otherwise hold 85,000 copies of each)
+    return {"key": (e["observation_id"], s(e["reference_side"])), "table": s(e["table"]), "type": s(e["observation_type"]),
+            "subject": s(e["subject"]), "task": s(e["task"]), "task_id": s(e["task_id"]), "rec": s(e["source_recording_id"]),
+            "rows": int(e["rows"]), "overall": s(e["status"]), "causes": [s(x) for x in e["failed_limits"]],
+            "failed_channels": [s(x) for x in e["failed_channels"]], "failed_samples": e["failed_samples"],
+            "limitations": [s(x) for x in e["limitations"]], "flight": e["flight"], "attributes": dict(e["attributes"])}
 
 
 def account(full_keys, filtered_keys, failed_keys):
@@ -351,9 +353,10 @@ def stream_part(part, table_name, q, ctx, sinks, state):
                     if prev_key is not None:
                         state["closed"].add(prev_key)
                     prev_key = key
+                e = q[key]
+                key = e["key"]  # the assessment entry's own key object: one copy of each observation id in memory
                 state["rows"][key] = state["rows"].get(key, 0) + (b - a)
                 state["export"][key] = part.label
-                e = q[key]
                 quality.extend([FAILED if e["overall"] == FAILED else NOT_FAILED] * (b - a))
                 causes.extend([json.dumps(e["causes"])] * (b - a))
                 lims.extend([json.dumps(e["limitations"])] * (b - a))
@@ -517,6 +520,9 @@ def build_package(adapter, out_dir, *, stage, started=None, rss_cap_mib=RSS_CAP_
     with open(out / "assessment.jsonl", "x") as af:
         for raw in adapter.assessment_entries():
             e = slim(raw)
+            keep_attr = getattr(adapter, "resident_attribute_keys", None)  # None: keep all (default); a tuple limits what stays resident
+            if keep_attr is not None:
+                e["attributes"] = {k: v for k, v in e["attributes"].items() if k in keep_attr}
             if e["key"] in q:
                 raise PackageError(f"duplicate assessment entry {e['key']}")
             q[e["key"]] = e

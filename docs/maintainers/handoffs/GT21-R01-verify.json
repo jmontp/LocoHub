@@ -1,0 +1,31 @@
+{
+  "task_id": "GT21-R01",
+  "verifier": "independent agent (did not write the work; worker code not imported; own probes)",
+  "verified_at_utc": "2026-11-26",
+  "scientific_approval": false,
+  "verdict": "PASS. GT21-R01 local review package gt21_r01_package_v1 verified; done. Local only, no scientific approval.",
+  "layout": "Same kind as GT23 v11 and UM21 v4: manifest.json (schema locohub.release_package/1, identical top-level keys, files as {bytes, sha256}), manifest.sha256, limitations.json, exclusions.csv (identical 17 columns), assessment.jsonl, dataset_index.json, phase_preview.json, test_summary.json, README.md, evidence/. Differences (cosmetic): GT21 and GT23 have both phase and time tables (UM21 phase only); evidence/ files are dataset-specific (power_rule_check.csv here); exclusions stage vocabulary here is upstream_not_released and filtered_variant_only (UM21 also has release_membership).",
+  "hashes": "All 14 manifest files streamed through sha256: bytes and sha256 match; manifest.sha256 matches manifest.json; binding hashes equal the file hashes (4 tables, exclusions, assessment).",
+  "counts": "Parquet metadata + streaming id reads: full 84,793 observations (81,647 phase / 3,146 time), filtered 83,547 (81,145 / 2,402); rows full phase 12,247,050, filtered phase 12,171,750, full time 14,415,683, filtered time 11,621,500; no observation split into two runs; exclusions.csv 26,967 rows = 25,721 upstream_not_released (authors_rule_discard 23,393; authors_rule_case_not_found 2,076; recording_not_converted_in_pass 251; recording_excluded_marker_fit 1) + 1,246 filtered_variant_only; no duplicate exclusion ids.",
+  "full_vs_filtered": "assessment.jsonl has 84,793 lines, keys equal the full observation set, 1,246 failed. filtered == full minus exactly the failed ids; every failure is a row in exclusions.csv (in_full true, in_filtered false); no upstream exclusion id appears in either table; no excluded id is in filtered.",
+  "sample": {
+    "seed": 20261130,
+    "participants": [
+      "AB07",
+      "AB12"
+    ],
+    "phase_observations": 30,
+    "time_recordings": 2,
+    "column_comparisons": 1792,
+    "result": "every column equal to the gt21_rb07_export values (NaN-aware exact equality, types equal); column names = export names + 6 package columns; 150 rows per phase observation, phase_ipsi 0..100 inclusive with step 100/149; time_s strictly increasing; power = moment x joint speed on all 67,842 sampled rows x 6 joint-sides (rtol 1e-9); filtered rows equal full rows for sampled observations present in filtered; quality_status consistent with assessment.",
+    "note": "Sample contained no failed observation; failed handling is covered by the global id check. Worker's own sample used AB09, AB10, AB28 (not reused)."
+  },
+  "limitations": "limitations.json in plain words and present: held frames (35,959 obs), plate dropout (689, flagged not failed), early source heel strikes (18), 2 left strides with no toe-off, left treadmill toe-off rebuilt from belt force < 20 N with right-foot accuracy (median 0 ms, p95 15 ms, worst 195 ms, 20,447 strides), P1 not checked for all 84,793, ankle zero offset unreviewed with L1 caveat, source is the authors' 2024 copy without publisher checksums (AB17 only compared), power rule, authors' rule exclusions, AB27 thigh and AB28 pelvis notes. scientific_approval false, local_only true, no_upload_no_publish true in manifest.",
+  "shared_builder": "git diff of contributor_tools/common/release_package.py (12 insertions, 6 deletions) is behaviour-neutral for UM21/GT23: sys.intern on assessment strings (value-identical), reuse of the entry's own key tuple (equal key), and an optional adapter attribute resident_attribute_keys defaulting to None (keep all); assessment.jsonl is written from the raw entry, so the shrink affects memory only. Tests: tests/test_release_package.py, test_gt21_r01_package.py, test_um21_r01_package.py, test_gt23_r01_bundle.py: 23 passed. Note: neither UM21 v4 nor GT23 v11 was rebuilt with this builder version; neutrality is by reading the diff and tests.",
+  "receipts": "Full a6 (GT21-R01-full-v1-a6), pilot a6 (AB12, AB27) and readback v1: status completed, clean_success true, exit 0, no launcher/finalisation errors, no orphans, no new Windows workers, bindings before = after. Full and pilot bind identical code hashes (run_gt21_r01_package.py, release_package.py, joint_power.py, run_gt21_q01_assessment.py) and the same launcher; these equal the manifest bound_files_sha256 and the current files on disk. Full spec cites the pilot receipt. Peaks: full 491.7 MiB under the 768 MiB cap, readback 493 MiB. Audit docs/quality/audits/gt21-r01-readback.json all_pass true (seed 20261207; AB09, AB10, AB28); test_summary.json all_pass true (31 checks).",
+  "probe_resources": "Hash and counts probes run alone under prlimit 600 MiB, nice 19, ionice idle, one thread; counts peak 209 MiB. The sample probe peaked at 344 MiB RSS, which exceeds the 300 MiB read-only-probe guideline by 44 MiB (row group read column by column); it read only, wrote nothing under converted_datasets, and was bounded by the 600 MiB address limit. Recorded as a minor rule overrun.",
+  "non_blocking": [
+    "Manifest resources report wall 1,290 s; the launcher receipt reports 1,329 s (includes start-up/finalisation). Cosmetic.",
+    "Dataset page and catalog entry naming this exact package (manifest sha256 9245b26a...) are still to be built; the package stays local, unapproved."
+  ]
+}

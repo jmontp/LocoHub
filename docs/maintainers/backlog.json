@@ -4689,7 +4689,7 @@
       "priority": "P1",
       "dataset": "gt21",
       "title": "Reconcile a local review release for Georgia Tech 2021",
-      "status": "blocked",
+      "status": "done",
       "stage": "release",
       "question": "Do this dataset's exact data files, review evidence and researcher-facing claims agree?",
       "scope": "Complete retained Georgia Tech 2021 source scope and every exported observation type; any smaller local bundle remains an explicitly separate scope.",
@@ -4714,24 +4714,46 @@
         "The catalog, download variant and preview refer to this exact reviewed artifact or remain explicitly legacy/unreviewed.",
         "Record any release limitation and remaining source gaps. Publishing or uploading follows the user-requested destination/workflow and is separate from this local review."
       ],
-      "next_action": "After GT21-Q01: build the package with contributor_tools/common/release_package.py and a GT21 adapter (phase + time, full + filtered).",
+      "next_action": "Done: package independently verified (handoffs/GT21-R01-verify.json). Remaining outside this task: build the GT21 dataset page naming this exact package; no publishing or approval.",
       "resource_class": "numerical",
       "evidence_paths": [
-        "docs/quality/audits/backlog-refresh-20261027.json"
+        "docs/quality/audits/backlog-refresh-20261027.json",
+        "docs/quality/audits/gt21-r01-disk-estimate.json",
+        "docs/quality/audits/gt21-r01-pilot-readback.json",
+        "docs/quality/audits/gt21-r01-pilot-launcher-receipt-v1-a3.json",
+        "docs/quality/audits/gt21-r01-readback-launcher-receipt-pilot_a6.json",
+        "docs/maintainers/handoffs/GT21-R01.json",
+        "converted_datasets/reconversion_v2/gt21_r01_package_v1",
+        "converted_datasets/reconversion_v2/gt21_r01_readback_v1/readback.json",
+        "docs/quality/audits/gt21-r01-readback.json",
+        "docs/quality/audits/gt21-r01-full-launcher-receipt-v1-a6.json",
+        "docs/quality/audits/gt21-r01-pilot-launcher-receipt-v1-a6.json",
+        "docs/quality/audits/gt21-r01-readback-launcher-receipt-v1.json",
+        "docs/quality/audits/gt21-r01-full-spec-v1-a6.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-23T20:30:15+00:00",
-        "summary": "Added during backlog restructuring; no new scientific checks or conversion have run for this task. Update 2026-11-23: José's decisions recorded (docs and bookkeeping only; no data job or conversion ran).",
-        "changed_files": [],
+        "last_checked_at_utc": "2026-11-26T01:30:00+00:00",
+        "summary": "Local review package built with the shared builder: converted_datasets/reconversion_v2/gt21_r01_package_v1 (16.07 GB, 22 participants, full/filtered x phase/time). Full: 84,793 observations (81,647 phase cycles, 3,146 continuous recordings), 12,247,050 phase rows, 14,415,683 time rows. Filtered: 83,547 observations (81,145 phase, 2,402 time), 12,171,750 phase rows, 11,621,500 time rows. 1,246 observations failed the assessment (502 phase, 744 time) and are only in full. exclusions.csv has 26,967 rows: 25,721 upstream (authors_rule_discard 23,393; authors_rule_case_not_found 2,076; recording_not_converted_in_pass 251; recording_excluded_marker_fit 1) and 1,246 assessment failures. Builder checks all pass (including the verified chain totals). Independent readback passes every check. scientific_approval false, local only.",
+        "changed_files": [
+          "contributor_tools/run_gt21_r01_package.py",
+          "contributor_tools/readback_gt21_r01_package.py",
+          "tests/test_gt21_r01_package.py",
+          "contributor_tools/common/release_package.py"
+        ],
         "checks": [
-          "Reviewed the retained project scope and declared dependencies only."
+          "tests: 23 passed (test_release_package, test_gt21_r01_package, test_um21_r01_package, test_gt23_r01_bundle).",
+          "Pilot a6 (AB12, AB27) clean, then full a6 (job GT21-R01-full-v1-a6) clean_success true, 1,290 s wall, peak RSS 491.7 MiB under the 768 MiB cap; builder tests_pass true, no failed checks; pilot receipt bound the same code (gt21-r01-pilot-launcher-receipt-v1-a6).",
+          "Readback (job GT21-R01-readback-v1, clean, 905 s, peak 493 MiB): manifest and file hashes, binding, 150-sample grid and time order, full = filtered + failed, observation set equals the exports' own observations.jsonl and recordings.jsonl, upstream exclusions equal exports' exclusions.jsonl by id and reason text, held columns empty, L1/L5 recomputed from the full tables equal the assessment, seeded sample (seed 20261207; AB10, AB09, AB28; 30 phase observations and 3 time recordings each; 5,544 column comparisons) equal to the export value for value, power = moment x joint speed on every sampled row, required limitations present with the right-foot accuracy numbers.",
+          "Power: the export already follows D-REF-5; the build compared every row of every export file (both tables, 12 columns) and found zero deviations (power_rule_check.csv).",
+          "Inputs: every export and Q01 file hashed against its launcher receipt and the exports' run_summary hashes."
         ],
         "remaining": [
-          "Review this dataset's completed evidence and prepare one fresh immutable local bundle using the existing bounded release workflow; record all unsupported scope.",
-          "Update 2026-11-23: José decided (D-REF-1, D-REF-2): joint angles are differences of segment angles measured against gravity (no static-pose or model zero), and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run. Pelvis markers are available for the pelvis (earlier decision D-GT21-C01-2 C); whether thigh, shank and foot segment angles, the ankle centre and the foot direction can be built from GT21 markers is not checked."
-        ]
+          "Independent review (second agent) of acceptance criteria against the evidence.",
+          "Catalog, download variant and preview still refer to legacy GT21 artifacts until a release step; publishing is separate."
+        ],
+        "verified": "Independent verifier 2026-11-26: PASS. Hashes, counts (84,793 / 83,547; exclusions 26,967), filtered = full minus failed, 32-item seeded sample (seed 20261130, AB07, AB12) equal to export, limitations, shared-builder diff neutral, 23 tests, receipts clean with same bound code. Local only; scientific_approval false.",
+        "verify_file": "docs/maintainers/handoffs/GT21-R01-verify.json"
       },
-      "blocked_reason": "Required evidence is unfinished: GT21-Q01, CORE-02. Recheck the actual artifacts and resource conditions before execution; a task plan does not satisfy these prerequisites.",
       "legacy_ids": [
         "RELEASE-02"
       ]

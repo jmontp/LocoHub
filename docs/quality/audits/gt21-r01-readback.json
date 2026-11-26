@@ -1,0 +1,399 @@
+{
+ "task_id": "GT21-R01-readback",
+ "version": "v1",
+ "scientific_approval": false,
+ "package": "converted_datasets/reconversion_v2/gt21_r01_package_v1",
+ "seed": 20261207,
+ "sampled_subjects": [
+  "AB10",
+  "AB09",
+  "AB28"
+ ],
+ "sampled_observations": {
+  "phase:AB10": 30,
+  "phase:AB09": 30,
+  "phase:AB28": 30,
+  "time:AB10": 3,
+  "time:AB09": 3,
+  "time:AB28": 3
+ },
+ "columns_compared": 5544,
+ "checks": [
+  {
+   "id": "R1a",
+   "check": "manifest.sha256 equals the sha256 of manifest.json",
+   "expected": "9245b26ae9f8387927167e5db0fa2a444325bf08f1d634ec51e56aaa1ece1e89",
+   "observed": "9245b26ae9f8387927167e5db0fa2a444325bf08f1d634ec51e56aaa1ece1e89",
+   "pass": true
+  },
+  {
+   "id": "R1b",
+   "check": "the files on disk are exactly the files in the manifest",
+   "expected": [
+    "README.md",
+    "assessment.jsonl",
+    "dataset_index.json",
+    "evidence/assessment_failure_samples.csv",
+    "evidence/power_rule_check.csv",
+    "exclusions.csv",
+    "filtered_phase.parquet",
+    "filtered_time.parquet",
+    "full_phase.parquet",
+    "full_time.parquet",
+    "limitations.json",
+    "phase_preview.json",
+    "test_summary.json"
+   ],
+   "observed": [
+    "README.md",
+    "assessment.jsonl",
+    "dataset_index.json",
+    "evidence/assessment_failure_samples.csv",
+    "evidence/power_rule_check.csv",
+    "exclusions.csv",
+    "filtered_phase.parquet",
+    "filtered_time.parquet",
+    "full_phase.parquet",
+    "full_time.parquet",
+    "limitations.json",
+    "phase_preview.json",
+    "test_summary.json"
+   ],
+   "pass": true
+  },
+  {
+   "id": "R1c",
+   "check": "sha256 and bytes of every file equal the manifest",
+   "expected": [],
+   "observed": [],
+   "pass": true
+  },
+  {
+   "id": "R2a",
+   "check": "the same binding in dataset_index, phase_preview, test_summary and limitations",
+   "expected": [],
+   "observed": [],
+   "pass": true
+  },
+  {
+   "id": "R2b",
+   "check": "binding hashes equal the files",
+   "expected": [],
+   "observed": [],
+   "pass": true
+  },
+  {
+   "id": "R2c",
+   "check": "tables are phase and time",
+   "expected": [
+    "phase",
+    "time"
+   ],
+   "observed": [
+    "phase",
+    "time"
+   ],
+   "pass": true
+  },
+  {
+   "id": "R2d",
+   "check": "scientific_approval false and local only, in manifest and test_summary and limitations-free flags",
+   "expected": [
+    false,
+    true,
+    true,
+    false
+   ],
+   "observed": [
+    false,
+    true,
+    true,
+    false
+   ],
+   "pass": true
+  },
+  {
+   "id": "R3a",
+   "check": "every input in inputs_sha256 still hashes to its recorded value",
+   "expected": [],
+   "observed": [],
+   "pass": true
+  },
+  {
+   "id": "R3b",
+   "check": "export files used equal the hashes in each export's own run_summary.json",
+   "expected": [],
+   "observed": [],
+   "pass": true
+  },
+  {
+   "id": "R5x",
+   "check": "assessment.jsonl lists every observation once",
+   "expected": [],
+   "observed": [],
+   "pass": true
+  },
+  {
+   "id": "R4a",
+   "check": "no grid, order, contiguity or duplicate problems in any table file",
+   "expected": {
+    "full_phase": {},
+    "full_time": {},
+    "filtered_phase": {},
+    "filtered_time": {}
+   },
+   "observed": {
+    "full_phase": {},
+    "full_time": {},
+    "filtered_phase": {},
+    "filtered_time": {}
+   },
+   "pass": true
+  },
+  {
+   "id": "R4b",
+   "check": "every phase observation has exactly 150 rows, both variants",
+   "expected": [],
+   "observed": [],
+   "pass": true
+  },
+  {
+   "id": "R4c",
+   "check": "full and filtered have identical column lists, per table",
+   "expected": {
+    "size": 2
+   },
+   "observed": {
+    "size": 2
+   },
+   "pass": true
+  },
+  {
+   "id": "R4d",
+   "check": "extra columns are the six documented ones, last",
+   "expected": [
+    [
+     "source_export",
+     "quality_status",
+     "failed_limits",
+     "limitations",
+     "lineage_id",
+     "assessment_id"
+    ],
+    [
+     "source_export",
+     "quality_status",
+     "failed_limits",
+     "limitations",
+     "lineage_id",
+     "assessment_id"
+    ]
+   ],
+   "observed": [
+    [
+     "source_export",
+     "quality_status",
+     "failed_limits",
+     "limitations",
+     "lineage_id",
+     "assessment_id"
+    ],
+    [
+     "source_export",
+     "quality_status",
+     "failed_limits",
+     "limitations",
+     "lineage_id",
+     "assessment_id"
+    ]
+   ],
+   "pass": true
+  },
+  {
+   "id": "R5a",
+   "check": "observations in full equal the assessed observations",
+   "expected": {
+    "size": 84793
+   },
+   "observed": {
+    "size": 84793
+   },
+   "pass": true
+  },
+  {
+   "id": "R5b",
+   "check": "full = filtered + failed with no gap or overlap",
+   "expected": {
+    "size": 1246
+   },
+   "observed": {
+    "size": 1246
+   },
+   "pass": true
+  },
+  {
+   "id": "R5c",
+   "check": "filtered is a subset of full",
+   "expected": 0,
+   "observed": 0,
+   "pass": true
+  },
+  {
+   "id": "R5d",
+   "check": "kept observations have identical finite counts and value sums (over all numeric columns, rtol 1e-9: batch boundaries change the summation order) in full and filtered",
+   "expected": [],
+   "observed": [],
+   "pass": true
+  },
+  {
+   "id": "R5e",
+   "check": "quality_status is failed exactly for the failed observations in full, never in filtered",
+   "expected": [],
+   "observed": [],
+   "pass": true
+  },
+  {
+   "id": "R5f",
+   "check": "observations in full equal the export's own observations.jsonl and recordings.jsonl",
+   "expected": {
+    "size": 84793
+   },
+   "observed": {
+    "size": 84793
+   },
+   "pass": true
+  },
+  {
+   "id": "R5g",
+   "check": "full phase rows = 150 x phase observations = sum of export run_summary phase_rows; time rows likewise",
+   "expected": [
+    12247050,
+    14415683
+   ],
+   "observed": [
+    12247050,
+    14415683
+   ],
+   "pass": true
+  },
+  {
+   "id": "R5h",
+   "check": "filtered rows = full rows minus the rows of the failed observations, per table",
+   "expected": {
+    "phase": 12171750,
+    "time": 11621500
+   },
+   "observed": {
+    "phase": 12171750,
+    "time": 11621500
+   },
+   "pass": true
+  },
+  {
+   "id": "R6a",
+   "check": "upstream exclusion ids equal the step ids in the exports' exclusions.jsonl, once each",
+   "expected": {
+    "size": 25721
+   },
+   "observed": {
+    "size": 25721
+   },
+   "pass": true
+  },
+  {
+   "id": "R6b",
+   "check": "upstream exclusion counts by source reason text equal the export's counts",
+   "expected": {
+    "authors_rule_discard": 19870,
+    "authors_rule_case_not_found": 2076,
+    "authors_rule_discard: more than 2 distinct treadmill speeds inside the step": 3523,
+    "recording_not_converted_in_pass": 251,
+    "fewer than 3 fit markers on femur_r: have ['R_Knee_Lat']": 1
+   },
+   "observed": {
+    "authors_rule_discard": 19870,
+    "authors_rule_case_not_found": 2076,
+    "authors_rule_discard: more than 2 distinct treadmill speeds inside the step": 3523,
+    "recording_not_converted_in_pass": 251,
+    "fewer than 3 fit markers on femur_r: have ['R_Knee_Lat']": 1
+   },
+   "pass": true
+  },
+  {
+   "id": "R6c",
+   "check": "every failed observation is listed once as filtered_variant_only, and nothing else is",
+   "expected": {
+    "size": 1246
+   },
+   "observed": {
+    "size": 1246
+   },
+   "pass": true
+  },
+  {
+   "id": "R6d",
+   "check": "exclusion rows = upstream + failed, no other stage",
+   "expected": 26967,
+   "observed": 26967,
+   "pass": true
+  },
+  {
+   "id": "R6e",
+   "check": "no upstream exclusion names an observation in the full tables",
+   "expected": [],
+   "observed": [],
+   "pass": true
+  },
+  {
+   "id": "R7",
+   "check": "held columns hold no finite value in the full tables",
+   "expected": [],
+   "observed": [],
+   "pass": true
+  },
+  {
+   "id": "R8",
+   "check": "L1 and L5 failures recomputed from the full tables equal the assessment's L1 and L5 failures, per observation",
+   "expected": {
+    "size": 190
+   },
+   "observed": {
+    "size": 190
+   },
+   "pass": true
+  },
+  {
+   "id": "R9",
+   "check": "sampled observations: every non-extra column equals the export value for value (NaN equal)",
+   "expected": [],
+   "observed": [],
+   "pass": true
+  },
+  {
+   "id": "R10a",
+   "check": "sampled observations: power = moment x joint speed, missing exactly where either is missing",
+   "expected": 0,
+   "observed": 0,
+   "pass": true
+  },
+  {
+   "id": "R10b",
+   "check": "limitations.json names every required limitation",
+   "expected": [],
+   "observed": [],
+   "pass": true
+  },
+  {
+   "id": "R10c",
+   "check": "the toe-off limitation states the right-foot accuracy (0 ms median, 15 ms p95, 195 ms worst)",
+   "expected": true,
+   "observed": true,
+   "pass": true
+  }
+ ],
+ "all_pass": true,
+ "resources": {
+  "peak_rss_mib": 493.0,
+  "wall_seconds": 905.2
+ }
+}
