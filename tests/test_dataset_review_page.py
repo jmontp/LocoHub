@@ -152,10 +152,12 @@ def test_committed_pages_carry_the_current_status():
         assert fn(path.read_text(encoding="utf-8")) == path.read_text(encoding="utf-8"), f"run dataset_status.py: {path}"
 
 
-def test_known_problems_page_for_gt21_and_cards_inside_the_gt23_page():
+def test_problems_are_folded_into_the_gt21_and_gt23_pages():
     cat = (ROOT / "docs/index.html").read_text(encoding="utf-8")
-    assert 'href="datasets/gt21/problems.html"' in cat
-    assert 'href="problems.html">Known problems' in (ROOT / "docs/datasets/gt21/index.html").read_text(encoding="utf-8")
+    # GT21 folded its problems into the dataset page too: no separate page, no dead link
+    assert not (ROOT / "docs/datasets/gt21/problems.html").exists()
+    assert "gt21/problems.html" not in cat
+    assert "problems.html" not in (ROOT / "docs/datasets/gt21/index.html").read_text(encoding="utf-8")
     # GT23 folded its problems into the dataset page: no separate page, no dead link
     assert not (ROOT / "docs/datasets/gt23/problems.html").exists()
     assert "gt23/problems.html" not in cat

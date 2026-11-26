@@ -69,7 +69,10 @@ def load_inputs(spec: dict, root: Path = ROOT):
     r01 = json.loads((root / spec["handoff"]).read_text(encoding="utf-8"))
     if r01["task_id"].split()[0] != spec["r01_task_id"]:  # a rerun handoff may read "UM21-R01 v3 (...)"
         raise ValueError(f"handoff is for {r01['task_id']}, spec expects {spec['r01_task_id']}")
-    scope = json.loads((root / spec["scope"]).read_text(encoding="utf-8"))
+    if spec.get("scope") is None:  # a spec that carries its own cards (card_source "spec") has no scope file
+        scope = {"denominators": spec.get("denominators", {}), "cards": []}
+    else:
+        scope = json.loads((root / spec["scope"]).read_text(encoding="utf-8"))
     return manifest, index, excl, held, preview, r01, scope
 
 
@@ -395,11 +398,15 @@ def column_groups_table(spec, index):
             for k, v in st.items():
                 if k in ("not_checked_no_column", "unchecked_all_missing"):
                     empty += v
-                elif k == "fail":
+                elif k in ("fail", "failed"):
                     failed += v
+                elif k == "missing":  # packages that use the assessment's own words (passed, failed, missing, unchecked)
+                    empty += v
                 elif v:
                     seen.add(k)
         keys = {STATE_KEY[k] for k in seen if k in STATE_KEY}
+        if g.get("state"):  # a group may name its own check state when the package's state words are not the old ones
+            keys = {g["state"]}
         if len(keys) > 1:
             raise ValueError(f"column group {g['name']} mixes check states {sorted(keys)}")
         key = keys.pop() if keys else "unchecked"
@@ -493,6 +500,55 @@ def problem_cards(spec, scope, figs_dir):
                 f'<p class="fix-evidence"><strong>Example from the source.</strong> {esc(c["example"])}</p>'
                 f'{block}{knock_block(fix, quiet=True)}</article>')
     return "".join(out)
+
+
+SCOPE_LABELS = (("participants", "Participants"), ("tasks", "Kinds of recordings"), ("share", "Share of the data"))
+
+
+def spec_scope_block(card):
+    """Three plain lines of scope for a card that carries its own numbers (no participant-by-task grid)."""
+    items = "".join(f'<li class="ko-item"><strong>{label}.</strong> {esc(card["scope"][key])}</li>' for key, label in SCOPE_LABELS)
+    return f'<div class="scope-block"><h4>How much was affected</h4><ul class="ko-list">{items}</ul></div>'
+
+
+def spec_problem_cards(spec, figs_dir):
+    """Problem cards written in the spec itself (card_source "spec"), grouped by section in spec order."""
+    words = spec["status_words"]
+    sections = []
+    for c in spec["cards"]:
+        if c["section"] not in sections:
+            sections.append(c["section"])
+    out = []
+    for sec in sections:
+        out.append(f'<h3 class="sec-h">{esc(sec)}</h3>')
+        for c in (c for c in spec["cards"] if c["section"] == sec):
+            if c["status"] not in words:
+                raise ValueError(f"card {c['key']} has an unknown status {c['status']}")
+            for k in c["knock_on"]:
+                if k["verdict"] not in VERDICT_CLASS:
+                    raise ValueError(f"unknown verdict {k['verdict']}")
+            now = f'<p class="note"><strong>In this version.</strong> {esc(c["now"])}</p>' if c.get("now") else ""
+            figs = "".join('<div class="fix-figures fix-figures-single">'
+                           + local_fig(figs_dir, f["src"], f["question"], f["alt"], f.get("caption", "")) + "</div>" for f in c["figures"])
+            how = f'<p><strong>How we know.</strong> {esc(c["how"])}</p>' if c.get("how") else ""
+            checked = f'<p><strong>How it was checked.</strong> {esc(c["checked"])}</p>' if c.get("checked") else ""
+            out.append(
+                f'<article class="fix-card" id="{c["key"]}"><h3>{esc(c["title"])}</h3>'
+                f'<p class="status-line"><span class="status-pill s-{c["status"]}">{esc(words[c["status"]])}</span></p>'
+                f'<p><strong>What was wrong.</strong> {esc(c["wrong"])}</p>{how}'
+                f'<p><strong>What we did.</strong> {esc(c["did"])}</p>{checked}{now}{spec_scope_block(c)}{figs}'
+                f'<p class="fix-evidence"><strong>Example.</strong> {esc(c["example"])}</p>'
+                f'{knock_block({"knock_on": c["knock_on"], "direction": c.get("direction", "")}, quiet=True)}</article>')
+    return "".join(out)
+
+
+def spec_glance_table(spec):
+    words = spec["status_words"]
+    rows = "".join(f'<tr><td><a href="#{c["key"]}">{esc(c["title"])}</a></td><td>{esc(words[c["status"]])}</td><td>{esc(c["short"])}</td></tr>'
+                   for c in spec["cards"])
+    key = "".join(f'<li><span class="status-pill s-{k}">{esc(words[k])}</span> {esc(t)}</li>' for k, t in spec["status_key"].items())
+    return (f'<div class="table-scroll" role="region" aria-label="All problems" tabindex="0"><table class="plain-table"><thead><tr><th>Problem</th>'
+            f'<th>Where it stands</th><th>How much</th></tr></thead><tbody>{rows}</tbody></table></div><ul class="status-key">{key}</ul>')
 
 
 def glance_table(spec, scope):
@@ -592,7 +648,8 @@ def build(spec: dict, root: Path = ROOT, backlog_path: Path = BACKLOG, allow_rev
     figs_dir = root / "docs/datasets" / spec["slug"] / "figures"
     figinfo = json.loads((figs_dir / FIGJSON_NAME).read_text(encoding="utf-8")) if (figs_dir / FIGJSON_NAME).exists() else {}
     n = manifest["counts"]
-    own_cards = "card_updates" in spec  # a package that tracks its problems as cards in a scope file
+    spec_cards = spec.get("card_source") == "spec"
+    own_cards = "card_updates" in spec or spec_cards  # a package that tracks its problems as cards in a scope file
     if own_cards:
         full_by_type = n["full"]["observations_by_type"]
         full, filtered = n["observations_full"], n["observations_filtered"]
@@ -619,11 +676,11 @@ def build(spec: dict, root: Path = ROOT, backlog_path: Path = BACKLOG, allow_rev
     if own_cards:
         nav_extra_glance, nav_extra_limits = '<a href="#at-a-glance">At a glance</a>', '<a href="#limitations">Limitations</a>'
         glance = (f'<section id="at-a-glance" aria-labelledby="glance-h"><h2 id="glance-h">At a glance</h2>'
-                  f'<p class="note">{esc(spec["scope_note"])}</p>{overview_figures(spec, figs_dir)}{glance_table(spec, scope)}</section>\n\n      ')
+                  f'<p class="note">{esc(spec["scope_note"])}</p>{overview_figures(spec, figs_dir)}{spec_glance_table(spec) if spec_cards else glance_table(spec, scope)}</section>\n\n      ')
         limits = (f'<section id="limitations" aria-labelledby="limits-h"><h2 id="limits-h">What is still limited</h2>'
                   f'{limitations_section(spec, root / spec["bundle"])}</section>\n\n      ')
         fixed_h = "What we fixed and what we did not (original vs fixed)"
-        fixed_body = problem_cards(spec, scope, figs_dir)
+        fixed_body = spec_problem_cards(spec, figs_dir) if spec_cards else problem_cards(spec, scope, figs_dir)
         columns_html = column_groups_table(spec, index)
     power_html, nav_power = "", ""
     if "power_section" in spec:

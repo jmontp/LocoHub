@@ -1,0 +1,1108 @@
+{
+ "schema": 1,
+ "slug": "gt21",
+ "display_name": "Georgia Tech 2021",
+ "title": "Georgia Tech 2021 · LocoHub",
+ "css_class": "gt21d",
+ "r01_task_id": "GT21-R01",
+ "bundle": "converted_datasets/reconversion_v2/gt21_r01_package_v1",
+ "handoff": "docs/maintainers/handoffs/GT21-R01.json",
+ "scope": null,
+ "card_source": "spec",
+ "verified_date": "2026-11-26",
+ "meta_description": "Georgia Tech 2021 walking, ramps, stairs and treadmill data: what we fixed, what we left out, what we checked and what is still limited.",
+ "heading_note": "Local review version, not yet released. Nothing on this page has been approved scientifically.",
+ "builder_notes": [
+  "PHASE 2 WORK, not done in the write-only phase. build_dataset_review_page.py reads cards from a scope JSON (scope['cards'], one scope-<key>.svg grid per card). This spec carries its cards itself (card_source = spec) and has no participant-by-task grids, so the builder needs one small branch: when spec['card_source'] == 'spec', take the cards from spec['cards'] instead of scope['cards'], skip load_inputs' scope read (scope is null), skip scope_block's grid and table, and print a three-line 'How much was affected' block from each card's 'scope' object (participants, tasks, share). spec['denominators'] replaces scope['denominators'].",
+  "Card figure files are SVGs written by contributor_tools/figures_gt21_page.py into docs/datasets/gt21/figures/; each card lists them under 'figures' with question, alt and caption (same keys as GT23 overview figures).",
+  "The status words 'left_out' and 'held' already have pill styles in CSS_CARDS; 'not_checked_alone' is reused with the label 'Not checked' for the plane-glitch card.",
+  "docs/datasets/gt21/problems.html is replaced by this page and should be deleted (dataset_status.page_block links 'Known problems' only while problems.html exists). The old figures in docs/datasets/gt21/figures (force-sign, heading, mass, pelvis, plates, sideways, steps, terrain, zero, scope-*) belong to that page and to the earlier 16-participant conversion; remove them when the page is built.",
+  "The old GT21 problems page is stale: it says 16 participants and 102 recordings; the package has 22 participants and 3,146 converted recordings.",
+  "Column-group states: GT21's dataset_index.json uses the Q01 words (passed, failed, missing, unchecked), not GT23's. Each GT21 column group names its own 'state', and the builder counts 'missing' as no value and 'failed' as failed."
+ ],
+ "denominators": {
+  "participants": 22,
+  "recordings_converted": 3146,
+  "recordings_in_source_inventory": 3147,
+  "recordings_not_converted": 1,
+  "treadmill_recordings_in_source": 157,
+  "other_recordings_in_source": 2990,
+  "source_steps_segmented": 107367,
+  "observations_full": 84793,
+  "observations_filtered": 83547,
+  "phase_observations_full": 81647,
+  "time_observations_full": 3146,
+  "phase_observations_filtered": 81145,
+  "time_observations_filtered": 2402,
+  "phase_rows_full": 12247050,
+  "time_rows_full": 14415683,
+  "exclusion_rows": 26967,
+  "phase_observations_by_mode": {
+   "levelground": 14252,
+   "ramp": 19953,
+   "stair": 10059,
+   "treadmill": 37383
+  },
+  "continuous_recordings_by_mode": {
+   "levelground": 680,
+   "ramp": 1394,
+   "stair": 916,
+   "treadmill": 156
+  }
+ },
+ "lead": "Movement recorded from {subjects} participants during level-ground walking, ramps, stairs, the transitions between them, and treadmill walking: {recordings:,} recordings. This is a local review version and is not released. The full version has <strong>{full:,} observations</strong>; the cleaned version has <strong>{filtered:,}</strong>. An observation is one stride of one leg ({cycles:,} in the full version, 150 samples from 0 to 100 percent of the stride) or one whole recording ({continuous:,}; every recording is exported once, with its source sample times at 200 Hz). Each file comes as a phase table and a time table.",
+ "overview_figures": [
+  {
+   "src": "page-failures.svg",
+   "question": "How many observations fail each coarse limit?",
+   "alt": "Bars of observations failing each coarse limit: joint range 186, sudden 30 degree jump 1,134, pressure point 4, left-right side check 16.",
+   "caption": "The limits are coarse physical limits written before any Georgia Tech 2021 data were read, the same numbers as for Umich 2021 and Georgia Tech 2023. They are not reference ranges. An observation can fail more than one limit. 1,246 observations fail at least one and are left out of the cleaned version."
+  },
+  {
+   "src": "page-left-out.svg",
+   "question": "What was left out, and why?",
+   "alt": "Bars of items left out by reason on a log scale. The largest is 23,393 steps dropped by the authors' rule; 1,246 observations that failed a coarse limit are left out of the cleaned version only.",
+   "caption": "Dark bars were left out of both versions at export; the orange bar is left out of the cleaned version only. The scale is logarithmic."
+  },
+  {
+   "src": "page-limitations.svg",
+   "question": "How many observations does each limitation touch?",
+   "alt": "Bars of the number of observations touched by each of 14 limitations; five of them touch all 84,793.",
+   "caption": "One observation can carry several limitations."
+  }
+ ],
+ "status_words": {
+  "fixed": "Fixed and checked",
+  "documented": "Kept and flagged, nothing changed",
+  "held": "Held back, left as it is",
+  "left_out": "Left out, accounted for",
+  "not_checked_alone": "Not checked"
+ },
+ "status_key": {
+  "fixed": "A fix was run on real data and a second agent checked it. A fix is not scientific approval.",
+  "documented": "The values stay as the source gave them or as the rule gives them. The problem is flagged in the data and written down; nothing was changed to match a preferred shape.",
+  "held": "The data stay in the package with the affected columns empty and the reason written down. Missing is never zero and never a pass.",
+  "left_out": "The affected items are not in either version. Each one is a row in the left-out list with its reason.",
+  "not_checked_alone": "The check could not be run on this data, so nothing here counts as passed."
+ },
+ "scope_note": "Each card gives three numbers: how many of the 22 participants, which kinds of recordings, and what share of the 84,793 observations it touches. Counts come from the package's own limitations list and from the checked handoffs, not from new runs.",
+ "fixed_note": "One card per problem. Each card says what was wrong, how much it touches, what we did, how it was checked, and what else it could affect. Modes are level ground (680 recordings), ramps (1,394), stairs (916) and treadmill (156). Cards that show an example say how it was drawn; the figures that show every participant have no example to pick.",
+ "cards": [
+  {
+   "key": "left_toe_off",
+   "section": "Timing of events on the treadmill",
+   "title": "Left treadmill toe-off was a copy of the right foot's",
+   "status": "fixed",
+   "short": "18,667 left treadmill strides rebuilt from belt force; 2 left empty",
+   "scope": {
+    "participants": "22 of 22",
+    "tasks": "Treadmill only: the copy is in 157 of 157 treadmill source recordings and in none of the 2,990 others",
+    "share": "18,667 of 84,793 observations (22.0%) are left-foot treadmill strides"
+   },
+   "wrong": "In all 157 treadmill recordings of the source, the left toe-off column is identical to the right one, while the heel strikes differ. The shared toe-off falls where the right belt unloads, so the left stance ran from the left heel strike to the right foot's next toe-off. That is about 0.08 to 0.14 of the stride (median per participant), against 0.58 to 0.63 for the right foot.",
+   "how": "A read-only scan of all 3,147 source recordings found the copy in 157 of 157 treadmill recordings and in none of 2,990 others. In one recording per participant the left belt stays loaded about 0.4 to 0.5 s after the shared toe-off, while the right belt unloads at it.",
+   "did": "We rebuilt the left toe-off as the first sample after each left heel strike, inside the stride, where the left belt vertical force is below 20 N (the contact rule already used elsewhere). 20,431 of the 20,433 left treadmill steps got a toe-off; 2 have none, because the belt force never falls below 20 N, and their stance fields stay empty. No threshold was tuned. The right foot and every other mode are untouched. Only the left stance fields changed; no signal value changed. 18,667 left-foot treadmill strides are in the package; 1,778 left treadmill steps are left out by the authors' rule and listed.",
+   "checked": "A second agent re-scanned the source (157 of 157, 0 of 2,990), recomputed 60 random left toe-offs from the exported force with no mismatch, and compared old and new exports: the same 84,793 observations in the same order, the same left-out list, and no angle, speed, moment, power, force or pressure column changed.",
+   "now": "The median left stance is now 0.587 to 0.633 of the stride per participant, next to 0.579 to 0.631 for the right foot.",
+   "example": "The first figure shows one recording per participant, all 22, so nothing was picked. Right-foot dots sit on the line; left-foot dots sit far below it.",
+   "figures": [
+    {
+     "src": "gt21-toe-off-belt.svg",
+     "question": "Did the source left toe-off agree with the left belt force?",
+     "alt": "Scatter of the fraction of the stride the belt is loaded against the source toe-off fraction, one dot per participant. Right foot dots lie on the diagonal near 0.6. Left foot dots lie near 0.1 on the vertical axis while the belt is loaded about 0.6 of the stride.",
+     "caption": "One treadmill recording per participant, 22 participants, before the fix. If the source toe-off were right, every dot would sit on the dashed line."
+    },
+    {
+     "src": "gt21-toe-off-right-check.svg",
+     "question": "How well does the belt-force rule reproduce the source toe-off on the right foot?",
+     "alt": "Per participant, the 95th percentile and the worst toe-off error in milliseconds when the rule is applied to the right foot; the 95th percentiles are at or below about 20 ms and the worst case is 195 ms.",
+     "caption": "The right foot has a correct source toe-off, so it is the test of the rule. Over 20,447 strides the median error is 0 ms, the 95th percentile is 15 ms and the worst is 195 ms; 73.7% match exactly."
+    }
+   ],
+   "knock_on": [
+    {
+     "verdict": "Also wrong, fixed",
+     "signal": "Left stance and swing timing of treadmill strides",
+     "line": "Stance now ends at the left belt's unloading.",
+     "evidence": "Median left stance per participant 0.587 to 0.633 of the stride, was 0.083 to 0.140."
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Angles, speeds, moments, powers, forces and pressure point",
+     "line": "No data column changed between the old and new export; only the stance fields in the observation notes changed.",
+     "evidence": "Streamed old-versus-new compare for all 22 participants by the worker, re-done for 3 by a second agent: 0 unexpected differences."
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Right foot and all other modes",
+     "line": "The rule is applied to the left foot of treadmill recordings only.",
+     "evidence": "86,795 steps that are not left treadmill steps are identical before and after."
+    },
+    {
+     "verdict": "Left out",
+     "signal": "Stance of 2 left strides",
+     "line": "Their stance fields are empty because no sample falls below 20 N inside the stride. Nothing was invented.",
+     "evidence": "AB12 1, AB21 1."
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "Left toe-off timing",
+     "line": "It is a rule, not a measurement. It is tested on the right foot only; the left belt is assumed to behave the same way.",
+     "evidence": "Right-foot test: median 0 ms, 95th percentile 15 ms, worst 195 ms over 20,447 strides."
+    },
+    {
+     "verdict": "Not checked",
+     "signal": "Left toe-off against an independent event",
+     "line": "No video, marker or second plate event was used to confirm the rebuilt left toe-off.",
+     "evidence": ""
+    }
+   ]
+  },
+  {
+   "key": "early_heel_strike",
+   "section": "Timing of events on the treadmill",
+   "title": "Early source heel strikes give very short left stances",
+   "status": "documented",
+   "short": "18 strides kept and flagged; 12 of them fail a coarse limit",
+   "scope": {
+    "participants": "4 of 22 (AB12 12 strides, AB27 3, AB21 2, AB30 1)",
+    "tasks": "Left foot, treadmill only, 6 recordings",
+    "share": "18 of 84,793 observations (0.02%)"
+   },
+   "wrong": "In 20 left treadmill strides the source heel strike falls while the left foot is still coming off the previous step, so applying the 20 N rule gives a stance of only 2 to 5 samples. In every case the force at the heel strike is above 20 N (100 to 590 N) and drops below 20 N within a few samples, while the stride has 40 to 73 samples below 20 N.",
+   "how": "A second agent examined three of the strides: the left force is still falling off the previous contact, or is near zero, when the heel strike is marked, and real loading starts in the last one or two samples of the stride. That points to an early source heel-strike time, not to a toe-off error.",
+   "did": "Nothing was tuned or moved. Of the 20 strides, 2 are left out by the authors' rule (they have more than two belt speeds) and 18 stay in the package, flagged. 12 of the 18 fail a coarse limit and are left out of the cleaned version; 6 remain in it. The heel-strike timing is a source question that is not resolved.",
+   "checked": "The audit list of 22 short stances was accounted one by one by a second agent: 18 flagged early heel strikes, 2 flagged as having no toe-off, 2 left out by the authors' rule, 0 unaccounted.",
+   "example": "The figure shows 8 of the 18 strides drawn at random with seed 20261201. Each line is the left belt force at the heel strike and the six samples after it.",
+   "figures": [
+    {
+     "src": "gt21-early-heel-strike.svg",
+     "question": "Why is the stance only 2 to 5 samples long?",
+     "alt": "Lines of left belt force in newtons at the source heel strike and the next six samples for eight strides. Every line starts above 20 N and falls to or below the 20 N line within a few samples.",
+     "caption": "Eight of the 18 flagged strides, drawn with seed 20261201. The dashed line is the 20 N contact rule."
+    }
+   ],
+   "knock_on": [
+    {
+     "verdict": "Open limit",
+     "signal": "Stance and swing timing of these 18 strides",
+     "line": "Stance is 2 to 5 samples long and is not a real stance.",
+     "evidence": "18 observations in 6 recordings; flagged in the data."
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "Which strides fail a coarse limit",
+     "line": "12 of the 18 fail a limit (against 1.5% of all observations). The cause was not examined.",
+     "evidence": "6 of the 18 remain in the cleaned version."
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Signal values inside the stride",
+     "line": "Nothing was altered; the strides are exactly as the rule cut them.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Not checked",
+     "signal": "Short stances on the right foot, in other modes, or with a stance above 5 samples",
+     "line": "The audit lists left treadmill strides only.",
+     "evidence": ""
+    }
+   ]
+  },
+  {
+   "key": "plate_dropout",
+   "section": "Force plates and missing values",
+   "title": "Some force samples look like a plate that dropped out",
+   "status": "documented",
+   "short": "689 observations flagged; none removed",
+   "scope": {
+    "participants": "22 of 22",
+    "tasks": "All four modes; 203 recordings (503 strides and 186 whole recordings)",
+    "share": "689 of 84,793 observations (0.8%); 33,465 flagged samples"
+   },
+   "wrong": "In these samples the vertical force reads 0 while the ankle moment is above 0.3 N·m per kg. The two disagree, which looks like a force plate that dropped out.",
+   "how": "A second agent recomputed the flag from the exported tables for two participants (AB06 and AB18) and every 200 Hz recording of both: 0 mismatches.",
+   "did": "The samples are flagged only. They are not removed, the observation is not failed for it, and nothing is filled in. 628 of the 689 observations remain in the cleaned version; the other 61 are left out for other reasons. Treating dropout as failing (689 more observations out of the cleaned version) or blanking the moments is possible and was not done.",
+   "example": "The figure counts flagged samples for all 22 participants; nothing was drawn. AB21 (5,296), AB12 (5,262), AB30 (4,943) and AB07 (3,216) have the most samples.",
+   "figures": [
+    {
+     "src": "gt21-plate-dropout.svg",
+     "question": "Which participants have the most flagged dropout samples?",
+     "alt": "Bars of flagged plate dropout samples for each of the 22 participants. AB21, AB12 and AB30 are the tallest at about 5,000 samples each.",
+     "caption": "Flagged samples per participant, 33,465 in all."
+    }
+   ],
+   "knock_on": [
+    {
+     "verdict": "Open limit",
+     "signal": "Ankle moment and power in flagged samples",
+     "line": "Force and moment disagree there, and which one is right was not examined. Both are kept as published.",
+     "evidence": "33,465 samples in 689 observations."
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Joint angles and pressure point",
+     "line": "They come from the markers or are separate columns and are not touched by the flag.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Not checked",
+     "signal": "Other plate problems",
+     "line": "Only the pattern force 0 with a large ankle moment is flagged; other kinds of plate errors are not searched for.",
+     "evidence": ""
+    }
+   ]
+  },
+  {
+   "key": "stance_mask",
+   "section": "Force plates and missing values",
+   "title": "Stance force is masked where no plate carries the foot",
+   "status": "held",
+   "short": "27,260 strides: force, moments, power and pressure point missing, not zero",
+   "scope": {
+    "participants": "22 of 22",
+    "tasks": "Level ground 10,766 strides (75.5% of its strides), ramps 12,533 (62.8%), stairs 3,961 (39.4%), treadmill 0 after the left toe-off fix",
+    "share": "27,260 of 84,793 observations (32.1%); 33.4% of the 81,647 strides"
+   },
+   "wrong": "During stance, where no plate carries at least 20 N under the foot, the force cannot be assigned to that foot. This is a measurement limit of the source.",
+   "how": "The 20 N threshold was fixed before results, as 1.5 times the roughly 13 N offset of the level-ground treadmill plate (the same rule as for Georgia Tech 2023). A separate readback found 0 masked stance samples at or above 20 N and 0 unmasked stance samples below 20 N.",
+   "did": "Vertical, forward and sideways force are set to missing in those samples, and so are the moments, power and pressure point that depend on them; nothing is set to zero. A stride is flagged when at least half of its stance samples have no force.",
+   "checked": "The masks for all 3,146 recordings equal an independent recomputation, and a scalar loop over 66 random recordings has 0 mismatches.",
+   "example": "The figure counts all strides by mode; nothing was drawn.",
+   "figures": [
+    {
+     "src": "gt21-stance-mask.svg",
+     "question": "How many strides have their stance force masked, in each mode?",
+     "alt": "Bars of the share of strides flagged for masked stance force: level ground 75.5 percent, ramps 62.8 percent, stairs 39.4 percent, treadmill 0 percent.",
+     "caption": "Strides flagged as having at least half of their stance force missing."
+    }
+   ],
+   "knock_on": [
+    {
+     "verdict": "Left out",
+     "signal": "Force, moments, power and pressure point in masked stance samples",
+     "line": "Empty, not zero. Averages over strides must skip them.",
+     "evidence": "27,260 flagged strides; 242 of them also fail a coarse limit."
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "Left-right side check",
+     "line": "It could not run in 40,800 strides because force is masked in stance, mostly on ramps and transitions. Missing is not a pass.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "Forward and sideways force",
+     "line": "At the first export, 475,592 phase force samples were missing without being masked: forward and sideways force is missing where a loaded foot fails a 45 degree heading gate, or where no plate is loaded. The cause was not diagnosed per case.",
+     "evidence": "Second implementation agrees with the count."
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Joint angles",
+     "line": "Angles come from markers, not plates.",
+     "evidence": ""
+    }
+   ]
+  },
+  {
+   "key": "held_frames",
+   "section": "Force plates and missing values",
+   "title": "Held frames: angles are missing where the model fit was bad",
+   "status": "held",
+   "short": "35,959 observations have held frames; AB27 highest",
+   "scope": {
+    "participants": "22 of 22 (AB27 holds 12.6% of its leg-frames, the most; AB06 0.9%, the least)",
+    "tasks": "All four modes; 3,123 of 3,146 recordings",
+    "share": "35,959 of 84,793 observations (42.4%): 32,836 of 81,647 strides (40.2%) and 3,123 of 3,146 whole recordings. 4.2% of phase rows and 7.0% of time rows have a missing angle"
+   },
+   "wrong": "In a held frame the fit of the body model to the markers was bad, or a marker was missing, so the angles of that leg cannot be trusted. Overall 1,132,257 of 28,831,366 leg-frames (3.9%) are held.",
+   "how": "A frame of one leg is held when a pelvis, thigh or shank marker fit leaves a residual over 20 mm, or when the knee axis is more than 45 degrees from the lateral knee marker. The two thresholds were fixed from the pilot distributions (medians 1 to 5 mm and 4 to 10 degrees), not from pass rates.",
+   "did": "Nothing is filled. In a held frame the angles, angle speeds and pressure point of that leg are missing, and so is power, which needs the speed; forces and moments are kept. The share of held frames is written in each observation's notes.",
+   "checked": "The readback found every held column empty and no value inside a held frame. Pelvis angles were re-derived from the raw markers with scalar loops for 66 random recordings (largest difference 1.1e-16 rad).",
+   "example": "The figure gives the held share for all 22 participants; nothing was drawn. AB27's right thigh marker leaves the rigid thigh in about 22% of right-leg frames (3,570 observations in 142 recordings).",
+   "figures": [
+    {
+     "src": "gt21-held-frames.svg",
+     "question": "Which participants have the most held frames?",
+     "alt": "Bars of the percent of leg-frames held for each of the 22 participants. AB27 is highest at 12.6 percent; the overall figure of 3.9 percent is drawn as a dashed line.",
+     "caption": "Share of leg-frames held, per participant."
+    }
+   ],
+   "knock_on": [
+    {
+     "verdict": "Left out",
+     "signal": "Angles, angle speeds, power and pressure point in held frames",
+     "line": "Empty with the share of held frames in the observation notes.",
+     "evidence": "520,406 of 12,247,050 phase rows and 1,012,525 of 14,415,683 time rows have a missing angle."
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Ground forces and moments",
+     "line": "They do not use the marker fit and are kept in held frames.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "Sudden-jump check across a held gap",
+     "line": "A jump across a missing stretch is not tested.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "AB27 right leg",
+     "line": "About 22% of right-leg frames are held because of the thigh marker; right-leg angles of AB27 have gaps.",
+     "evidence": "3,570 observations in 142 recordings."
+    }
+   ]
+  },
+  {
+   "key": "angle_jumps",
+   "section": "Observations that fail a coarse limit",
+   "title": "Sudden jumps of 30 degrees or more between neighbouring samples",
+   "status": "documented",
+   "short": "1,134 observations fail; the pelvis angle has the most jump samples",
+   "scope": {
+    "participants": "Spread across participants; the most failing observations (counting every limit) are AB21 96, AB25 88, AB11 84, AB17 77, AB12 73 and AB10 73",
+    "tasks": "All four modes; 743 of 3,146 whole recordings (23.6%) contain a failing angle",
+    "share": "1,134 of 84,793 observations (1.3%) fail the jump check; 1,246 fail at least one check"
+   },
+   "wrong": "A joint or segment angle changes by 30 degrees or more between two neighbouring samples, 5 ms apart. At that rate the angle would move much faster than a person can.",
+   "how": "The check runs on the 200 Hz time table. A stride fails when a jump falls inside its span. Testing the 150-sample phase grid directly was rejected: Georgia Tech 2023 showed that this makes false jumps by resampling. A second agent recomputed the check for 292 recordings and 50 strides with 0 mismatches.",
+   "did": "Observations with a jump stay in the full version with the failure recorded and are left out of the cleaned version. Nothing is smoothed, unwrapped or corrected. No angle was found beyond 180 degrees anywhere, so no whole-turn wrap is present.",
+   "checked": "All 84,793 assessment lines were recounted against the summary: 0 mismatches. Failed observations are rows 'failed a coarse limit' in the left-out list.",
+   "example": "The figure counts jump samples by signal in the time table; nothing was drawn.",
+   "figures": [
+    {
+     "src": "gt21-jumps-by-signal.svg",
+     "question": "Which angle signals jump?",
+     "alt": "Bars of samples with a jump of 30 degrees or more by signal in the time table. The pelvis angle has 1,119; the ankle angles have about 290 each; the hip angles about 210 to 240; thigh and shank angles have few.",
+     "caption": "Time table, 3,146 whole recordings. Pelvis angle in orange."
+    }
+   ],
+   "knock_on": [
+    {
+     "verdict": "Left out",
+     "signal": "1,134 observations in the cleaned version",
+     "line": "They stay in the full version with the failure noted.",
+     "evidence": "Combined with the other limits, 1,246 observations are cleaned away."
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "Cause of the jumps",
+     "line": "Whether they are marker swaps, fit failures or something else was not examined.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "Angle speeds and power at a jump",
+     "line": "They are computed from the same angles and are not limit-checked, so a jump shows up in them.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "The 30 degree threshold",
+     "line": "A coarse limit written before the data were read. It is a draft, not a reference range.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Not checked",
+     "signal": "Jumps across held gaps",
+     "line": "Not tested.",
+     "evidence": ""
+    }
+   ]
+  },
+  {
+   "key": "ankle_extremes",
+   "section": "Observations that fail a coarse limit",
+   "title": "Ankle angles outside the joint limit (zero point unreviewed)",
+   "status": "documented",
+   "short": "186 observations fail the joint-range check, almost all ankle",
+   "scope": {
+    "participants": "Spread across participants (for example AB17 44 failing observations, AB10 18, AB30 16)",
+    "tasks": "Ramp recordings hold the ten largest values (AB30, AB23, AB24); other modes were not broken down",
+    "share": "186 of 84,793 observations (0.2%); 915 ankle samples (565 in the time table, 350 in the phase table)"
+   },
+   "wrong": "The joint-range check allows hip −50 to 150°, knee −30 to 165° and ankle −80 to 50°. 186 observations fall outside, nearly all at the ankle. The ten largest ankle values are 167 to 178°, which is 117 to 128° beyond the upper limit.",
+   "how": "The limits are the same numbers used for Umich 2021 and Georgia Tech 2023, written before any of these data were read. A second agent recomputed them for 2 participants with 0 mismatches.",
+   "did": "Nothing was changed. Failing observations stay in the full version and are left out of the cleaned version. Caveat: the ankle angle is the difference of the foot and shank angles measured against gravity, and where it is zero has not been reviewed. The ankle failures may reflect that zero point and are not evidence of measurement errors.",
+   "checked": "Q01 passes with a note: the 186 ankle failures should not be read as measurement errors until the zero point is reviewed.",
+   "example": "The second figure shows the ten largest failing values, chosen by size (not at random): all ankle angles in ramp recordings of AB30, AB23 and AB24.",
+   "figures": [
+    {
+     "src": "gt21-ankle-extremes-by-signal.svg",
+     "question": "Which signals go outside the joint limit?",
+     "alt": "Bars of samples outside the joint limit in the time table by signal. The right ankle has 323 and the left ankle 242; the right knee has 101; the left knee, left hip and right hip have fewer.",
+     "caption": "Time table. Ankle angles in orange. The phase table adds 350 ankle samples."
+    },
+    {
+     "src": "gt21-ankle-worst-values.svg",
+     "question": "How far outside the limit are the largest values?",
+     "alt": "Ten dots at 167 to 178 degrees on an ankle angle axis, far right of a shaded allowed range from −80 to 50 degrees.",
+     "caption": "The ten largest failing ankle values, chosen by size."
+    }
+   ],
+   "knock_on": [
+    {
+     "verdict": "Open limit",
+     "signal": "Ankle zero point",
+     "line": "Where the ankle angle is zero has not been reviewed, so a passing ankle angle does not prove the zero is right.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "Ankle speed and power",
+     "line": "They are computed from the same angle and inherit its zero point where the angle is off.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Left out",
+     "signal": "Failing observations in the cleaned version",
+     "line": "186 joint-range failures, 93 of which also fail the jump check.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Not checked",
+     "signal": "Cause of the largest values",
+     "line": "Not examined.",
+     "evidence": ""
+    }
+   ]
+  },
+  {
+   "key": "crossing_steps",
+   "section": "Which strides are in the package",
+   "title": "Steps that cross label windows follow the authors' rule",
+   "status": "left_out",
+   "short": "81,647 of 107,367 steps exported (76.0%); 25,720 left out and listed",
+   "scope": {
+    "participants": "22 of 22",
+    "tasks": "All four modes; left out: level ground 1,952 steps, ramps 12,960, stairs 7,034, treadmill 3,774",
+    "share": "25,720 of 107,367 source steps (24.0%) are left out, plus 1 whole recording; the authors' rule on the left leg touches 39,868 strides (48.8% of 81,647)"
+   },
+   "wrong": "A source step can cross the boundary between two label windows, for example from level walking into a ramp, so the windows alone do not give it one label.",
+   "how": "The authors' own published STRIDES rule decides, as chosen for this dataset. For the authors' right-leg intervals, 106,818 matched ours with start and end within 5 ms (one sample), 3,390 were extra partial first or last intervals, and none was missed. A separate parser re-read the text of the authors' script and re-classified every step.",
+   "did": "Steps the rule drops are left out and listed with the reason (23,393 dropped, 2,076 left-leg steps with no matching case). The rule was published for the right leg only; the same rule was applied to the left leg and flagged. The authors' class 'stand' never occurs. The treadmill trial window is dropped, and treadmill steps with more than two belt speeds are left out (3,523 of the 23,393).",
+   "checked": "Every step has one disposition: 107,367 steps equal 81,647 exported plus 25,720 listed.",
+   "example": "The figure counts every step by mode; nothing was drawn.",
+   "figures": [
+    {
+     "src": "gt21-crossing-steps.svg",
+     "question": "How many steps does the authors' rule leave out, in each mode?",
+     "alt": "Stacked bars of exported and left-out source steps by mode. Ramps and stairs leave out the largest shares, about 39 and 41 percent; level ground about 12 percent; treadmill about 9 percent.",
+     "caption": "Source steps of both legs, 107,367 in all."
+    }
+   ],
+   "knock_on": [
+    {
+     "verdict": "Left out",
+     "signal": "25,720 steps and 1 recording",
+     "line": "Each is a row in the left-out list with its reason.",
+     "evidence": "AB27 treadmill recording 6 has too few fitted thigh markers and is left out whole (251 steps)."
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "Left-leg strides",
+     "line": "The authors published the rule for the right leg only. 2,076 left-leg steps had no matching case in it.",
+     "evidence": "Stairs 1,266, ramps 758, level ground 52."
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Signal values inside kept strides",
+     "line": "Only the choice of strides depends on the rule.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Not checked",
+     "signal": "Whether dropped steps are poor data",
+     "line": "The rule is the authors' label logic, not a quality judgment.",
+     "evidence": ""
+    }
+   ]
+  },
+  {
+   "key": "joint_centres",
+   "section": "How angles and power were made",
+   "title": "Joint centres come from the authors' scaled model",
+   "status": "documented",
+   "short": "Segment and joint angles depend on model-placed joint centres",
+   "scope": {
+    "participants": "22 of 22",
+    "tasks": "All four modes",
+    "share": "Every observation with an angle: all 84,793; AB28's pelvis offset touches 4,137"
+   },
+   "wrong": "Joint centres are not measured. They come from the authors' body model, scaled to each person: the hip centre is the model's hip joint in the pelvis, placed by the pelvis marker fit, and the knee and ankle centres are the model's joint positions in the shank, placed by the shank marker fit, frame by frame. The segment angles, and the hip, knee and ankle angles built from them, depend on where the model puts those centres.",
+   "how": "Each frame's fit is checked against the markers (see held frames). The knee is placed from the shank fit, because the scaled models give the thigh no fixed knee position (the knee moves with the angle); the route through the thigh is kept only as a cross-check. The marker pelvis angle follows the authors' pelvis model to within 0.6 to 2.2° RMS after a constant offset is removed (8 recordings from an earlier review and 24 drawn at random, one per mode for the six newest participants).",
+   "did": "Nothing was corrected. Angles are used as the model and markers give them.",
+   "example": "The figure shows all 32 recordings that were compared; the 24 were drawn with a recorded seed.",
+   "figures": [
+    {
+     "src": "gt21-pelvis-vs-model.svg",
+     "question": "Does the marker pelvis angle follow the authors' pelvis model?",
+     "alt": "Dots of the root-mean-square difference in degrees between the marker pelvis angle and the authors' pelvis model for 32 recordings, all between about 0.6 and 2.2 degrees, inside or near a shaded band from 0.9 to 2.7 degrees.",
+     "caption": "Constant offset removed. The shaded band is the range seen in the earlier review."
+    }
+   ],
+   "knock_on": [
+    {
+     "verdict": "Open limit",
+     "signal": "Left and right ankle height",
+     "line": "Right minus left ankle-centre height has a median of +2.3 mm (−15 to +14 mm across participants). It is participant-specific, and whether it is fit error or real posture is unresolved.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "AB28 pelvis angle",
+     "line": "About −24° in every mode, while others show −4 to −18°. It is consistent within the participant (probably marker placement or posture, not a sign error) and was not corrected.",
+     "evidence": "4,137 observations in 142 recordings."
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Moments and ground forces",
+     "line": "They are the authors' published values and are not recomputed from our joint centres.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Not checked",
+     "signal": "Joint centres against an independent measurement",
+     "line": "No independent measurement of joint centres was used.",
+     "evidence": ""
+    }
+   ]
+  },
+  {
+   "key": "power",
+   "section": "How angles and power were made",
+   "title": "Power is the published moment times LocoHub's joint speed",
+   "status": "documented",
+   "short": "Rule checked on every row of both tables: 0 differences",
+   "scope": {
+    "participants": "22 of 22",
+    "tasks": "All four modes",
+    "share": "All 84,793 observations; 78.1% of phase rows (hip, this leg) and 71.6% of time rows (hip, left) have a power value"
+   },
+   "wrong": "A power value must agree with its moment and its joint speed. The standard of 24 November 2026 (D-REF-5) defines hip, knee and ankle power as the published moment times LocoHub's own joint angular velocity of the same leg.",
+   "how": "The export already followed this rule: the build compared every row of every export file, in both tables and 12 power columns, and found 0 deviating rows. A second agent reproduced it for 67,842 sampled rows and 6 joint-sides to a relative tolerance of 1e-9.",
+   "did": "No value was changed. The package only verifies the rule. Power is missing wherever the moment or the speed is missing. LocoHub's joint speed is the central difference of the joint angle over the two neighbouring 200 Hz samples, with no smoothing.",
+   "example": "The figure lists all 12 columns with rows compared; nothing was drawn.",
+   "figures": [
+    {
+     "src": "gt21-power-check.svg",
+     "question": "Does power equal moment times joint speed on every row?",
+     "alt": "Bars of rows with a power value, in millions, for hip, knee and ankle power on each leg in the phase and time tables; every bar is labelled 0 differ.",
+     "caption": "Rows with a power value for each of the 12 power columns; each is labelled with the number of rows that differ from moment times speed."
+    }
+   ],
+   "knock_on": [
+    {
+     "verdict": "Left out",
+     "signal": "Power in held frames and masked stance",
+     "line": "Missing where the speed or the moment is missing.",
+     "evidence": "See the held-frames and masked-stance cards."
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "Power at angle jumps and extremes",
+     "line": "Power has no limit of its own, so it carries any jump or offset of the angle.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Not checked",
+     "signal": "Joint powers against any reference",
+     "line": "They are limit-free, so not assessed. A missing or unassessed signal is not evidence of passing.",
+     "evidence": ""
+    }
+   ]
+  },
+  {
+   "key": "source_copy",
+   "section": "Source and checks",
+   "title": "The source is the authors' 2024 copy, without publisher checksums",
+   "status": "documented",
+   "short": "All 22 participants; one compared with the 2021 archive",
+   "scope": {
+    "participants": "22 of 22; compared with the 2021 archive: AB17 only",
+    "tasks": "All four modes",
+    "share": "All 84,793 observations"
+   },
+   "wrong": "The source files of all 22 participants come from the authors' own 2024 copy. It carries no publisher checksums, so the source bytes cannot be checked against the checksummed 2021 publisher archive. For 21 participants nothing was compared.",
+   "how": "For AB17 a file-by-file comparison of the 2021 archive's central directory with the 2024 copy found 1,464 files identical in size and checksum, 136 only in 2024 (133 'ik_offset' files and 3 static files), and 2 ramp joint-moment files that differ. The listing shows every ramp joint-moment file rewritten on 23 and 24 September 2021, after the 2021 archive (listing times are metadata, not proof); 59 of AB17's 61 such files still match the archive's checksums.",
+   "did": "Nothing was changed. The limitation is written in the package and in its notes.",
+   "example": "The figure shows all 22 participants and which one was compared.",
+   "figures": [
+    {
+     "src": "gt21-source-compared.svg",
+     "question": "Which participants' source files were compared with the 2021 archive?",
+     "alt": "A grid of 22 participant tiles with only AB17 filled blue as compared; the rest are grey.",
+     "caption": "AB17: 1,464 files identical, 2 differ, 136 only in the 2024 copy."
+    }
+   ],
+   "knock_on": [
+    {
+     "verdict": "Open limit",
+     "signal": "Ramp joint moments",
+     "line": "Their files are listed as rewritten after the 2021 archive. For AB17 two of them differ from it; what changed inside them was not decoded.",
+     "evidence": "AB17 ramp recordings 1 (right, 01_01) and 6 (right, 01_04)."
+    },
+    {
+     "verdict": "Not checked",
+     "signal": "Source bytes of 21 participants",
+     "line": "Not compared with the 2021 release.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "File integrity of the copy",
+     "line": "All 22 participants' files were read without failure, and the package hashes are bound to the guarded-job receipts.",
+     "evidence": ""
+    }
+   ]
+  },
+  {
+   "key": "plane_glitch",
+   "section": "Source and checks",
+   "title": "The leg-plane glitch check could not be run",
+   "status": "not_checked_alone",
+   "short": "Not checked for any of the 84,793 observations",
+   "scope": {
+    "participants": "22 of 22",
+    "tasks": "All four modes",
+    "share": "All 84,793 observations"
+   },
+   "wrong": "The check asks whether a leg's side-view plane jumps away from the walking direction. The export has no per-frame plane, so the check cannot be computed from it.",
+   "how": "Every observation is recorded as not checked for this rule. The number of held bad-fit frames is counted instead and is on the held-frames card.",
+   "did": "Nothing was invented. A not-checked state is never a pass. Recomputing it from the markers would need a new native job and was not done.",
+   "example": "The figure shows how every check came out, for all observations.",
+   "figures": [
+    {
+     "src": "gt21-checks-run.svg",
+     "question": "Which checks were run on how many observations?",
+     "alt": "Stacked bars of the share of observations passed, failed, missing or not checked for each check. The plane glitch bar is entirely grey, not checked. The missing-values check is entirely orange.",
+     "caption": "All 84,793 observations. Every observation has at least one missing sample (held or masked), so the missing-values check does not separate them."
+    }
+   ],
+   "knock_on": [
+    {
+     "verdict": "Not checked",
+     "signal": "Plane glitches in leg angles",
+     "line": "Some may remain in the data.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "Other checks that did not run everywhere",
+     "line": "The left-right side check is missing in 40,800 strides and not applicable to the 3,146 whole recordings.",
+     "evidence": ""
+    }
+   ]
+  }
+ ],
+ "limits_intro": "Every limitation below stays in the data as a note. Nothing is resampled, filled in or relabelled to hide it. Counts come from the package's own limitations list.",
+ "limit_plain": {
+  "held_frames_in_angles": "Held frames: the marker fit was bad or a marker was missing, so angles, speeds, power and the pressure point of that leg are missing there. Nothing is filled.",
+  "plate_dropout_samples": "Plate dropout: samples where the vertical force is 0 while the ankle moment is above 0.3 N·m/kg. Flagged only; nothing removed.",
+  "early_source_heel_strike_short_left_stance": "Early source heel strikes: 18 left treadmill strides where the source heel strike falls while the foot is still unloading, so the stance is 2 to 5 samples long. The timing is a source question and is not resolved.",
+  "left_stance_unavailable_no_toe_off": "Two left treadmill strides have no toe-off, because the belt force never falls below 20 N inside the stride. Their stance fields are empty.",
+  "left_treadmill_stance_from_belt_force": "Left treadmill toe-off was rebuilt from the belt force (below 20 N), because the source copies the right foot's toe-off into the left. The same rule reproduces the right foot with a median error of 0 ms, a 95th percentile of 15 ms and a worst case of 195 ms.",
+  "incomplete_stance_force": "Stance force is masked: where no plate carries 20 N under the foot in stance, force, moments, power and the pressure point are missing, not zero. At least half of the stance samples are missing in these strides.",
+  "authors_rule_extended_to_left_leg": "The authors' stride rule, published for the right leg only, was applied to the left leg and flagged.",
+  "ab27_right_thigh_held_frames": "AB27 right thigh: the thigh marker leaves the rigid thigh in about 22 percent of right-leg frames, so those frames are held.",
+  "ab28_pelvis_angle_offset": "AB28 pelvis angle: about −24° in every mode, while other participants show −4 to −18°. Consistent within the participant; not corrected.",
+  "p1_unchecked": "Leg-plane glitch (P1) could not be checked, because the export has no per-frame plane. Never a pass.",
+  "ankle_zero_offset_unreviewed": "Ankle failures may reflect an unreviewed zero offset: the ankle angle is the difference of the foot and shank angles measured against gravity, and where it is zero has not been reviewed. The coarse limits are a draft, not approved reference ranges.",
+  "source_is_authors_2024_copy": "The source files of all 22 participants are the authors' 2024 copy without publisher checksums. Compared with the 2021 archive for AB17 only (1,464 of 1,466 files identical).",
+  "power_from_moment_and_speed": "Hip, knee and ankle power are the published moment times LocoHub's joint speed. The build checked every row and found no difference. Power is missing wherever the moment or the speed is missing.",
+  "authors_rule_exclusions": "Strides left out by the authors' rule, steps whose case was not found, steps of a recording that was not converted, and one recording with too few fitted markers. Every one is a row in the left-out list."
+ },
+ "limit_unchecked_intro": "Signal families with no limit, so not checked: ",
+ "limit_unchecked_plain": [
+  "joint speeds",
+  "joint moments",
+  "joint powers (moment times speed, not limit-checked)",
+  "ground forces in body weights",
+  "the pressure point beyond the coarse limit of 0.5 m forward and 0.3 m up or sideways (only that limit is checked)",
+  "the leg-plane glitch"
+ ],
+ "exclusion_mode": "manifest_paths",
+ "exclusion_rows": [
+  {
+   "what": "Steps dropped by the authors' rule",
+   "count": [
+    "exclusions_by_kind",
+    "authors_rule_discard"
+   ],
+   "where": "Neither version",
+   "why": "A step that crosses label windows follows the authors' rule, which drops it. 3,523 of them are treadmill steps with more than two belt speeds."
+  },
+  {
+   "what": "Left-leg steps with no matching case in the authors' rule",
+   "count": [
+    "exclusions_by_kind",
+    "authors_rule_case_not_found"
+   ],
+   "where": "Neither version",
+   "why": "The rule was published for the right leg only. Stairs 1,266, ramps 758, level ground 52."
+  },
+  {
+   "what": "Steps of a recording that was not converted",
+   "count": [
+    "exclusions_by_kind",
+    "recording_not_converted_in_pass"
+   ],
+   "where": "Neither version",
+   "why": "AB27 treadmill recording 6 has too few fitted thigh markers."
+  },
+  {
+   "what": "Recording with too few fitted markers",
+   "count": [
+    "exclusions_by_kind",
+    "recording_excluded_marker_fit"
+   ],
+   "where": "Neither version",
+   "why": "AB27 treadmill recording 6: fewer than 3 fitted markers on the right thigh."
+  },
+  {
+   "what": "Failed a coarse limit",
+   "count": [
+    "exclusions_by_stage",
+    "filtered_variant_only"
+   ],
+   "where": "Cleaned version only",
+   "why": "Kept in the full version with the failure recorded; left out of the cleaned version only."
+  }
+ ],
+ "accounting_note": "Accounting: {total:,} rows. {upstream:,} steps or recordings are left out of both versions. {failed:,} observations are left out of the cleaned version only. The full version has {full:,} observations and the cleaned version has {filtered:,}, which is the full version minus those {failed:,}. The left-out list has one row each.",
+ "checked": {
+  "checked": [
+   "Every exported observation set was read back by separate code: the observations equal the exports' own lists, the 150-sample grid runs 0 to 100 percent, time is strictly increasing, the cleaned version is the full version minus exactly the 1,246 failed observations, and all file hashes match.",
+   "A random sample (seed 20261207; AB09, AB10, AB28; 30 strides and 3 recordings each, 5,544 column values) equals the export value for value, and power equals moment times joint speed on every sampled row.",
+   "The first export was checked on all 81,647 strides and 3,146 recordings against the processed tables (largest difference 5.7e-14), and every force of 88 random recordings was re-derived from the 1 kHz plate (largest difference 1.6e-12 body weights).",
+   "Power equals moment times joint speed on every row of both tables for all 12 power columns: 0 deviating rows.",
+   "Joint angles against coarse limits (hip −50 to 150°, knee −30 to 165°, ankle −80 to 50°), angles for jumps of 30° or more between neighbouring samples, the pressure point against 0.5 m forward and 0.3 m up and sideways of the foot, and a left-right side check. 83,547 of 84,793 observations pass; 1,246 fail. A second agent recomputed the assessment with 0 mismatches.",
+   "The left toe-off rule reproduces the right foot's source toe-off: median 0 ms, 95th percentile 15 ms, worst 195 ms over 20,447 strides.",
+   "Every item left out of either version has a row and a reason in the left-out list: 26,967 rows."
+  ],
+  "not_checked": [
+   "Joint speeds, moments, powers, ground forces and the foot-frame pressure point beyond its coarse limit have no limit, so they were not assessed. A missing or unassessed signal is not evidence of passing.",
+   "The leg-plane glitch check (P1) could not be run on any observation.",
+   "Where the ankle angle is zero has not been reviewed.",
+   "The limits are a draft written before any of these data were read. They are not approved reference ranges.",
+   "Source files of 21 of 22 participants were not compared with the 2021 publisher archive.",
+   "The rebuilt left toe-off was tested on the right foot only, not against an independent left event.",
+   "The cause of the early heel strikes, of the angle jumps and of the largest ankle values was not examined.",
+   "The cause of 475,592 force samples missing at the first export without a mask was not diagnosed per case."
+  ],
+  "note": "A passing check is not scientific approval. This page approves the conversion arithmetic and the file structure only."
+ },
+ "phase_note": "Mean (line) and spread of one standard deviation (band) of each signal over the stride, from the cleaned version, for the two legs pooled. Colors are the task variants; where a task has many variants, three or four are shown. Moments and ground force are shown as they are released: the assessment did not check them, and they do not mean the signals are scientifically approved.",
+ "phase_columns": [
+  "pelvis_sagittal_angle_rad",
+  "thigh_sagittal_angle_ipsi_rad",
+  "shank_sagittal_angle_ipsi_rad",
+  "foot_sagittal_angle_ipsi_rad",
+  "hip_flexion_angle_ipsi_rad",
+  "knee_flexion_angle_ipsi_rad",
+  "ankle_dorsiflexion_angle_ipsi_rad",
+  "hip_flexion_moment_ipsi_Nm_kg",
+  "knee_flexion_moment_ipsi_Nm_kg",
+  "ankle_dorsiflexion_moment_ipsi_Nm_kg",
+  "grf_vertical_ipsi_BW",
+  "cop_anterior_ipsi_m"
+ ],
+ "plain": {
+  "pelvis_sagittal_angle_rad": {
+   "name": "Pelvis tilt",
+   "unit": "radians"
+  },
+  "thigh_sagittal_angle_ipsi_rad": {
+   "name": "Thigh angle",
+   "unit": "radians"
+  },
+  "shank_sagittal_angle_ipsi_rad": {
+   "name": "Shank angle",
+   "unit": "radians"
+  },
+  "foot_sagittal_angle_ipsi_rad": {
+   "name": "Foot angle",
+   "unit": "radians"
+  },
+  "hip_flexion_angle_ipsi_rad": {
+   "name": "Hip angle",
+   "unit": "radians"
+  },
+  "knee_flexion_angle_ipsi_rad": {
+   "name": "Knee angle",
+   "unit": "radians"
+  },
+  "ankle_dorsiflexion_angle_ipsi_rad": {
+   "name": "Ankle angle",
+   "unit": "radians"
+  },
+  "hip_flexion_moment_ipsi_Nm_kg": {
+   "name": "Hip moment",
+   "unit": "newton-metres per kg body mass"
+  },
+  "knee_flexion_moment_ipsi_Nm_kg": {
+   "name": "Knee moment",
+   "unit": "newton-metres per kg body mass"
+  },
+  "ankle_dorsiflexion_moment_ipsi_Nm_kg": {
+   "name": "Ankle moment",
+   "unit": "newton-metres per kg body mass"
+  },
+  "grf_vertical_ipsi_BW": {
+   "name": "Up-down ground force",
+   "unit": "body weights"
+  },
+  "cop_anterior_ipsi_m": {
+   "name": "Pressure point, forward in the foot frame",
+   "unit": "metres"
+  }
+ },
+ "phase_panels": [
+  {
+   "label": "Level walking",
+   "series": [
+    {
+     "label": "Level walking",
+     "color": "#0072B2",
+     "task": "level_walking",
+     "task_id": "level"
+    }
+   ]
+  },
+  {
+   "label": "Walking down slopes",
+   "series": [
+    {
+     "label": "5.2° decline",
+     "color": "#56B4E9",
+     "task": "decline_walking",
+     "task_id": "decline_5.2deg"
+    },
+    {
+     "label": "9.2° decline",
+     "color": "#009E73",
+     "task": "decline_walking",
+     "task_id": "decline_9.2deg"
+    },
+    {
+     "label": "18.0° decline",
+     "color": "#0072B2",
+     "task": "decline_walking",
+     "task_id": "decline_18.0deg"
+    }
+   ]
+  },
+  {
+   "label": "Walking up slopes",
+   "series": [
+    {
+     "label": "5.2° incline",
+     "color": "#E69F00",
+     "task": "incline_walking",
+     "task_id": "incline_5.2deg"
+    },
+    {
+     "label": "9.2° incline",
+     "color": "#CC79A7",
+     "task": "incline_walking",
+     "task_id": "incline_9.2deg"
+    },
+    {
+     "label": "18.0° incline",
+     "color": "#D55E00",
+     "task": "incline_walking",
+     "task_id": "incline_18.0deg"
+    }
+   ]
+  },
+  {
+   "label": "Stairs",
+   "series": [
+    {
+     "label": "Up",
+     "color": "#D55E00",
+     "task": "stair_ascent",
+     "task_id": "stair_ascent"
+    },
+    {
+     "label": "Down",
+     "color": "#0072B2",
+     "task": "stair_descent",
+     "task_id": "stair_descent"
+    }
+   ]
+  },
+  {
+   "label": "Starting, stopping and turning",
+   "series": [
+    {
+     "label": "Stand to walk",
+     "color": "#009E73",
+     "task": "transition",
+     "task_id": "stand_to_walk"
+    },
+    {
+     "label": "Walk to stand",
+     "color": "#56B4E9",
+     "task": "transition",
+     "task_id": "walk_to_stand"
+    },
+    {
+     "label": "Turn left",
+     "color": "#E69F00",
+     "task": "transition",
+     "task_id": "turn_left"
+    },
+    {
+     "label": "Turn right",
+     "color": "#D55E00",
+     "task": "transition",
+     "task_id": "turn_right"
+    }
+   ]
+  }
+ ],
+ "status_text": {
+  "checked": {
+   "label": "Checked",
+   "note": "Checked against impossible angle ranges."
+  },
+  "offset_unverified": {
+   "label": "Checked; zero point not checked",
+   "note": "Checked only against clearly impossible values. Where the ankle angle is zero has not been checked."
+  },
+  "partly_checked": {
+   "label": "Partly checked",
+   "note": "Checked for sudden jumps only; no plausible range exists to check against."
+  },
+  "pass": {
+   "label": "Checked",
+   "note": "Checked against the coarse limits for the pressure point."
+  },
+  "unchecked": {
+   "label": "Not checked",
+   "note": "No coarse limit exists, so no check was run."
+  }
+ },
+ "column_groups": [
+  {
+   "name": "Pelvis, thigh, shank and foot angles",
+   "state": "partly_checked",
+   "unit": "radians",
+   "cols": [
+    "pelvis_sagittal_angle_rad",
+    "thigh_sagittal_angle_ipsi_rad",
+    "thigh_sagittal_angle_contra_rad",
+    "shank_sagittal_angle_ipsi_rad",
+    "shank_sagittal_angle_contra_rad",
+    "foot_sagittal_angle_ipsi_rad",
+    "foot_sagittal_angle_contra_rad"
+   ],
+   "note": "Angles of body segments against gravity, from the markers and the authors' scaled model."
+  },
+  {
+   "name": "Hip and knee angles",
+   "state": "checked",
+   "unit": "radians",
+   "cols": [
+    "hip_flexion_angle_ipsi_rad",
+    "hip_flexion_angle_contra_rad",
+    "knee_flexion_angle_ipsi_rad",
+    "knee_flexion_angle_contra_rad"
+   ],
+   "note": "Differences of the segment angles; flexion is positive. Missing in held frames."
+  },
+  {
+   "name": "Ankle angle",
+   "state": "offset_unverified",
+   "unit": "radians",
+   "cols": [
+    "ankle_dorsiflexion_angle_ipsi_rad",
+    "ankle_dorsiflexion_angle_contra_rad"
+   ],
+   "note": "Difference of the shank and foot angles; its zero point is unreviewed."
+  },
+  {
+   "name": "Hip, knee and ankle angle speeds",
+   "state": "unchecked",
+   "unit": "radians per second",
+   "cols": [
+    "hip_flexion_velocity_ipsi_rad_s",
+    "hip_flexion_velocity_contra_rad_s",
+    "knee_flexion_velocity_ipsi_rad_s",
+    "knee_flexion_velocity_contra_rad_s",
+    "ankle_dorsiflexion_velocity_ipsi_rad_s",
+    "ankle_dorsiflexion_velocity_contra_rad_s"
+   ],
+   "note": "Central difference of the angle over the neighbouring samples, no smoothing; missing in held frames."
+  },
+  {
+   "name": "Hip, knee and ankle moments",
+   "state": "unchecked",
+   "unit": "newton-metres per kg body mass",
+   "cols": [
+    "hip_flexion_moment_ipsi_Nm_kg",
+    "hip_flexion_moment_contra_Nm_kg",
+    "knee_flexion_moment_ipsi_Nm_kg",
+    "knee_flexion_moment_contra_Nm_kg",
+    "ankle_dorsiflexion_moment_ipsi_Nm_kg",
+    "ankle_dorsiflexion_moment_contra_Nm_kg"
+   ],
+   "note": "Published values; the knee moment is the knee flexor moment. Missing where stance force is masked."
+  },
+  {
+   "name": "Hip, knee and ankle powers",
+   "state": "unchecked",
+   "unit": "watts per kg body mass",
+   "cols": [
+    "hip_flexion_power_ipsi_W_kg",
+    "hip_flexion_power_contra_W_kg",
+    "knee_flexion_power_ipsi_W_kg",
+    "knee_flexion_power_contra_W_kg",
+    "ankle_dorsiflexion_power_ipsi_W_kg",
+    "ankle_dorsiflexion_power_contra_W_kg"
+   ],
+   "note": "Published moment times LocoHub's joint speed."
+  },
+  {
+   "name": "Ground force: up-down",
+   "state": "unchecked",
+   "unit": "body weights",
+   "cols": [
+    "grf_vertical_ipsi_BW",
+    "grf_vertical_contra_BW"
+   ],
+   "note": "Plate force divided by body weight; masked where no plate carries the foot."
+  },
+  {
+   "name": "Ground force: forward and sideways",
+   "state": "unchecked",
+   "unit": "body weights",
+   "cols": [
+    "grf_anterior_ipsi_BW",
+    "grf_anterior_contra_BW",
+    "grf_lateral_ipsi_BW",
+    "grf_lateral_contra_BW"
+   ],
+   "note": "Missing where a loaded foot fails the heading gate or the stance force is masked."
+  },
+  {
+   "name": "Pressure point in the foot frame",
+   "state": "pass",
+   "unit": "metres",
+   "cols": [
+    "cop_anterior_ipsi_m",
+    "cop_anterior_contra_m",
+    "cop_vertical_ipsi_m",
+    "cop_vertical_contra_m",
+    "cop_lateral_ipsi_m",
+    "cop_lateral_contra_m"
+   ],
+   "note": "Ankle frame, origin 100 mm forward of the ankle joint centre; the export carries this definition as written."
+  }
+ ],
+ "columns_note": "\"Have a value\" is the share of observations with at least one value in the column; a column that is only partly empty (held frames, masked stance) still counts as having a value. Columns are listed for the stride files; the time files carry the same signals with left and right names instead of this-leg and other-leg names. A column can be empty in an observation where a plate or marker is missing; the reason is written in the file's list of empty signals.",
+ "downloads_text": "<strong>Local review files, not published yet.</strong> The full version, the cleaned version (each as a stride table and a time table), the list of left-out items and the list of limitations exist only on the maintainer's computer (22 participants, 84,793 observations full, 83,547 cleaned). They will get download links when they are released."
+}
