@@ -350,12 +350,12 @@ whether two recordings are the same recording.</p>
 <h2>5. Columns compared and not compared</h2>
 <table class="small"><thead><tr><th>Column</th><th>Training</th><th>LocoHub</th><th>Reporting size</th></tr></thead><tbody>{mapping}</tbody></table>
 <p>Training columns not compared (same list for both files):</p><table class="small"><tbody>{un_rows}</tbody></table>
-<p>{lh_unmapped_note} LocoHub UM21 (phase only) has no ankle velocity or vertical force column, so those two rows have no matched samples.</p>
+<p>{lh_unmapped_note} LocoHub UM21 package v4 (phase only) has no ankle velocity or vertical force column, so those two rows have no matched samples.</p>
 <h2>6. Caveats</h2>
 <ul>
 <li><b>Velocity</b> in the training file is its own backward difference of the sampled angle; LocoHub uses the source or stride slope. The difference is a method difference.</li>
 <li><b>Centre of pressure</b>: the LocoHub value has the 0.100 m origin shift added back before comparing, so the mean difference also contains any difference between the two ankle-centre definitions. It is only present where force was measured.</li>
-<li><b>UM21 has no LocoHub force</b>, and no time table; comparisons use LocoHub phase samples only.</li>
+<li><b>UM21 package v4, the one compared here, has no LocoHub force and no time table</b>; comparisons use LocoHub phase samples only. Package v5 adds a time table with force and was not compared.</li>
 <li><b>Angles</b>: the training UM21 shank/foot values include its own &minus;2&times; pelvis tilt correction; the training GT21 values were built on the old pelvis tilt, and the angle zero differs between the two (static pose vs gravity).</li>
 <li><b>Coverage</b> is the fraction of compared positions with a value in each series; a missing value in either series removes that sample from every statistic of that column.</li>
 <li>Training recordings with too little finite ankle moment to align are listed, not compared; every skipped recording is counted in section 4.</li>

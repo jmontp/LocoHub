@@ -27,7 +27,7 @@ code { font-size:.88em; }
 
 <div class="box">
 <strong>Short version.</strong>
-(1) UM21 package v4 has no ground force and no time table (phase strides only, treadmill only), so your trainer cannot use it as it is.
+(1) UM21 package v4 has no ground force and no time table (phase strides only, treadmill only), so your trainer could not use it as it was. Package v5, built after this comparison, adds a time table with ground force; this page compares v4 only.
 (2) GT21 rebuild has force, time tables and 22 participants (you use 15), but its angle zero, segment angles, CoP origin and metadata rules all differ from your file.
 (3) Your loader fixes (UM21 pelvis sign, GT21 force sidecar, CoP sidecars) are made redundant for GT21 and partly for UM21, but the UM21 CoP rule conflicts with your held-out-moment rule.
 </div>
@@ -58,7 +58,7 @@ code { font-size:.88em; }
 <tr><td>Participants</td><td>UM21 10; GT21 15</td><td>10</td><td>22 (adds AB12, AB15, AB17, AB19, AB23, AB27, AB28 to your 15). AB27 treadmill_06_01 excluded.</td></tr>
 <tr><td>Tasks</td><td>UM21: level, incline, decline, transition, run, stair up, stair down. GT21: level, incline, decline, transition, stairs.</td><td>Treadmill level, 5 and 10 deg incline and decline, plus speed/slope transitions. No run, no stairs. Six of 50 recordings left out (wrong clock or copy).</td><td>Overground level (with turns), ramps, stairs, treadmill. Labels follow the authors' STRIDES.m rule.</td></tr>
 <tr><td>Amount</td><td>Continuous 200 Hz rows</td><td>44 recordings, 7,545 strides (7,523 after filtering), 1,131,750 phase rows</td><td>81,647 phase strides (both legs) and 3,146 continuous recordings (14.4 M frames); 25,720 steps and 1 recording listed as exclusions. 22 participants.</td></tr>
-<tr><td>Representation</td><td>Time, 200 Hz, one reference leg per row</td><td>Phase only (150 samples, 0 to 100 %). No time table.</td><td>Both: phase files and one continuous 200 Hz observation per recording with left and right columns (per its README).</td></tr>
+<tr><td>Representation</td><td>Time, 200 Hz, one reference leg per row</td><td>Phase only (150 samples, 0 to 100 %). No time table in v4 (package v5 adds one).</td><td>Both: phase files and one continuous 200 Hz observation per recording with left and right columns (per its README).</td></tr>
 <tr><td>Vertical and shear force</td><td>Yes (GT21 from your sidecar)</td><td><strong>None.</strong></td><td>Yes, ipsi and contra, re-derived from the 1 kHz plates. Missing (never 0) in stance where no owned plate carries 20 N. A foot owning no loaded plate reads 0 (a stated choice).</td></tr>
 <tr><td>Angle source and zero</td><td>UM21 Plug-in Gait (pelvis-corrected by you). GT21 authors' static-pose-relative angles; foot-flat foot angle mean -0.134 rad.</td><td>Markers, in each leg's own side-view plane, from gravity (thigh and shank from straight down, foot and pelvis from forward horizontal). Ankle = foot minus shank.</td><td>Same standard, from markers and scaled models. Frames where a rigid-fit residual is above 20 mm or the knee axis is more than 45 deg off the knee marker are held (angles, speeds, CoP missing; force and moment kept): 3.9 % of leg-frames, AB27 12.6 %.</td></tr>
 <tr><td>Segment angles</td><td>As in the old files (GT21 built on a pelvis tilt now known to be wrong)</td><td>Measured, not built from joint angles</td><td>Pelvis from markers (medians -9 to -18 deg, AB28 about -24 deg); others measured</td></tr>
@@ -72,7 +72,7 @@ code { font-size:.88em; }
 <h2>UM21 (package v4)</h2>
 <h3>What to change in your loader</h3>
 <ol>
-<li><strong>Cannot train on it yet.</strong> Your inputs need vertical force, your swing mask, CoP-measured rule and window_ok all use it. v4 has no force and no time table. Keep the old UM21 time file for training until a time table with force exists (not planned in the docs read).</li>
+<li><strong>Cannot train on it yet.</strong> Your inputs need vertical force, your swing mask, CoP-measured rule and window_ok all use it. v4 has no force and no time table. Package v5, built after this comparison, has both; it has not been compared with your training file yet, so keep the old UM21 time file for training until it is.</li>
 <li>If a time table appears: drop <code>fix_um21_pelvis_sign</code> (LocoHub now measures thigh, shank and foot from markers; the old build error was twice the pelvis tilt, 2 to 58 deg on average, which is what your fix targets). Keep <code>check_foot_flat</code> and see whether the new zero passes; the v4 page says that was not checked.</li>
 <li>Keep or drop your AB01 Tread_i5 exclusion: v4 already leaves out AB01 5 deg incline (the copy) and five other recordings with clock problems (AB01 10 and 5 deg decline, AB08 and AB09 10 deg incline, AB10 level).</li>
 <li>CoP: shift by the origin. Your value is measured from the ankle joint centre, LocoHub's from a point 100 mm ahead of it, so roughly your s = LocoHub forward + 0.100 m, if both use the same ankle centre. The ankle centres differ in definition (yours: malleolar midpoint + 35.7 mm down the shank, borrowed from GT23); the size of that gap is unknown.</li>

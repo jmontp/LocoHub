@@ -6,8 +6,8 @@
  "css_class": "um21",
  "r01_task_id": "UM21-R01",
  "meta_description": "UMich 2021 treadmill walking: what we fixed, what we left out, what we checked and what is still limited.",
- "heading_note": "Local review version, not yet released. Nothing on this page has been approved scientifically.",
- "downloads_text": "<strong>Local review files, not published yet.</strong> The full version, the cleaned version, the list of left-out strides and the log of turned ankle samples exist only on the maintainer's computer. They will get download links when they are released.",
+ "heading_note": "Local review version, not yet released. Nothing on this page has been approved scientifically. This version has a phase table and a time table.",
+ "downloads_text": "<strong>Local review files, not published yet.</strong> The full version and the cleaned version (each with a phase table and a time table), the list of left-out items and the notes on limitations exist only on the maintainer's computer. They will get download links when they are released.",
  "status_text": {
   "checked": {
    "label": "Checked",
@@ -26,39 +26,41 @@
    "note": "Checked against coarse physical limits (angles against impossible ranges and sudden jumps, pressure point against distance from the foot)."
   }
  },
- "bundle": "converted_datasets/reconversion_v2/um21_r01_package_v4",
+ "bundle": "converted_datasets/reconversion_v2/um21_r01_package_v5",
  "handoff": "docs/maintainers/handoffs/UM21-R01-v3.json",
  "scope": "docs/quality/audits/um21-problem-scope.json",
- "verified_date": "2026-11-25",
- "lead": "Treadmill walking from {subjects} participants at level, 5° and 10° incline, and 5° and 10° decline, plus the transitions between them (belt speed or slope changing): {recordings} recordings. This is a local review version and is not released. The full version has <strong>{full:,} strides</strong>; the cleaned version has <strong>{filtered:,}</strong>. Every stride has exactly 150 samples from 0 to 100 percent of the stride. Joint angles are measured from markers against gravity, power is moment times joint speed, and the pressure point in the foot's frame is published for {legs_published} of {legs_total} legs.",
+ "verified_date": "2026-11-26",
+ "lead": "Treadmill walking from {subjects} participants at level, 5° and 10° incline, and 5° and 10° decline, plus the transitions between them (belt speed or slope changing): {recordings} recordings. This is a local review version and is not released. The full version has <strong>{full:,} observations</strong>: 7,545 strides in the phase table (exactly 150 samples from 0 to 100 percent of the stride) and 44 continuous recordings in the time table (one per recording, 100 samples per second, with the ground force of each foot in body weights). The cleaned version has <strong>{filtered:,}</strong>. Joint angles are measured from markers against gravity, power is moment times joint speed, and the pressure point in the foot's frame is published for {legs_published} of {legs_total} legs.",
  "overview_figures": [
   {
-   "src": "page-left-out.svg",
-   "question": "What was left out, and why?",
-   "alt": "Bars of strides left out: 21 with a pressure point too far from the foot, 15 too short or too long, 2 with a sudden ankle jump, 1 with an ankle angle outside the possible range.",
-   "caption": "Dark bars were left out of both versions; orange bars are left out of the cleaned version only."
+   "src": "um21-left-out-v5.svg",
+   "question": "What was left out of the cleaned version, and why?",
+   "alt": "Bars of items left out: 21 strides with a pressure point too far from the foot, 15 strides too short or too long, 2 strides with a sudden ankle jump, 1 stride with an ankle angle outside the possible range, and 1 time recording with sudden jumps.",
+   "caption": "Gray bars were left out of both versions (17 strides); orange-red bars are left out of the cleaned version only (23 items: 22 strides and 1 time recording)."
   },
   {
    "src": "page-limitations.svg",
    "question": "How many strides does each limitation touch?",
    "alt": "Bars of the number of strides touched by each of 9 limitations; several touch all 7,545.",
-   "caption": "One stride can carry several limitations."
+   "caption": "Strides in the phase table only. One stride can carry several limitations; the time-table limitations are in the table below."
   }
  ],
  "status_words": {
   "fixed": "Fixed and checked",
   "left_out": "Left out, checked",
   "retired": "No longer needed",
-  "held": "Held back, left as it is"
+  "held": "Held back, left as it is",
+  "documented": "Kept and flagged, nothing changed"
  },
  "status_key": {
   "fixed": "A fix was run on real data and a second agent checked it. A fix is not scientific approval.",
   "left_out": "The affected data are left out of the package, with the reason written down. Nothing was shifted or estimated.",
   "retired": "The earlier fix is no longer needed because this version computes the value another way.",
-  "held": "The data stay in the package, with the affected columns empty and the reason written down. They were not investigated further."
+  "held": "The data stay in the package, with the affected columns empty and the reason written down. They were not investigated further.",
+  "documented": "The values stay as the source gave them or as the rule gives them. The point is flagged in the data and written down; nothing was changed to match a preferred shape."
  },
- "scope_note": "Counts in the grids describe the source recordings each problem touched, measured before the fix for the six earlier problems and in this package for the newer ones. Each card says what this version does about them.",
- "fixed_note": "One card per problem. Each card says what was wrong, how much of the data it touched, what we did, how it was checked, and what else it could affect. Example strides were drawn at random with a recorded seed, not hand-picked.",
+ "scope_note": "Counts in the grids describe the source recordings each problem touched, measured before the fix for the six earlier problems and in this package for the newer ones. The last section is new in this version: the time table and the ground force. Each card says what this version does about them.",
+ "fixed_note": "One card per problem. Each card says what was wrong, how much of the data it touched, what we did, how it was checked, and what else it could affect. Example strides were drawn at random with a recorded seed, not hand-picked. The cards of the time table and ground force have a figure from small evidence files; the under-20 N figure is a made-up example and is labeled so.",
  "card_updates": {
   "clock": {
    "status": "left_out",
@@ -134,7 +136,7 @@
  },
  "limits_intro": "Every limitation below stays in the data as a note. Nothing is resampled, filled in or relabelled to hide it. Counts come from the package's own limitations list; a dash means the note has no count of its own.",
  "limit_plain": {
-  "moments_from_v2": "Moments are carried over from the earlier version unchanged. They do not depend on the angles.",
+  "moments_from_v2": "Phase table: moments are carried over from the earlier version unchanged. They do not depend on the angles.",
   "power_from_moment_and_speed": "Hip, knee and ankle power are the published moment times our own joint speed. The source's power is not carried over.",
   "knee_marker_labels_swapped": "The knee marker named KNEM is on the outer side of the knee and KNE on the inner side, the reverse of the usual reading. The evidence is marker positions only.",
   "cop_estimated_plate_position": "The pressure point is built on an estimated plate position and passed the checks of its leg. It is not an independently measured foot-frame value.",
@@ -142,7 +144,12 @@
   "cop_held_pending_ruling": "Five recordings are held back and left as they are: the 10° incline recordings of AB01, AB02 and AB03, AB04 at 10° decline, and AB10 at 5° decline.",
   "angle_columns_missing_in_stride": "Some angle columns are missing for a stride because a marker is not visible or the pelvis differs from the pelvis from markers by more than 1°. Nothing is filled.",
   "plane_glitch_hold": "One stride has its plane-dependent columns held because the leg plane swung more than 60° from the walking direction.",
-  "plate_position_fitted": "The force-plate position is not recorded in the source, so it is fitted from the data. It is labelled 'estimated plate position'."
+  "plate_position_fitted": "The force-plate position is not recorded in the source, so it is fitted from the data. It is labelled 'estimated plate position'.",
+  "time_table_source_rate": "Time table: one continuous recording each, on the source's 100 samples per second, not resampled. Force is read every tenth plate sample (the plate runs at 1,000 per second), without averaging.",
+  "moments_from_source_sign_applied": "Time table: moments are the source moments with the same sign step as the phase table. At every stride they reproduce the phase table moments to rounding.",
+  "time_pelvis_vicon_single_column": "Time table: pelvis tilt is the source's, in one column for the whole recording. Where the phase table holds a stride's pelvis and hip angle, the time table holds them over that stride's frames too; frames between strides are not checked against markers.",
+  "time_grf_plate_force": "Time table: ground force is the plate force of each foot's belt in the walking direction, divided by body weight. Under 20 N it is written as 0, not as missing. In AB03 and AB10 the plates read 3 to 9 percent under body weight; the values are published as recorded.",
+  "time_grf_held_leg": "Time table: the force columns are empty for the whole recording in 6 recordings (12 legs): five are held back by ruling and AB04 at 5° incline has its plate loaded at fewer than 95 percent of heel strikes."
  },
  "limit_unchecked_intro": "Signal families with no limit, so not checked: ",
  "limit_unchecked_plain": [
@@ -192,17 +199,30 @@
    ],
    "where": "Full version only, marked failed",
    "why": "One stride next to excluded short strides has an ankle angle reaching 85°. Not investigated further."
+  },
+  {
+   "what": "Sudden jumps in a time recording (AB05, 10° decline, left foot and ankle angle)",
+   "count": [
+    "exclusions_by_reason",
+    "assessment_failed",
+    "L2"
+   ],
+   "where": "Full version only, marked failed",
+   "why": "4 samples jump by 44 to 48° between neighbouring samples (limit 30°), in 2 places. None is inside a stride of the phase table, so no stride is affected. The whole recording is left out of the cleaned time table; the cause was not examined."
   }
  ],
- "accounting_note": "Accounting: {total} rows. {both} strides are left out of both versions (15 too short or too long, 2 with sudden ankle jumps) and {failed} are left out of the cleaned version only. The full version has {full:,} strides and the cleaned version {filtered:,}, which is the full version minus those {failed}. Six of the 50 treadmill recordings were left out whole before any stride existed (see the timing card), so they are not counted here.",
+ "accounting_note": "Accounting: {total} rows. {both} strides are left out of both versions (15 too short or too long, 2 with sudden ankle jumps) and {failed} items are left out of the cleaned version only (22 strides and 1 time recording). The full version has {full:,} observations (7,545 phase and 44 time) and the cleaned version {filtered:,}, which is the full version minus those {failed}. Six of the 50 treadmill recordings were left out whole before any stride existed (see the timing card), so they are not counted here.",
  "checked": {
   "checked": [
-   "The cleaned version is the full version minus 22 failures and nothing else: every kept stride has identical values in both, every stride has exactly 150 samples from 0 to 100 percent, and every left-out stride has a row and a reason (39 rows). A second agent recomputed this from the files.",
-   "Hip, knee and ankle angles against coarse physical limits, all angles for sudden jumps between neighbouring samples, and the pressure point against its distance from the foot. 7,523 of 7,545 strides pass; 22 fail.",
+   "The cleaned version is the full version minus 23 failures and nothing else: every kept observation has identical values in both, every stride has exactly 150 samples from 0 to 100 percent, every time recording has one row per 0.01 s, and every left-out item has a row and a reason (40 rows). A second agent recomputed this from the files.",
+   "Hip, knee and ankle angles against coarse physical limits, all angles for sudden jumps between neighbouring samples, and the pressure point against its distance from the foot. 7,523 of 7,545 strides pass and 22 fail; 43 of 44 time recordings pass and 1 fails (sudden jumps).",
    "Angles, speeds and the pressure point were recomputed by a second implementation on 16 legs: angles and speeds agree to 0.0 rad and the pressure point to 7e-16 m.",
    "Power equals moment times joint speed to 1e-12 in a separate readback of every row, and to 1e-9 in an independent check of 10 strides.",
    "The pressure-point decision (published or held) was recomputed for all 88 legs: 60 published, 28 held, identical to the build.",
-   "No angle jump of 30° or more between neighbouring frames in 1,031 stride windows of 12 legs, by a simpler second method."
+   "No angle jump of 30° or more between neighbouring frames in 1,031 stride windows of 12 legs, by a simpler second method.",
+   "The phase table is identical to the earlier version in every data column, full and cleaned. A second agent compared all 1,131,750 rows.",
+   "The time table was compared with the phase table at all 7,545 stride windows: angles within 2e-16 rad, moments exactly equal, pressure point within about 1 mm for 59 of 60 published legs (see the AB04 card for the other).",
+   "Ground force: the two feet add up to a median of 0.994 body weights over the 38 recordings with force. An independent recompute of 200 frames per foot in 2 recordings differed by 0.0 body weights, and a second agent re-read 100 frames per foot from the source in one recording and matched to 2e-13 N."
   ],
   "not_checked": [
    "Joint speeds and joint moments have no limit, and power has none either (it is exact moment times speed but not checked for size).",
@@ -211,7 +231,9 @@
    "The plate position is fitted, not measured: the pressure point was not compared with a measured foot-frame value, and its axis, sign, tilt and shifts were taken from the build's summary in the independent check.",
    "The knee marker names rest on marker positions only; no photograph or marker-set description was seen.",
    "The two jump strides were judged on the source ankle and not judged again on the ankle from markers.",
-   "The cause of the toe-off failure in the held-back 10° incline recordings."
+   "The cause of the toe-off failure in the held-back 10° incline recordings.",
+   "The sideways and forward direction and sign of the ground force rest on the plate position fitted earlier; they were checked by size only, not derived again from the plate.",
+   "Pelvis speed and power in the time table are reported against the phase table, not gated: 6,897 of 7,545 strides have pelvis speed within the 0.03 limit (small jittery signal on a different clock)."
   ],
   "note": "A stride that passes has not been shown to be right, only not clearly impossible. A passing check is not scientific approval. Missing samples are never counted as a pass."
  },
@@ -481,7 +503,7 @@
    "note": "In the ankle frame on an estimated plate position; empty in held legs."
   }
  ],
- "columns_note": "Every column has a value for each stride's own leg only; pelvis has no side. There is no time-indexed table, no ground force and no other-leg column in this version.",
+ "columns_note": "Every phase-table column has a value for each stride's own leg only; pelvis has no side. The time table is one row per 0.01 s of a whole recording and has both legs: the same angles, moments and powers, the pressure point, and the ground force of each foot (up-down, forward, sideways) in body weights. There is no other-leg column in the phase table.",
  "scope_questions": {
   "clock": "Which recordings have the wrong task timing?",
   "angle_zero": "Which recordings have angles measured from markers?",
@@ -493,5 +515,265 @@
   "power": "Which recordings have power recomputed?",
   "cop": "How much of each recording's pressure point is held?",
   "held_back": "Which recordings are held back?"
- }
+ },
+ "extra_cards": [
+  {
+   "key": "time_table",
+   "section": "Time table and ground force (new in this version)",
+   "title": "There was no time table",
+   "status": "fixed",
+   "short": "44 continuous recordings, 772,821 rows",
+   "scope": {
+    "participants": "10 of 10",
+    "tasks": "All 44 kept treadmill recordings (6 of 50 are left out whole, see the timing card)",
+    "share": "44 of 7,589 observations (0.6%); 772,821 of 1,904,571 rows (40.6%)"
+   },
+   "wrong": "The earlier version had only the phase table (one row per sample of a stride). Anyone who wanted the whole recording on a clock, or the ground force, had nothing to read.",
+   "how": "The earlier page and data reference said so. The source has the full recording at 100 samples per second.",
+   "did": "We added a time table: one continuous recording each, on the source clock at 100 samples per second (time = (frame - 1) / 100), nothing resampled. It holds the same angles, moments, powers and pressure point as the phase table, plus ground force. The phase table did not change.",
+   "checked": "Held next to the phase table at all 7,545 stride windows: angles within 2e-16 rad, moments equal, pressure point within about 1 mm (one leg is noisier, see its card). Start times of all 7,545 strides match the clock. A readback of every file found no unlisted file and matching hashes.",
+   "now": "The full version has 7,545 phase strides and 44 time recordings (7,589 observations); the cleaned version has 7,523 and 43 (7,566).",
+   "example": "AB04 at level, where the pelvis sign is flipped twice, matches the phase table exactly (largest difference 2.8e-17 rad).",
+   "figures": [
+    {
+     "src": "um21-time-tables.svg",
+     "question": "How many samples does each table hold?",
+     "alt": "Bars of rows: phase full 1,131,750, phase cleaned 1,128,450, time full 772,821, time cleaned 755,206.",
+     "caption": "Rows in the phase table and the time table, full and cleaned."
+    }
+   ],
+   "knock_on": [
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Phase table",
+     "line": "Every data column equals the earlier version.",
+     "evidence": "All 1,131,750 full and 1,128,450 cleaned rows compared by a second agent."
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "Pelvis speed and power in the time table",
+     "line": "They are close to the phase table but not equal, because they are computed on a different clock. Reported, not used as a pass or fail.",
+     "evidence": "6,897 of 7,545 strides have pelvis speed within 0.03; limb speeds 99.9 percent."
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "Frames between strides",
+     "line": "The pelvis is not checked against markers there.",
+     "evidence": ""
+    }
+   ]
+  },
+  {
+   "key": "ground_force",
+   "section": "Time table and ground force (new in this version)",
+   "title": "There was no ground force; it is now in the time table, held for 6 recordings",
+   "status": "fixed",
+   "short": "76 of 88 legs publish force; 12 legs held",
+   "scope": {
+    "participants": "5 of 10 have a held recording (AB01, AB02, AB03, AB04, AB10)",
+    "tasks": "Held: 10° incline for AB01, AB02 and AB03; 10° decline for AB04; 5° decline for AB10 (all by ruling); 5° incline for AB04 (plate loaded at under 95 percent of heel strikes)",
+    "share": "6 of 44 recordings (13.6%); 12 of 88 legs (13.6%)"
+   },
+   "wrong": "The earlier version did not publish ground force.",
+   "how": "The source README gives the plate force in newtons per kg, but the two feet add up to body weight in newtons, so we read it as newtons.",
+   "did": "Ground force of each foot is the plate force turned into the walking direction with the plate position fitted earlier, flipped to be the force on the person, and divided by body weight (body mass times 9.81). Up is positive, forward is the walking direction, sideways is outward from that leg. Where the plate position is not trusted, the three columns stay present but empty for the whole recording, with the reason. This is 6 recordings: 5 are held back by ruling and are left as they are, and AB04 at 5° incline fails the loaded-plate rule. Nothing is filled in.",
+   "checked": "The two feet sum to a median of 0.994 body weights (10th to 90th percentile 0.949 to 1.000) over the 38 recordings with force; vertical is positive with peaks of 1.1 to 1.6 body weights. An independent recompute of 200 frames per foot in AB02 (5° incline) and AB03 (level) differed by 0.0, and a second agent matched the source to 2e-13 N in one recording.",
+   "now": "76 of 88 legs carry force and 12 are empty, each with a reason.",
+   "example": "The 6 held recordings are named in the scope lines above; none was drawn at random because all of them are listed.",
+   "figures": [
+    {
+     "src": "um21-force-held.svg",
+     "question": "How many legs have ground force?",
+     "alt": "Bars of legs: 76 publish force, 10 are held pending a ruling in 5 recordings, 2 are held because the plate was loaded at under 95 percent of heel strikes.",
+     "caption": "Legs of the 44 recordings (88 legs). Empty means no value, never zero."
+    }
+   ],
+   "knock_on": [
+    {
+     "verdict": "Left out",
+     "signal": "Force of the 6 held recordings",
+     "line": "The three force columns are empty for both legs. The pressure point of these 6 recordings is also held in both legs.",
+     "evidence": "About 17,000 samples each, none finite; read by a second agent."
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "Forward and sideways force",
+     "line": "Their direction and sign rest on the fitted plate position. They were checked by size only.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Angles, moments, powers and the pressure point",
+     "line": "Adding force changed none of them.",
+     "evidence": "Phase table identical to the earlier version; time table agrees at every stride."
+    }
+   ]
+  },
+  {
+   "key": "force_under_20n",
+   "section": "Time table and ground force (new in this version)",
+   "title": "Force under 20 N is 0 here, and missing in Georgia Tech 2021",
+   "status": "documented",
+   "short": "A sample under 20 N reads 0 body weights",
+   "scope": {
+    "participants": "10 of 10",
+    "tasks": "All 38 recordings with force, both legs",
+    "share": "Every foot has samples under 20 N each time it is off the belt; the smallest loaded sample per recording is 0.020 to 0.039 body weights (20 N)"
+   },
+   "wrong": "Nothing was wrong, but the two datasets differ. Georgia Tech 2021 marks stance independently, so it marks force missing when stance is expected and the plate reads under 20 N. UMich 2021 has no independent stance timing, so it cannot tell a lifted foot from a plate that missed a loaded foot.",
+   "how": "UMich 2021 has no stance timing that does not come from the same plate.",
+   "did": "We write any plate sample under 20 N as 0 body weights, in all three components. A sample that is not a number is missing. We did not guess which zeros are lifted feet and which are plate errors.",
+   "checked": "In a second agent's sample, every frame under 20 N was exactly 0 in the three components; the smallest positive vertical force per recording is 20 N expressed in body weights.",
+   "now": "A 0 in UMich 2021 force means under 20 N; it does not mean a measured zero. Do not read a 0 as a foot in swing.",
+   "example": "The figure is a made-up example of the end of one stance, not data. The same plate signal is written as 0 in UMich 2021 and as empty in Georgia Tech 2021.",
+   "figures": [
+    {
+     "src": "um21-under-20n.svg",
+     "question": "What happens to force under 20 N in the two datasets?",
+     "alt": "Made-up force falling at the end of stance. The UMich 2021 line drops to zero below 20 N; the Georgia Tech 2021 line stops there.",
+     "caption": "Made-up example, labeled so. Not data."
+    }
+   ],
+   "knock_on": [
+    {
+     "verdict": "Open limit",
+     "signal": "Swing timing from force",
+     "line": "A user who finds stance from force in UMich 2021 cannot tell a lifted foot from a plate that read under 20 N for another reason.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Values over 20 N",
+     "line": "They are as recorded.",
+     "evidence": "Second agent's sample."
+    }
+   ]
+  },
+  {
+   "key": "plate_shortfall",
+   "section": "Time table and ground force (new in this version)",
+   "title": "AB03 and AB10 plates read 3 to 9 percent under body weight",
+   "status": "documented",
+   "short": "Published as recorded; 3 recordings lowest",
+   "scope": {
+    "participants": "2 of 10 (AB03 and AB10)",
+    "tasks": "Most on declines; the lowest are AB03 at 10° decline (0.912), AB10 at 10° decline (0.923) and AB03 at 5° decline (0.931)",
+    "share": "Two-leg vertical sum across the 38 recordings with force: median 0.994 body weights"
+   },
+   "wrong": "The two feet should add up to about 1 body weight on average. For AB03 and AB10 they add up to 0.91 to 0.97.",
+   "how": "Compared the average two-leg vertical force with body weight for every recording with force.",
+   "did": "Nothing. The values are published as the plates recorded them. We did not rescale them to reach 1.0.",
+   "checked": "The three lowest recordings are all AB03 or AB10, consistent with an earlier finding about these two participants' plates.",
+   "now": "Forces of AB03 and AB10 are low by a few percent and the cause is not known.",
+   "example": "The five bars are the median, the 10th percentile and the three lowest recordings, not a random draw; the reason for choosing them is that they are the extremes.",
+   "figures": [
+    {
+     "src": "um21-plate-shortfall.svg",
+     "question": "Do the two feet add up to body weight?",
+     "alt": "Bars of the average two-leg vertical force: median 0.994, 10th percentile 0.949, and three recordings at 0.912 to 0.931 body weights.",
+     "caption": "Average two-leg vertical force in body weights; the dashed line is 1.0."
+    }
+   ],
+   "knock_on": [
+    {
+     "verdict": "Open limit",
+     "signal": "Any use of the size of the force for AB03 and AB10",
+     "line": "It is low by a few percent.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Not checked",
+     "signal": "Pressure point of AB03 and AB10",
+     "line": "Not rechecked against this shortfall.",
+     "evidence": ""
+    }
+   ]
+  },
+  {
+   "key": "cop_noise",
+   "section": "Time table and ground force (new in this version)",
+   "title": "AB04 at 10° incline: the right pressure point is noisy",
+   "status": "documented",
+   "short": "1 of 60 published legs",
+   "scope": {
+    "participants": "1 of 10 (AB04)",
+    "tasks": "10° incline, right leg",
+    "share": "1 of 60 legs that publish the pressure point (1.7%)"
+   },
+   "wrong": "In the time table this leg's pressure point differs from the phase table by a median of 2.8 mm and up to 39 mm at the 99th percentile, while every other leg agrees within about 1 mm.",
+   "how": "The sample-to-sample noise of this plate signal is about 3.0 mm forward and 1.3 mm sideways, against 0.06 to 0.11 mm in four other legs. Signed differences have both signs and no average shift, so it is noise and not an offset.",
+   "did": "We kept the leg and flagged it. We did not change the check for the other 59 legs.",
+   "checked": "The two tables pick different plate samples, so the noise does not cancel. A second agent re-derived the noise and found no offset larger than about 0.1 mm.",
+   "now": "This leg's pressure point is noisy by a few millimetres in both tables.",
+   "example": "AB04 at 10° incline is the only leg of 60 that did not pass the 1 mm check.",
+   "figures": [
+    {
+     "src": "um21-cop-noise.svg",
+     "question": "How noisy is this leg's pressure point?",
+     "alt": "Bars of sample-to-sample noise: 3.0 mm for AB04 right leg at 10 degree incline, and 0.06 to 0.11 mm for four other legs.",
+     "caption": "The numbers are from the second agent's check. The bar for other legs shows the upper end, 0.11 mm."
+    }
+   ],
+   "knock_on": [
+    {
+     "verdict": "Open limit",
+     "signal": "Fine detail of the pressure point of this leg",
+     "line": "A few millimetres of noise.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "The other 59 legs",
+     "line": "They agree with the phase table.",
+     "evidence": "Median 1 mm, 99th percentile 5 mm."
+    }
+   ]
+  },
+  {
+   "key": "time_jump",
+   "section": "Time table and ground force (new in this version)",
+   "title": "One time recording has sudden jumps",
+   "status": "left_out",
+   "short": "AB05, 10° decline, left out of the cleaned time table",
+   "scope": {
+    "participants": "1 of 10 (AB05)",
+    "tasks": "10° decline, left foot and ankle angle",
+    "share": "1 of 44 time recordings (2.3%); 4 of 17,615 samples"
+   },
+   "wrong": "The left foot angle and the left ankle angle change by 44 to 48° between neighbouring samples, at two places in the recording.",
+   "how": "A check of every angle in every time recording against a 30° limit between neighbouring samples; only these 4 samples fail.",
+   "did": "The recording stays in the full time table, marked failed, and is left out of the cleaned time table. No stride of the phase table covers these samples, so no phase stride is affected. Nothing was smoothed or filled.",
+   "checked": "A second agent scanned all 13 angle columns of all 44 recordings and found the same four samples.",
+   "now": "The full version has 44 time recordings and the cleaned version has 43.",
+   "example": "The figure shows all four samples.",
+   "figures": [
+    {
+     "src": "um21-time-jump.svg",
+     "question": "How big are the jumps in the left-out time recording?",
+     "alt": "Bars of four jumps, 44 to 48 degrees, all above the 30 degree limit.",
+     "caption": "Each bar is one sample of the AB05 10° decline recording."
+    }
+   ],
+   "knock_on": [
+    {
+     "verdict": "Left out",
+     "signal": "The AB05 10° decline time recording in the cleaned version",
+     "line": "One row in the left-out list.",
+     "evidence": "1 of 44 recordings."
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Phase table strides of this recording",
+     "line": "No stride window covers the jumps.",
+     "evidence": "0 phase failures of this kind in 7,545."
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "Cause of the jumps",
+     "line": "Not examined.",
+     "evidence": ""
+    }
+   ]
+  }
+ ]
 }

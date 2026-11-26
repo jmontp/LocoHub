@@ -73,6 +73,8 @@ Use explicit column names with unit and side tokens. Examples:
 
 Unavailable signals stay missing. Zero-filled missing features can create false evidence that a signal was measured. A column existing in a file does not establish coverage across every task or observation. Inspect finite-value coverage and required/optional signal declarations before analysis.
 
+UMich 2021 and Georgia Tech 2021 handle low force differently. UMich 2021 writes a force sample under 20 N as 0 body weights, because it has no independent stance timing and cannot tell a lifted foot from a plate that missed a loaded foot. Georgia Tech 2021 marks force missing when stance is expected but the plate reads under 20 N. A 0 in UMich 2021 force means under 20 N, not a measured zero.
+
 ## Signs and frames
 
 LocoHub uses one sign rule for every dataset. This section is the authoritative statement; other pages refer to it.

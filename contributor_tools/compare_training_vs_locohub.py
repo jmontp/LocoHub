@@ -11,7 +11,7 @@ Two comparisons
         Current export root per participant: gt21_rb07_export_<ID> if its run_summary.json exists, else
         gt21_rb06_export_<ID>_r2.
   um21  training time file (umich_2021_time.parquet, 200 Hz, right leg)
-        vs LocoHub UM21 package v4 phase file (full_phase.parquet; phase only, no time table, no force).
+        vs LocoHub UM21 package v4 phase file (full_phase.parquet; phase only, no time table, no force; package v5 later added a time table with force).
         The training series is read at the source-time positions of every LocoHub stride (see Matching).
 
 Matching (nothing is assumed beyond what is written here; every choice is logged in alignment.csv)

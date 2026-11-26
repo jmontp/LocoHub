@@ -321,7 +321,7 @@ OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 \
 
 One layout for every dataset's local review package. `contributor_tools/common/release_package.py` writes it by streaming
 (row-group by row-group); a small per-dataset adapter supplies the inputs. `run_gt23_r01_bundle.py` is the first adapter
-(Georgia Tech 2023); UMich 2021 and Georgia Tech 2021 move to the same builder later. A package is written to a new
+(Georgia Tech 2023); the UMich 2021 package v5 (phase and time tables) and the Georgia Tech 2021 package v1 use the same layout. A package is written to a new
 directory and never replaces an existing one. `scientific_approval` is always false; a package is a review copy, not a
 publication.
 
@@ -409,6 +409,6 @@ Nothing else is per dataset.
 | `README.md` data card | short README | plain-words README |
 | none | `dataset_index.json`, `phase_preview.json`, `test_summary.json` | same names, same `binding` |
 
-The in-memory builder, its tests and the UMich 2021 bundle keep their layouts: the UM21 review page
-(`build_dataset_review_page.py`) reads `manifest.json`, `dataset_index.json`, `exclusions.csv`, `held_signals.csv` and
-`phase_preview.json` of the legacy bundle and is updated when UM21 is rebuilt through the package builder.
+The in-memory builder, its tests and the older UMich 2021 bundle (`um21_r01_review_v2`) keep their layouts. The UM21 review
+page (`build_dataset_review_page.py`) now reads the package layout (`um21_r01_package_v5`, which has a phase table and a
+time table with ground force); the legacy-bundle reading of `held_signals.csv` stays only for older bundles.

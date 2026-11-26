@@ -555,6 +555,8 @@ def glance_table(spec, scope):
     upd, words = spec["card_updates"], spec["status_words"]
     rows = "".join(f'<tr><td><a href="#{c["key"]}">{esc(c["title"])}</a></td><td>{esc(words[upd[c["key"]]["status"]])}</td>'
                    f'<td>{esc(upd[c["key"]].get("short", c["short"]))}</td></tr>' for c in scope["cards"])
+    rows += "".join(f'<tr><td><a href="#{c["key"]}">{esc(c["title"])}</a></td><td>{esc(words[c["status"]])}</td><td>{esc(c["short"])}</td></tr>'
+                    for c in spec.get("extra_cards", []))  # cards written in the spec, after the scope-file cards
     key = "".join(f'<li><span class="status-pill s-{k}">{esc(words[k])}</span> {esc(t)}</li>' for k, t in spec["status_key"].items())
     return (f'<div class="table-scroll" role="region" aria-label="All problems" tabindex="0"><table class="plain-table"><thead><tr><th>Problem</th>'
             f'<th>Where it stands</th><th>How much</th></tr></thead><tbody>{rows}</tbody></table></div><ul class="status-key">{key}</ul>')
@@ -681,6 +683,8 @@ def build(spec: dict, root: Path = ROOT, backlog_path: Path = BACKLOG, allow_rev
                   f'{limitations_section(spec, root / spec["bundle"])}</section>\n\n      ')
         fixed_h = "What we fixed and what we did not (original vs fixed)"
         fixed_body = spec_problem_cards(spec, figs_dir) if spec_cards else problem_cards(spec, scope, figs_dir)
+        if spec.get("extra_cards") and not spec_cards:
+            fixed_body += spec_problem_cards({"cards": spec["extra_cards"], "status_words": spec["status_words"]}, figs_dir)
         columns_html = column_groups_table(spec, index)
     power_html, nav_power = "", ""
     if "power_section" in spec:
