@@ -30,3 +30,4 @@ Each row: what was decided, what else was possible, and how to undo it.
 | 22 | 2026-11-26 | UM21 | Velocity agreement gated pooled over all strides; pelvis velocity and power reported, not gated | Per-recording gate | Re-run readback |
 | 23 | 2026-11-26 | UM21 | Force also held for AB04 i5 (fails the 95% plate-loaded gate), in addition to the 5 held recordings | Publish it | Rebuild package v5 |
 | 24 | 2026-11-26 | UM21 vs GT21 | Small difference kept and to be documented: GT21 marks force missing when the foot should be in stance but the plate reads under 20 N; UM21 has no independent stance timing, so under 20 N is always 0 | Use source gait events to mask UM21 the same way | New code + rebuild v5 |
+| 25 | 2026-11-26 | GT21/UM21 | Deleted failed GT21 package attempts and superseded test builds (~17.5 GB) and the 3 old GT21 problems-page scripts (José approved) | Keep them | Rebuild from code / git history |
