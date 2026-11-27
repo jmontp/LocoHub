@@ -1,0 +1,478 @@
+{
+  "schema": "locohub.guarded_launcher.receipt/2",
+  "job_id": "gt21-knee-centre-analysis",
+  "status": "completed",
+  "scientific_approval": false,
+  "envelope": {
+    "path": "docs/quality/audits/pm01-um21-tread-pilot-handoff.json",
+    "reviewed_sha256": "9f204cfd9ba6b2beb256e4d962778183ec2dd4895fd5009591680cb479a8dee9",
+    "limits": {
+      "timeout_seconds_max": 3600,
+      "kill_after_seconds_max": 30,
+      "poll_seconds_max": 15,
+      "startup_memory_mib_min": {
+        "linux": 3584,
+        "windows": 2816
+      },
+      "runtime_memory_mib_min": {
+        "linux": 2048,
+        "windows": 2048
+      },
+      "output_volume_free_mib_min": 5120,
+      "c_drive_free_mib_min": 1024,
+      "c_drive_path": "/mnt/c",
+      "address_space_mib_max": 768
+    },
+    "sha256": "9f204cfd9ba6b2beb256e4d962778183ec2dd4895fd5009591680cb479a8dee9"
+  },
+  "spec": {
+    "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+    "kill_after_seconds": 30,
+    "poll_seconds": 15,
+    "disk_admission": [
+      {
+        "path": "/mnt/s/workspace/locomotion-data-standardization/converted_datasets",
+        "min_free_mib": 2048
+      }
+    ],
+    "thread_env": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "ARROW_NUM_THREADS": "1",
+      "NUMEXPR_NUM_THREADS": "1"
+    },
+    "expected_output_names": [
+      "run_summary.json",
+      "per_participant.csv",
+      "comparison.json",
+      "model_inspection.json"
+    ],
+    "address_space_mib": 768,
+    "job_id": "gt21-knee-centre-analysis",
+    "command": [
+      "python3",
+      "contributor_tools/analyze_gt21_knee_centre.py",
+      "compute",
+      "--out-root",
+      "converted_datasets/reconversion_v2/gt21_knee_centre_v1",
+      "--seed",
+      "20261127"
+    ],
+    "output_root": "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt21_knee_centre_v1",
+    "receipt_path": "/mnt/s/workspace/locomotion-data-standardization/docs/quality/audits/gt21-knee-centre-analysis-launcher-receipt.json",
+    "bindings": {
+      "contributor_tools/analyze_gt21_knee_centre.py": "0b6f363b33cb3a1a5a76656fb6e25438c98962a6eb0a4c86b718663aeb677c42",
+      "contributor_tools/analyze_gt21_static_pose.py": "38ac573d93c8f980dee17c40c99f9e8ce0cfd9956d1d05919fd07b8174fd8f05",
+      "contributor_tools/gt21_rb_pass.py": "b199962c508e05c12fdd376175a15acd5d8ad92c622ce74196044d1857db39eb",
+      "contributor_tools/gt21_numeric_source.py": "23f7b5a05a75464efd3d2f0ac3f767c927a31411af5941c339924fc5034a8917",
+      "contributor_tools/common/review_sheet.py": "c82327addbe46146f45ed325cd26eaa2d73c25df5bb2191813164a78634b9140",
+      "contributor_tools/guarded_launcher.py": "372519f9dd1f52510f747eed3779044765fdc158b08ca007deb8d6d8708c844f",
+      "converted_datasets/reconversion_v2/gt21_static_analysis_v1/per_participant.csv": "b0a01986e47488c858b5e99d6a3ec2757c8dfccb00c5ca1e4fd38958663ce4a6",
+      "converted_datasets/reconversion_v2/gt21_static_analysis_v1/comparison.json": "4cf12c96ab500daf62a5e355e38bcf3277d86ec5a603a705f02d37a830793b12",
+      "converted_datasets/reconversion_v2/gt21_rb01_inventory_20261123/recording_ledger.jsonl": "907b26763b1293a872794df3ceb90f2bc8ceec710e62c6e9b43ea49936a52f92"
+    },
+    "timeout_seconds": 3600,
+    "startup_memory_mib": {
+      "linux": 3584,
+      "windows": 2816
+    },
+    "runtime_memory_mib": {
+      "linux": 2048,
+      "windows": 2048
+    }
+  },
+  "spec_sha256": "93fca18db63094f468aa59c6ac920e09b8700fb6f573b25d9d8dac362b4b2947",
+  "launcher_sha256": "372519f9dd1f52510f747eed3779044765fdc158b08ca007deb8d6d8708c844f",
+  "checked_at_utc": "2026-11-27T20:13:56+00:00",
+  "chaining": "none; no successor is started",
+  "bindings_before": {
+    "contributor_tools/analyze_gt21_knee_centre.py": {
+      "expected": "0b6f363b33cb3a1a5a76656fb6e25438c98962a6eb0a4c86b718663aeb677c42",
+      "actual": "0b6f363b33cb3a1a5a76656fb6e25438c98962a6eb0a4c86b718663aeb677c42",
+      "bytes": 50915,
+      "matches": true
+    },
+    "contributor_tools/analyze_gt21_static_pose.py": {
+      "expected": "38ac573d93c8f980dee17c40c99f9e8ce0cfd9956d1d05919fd07b8174fd8f05",
+      "actual": "38ac573d93c8f980dee17c40c99f9e8ce0cfd9956d1d05919fd07b8174fd8f05",
+      "bytes": 33939,
+      "matches": true
+    },
+    "contributor_tools/gt21_rb_pass.py": {
+      "expected": "b199962c508e05c12fdd376175a15acd5d8ad92c622ce74196044d1857db39eb",
+      "actual": "b199962c508e05c12fdd376175a15acd5d8ad92c622ce74196044d1857db39eb",
+      "bytes": 47471,
+      "matches": true
+    },
+    "contributor_tools/gt21_numeric_source.py": {
+      "expected": "23f7b5a05a75464efd3d2f0ac3f767c927a31411af5941c339924fc5034a8917",
+      "actual": "23f7b5a05a75464efd3d2f0ac3f767c927a31411af5941c339924fc5034a8917",
+      "bytes": 4374,
+      "matches": true
+    },
+    "contributor_tools/common/review_sheet.py": {
+      "expected": "c82327addbe46146f45ed325cd26eaa2d73c25df5bb2191813164a78634b9140",
+      "actual": "c82327addbe46146f45ed325cd26eaa2d73c25df5bb2191813164a78634b9140",
+      "bytes": 6069,
+      "matches": true
+    },
+    "contributor_tools/guarded_launcher.py": {
+      "expected": "372519f9dd1f52510f747eed3779044765fdc158b08ca007deb8d6d8708c844f",
+      "actual": "372519f9dd1f52510f747eed3779044765fdc158b08ca007deb8d6d8708c844f",
+      "bytes": 51512,
+      "matches": true
+    },
+    "converted_datasets/reconversion_v2/gt21_static_analysis_v1/per_participant.csv": {
+      "expected": "b0a01986e47488c858b5e99d6a3ec2757c8dfccb00c5ca1e4fd38958663ce4a6",
+      "actual": "b0a01986e47488c858b5e99d6a3ec2757c8dfccb00c5ca1e4fd38958663ce4a6",
+      "bytes": 10726,
+      "matches": true
+    },
+    "converted_datasets/reconversion_v2/gt21_static_analysis_v1/comparison.json": {
+      "expected": "4cf12c96ab500daf62a5e355e38bcf3277d86ec5a603a705f02d37a830793b12",
+      "actual": "4cf12c96ab500daf62a5e355e38bcf3277d86ec5a603a705f02d37a830793b12",
+      "bytes": 14947,
+      "matches": true
+    },
+    "converted_datasets/reconversion_v2/gt21_rb01_inventory_20261123/recording_ledger.jsonl": {
+      "expected": "907b26763b1293a872794df3ceb90f2bc8ceec710e62c6e9b43ea49936a52f92",
+      "actual": "907b26763b1293a872794df3ceb90f2bc8ceec710e62c6e9b43ea49936a52f92",
+      "bytes": 1179769,
+      "matches": true
+    }
+  },
+  "disk_admission": [
+    {
+      "path": "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt21_knee_centre_v1",
+      "min_free_mib": 5120,
+      "source": "envelope: output volume (S:)",
+      "free_mib": 51167.34765625,
+      "passes": true
+    },
+    {
+      "path": "/mnt/c",
+      "min_free_mib": 1024,
+      "source": "envelope: C:",
+      "free_mib": 21322.33203125,
+      "passes": true
+    },
+    {
+      "path": "/mnt/s/workspace/locomotion-data-standardization/converted_datasets",
+      "min_free_mib": 2048,
+      "source": "spec",
+      "free_mib": 51167.34765625,
+      "passes": true
+    }
+  ],
+  "census_before": {
+    "linux": {
+      "checked_at_utc": "2026-11-27T20:13:56+00:00",
+      "boot_id": "a81def3c-fa85-4161-b227-f59ffadc384d",
+      "process_count": 175,
+      "exempt": [
+        {
+          "pid": 1697587,
+          "start_ticks": 99403742,
+          "cwd": "/home/jmontp",
+          "cmdline": "/home/jmontp/.local/bin/pretty daemon",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1697596,
+          "start_ticks": 99403750,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "-zsh",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1797481,
+          "start_ticks": 143311610,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1795464455432-zuopx8.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'which'; \\builtin unset -f -- 'which'; } >/dev/null 2>&1 || true && { \\builtin unalias -- 'un",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1797482,
+          "start_ticks": 143311611,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "python3 -m contributor_tools.guarded_launcher run docs/quality/audits/gt21-knee-centre-analysis-spec.json",
+          "why": "launcher itself (CLI)"
+        },
+        {
+          "pid": 2354851,
+          "start_ticks": 109454620,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "claude --resume",
+          "why": "non-interpreter ancestor"
+        }
+      ],
+      "workers": []
+    },
+    "windows": {
+      "checked_at_utc": "2026-11-27T20:13:57+00:00",
+      "last_boot_utc": "2026-09-07T21:16:10.5000000Z",
+      "process_count": 319,
+      "free_physical_mib": 6373.60546875,
+      "workers": []
+    }
+  },
+  "startup_memory": {
+    "linux": {
+      "available_mib": 9782.52734375,
+      "reserve_mib": 3584,
+      "passes": true
+    },
+    "windows": {
+      "available_mib": 6373.60546875,
+      "reserve_mib": 2816,
+      "passes": true
+    }
+  },
+  "launch_ledger": {
+    "parent": {
+      "pid": 1797481,
+      "ppid": 2354851,
+      "start_ticks": 143311610,
+      "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1795464455432-zuopx8.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'which'; \\builtin unset -f -- 'which'; } >/dev/null 2>&1 || true && { \\builtin unalias -- 'un",
+      "interactive_terminal": false
+    },
+    "claimed": true,
+    "entries": [
+      "/tmp/locohub_guarded_launcher_uid1000/a81def3c-fa85-4161-b227-f59ffadc384d/1797481-143311610.json"
+    ],
+    "keys": [
+      {
+        "pid": 1797481,
+        "ppid": 2354851,
+        "start_ticks": 143311610,
+        "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1795464455432-zuopx8.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'which'; \\builtin unset -f -- 'which'; } >/dev/null 2>&1 || true && { \\builtin unalias -- 'un",
+        "interactive_terminal": false
+      }
+    ]
+  },
+  "launched": true,
+  "process_identity": {
+    "leader_pid": 1797500,
+    "launched_at_utc": "2026-11-27T20:13:57+00:00",
+    "argv": [
+      "timeout",
+      "--signal=TERM",
+      "--kill-after=30s",
+      "3600",
+      "nice",
+      "-n",
+      "19",
+      "ionice",
+      "-c",
+      "3",
+      "python3",
+      "contributor_tools/analyze_gt21_knee_centre.py",
+      "compute",
+      "--out-root",
+      "converted_datasets/reconversion_v2/gt21_knee_centre_v1",
+      "--seed",
+      "20261127"
+    ],
+    "log_path": "/mnt/s/workspace/locomotion-data-standardization/docs/quality/audits/gt21-knee-centre-analysis-launcher-receipt.log",
+    "parent_death_signal": "SIGTERM",
+    "parent_death_signal_set": true,
+    "pgid": 1797500,
+    "sid": 1797500,
+    "own_session_verified": true,
+    "boot_id": "a81def3c-fa85-4161-b227-f59ffadc384d",
+    "leader_start_ticks": 143311707
+  },
+  "job_outcome": "completed",
+  "finished_at_utc": "2026-11-27T20:14:05+00:00",
+  "exit_code": 0,
+  "wall_time_seconds": 8.215,
+  "peak_rss_kib_largest_process": 123220,
+  "peak_group_rss_kib_sampled": 0,
+  "runtime_guard": {
+    "poll_seconds": 15,
+    "reserve_mib": {
+      "linux": 2048,
+      "windows": 2048
+    },
+    "polls": 0,
+    "min_linux_available_mib": null,
+    "min_windows_free_mib": null,
+    "breach": null,
+    "observed_address_space_limits": [
+      "805306368"
+    ],
+    "observed_address_space_by_process": [
+      {
+        "pid": 1797500,
+        "start_ticks": 143311707,
+        "limit": "805306368",
+        "cmdline": "timeout --signal=TERM --kill-after=30s 3600 nice -n 19 ionice -c 3 python3 contributor_tools/analyze_gt21_knee_centre.py compute --out-root converted_datasets/reconversion_v2/gt21_knee_centre_v1 --see"
+      },
+      {
+        "pid": 1797501,
+        "start_ticks": 143311708,
+        "limit": "805306368",
+        "cmdline": "python3 contributor_tools/analyze_gt21_knee_centre.py compute --out-root converted_datasets/reconversion_v2/gt21_knee_centre_v1 --seed 20261127"
+      }
+    ]
+  },
+  "stop_actions": [],
+  "orphans_at_leader_exit": [],
+  "launcher_errors": [],
+  "finalisation_errors": [],
+  "clean_success": true,
+  "retry": "never automatic",
+  "cleanup_proof": {
+    "checked_at_utc": "2026-11-27T20:14:05+00:00",
+    "basis": "same_boot_proc_scan",
+    "proven": true,
+    "boot_id_now": "a81def3c-fa85-4161-b227-f59ffadc384d",
+    "pgid_members": [],
+    "leader_pid_with_same_start_ticks_present": false,
+    "attempts": 1
+  },
+  "census_after": {
+    "linux": {
+      "checked_at_utc": "2026-11-27T20:14:05+00:00",
+      "boot_id": "a81def3c-fa85-4161-b227-f59ffadc384d",
+      "process_count": 172,
+      "exempt": [
+        {
+          "pid": 1697587,
+          "start_ticks": 99403742,
+          "cwd": "/home/jmontp",
+          "cmdline": "/home/jmontp/.local/bin/pretty daemon",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1697596,
+          "start_ticks": 99403750,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "-zsh",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1797481,
+          "start_ticks": 143311610,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1795464455432-zuopx8.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'which'; \\builtin unset -f -- 'which'; } >/dev/null 2>&1 || true && { \\builtin unalias -- 'un",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1797482,
+          "start_ticks": 143311611,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "python3 -m contributor_tools.guarded_launcher run docs/quality/audits/gt21-knee-centre-analysis-spec.json",
+          "why": "launcher itself (CLI)"
+        },
+        {
+          "pid": 2354851,
+          "start_ticks": 109454620,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "claude --resume",
+          "why": "non-interpreter ancestor"
+        }
+      ],
+      "workers": []
+    },
+    "windows": {
+      "checked_at_utc": "2026-11-27T20:14:06+00:00",
+      "last_boot_utc": "2026-09-07T21:16:10.5000000Z",
+      "process_count": 319,
+      "free_physical_mib": 6389.671875,
+      "workers": []
+    }
+  },
+  "windows_new_workers": [],
+  "bindings_after": {
+    "contributor_tools/analyze_gt21_knee_centre.py": {
+      "expected": "0b6f363b33cb3a1a5a76656fb6e25438c98962a6eb0a4c86b718663aeb677c42",
+      "actual": "0b6f363b33cb3a1a5a76656fb6e25438c98962a6eb0a4c86b718663aeb677c42",
+      "bytes": 50915,
+      "matches": true
+    },
+    "contributor_tools/analyze_gt21_static_pose.py": {
+      "expected": "38ac573d93c8f980dee17c40c99f9e8ce0cfd9956d1d05919fd07b8174fd8f05",
+      "actual": "38ac573d93c8f980dee17c40c99f9e8ce0cfd9956d1d05919fd07b8174fd8f05",
+      "bytes": 33939,
+      "matches": true
+    },
+    "contributor_tools/gt21_rb_pass.py": {
+      "expected": "b199962c508e05c12fdd376175a15acd5d8ad92c622ce74196044d1857db39eb",
+      "actual": "b199962c508e05c12fdd376175a15acd5d8ad92c622ce74196044d1857db39eb",
+      "bytes": 47471,
+      "matches": true
+    },
+    "contributor_tools/gt21_numeric_source.py": {
+      "expected": "23f7b5a05a75464efd3d2f0ac3f767c927a31411af5941c339924fc5034a8917",
+      "actual": "23f7b5a05a75464efd3d2f0ac3f767c927a31411af5941c339924fc5034a8917",
+      "bytes": 4374,
+      "matches": true
+    },
+    "contributor_tools/common/review_sheet.py": {
+      "expected": "c82327addbe46146f45ed325cd26eaa2d73c25df5bb2191813164a78634b9140",
+      "actual": "c82327addbe46146f45ed325cd26eaa2d73c25df5bb2191813164a78634b9140",
+      "bytes": 6069,
+      "matches": true
+    },
+    "contributor_tools/guarded_launcher.py": {
+      "expected": "372519f9dd1f52510f747eed3779044765fdc158b08ca007deb8d6d8708c844f",
+      "actual": "372519f9dd1f52510f747eed3779044765fdc158b08ca007deb8d6d8708c844f",
+      "bytes": 51512,
+      "matches": true
+    },
+    "converted_datasets/reconversion_v2/gt21_static_analysis_v1/per_participant.csv": {
+      "expected": "b0a01986e47488c858b5e99d6a3ec2757c8dfccb00c5ca1e4fd38958663ce4a6",
+      "actual": "b0a01986e47488c858b5e99d6a3ec2757c8dfccb00c5ca1e4fd38958663ce4a6",
+      "bytes": 10726,
+      "matches": true
+    },
+    "converted_datasets/reconversion_v2/gt21_static_analysis_v1/comparison.json": {
+      "expected": "4cf12c96ab500daf62a5e355e38bcf3277d86ec5a603a705f02d37a830793b12",
+      "actual": "4cf12c96ab500daf62a5e355e38bcf3277d86ec5a603a705f02d37a830793b12",
+      "bytes": 14947,
+      "matches": true
+    },
+    "converted_datasets/reconversion_v2/gt21_rb01_inventory_20261123/recording_ledger.jsonl": {
+      "expected": "907b26763b1293a872794df3ceb90f2bc8ceec710e62c6e9b43ea49936a52f92",
+      "actual": "907b26763b1293a872794df3ceb90f2bc8ceec710e62c6e9b43ea49936a52f92",
+      "bytes": 1179769,
+      "matches": true
+    }
+  },
+  "outputs": [
+    {
+      "path": "comparison.json",
+      "bytes": 23494,
+      "sha256": "fcb47150251ca3bbd97175068faed1fd8d4ceb7cdbe97b25bbc65fb6dbf78a96"
+    },
+    {
+      "path": "model_inspection.json",
+      "bytes": 112927,
+      "sha256": "c7ab7f412da6735edb49023fca1461908a033fd11c2317b3c420ed2c986bb963"
+    },
+    {
+      "path": "per_participant.csv",
+      "bytes": 41495,
+      "sha256": "6ecffbe86b9744795b21ec6de05691226d94df03dbd1316d2abb914833ad7e26"
+    },
+    {
+      "path": "run_summary.json",
+      "bytes": 174,
+      "sha256": "c70b258baa8c66415dc2ee0f7d9d5dde7622231106609de979bcfb5cb410d7bf"
+    }
+  ],
+  "expected_outputs_missing": [],
+  "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "checks": {
+    "cleanup_proven": true,
+    "bindings_unchanged": true,
+    "envelope_unchanged": true,
+    "linux_no_new_worker": true,
+    "windows_no_new_worker": true,
+    "no_orphans_at_leader_exit": true,
+    "outputs_hashed": true,
+    "expected_outputs_present": true
+  }
+}
