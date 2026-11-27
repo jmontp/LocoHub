@@ -208,6 +208,17 @@ class ReleaseAdapter:
 
 
 # ------------------------------------------------------------------ pure rules
+def strip_extra(schema):
+    """The schema without the columns this builder appends (EXTRA_COLUMNS). A part that is itself a package table (a previous
+    release of the same dataset used as the input of a transform-only rebuild) carries them; they are dropped on read and
+    written again from the new assessment. Schemas without them pass through unchanged."""
+    keep = [f for f in schema if f.name not in EXTRA_COLUMNS]
+    if len(keep) == len(schema):
+        return schema
+    import pyarrow as pa
+    return pa.schema(keep, metadata=schema.metadata)
+
+
 def batch_runs(oids, sides):
     """Run-length encode consecutive rows by (observation_id, reference_side): [(key, start, end)], end exclusive."""
     runs = []
@@ -323,7 +334,8 @@ def stream_part(part, table_name, q, ctx, sinks, state):
     fh = open(part.path, "rb")
     try:
         pf = open_part(fh)
-        schema = pf.schema_arrow
+        schema = strip_extra(pf.schema_arrow)
+        package_input = "source_export" in pf.schema_arrow.names   # a previous package table: its source_export labels are kept per row
         if state["schema"].get(table_name) is None:
             state["schema"][table_name] = schema
         elif not schema.equals(state["schema"][table_name]):
@@ -331,6 +343,9 @@ def stream_part(part, table_name, q, ctx, sinks, state):
         prev_key = state["prev_key"].get((table_name, str(part.path)))
         for batch in pf.iter_batches(batch_size=READ_BATCH_ROWS, use_threads=False):
             trim_memory()
+            row_labels = batch.column("source_export").to_pylist() if package_input else None
+            if package_input:
+                batch = batch.select([n for n in batch.schema.names if n not in EXTRA_COLUMNS])
             oids = batch.column("observation_id").to_pylist()
             sides = batch.column("reference_side").to_pylist()
             recs = batch.column("source_recording_id").to_pylist()
@@ -356,7 +371,7 @@ def stream_part(part, table_name, q, ctx, sinks, state):
                 e = q[key]
                 key = e["key"]  # the assessment entry's own key object: one copy of each observation id in memory
                 state["rows"][key] = state["rows"].get(key, 0) + (b - a)
-                state["export"][key] = part.label
+                state["export"][key] = row_labels[a] if package_input else part.label
                 quality.extend([FAILED if e["overall"] == FAILED else NOT_FAILED] * (b - a))
                 causes.extend([json.dumps(e["causes"])] * (b - a))
                 lims.extend([json.dumps(e["limitations"])] * (b - a))
@@ -372,7 +387,8 @@ def stream_part(part, table_name, q, ctx, sinks, state):
             cl = [x for x, k in zip(causes, keep) if k]
             ll = [x for x, k in zip(lims, keep) if k]
             m = len(ql)
-            for name, vals in (("source_export", [part.label] * m), ("quality_status", ql), ("failed_limits", cl),
+            labels = [x for x, k in zip(row_labels, keep) if k] if package_input else [part.label] * m
+            for name, vals in (("source_export", labels), ("quality_status", ql), ("failed_limits", cl),
                                ("limitations", ll), ("lineage_id", [ctx["lineage_id"]] * m),
                                ("assessment_id", [ctx["assessment_id"]] * m)):
                 t = t.append_column(name, pa.array(vals, type=pa.string()).dictionary_encode())
@@ -539,7 +555,7 @@ def build_package(adapter, out_dir, *, stage, started=None, rss_cap_mib=RSS_CAP_
     for table_name in tables:
         parts = adapter.table_parts(table_name)
         with open(parts[0].path, "rb") as fh:
-            base = open_part(fh).schema_arrow
+            base = strip_extra(open_part(fh).schema_arrow)
         schema = pa.schema(list(base) + [pa.field(n, pa.dictionary(pa.int32(), pa.string())) for n in EXTRA_COLUMNS])
         sinks = {(v, table_name): Sink(out / f"{v}_{table_name}.parquet", schema, adapter.group_rows) for v in VARIANTS}
         try:

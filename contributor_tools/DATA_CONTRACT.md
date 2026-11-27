@@ -97,6 +97,10 @@ decisions):
   from forward horizontal; trunk zero undefined. Composition (thigh = pelvis +
   hip, shank = thigh − knee, foot = shank + ankle) holds only up to each
   dataset's zero offsets, which dataset notes state.
+- Foot-flat zero (D-REF-6, 27 November 2026; GT23 v12, GT21 v2, UM21 v6): foot and ankle
+  angles carry a per-person shift so a flat foot on level ground reads 0, and the
+  foot-frame centre of pressure (forward, up) is turned by the same angle; see
+  docs/reference/index.md and the package's limitations.json.
 - Frontal and transverse signs are not yet adopted; converters keep and
   document the source sign.
 

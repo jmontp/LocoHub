@@ -1,0 +1,397 @@
+{
+ "dataset": "UM21",
+ "old_package": "um21_r01_package_v5",
+ "new_package": "um21_r01_package_v6",
+ "tables": [
+  "phase",
+  "time"
+ ],
+ "offsets_sha256": "c4f5e05c282b510c0c7299a3ef5348e653a9f9343d6b0b09f7c7d7bd0e97c446",
+ "people_with_offset": 9,
+ "people_without_offset": [
+  "UM21_AB10"
+ ],
+ "checks": [
+  {
+   "id": "R1",
+   "check": "new package manifest and every file hash/size as recorded",
+   "pass": true,
+   "detail": {
+    "manifest_sha256_ok": true,
+    "files_with_wrong_hash_or_size": [],
+    "files_not_in_manifest": []
+   }
+  },
+  {
+   "id": "R9a",
+   "check": "observation set of the new package equals the old package (restricted to the new package's observations in a pilot)",
+   "pass": true,
+   "detail": {
+    "only_in_new": 0,
+    "only_in_old": 0
+   }
+  },
+  {
+   "id": "R9b",
+   "check": "every status change is listed once in evidence/foot_flat_membership_changes.csv and nothing else is listed",
+   "pass": true,
+   "detail": {
+    "status_changes": 2,
+    "newly_failed": 0,
+    "recovered": 2,
+    "listed": 2
+   }
+  },
+  {
+   "id": "R9c",
+   "check": "exclusions.csv: every non-assessment (upstream) row is identical to the old package",
+   "pass": true,
+   "detail": {
+    "old": 17,
+    "new": 17
+   }
+  },
+  {
+   "id": "R9d",
+   "check": "exclusions.csv assessment rows = old rows + newly failed - recovered, exactly",
+   "pass": true,
+   "detail": {
+    "old": 23,
+    "new": 21,
+    "expected": 21
+   }
+  },
+  {
+   "id": "R9e",
+   "check": "every failed observation of the new assessment is in exclusions.csv exactly once",
+   "pass": true,
+   "detail": null
+  },
+  {
+   "id": "R9f",
+   "check": "failed observations: new = old + newly failed - recovered; full observations unchanged; filtered = full - failed",
+   "pass": true,
+   "detail": {
+    "failed_old": 23,
+    "failed_new": 21
+   }
+  },
+  {
+   "id": "R2.phase",
+   "check": "phase: rows of the new full table equal the assessed rows and the old rows of the same observations",
+   "pass": true,
+   "detail": {
+    "rows": 1131750,
+    "assessed_rows": 1131750
+   }
+  },
+  {
+   "id": "R3.phase",
+   "check": "phase: every column except foot/ankle/CoP anterior+vertical is bit-identical to the old package",
+   "pass": true,
+   "detail": {
+    "columns_checked": 28,
+    "passes": 12,
+    "failures": {}
+   }
+  },
+  {
+   "id": "R4.phase",
+   "check": "phase: foot and ankle angle = old - person offset (<= 1e-12 rad), patterns identical, uncorrected people exact",
+   "pass": true,
+   "detail": {
+    "angle_max_dev_rad": 0.0,
+    "angle_rows_shifted": 1027800,
+    "angle_rows_uncorrected_exact": 207900,
+    "angle_pattern_mismatch": 0,
+    "angle_uncorrected_not_exact": 0
+   }
+  },
+  {
+   "id": "R5.phase",
+   "check": "phase: ankle - (foot - shank) residual < 1e-9 deg after the change",
+   "pass": true,
+   "detail": {
+    "max_residual_deg_old": 0.0,
+    "max_residual_deg_new": 2.5444437451708134e-14
+   }
+  },
+  {
+   "id": "R6.phase",
+   "check": "phase: CoP anterior/vertical = rotated old point (<= 1e-12 m), patterns identical, uncorrected people exact",
+   "pass": true,
+   "detail": {
+    "cop_max_dev_m": 0.0,
+    "cop_samples_rotated": 479195,
+    "cop_pattern_mismatch": 0,
+    "cop_uncorrected_not_exact": 0
+   }
+  },
+  {
+   "id": "R8.phase",
+   "check": "phase: L1/L5 failure counts recomputed from the new full table equal the new assessment",
+   "pass": true,
+   "detail": {
+    "recount": {
+     "observation_columns_with_failures_in_assessment": 18,
+     "recount": 18,
+     "mismatches": 0
+    },
+    "first_mismatches": []
+   }
+  },
+  {
+   "id": "R9g.phase",
+   "check": "phase: rows whose quality_status changed belong exactly to the status-changed observations",
+   "pass": true,
+   "detail": {
+    "changed_observations": 2,
+    "expected": 2
+   }
+  },
+  {
+   "id": "R7.phase",
+   "check": "phase: new filtered = new full without the failed observations, bit for bit, every column",
+   "pass": true,
+   "detail": {
+    "rows": 1128750,
+    "expected_rows": 1128750,
+    "columns_with_differences": {}
+   }
+  },
+  {
+   "id": "R2.time",
+   "check": "time: rows of the new full table equal the assessed rows and the old rows of the same observations",
+   "pass": true,
+   "detail": {
+    "rows": 772821,
+    "assessed_rows": 772821
+   }
+  },
+  {
+   "id": "R3.time",
+   "check": "time: every column except foot/ankle/CoP anterior+vertical is bit-identical to the old package",
+   "pass": true,
+   "detail": {
+    "columns_checked": 48,
+    "passes": 19,
+    "failures": {}
+   }
+  },
+  {
+   "id": "R4.time",
+   "check": "time: foot and ankle angle = old - person offset (<= 1e-12 rad), patterns identical, uncorrected people exact",
+   "pass": true,
+   "detail": {
+    "angle_max_dev_rad": 0.0,
+    "angle_rows_shifted": 701614,
+    "angle_rows_uncorrected_exact": 284794,
+    "angle_pattern_mismatch": 0,
+    "angle_uncorrected_not_exact": 0
+   }
+  },
+  {
+   "id": "R5.time",
+   "check": "time: ankle - (foot - shank) residual < 1e-9 deg after the change",
+   "pass": true,
+   "detail": {
+    "max_residual_deg_old": 0.0,
+    "max_residual_deg_new": 1.2722218725854067e-14
+   }
+  },
+  {
+   "id": "R6.time",
+   "check": "time: CoP anterior/vertical = rotated old point (<= 1e-12 m), patterns identical, uncorrected people exact",
+   "pass": true,
+   "detail": {
+    "cop_max_dev_m": 0.0,
+    "cop_samples_rotated": 691334,
+    "cop_pattern_mismatch": 0,
+    "cop_uncorrected_not_exact": 0
+   }
+  },
+  {
+   "id": "R8.time",
+   "check": "time: L1/L5 failure counts recomputed from the new full table equal the new assessment",
+   "pass": true,
+   "detail": {
+    "recount": "not applicable: this table carries no L1/L5 assessment",
+    "first_mismatches": []
+   }
+  },
+  {
+   "id": "R9g.time",
+   "check": "time: rows whose quality_status changed belong exactly to the status-changed observations",
+   "pass": true,
+   "detail": {
+    "changed_observations": 0,
+    "expected": 0
+   }
+  },
+  {
+   "id": "R7.time",
+   "check": "time: new filtered = new full without the failed observations, bit for bit, every column",
+   "pass": true,
+   "detail": {
+    "rows": 755206,
+    "expected_rows": 755206,
+    "columns_with_differences": {}
+   }
+  }
+ ],
+ "counts_old": {
+  "tables": [
+   "phase",
+   "time"
+  ],
+  "observations_full": 7589,
+  "observations_filtered": 7566,
+  "failed_observations": 23,
+  "full": {
+   "phase_rows": 1131750,
+   "time_rows": 772821,
+   "phase_observations": 7545,
+   "time_observations": 44,
+   "observations_by_type": {
+    "individual_cycle": 7545,
+    "continuous_recording": 44
+   }
+  },
+  "filtered": {
+   "phase_rows": 1128450,
+   "time_rows": 755206,
+   "phase_observations": 7523,
+   "time_observations": 43,
+   "observations_by_type": {
+    "individual_cycle": 7523,
+    "continuous_recording": 43
+   }
+  },
+  "exclusions_total": 40,
+  "exclusions_by_stage": {
+   "upstream_not_released": 15,
+   "release_membership": 2,
+   "filtered_variant_only": 23
+  },
+  "exclusions_by_kind": {
+   "upstream_stride_rule": 15,
+   "upstream_sudden_jump": 2,
+   "assessment_failed": 23
+  },
+  "exclusions_by_reason": {
+   "upstream_stride_rule": {
+    "t04_2_outside_stride_rule": 15
+   },
+   "upstream_sudden_jump": {
+    "c03_2_sudden_jump": 2
+   },
+   "assessment_failed": {
+    "L5": 21,
+    "L1": 1,
+    "L2": 1
+   }
+  },
+  "assessment_failures_by_cause": {
+   "L5": 21,
+   "L1": 1,
+   "L2": 1
+  },
+  "assessment_failures_by_table": {
+   "phase": 22,
+   "time": 1
+  },
+  "observations_by_part_label": {
+   "UM21-Q01v3 (v2 identity, moments, powers + S02 v7 angles and centre of pressure)": 7545,
+   "UM21-T05 time export (100 Hz source clock, S02 v7 geometry, plate force and centre of pressure)": 44
+  }
+ },
+ "counts_new": {
+  "tables": [
+   "phase",
+   "time"
+  ],
+  "observations_full": 7589,
+  "observations_filtered": 7568,
+  "failed_observations": 21,
+  "full": {
+   "phase_rows": 1131750,
+   "time_rows": 772821,
+   "phase_observations": 7545,
+   "time_observations": 44,
+   "observations_by_type": {
+    "individual_cycle": 7545,
+    "continuous_recording": 44
+   }
+  },
+  "filtered": {
+   "phase_rows": 1128750,
+   "time_rows": 755206,
+   "phase_observations": 7525,
+   "time_observations": 43,
+   "observations_by_type": {
+    "individual_cycle": 7525,
+    "continuous_recording": 43
+   }
+  },
+  "exclusions_total": 38,
+  "exclusions_by_stage": {
+   "upstream_not_released": 15,
+   "release_membership": 2,
+   "filtered_variant_only": 21
+  },
+  "exclusions_by_kind": {
+   "upstream_stride_rule": 15,
+   "upstream_sudden_jump": 2,
+   "assessment_failed": 21
+  },
+  "exclusions_by_reason": {
+   "upstream_stride_rule": {
+    "t04_2_outside_stride_rule": 15
+   },
+   "upstream_sudden_jump": {
+    "c03_2_sudden_jump": 2
+   },
+   "assessment_failed": {
+    "L5": 19,
+    "L1": 1,
+    "L2": 1
+   }
+  },
+  "assessment_failures_by_cause": {
+   "L5": 19,
+   "L1": 1,
+   "L2": 1
+  },
+  "assessment_failures_by_table": {
+   "phase": 20,
+   "time": 1
+  },
+  "observations_by_part_label": {
+   "UM21-Q01v3 (v2 identity, moments, powers + S02 v7 angles and centre of pressure)": 7545,
+   "UM21-T05 time export (100 Hz source clock, S02 v7 geometry, plate force and centre of pressure)": 44
+  }
+ },
+ "extra_columns_rows_different": {
+  "phase": {
+   "source_export": 0,
+   "quality_status": 300,
+   "failed_limits": 300,
+   "limitations": 1131750,
+   "lineage_id": 1131750,
+   "assessment_id": 1131750
+  },
+  "time": {
+   "source_export": 0,
+   "quality_status": 0,
+   "failed_limits": 0,
+   "limitations": 772821,
+   "lineage_id": 772821,
+   "assessment_id": 772821
+  }
+ },
+ "all_pass": true,
+ "resources": {
+  "peak_rss_mib": 188.6,
+  "wall_seconds": 40.1
+ }
+}

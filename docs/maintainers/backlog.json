@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "updated_at_utc": "2026-11-25T02:41:31+00:00",
+  "updated_at_utc": "2026-11-27T22:48:14Z",
   "snapshot_notice": "Reviewed planning snapshot for sequential agent handoffs. All 33 replacement watchers are stopped; prepared work needs a fresh reviewed handoff. No dataset has final scientific approval. Task states are not live process monitoring.",
   "previous_snapshot": "docs/maintainers/backlog-history/pre-handoff-refresh-2026-10-27.json",
   "next_task_id": "UM21-X01",
@@ -8573,6 +8573,92 @@
       "legacy_ids": [],
       "owner": "data-worker-claude",
       "started_at_utc": "2026-11-26T04:06:36Z"
+    },
+    {
+      "id": "CORE-FOOT-01",
+      "priority": "P1",
+      "dataset": "core",
+      "title": "Apply the foot-flat zero to the foot and ankle angles and CoP in all three packages",
+      "status": "done",
+      "stage": "release",
+      "question": "Do the GT23, GT21 and UM21 packages, rebuilt with the per-person foot-flat offset, keep every other value identical and satisfy ankle = foot − shank?",
+      "scope": "Foot and ankle sagittal angles (both legs) minus each person's offset (median over matched level-walking strides of the per-stride median ipsi foot angle at 20-35% phase); CoP anterior and vertical rotated by the offset in the leg plane; phase and time tables; new package versions GT23 v12, GT21 v2, UM21 v6; L1/L5 re-assessed. People without matched level walking stay uncorrected and flagged.",
+      "depends_on": [],
+      "inputs": [
+        "review_sheets/A2-footflat/summary.json",
+        "contributor_tools/build_review_sheet_footflat.py",
+        "contributor_tools/common/release_package.py",
+        "docs/reference/index.md"
+      ],
+      "deliverables": [
+        "Offsets file with evidence",
+        "Standard line in docs/reference",
+        "Three rebuilt packages with readbacks",
+        "Pages and sheet A refreshed",
+        "Independent verifier"
+      ],
+      "acceptance": [
+        "Only foot/ankle angles and CoP anterior/vertical change; everything else bit-identical",
+        "ankle = foot − shank to 1e-9",
+        "Every change in filtered membership accounted for"
+      ],
+      "next_action": "None for this task. Pages and sheet A refresh are separate work.",
+      "resource_class": "numerical",
+      "evidence_paths": [
+        "docs/maintainers/handoffs/CORE-FOOT-01.json",
+        "docs/quality/audits/foot-flat-offsets.json",
+        "docs/quality/audits/core-foot-01-readback-GT23-v12.json",
+        "docs/quality/audits/core-foot-01-readback-GT21-v2.json",
+        "docs/quality/audits/core-foot-01-readback-UM21-v6.json",
+        "docs/quality/audits/core-foot-01-summary-GT23.json",
+        "docs/quality/audits/core-foot-01-summary-GT21.json",
+        "docs/quality/audits/core-foot-01-summary-UM21.json",
+        "docs/quality/audits/core-foot-01-cop-sign-proof.json",
+        "contributor_tools/common/foot_flat.py",
+        "contributor_tools/common/foot_flat_adapter.py",
+        "tests/test_foot_flat.py",
+        "tests/test_foot_flat_package.py",
+        "converted_datasets/reconversion_v2/gt23_r01_review_v12",
+        "converted_datasets/reconversion_v2/gt21_r01_package_v2",
+        "converted_datasets/reconversion_v2/um21_r01_package_v6"
+      ],
+      "handoff": {
+        "last_checked_at_utc": "2026-11-27T23:23:01Z",
+        "summary": "Foot-flat zero applied in new packages GT23 v12, GT21 v2, UM21 v6 (offsets: GT23 median -6.7 deg, GT21 +1.2, UM21 -1.5; GT23 AB07 and UM21 AB10 uncorrected and flagged). Foot and ankle angles and CoP forward/up changed; every other column bit-identical to the previous package. Filtered membership changes accounted for: GT23 failed 125 to 126, GT21 1246 to 1226, UM21 23 to 21. GT23 v12 was built from the v11 package because the E01/E02 table files were deleted on 2026-11-25.",
+        "checks": [
+          "guarded pilot then full for each package, all builder checks pass (clean receipts)",
+          "independent readbacks R1-R9 pass for all three (clean receipts)",
+          "L2 flags unchanged (0 of about 144 M pairs)",
+          "CoP sign proof against each dataset own foot_frame_point (deviation 1e-16 m; wrong sign 0.012-0.015 m)",
+          "pytest tests/test_foot_flat.py tests/test_foot_flat_package.py and the three older package tests pass"
+        ],
+        "remaining": [
+          "Independent verification",
+          "Pages and sheet A refresh (not part of this worker task)"
+        ],
+        "files_changed": [
+          "contributor_tools/common/foot_flat.py",
+          "contributor_tools/common/foot_flat_adapter.py",
+          "contributor_tools/common/release_package.py",
+          "contributor_tools/compute_foot_flat_offsets.py",
+          "contributor_tools/run_gt23_r01_bundle_v12.py",
+          "contributor_tools/run_gt21_r01_package_v2.py",
+          "contributor_tools/run_um21_r01_package_v6.py",
+          "contributor_tools/readback_foot_flat.py",
+          "contributor_tools/summarize_foot_flat.py",
+          "contributor_tools/core_foot_01_cop_sign_proof.py",
+          "tests/test_foot_flat.py",
+          "tests/test_foot_flat_package.py",
+          "docs/reference/index.md",
+          "docs/reference/index.html",
+          "contributor_tools/DATA_CONTRACT.md"
+        ],
+        "verified": true,
+        "verify_file": "docs/maintainers/handoffs/CORE-FOOT-01-verify.json"
+      },
+      "legacy_ids": [],
+      "owner": "data-worker-claude",
+      "started_at_utc": "2026-11-27T20:50:44Z"
     }
   ],
   "decisions": [
@@ -9807,6 +9893,39 @@
       "answer": "A",
       "answered_at_utc": "2026-11-25T18:00:00Z",
       "note": "José in chat: 'do your picks. keep going until all three datasets have their phase and time datasets.'"
+    },
+    {
+      "id": "D-REF-6",
+      "task_id": "CORE-FOOT-01",
+      "status": "answered",
+      "question": "Should the foot angle be corrected so the foot reads the surface slope when flat in mid-stance?",
+      "options": [
+        {
+          "key": "A",
+          "label": "Foot-flat zero per person, foot (and so ankle) only, all three datasets",
+          "consequence": "Foot and ankle shift by each person's level-walking mid-stance offset; CoP rotated into the corrected foot frame; thigh, shank, knee, hip unchanged. Reversible."
+        },
+        {
+          "key": "B",
+          "label": "Standing-pose zero on thigh, shank and foot",
+          "consequence": "Changes segment angles' meaning to 'relative to standing'; UM21 has no standing trial. Reversible."
+        },
+        {
+          "key": "C",
+          "label": "No change",
+          "consequence": "Foot/ankle keep marker-placement offsets (GT23 median −6.7°). Reversible."
+        }
+      ],
+      "options_order": "By scope of change, smallest physical-reference first.",
+      "decide_before_recommendation": false,
+      "cost_of_waiting": "Ankle and foot gaps between datasets stay about twice as large.",
+      "recommended": "A",
+      "confidence": "medium",
+      "why": "Foot flat on the ground is a physical reference; ramps check out within ~3° after correction (sheet A2). GT21 knee gap is real posture (sheet A5), so thigh/shank stay.",
+      "check": "Sheet A2: ankle gap on level ground 8.5° before, 3.5° after.",
+      "answer": "A",
+      "answered_at_utc": "2026-11-27T20:00:00Z",
+      "note": "José in chat: 'do A' then 'ok go' after the exact change list."
     }
   ]
 }
