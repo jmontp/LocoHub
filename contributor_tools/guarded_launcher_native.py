@@ -51,6 +51,13 @@ MATLAB_EXE = r"C:\Program Files\MATLAB\R2023b\bin\matlab.exe"
 MATLAB_EXE_WSL = "/mnt/c/Program Files/MATLAB/R2023b/bin/matlab.exe"
 SCRIPT = "contributor_tools/conversion_scripts/Gtech_2021/gt21_rb01_label_export.m"
 SCRIPT_DIR = "contributor_tools/conversion_scripts/Gtech_2021"
+# Reviewed jobs: spec key "job" (default "labels", the original GT21-RB01 behaviour) picks one fixed script, function and
+# required output list. "static" is the GT21 standing-trial export (A3 check); it needs its own review before first use.
+STATIC_SCRIPT = "contributor_tools/conversion_scripts/Gtech_2021/gt21_static_export.m"
+JOBS = {"labels": {"script": SCRIPT, "function": "gt21_rb01_label_export",
+                   "required": lambda subject: [f"labels_{subject}.jsonl", f"subject_info_{subject}.json"]},
+        "static": {"script": STATIC_SCRIPT, "function": "gt21_static_export",
+                   "required": lambda subject: [f"static_meta_{subject}.json"]}}
 SCHEMA = "locohub.guarded_launcher_native.receipt/1"
 TIMEOUT_MAX_S = 1800
 GRACE_S = 30
@@ -66,7 +73,7 @@ ALLOWED_SOURCE_ROOTS = (gl.REPO_ROOT / "contributor_tools/conversion_scripts/Gte
                         Path("/mnt/s/locomotion_data/gt21_author_mirror_2024_extracted"))
 ALLOWED_OUTPUT_ROOTS = (gl.REPO_ROOT / "converted_datasets/reconversion_v2",)
 REQUIRED = ("job_id", "subject", "source_root", "output_root", "receipt_path", "bindings", "timeout_seconds")
-OPTIONAL = {"expected_output_names": []}
+OPTIONAL = {"expected_output_names": [], "job": "labels"}
 
 
 class NativeSpecError(ValueError):
@@ -104,7 +111,9 @@ def validate_native_spec(spec, limits=gl.ENVELOPE_LIMITS):
     if not isinstance(s["bindings"], dict) or not all(
             isinstance(v, str) and re.fullmatch("[0-9a-f]{64}", v) for v in s["bindings"].values()):
         raise NativeSpecError("bindings: {path: lowercase sha256} required")
-    if not {SCRIPT, "contributor_tools/guarded_launcher_native.py"} <= set(s["bindings"]):
+    if s["job"] not in JOBS:
+        raise NativeSpecError(f"job must be one of {sorted(JOBS)}")
+    if not {JOBS[s["job"]]["script"], "contributor_tools/guarded_launcher_native.py"} <= set(s["bindings"]):
         raise NativeSpecError("bindings must include the export script and this module")
     if not gl._positive(s["timeout_seconds"], "timeout_seconds") or s["timeout_seconds"] > TIMEOUT_MAX_S:
         raise NativeSpecError(f"timeout_seconds above the native maximum {TIMEOUT_MAX_S}")
@@ -122,13 +131,15 @@ def to_windows_path(path):
     return text
 
 
-def matlab_expression(source_win, out_win, subject, nonce):
+def matlab_expression(source_win, out_win, subject, nonce, job="labels"):
+    if job not in JOBS:
+        raise NativeSpecError("job outside the reviewed set")
     if not (SUBJECT.fullmatch(subject) and NONCE.fullmatch(nonce)):
         raise NativeSpecError("subject or nonce outside the reviewed set")
     for p in (source_win, out_win):
         if not WIN_PATH.fullmatch(p):
             raise NativeSpecError("path outside the reviewed set")
-    return f"gt21_rb01_label_export('{source_win}','{out_win}','{subject}','{nonce}')"
+    return f"{JOBS[job]['function']}('{source_win}','{out_win}','{subject}','{nonce}')"
 
 
 def start_script(expression, script_dir_win, log_win, nonce):
@@ -276,7 +287,7 @@ def run_native_job(spec, host=None, spec_sha256=None, dry_run=False, launch_ledg
     r = {"schema": SCHEMA, "job_id": s["job_id"], "status": None, "scientific_approval": False, "spec": s,
          "spec_sha256": spec_sha256, "module_sha256": gl.sha256_file(__file__),
          "launcher_sha256": gl.sha256_file(gl.__file__), "checked_at_utc": gl.utcnow(),
-         "fixed_command": {"exe": MATLAB_EXE, "flags": ["-batch", "-singleCompThread"], "script": SCRIPT},
+         "fixed_command": {"exe": MATLAB_EXE, "flags": ["-batch", "-singleCompThread"], "script": JOBS[s["job"]]["script"]},
          "chaining": "none; no successor is started"}
 
     def refuse(reason, **facts):
@@ -339,7 +350,7 @@ def run_native_job(spec, host=None, spec_sha256=None, dry_run=False, launch_ledg
     receipt_path.parent.mkdir(parents=True, exist_ok=True)
     source_win, out_win = to_windows_path(s["source_root"]), to_windows_path(out_root)
     script_dir_win = to_windows_path(gl.REPO_ROOT / SCRIPT_DIR)
-    expression = matlab_expression(source_win, out_win, s["subject"], nonce)
+    expression = matlab_expression(source_win, out_win, s["subject"], nonce, s["job"])
     t0 = time.monotonic()
     identity = {"windows_pid": None, "created_utc": None, "nonce": nonce, "launched_at_utc": gl.utcnow(),
                 "log_path": str(log_path)}
@@ -414,7 +425,7 @@ def run_native_job(spec, host=None, spec_sha256=None, dry_run=False, launch_ledg
         r["census_before"]["windows"], after["windows"])
     outputs = gl.hash_outputs(out_root)
     names = {Path(f["path"]).name for f in outputs if "error" not in f}
-    required = [f"labels_{s['subject']}.jsonl", f"subject_info_{s['subject']}.json", *s["expected_output_names"]]
+    required = [*JOBS[s["job"]]["required"](s["subject"]), *s["expected_output_names"]]
     missing = [n for n in required if n not in names]
     bindings_after = gl.hash_bindings(s["bindings"], gl.REPO_ROOT)
     outcome = stop_reason or ("completed" if not errors else "launcher_error")
