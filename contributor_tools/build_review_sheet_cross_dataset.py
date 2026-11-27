@@ -13,6 +13,8 @@ with the recorded SEED. Run (bounded, low priority):
   OMP_NUM_THREADS=1 ARROW_DEFAULT_MEMORY_POOL=system MPLBACKEND=Agg \
   prlimit --as=$((600*1024*1024)) -- nice -n 19 ionice -c 3 \
   python3 contributor_tools/build_review_sheet_cross_dataset.py [--render]
+Add --v2 to read the packages rebuilt with the per-person foot-flat zero (GT23 v12, GT21 v2, UM21 v6) and write
+review_sheets/A-<task>-v2/ and review_sheets/A-cross-dataset-v2/, leaving the first sheets in place.
 """
 import os
 for key in ('OPENBLAS_NUM_THREADS', 'OMP_NUM_THREADS', 'MKL_NUM_THREADS'):
@@ -48,6 +50,12 @@ DATASETS = {  # key: (label, folder, colour)
     'GT21': ('GT21', 'gt21_r01_package_v1', '#eb6834'),
     'UM21': ('UM21', 'um21_r01_package_v5', '#1baf7a'),
 }
+V2 = '--v2' in sys.argv  # packages after the foot-flat zero; sheets get a -v2 suffix
+if V2:
+    DATASETS = {'GT23': ('GT23', 'gt23_r01_review_v12', '#2a78d6'),
+                'GT21': ('GT21', 'gt21_r01_package_v2', '#eb6834'),
+                'UM21': ('UM21', 'um21_r01_package_v6', '#1baf7a')}
+SUFFIX = '-v2' if V2 else ''
 INK = '#20252B'
 
 # (key, title, unit, column, scale). Angle radians shown in degrees; CoP metres in cm.
@@ -268,7 +276,7 @@ def judge(pg, n_avail):
 
 def build(results, tid, gid):
     task = TASKS[tid]
-    out = SHEETS / f'A-{tid}'
+    out = SHEETS / f'A-{tid}{SUFFIX}'
     out.mkdir(parents=True, exist_ok=True)
     style()
     for sig in [s[0] for s in SIGNALS]:
@@ -319,7 +327,7 @@ def build(results, tid, gid):
                f'Random strides: reservoir sample of {N_STRIDES} per dataset, seed {SEED}.',
                'Chip rule (this sheet only, not a reference range): pass = mean curves correlate at 0.9 or more for every pair and every gap at 0, 15, 50, 85% is within 1 SD of the wider dataset; failed = opposite shape (r below 0); the shape test is skipped when a curve moves less than its own SD; otherwise not checked.',
                'Mean differences use the first dataset minus the second, in the unit shown, at 0, 15, 50 and 85% phase (linear interpolation of the mean curves).'] + details + [
-        'Sources: GT23 review v11, GT21 package v1, UM21 package v5, filtered phase tables. Builder: contributor_tools/build_review_sheet_cross_dataset.py']
+        'Sources: ' + ', '.join(f'{ds} {DATASETS[ds][1]}' for ds in DATASETS) + ', filtered phase tables. Builder: contributor_tools/build_review_sheet_cross_dataset.py']
     page(out / 'index.html', title=f'Cross-dataset check: {task["title"]}',
          ask='Check whether the three datasets overlap.', headline=f'{task["title"]}: GT23, GT21 and UM21',
          chips=chips, figures=figures, not_shown=not_shown, reply='ok  |  which signal looks wrong', details=details)
@@ -348,9 +356,9 @@ def main():
     index_rows, sheets = [], []
     for gid, tid in enumerate(TASK_IDS):
         chips, _ = build(results, tid, gid)
-        sheets.append(SHEETS / f'A-{tid}' / 'index.html')
+        sheets.append(SHEETS / f'A-{tid}{SUFFIX}' / 'index.html')
         index_rows.append((tid, chips))
-    idx = SHEETS / 'A-cross-dataset'
+    idx = SHEETS / f'A-cross-dataset{SUFFIX}'
     idx.mkdir(parents=True, exist_ok=True)
     marks = {'pass': 'pass', 'fail': 'FAILED', 'unchecked': 'not checked'}
     html = ['<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
@@ -358,7 +366,7 @@ def main():
             '<body style="font:16px/1.5 system-ui;max-width:860px;margin:20px auto;padding:0 16px">'
             '<h1>Do the three datasets follow the same standard?</h1><ul>']
     for tid, chips in index_rows:
-        html.append(f'<li><a href="../A-{tid}/index.html">{TASKS[tid]["title"]}</a><ul>' +
+        html.append(f'<li><a href="../A-{tid}{SUFFIX}/index.html">{TASKS[tid]["title"]}</a><ul>' +
                     ''.join(f'<li>{marks[s]}: {t}</li>' for s, t in chips) + '</ul></li>')
     html.append('</ul></body>')
     (idx / 'index.html').write_text('\n'.join(html), encoding='utf-8')

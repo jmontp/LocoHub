@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "contributor_tools"))
 import build_gt23_problems_page as P  # noqa: E402  (shared style only; importing it runs nothing)
 
-BUNDLE = ROOT / "converted_datasets/reconversion_v2/gt23_r01_review_v11"
+BUNDLE = ROOT / "converted_datasets/reconversion_v2/gt23_r01_review_v12"
 RERUN = ROOT / "docs/maintainers/handoffs/GT23-PL01.json"
 OUT = ROOT / "docs/datasets/gt23/figures"
 
@@ -80,12 +80,16 @@ def main():
              "nm_rerun_limit": "Mass factor from a local re-run", "window_span_both_legs": "Spans exported for both legs",
              "shuffle_not_steady_walking": "Shuffle filed as level walking", "unlabelled_walking_under_functional_task": "Walking filed as functional task",
              "run_label_check": "Cycles labelled run",
+             "foot_flat_zero_applied": "Foot angle zeroed to foot-flat", "foot_flat_zero_not_applied": "Foot-flat zero not applied (AB07)",
              "power_from_moment_and_speed": "Power recomputed", "other_powers_source_values": "Hip sideways, rotation, subtalar power as published"}
     items = sorted(((short[x["id"]], x.get("observations", x.get("observations_in_recording"))) for x in lim), key=lambda r: -r[1])
     hbar(plt, items, "page-limitations.svg", "Observations touched", [P.MUTED] * len(items), height=3.6)
     # 3. failures before and after
     q = json.loads(RERUN.read_text(encoding="utf-8"))["steps_2_to_4"]["q01_v2"]
-    before, after = q["before_old_v1"], q["after"]
+    before = q["before_old_v1"]
+    # This version: failures by cause from the current manifest (the foot-flat zero moved L1 and L5 counts; L2 stays 0).
+    cause = counts["assessment_failures_by_cause"]
+    after = {"failed": counts["failed_observations"], "L5": cause["L5"], "L1": cause["L1"], "L2": cause.get("L2", 0)}
     names = [("L5", "Pressure point too far\nfrom the foot"), ("L2", "Angle jumps 30° or\nmore between samples"), ("L1", "Joint angle outside\nthe possible range")]
     fig, ax = plt.subplots(figsize=(P.WIDTH_IN, 3.2), layout="constrained")
     ys = list(range(len(names)))[::-1]

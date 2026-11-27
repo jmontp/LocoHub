@@ -5,7 +5,7 @@
  "title": "Georgia Tech 2023 · LocoHub",
  "css_class": "gt23d",
  "r01_task_id": "GT23-R01",
- "bundle": "converted_datasets/reconversion_v2/gt23_r01_review_v11",
+ "bundle": "converted_datasets/reconversion_v2/gt23_r01_review_v12",
  "handoff": "docs/maintainers/handoffs/GT23-R01.json",
  "scope": "docs/quality/audits/gt23-problem-scope.json",
  "verified_date": "2026-11-25",
@@ -16,7 +16,7 @@
   {
    "src": "page-failures.svg",
    "question": "How many observations fail each coarse limit, before and after the fixes?",
-   "alt": "Bars of observations failing each coarse limit. Pressure point: 590 before and 108 after. Angle jump: 189 before and 0 after. Angle range: 40 before and 9 after.",
+   "alt": "Bars of observations failing each coarse limit. Pressure point: 590 before and 94 after. Angle jump: 189 before and 0 after. Angle range: 40 before and 24 after.",
    "caption": "The limits are coarse physical limits written before any of these data were read. They are not reference ranges. An observation can fail more than one limit."
   },
   {
@@ -28,7 +28,7 @@
   {
    "src": "page-limitations.svg",
    "question": "How many observations does each limitation touch?",
-   "alt": "Bars of the number of observations touched by each of 11 limitations; the largest is spans exported for both legs with 10,254.",
+   "alt": "Bars of the number of observations touched by each of 11 limitations; the largest is the foot angle zeroed to foot-flat with 17,862; spans exported for both legs follow with 10,254.",
    "caption": "One observation can carry several limitations."
   }
  ],
@@ -330,7 +330,7 @@
     {
      "verdict": "Open limit",
      "signal": "Ankle zero point",
-     "line": "Where the ankle angle is zero has not been checked.",
+     "line": "Each person's ankle zero is set from level walking (see the foot-flat card); other tasks were not checked against it.",
      "evidence": ""
     },
     {
@@ -607,8 +607,8 @@
   "notreconverted": {
    "status": "fixed",
    "short": "All 488 recordings converted; local review version exists",
-   "did": "All 488 recordings (4,880 channel files) were read and converted in guarded jobs run one at a time, with the code frozen after pilots. The full run covered 12 participants, passed 28 checks, peaked at 418 MiB and took 769 seconds. The result is the local review version on this page: 19,573 observations in the full version and 19,448 in the cleaned version, with every file hash checked by a second agent.",
-   "checked": "A second agent recomputed all file hashes, checked that the cleaned version is the full version minus 125 failures and nothing else, and compared a random sample of 10 observations with the source.",
+   "did": "All 488 recordings (4,880 channel files) were read and converted in guarded jobs run one at a time, with the code frozen after pilots. The full run covered 12 participants, passed 28 checks, peaked at 418 MiB and took 769 seconds. The result is the local review version on this page: 19,573 observations in the full version and 19,447 in the cleaned version, with every file hash checked by a second agent.",
+   "checked": "A second agent recomputed all file hashes, checked that the cleaned version is the full version minus 126 failures and nothing else, and compared a random sample of 10 observations with the source.",
    "knock_on": [
     {
      "verdict": "Left out",
@@ -646,7 +646,9 @@
   "unlabelled_walking_under_functional_task": "Walking cycles from recordings with no speed or slope label (normal walk 1 and the incline walks) are filed under functional task. Some show a flight phase (both feet off the plates).",
   "run_label_check": "Cycles labelled run (2.0 and 2.5 m/s) follow the authors' label, but the publisher's README describes these recordings as walking. Some show a flight phase.",
   "power_from_moment_and_speed": "Hip, knee and ankle power are the published moment times our own joint speed of the same leg, and are missing wherever the moment or the speed is missing. The source's power is not carried over.",
-  "other_powers_source_values": "Hip sideways, hip rotation and subtalar power are the published source values: the package has no joint speed for them, so they were not recomputed."
+  "other_powers_source_values": "Hip sideways, hip rotation and subtalar power are the published source values: the package has no joint speed for them, so they were not recomputed.",
+  "foot_flat_zero_applied": "Foot-flat zero: each person's foot angle, ankle angle and foot-frame pressure point (forward and up) were shifted by a per-person offset taken from level walking, so a flat foot reads 0. The offset is one number per person; other tasks were not checked against it.",
+  "foot_flat_zero_not_applied": "AB07: no matched level walking, so no foot-flat zero. People with no matched level-walking stride have no offset and keep the foot angle, ankle angle and pressure point as measured; their ankle angle is not comparable with the corrected people."
  },
  "limit_unchecked_intro": "Signal families with no limit, so not checked: ",
  "limit_unchecked_plain": [
@@ -765,17 +767,17 @@
  "checked": {
   "checked": [
    "Every exported observation was read back by separate code and compared with its inputs: the largest difference is 2.0e-9, which is float precision on forces of about a thousand newtons.",
-   "All file hashes match; the cleaned version is the full version minus 125 failures and nothing else; every phase observation has exactly 150 samples from 0 to 100 percent, and the phase files pass the data contract with no issues.",
+   "All file hashes match; the cleaned version is the full version minus 126 failures and nothing else; every phase observation has exactly 150 samples from 0 to 100 percent, and the phase files pass the data contract with no issues.",
    "Segment angles, joint angles and the pressure point were recomputed by a second implementation to 9e-16 radians and 2e-16 m.",
    "Mass factors for 52 recordings and the 40 AB03 body-weight columns were recomputed independently.",
    "Hip, knee and ankle power equals moment times joint speed to 1e-12 in a separate readback of every observation, and to 1e-9 in an independent check of 10 observations drawn with a recorded seed.",
    "Where a plate is loaded, our own strides reproduce the authors' strides exactly in the gait tasks.",
-   "Hip, knee and ankle angles against coarse limits (hip −50 to 150°, knee −30 to 165°, ankle −80 to 50°), angles for jumps of 30° or more between neighbouring samples, the pressure point against 0.5 m forward and 0.3 m up and sideways of the foot, and a left-right side check. 19,448 of 19,573 observations pass; 125 fail.",
-   "Every item left out of either version has a row and a reason in the left-out list: 5,281 rows."
+   "Hip, knee and ankle angles against coarse limits (hip −50 to 150°, knee −30 to 165°, ankle −80 to 50°), angles for jumps of 30° or more between neighbouring samples, the pressure point against 0.5 m forward and 0.3 m up and sideways of the foot, and a left-right side check. 19,447 of 19,573 observations pass; 126 fail.",
+   "Every item left out of either version has a row and a reason in the left-out list: 5,282 rows."
   ],
   "not_checked": [
    "Joint speeds, moments, powers, ground forces, the lab-axis pressure point and heading have no limit, so they were not assessed. A missing or unassessed signal is not evidence of passing.",
-   "Where the ankle angle is zero has not been checked.",
+   "Each person's ankle zero is set from level walking (see the foot-flat card); other tasks were not checked against it.",
    "The limits themselves are a draft written before any of these data were read. They are not approved reference ranges.",
    "The two time files were not run through the data contract.",
    "Source files were checked against the job receipts, not hashed again from the source.",
@@ -968,7 +970,7 @@
   },
   "offset_unverified": {
    "label": "Checked; zero point not checked",
-   "note": "Checked only against clearly impossible values. Where the ankle angle is zero has not been checked."
+   "note": "Checked only against clearly impossible values. Each person's ankle zero is set from level walking (see the foot-flat card); other tasks were not checked against it."
   },
   "partly_checked": {
    "label": "Partly checked",
@@ -1189,5 +1191,71 @@
    "caption": "Stride files, this leg, before this version. After it the gap is zero by construction."
   },
   "note": "The gap is the size of the difference relative to the size of the new power, per stride, over the samples where both exist. Medians for the other leg in the stride files and for the time files run from {median_min}% to {median_max}% across hip, knee and ankle. The gap comes from the speed definition, which is ours; we did not test the authors' model coordinate directly."
- }
+ },
+ "extra_cards": [
+  {
+   "key": "foot_flat",
+   "section": "Foot angle zero (new in this version)",
+   "title": "Foot angle zeroed to foot-flat",
+   "status": "fixed",
+   "short": "11 of 12 people shifted (median +6.7°, range +1.3 to +11.8°); AB07 left uncorrected",
+   "scope": {
+    "participants": "11 of 12 (AB07 has no matched level walking and is left as measured)",
+    "tasks": "Every task of those 11 people: 448 of 488 recordings",
+    "share": "17,862 of 19,573 observations (91.3%); AB07's 1,711 observations are uncorrected"
+   },
+   "wrong": "Where the foot angle reads zero depends on the markers and the model, not on the foot lying flat. In level walking at 20 to 35 percent of the stride the foot is flat on the ground, yet the 11 people read between −11.8° and −1.3° there (median −6.7°). The ankle angle and the pressure point in the foot's frame inherit that tilt.",
+   "how": "For each person we took the level-walking strides at 1.2 m/s (plus or minus 0.05), the median foot angle over 20 to 35 percent of each stride, and then the median of those over the person's strides. That is the person's offset. The choice of this correction was decision D-REF-6.",
+   "did": "Each person's foot angle was shifted by minus that person's offset, so a foot lying flat on level ground reads 0. The ankle angle (foot minus shank) shifts by the same amount, and the pressure point in the foot's frame (forward and up) is turned by the same angle inside the leg plane; its sideways value is unchanged. Pelvis, thigh, shank, hip and knee angles, all speeds, moments, powers, forces, identities and times are unchanged. AB07 has no matched level walking, so no offset exists for AB07 and the angles stay as measured; their ankle angle is not comparable with the corrected people.",
+   "checked": "A second agent recomputed the offsets of 3 people (AB01, AB11, AB06) from the earlier version and matched them exactly. In 20 strides and 3 recordings each of AB01 and AB12, foot and ankle equal the earlier value minus the offset to 0°, ankle equals foot minus shank to 3e-14°, and the pressure point matches an independent rotation to 1e-16 m (the wrong turning direction would differ by up to 3 cm). Every other column was identical in the probes. AB07's values are bit-identical to the earlier version.",
+   "now": "The cleaned version has 19,447 observations (19,448 before). 24 observations newly fail a coarse limit and 23 no longer do; the details are below.",
+   "example": "AB02 has the largest offset: the foot read −11.8° with the foot flat, so every foot and ankle value of AB02 is raised by 11.8°. Ramp check, on about 10° slopes, median over people of the foot angle minus the slope: incline +1.2° (before −4.3°), decline −2.8° (before −7.5°). People range from +0.6° to +4.2° on the incline and from −7.3° to +6.4° on the decline.",
+   "figures": [
+    {
+     "src": "foot-flat-offsets.svg",
+     "question": "How far was each person's foot from zero when it lay flat?",
+     "alt": "One dot per person on a degree axis: the foot angle at 20 to 35 percent of level-walking strides, from −11.8° to −1.3°. Gray lines show the spread over each person's strides.",
+     "caption": "One dot per person: the offset, the median stride. Gray line: range over that person's strides. Dashed blue line: median over people. Zero is a foot lying flat."
+    }
+   ],
+   "knock_on": [
+    {
+     "verdict": "Also wrong, fixed",
+     "signal": "Foot and ankle angles",
+     "line": "They read 0 for a flat foot in level walking, person by person.",
+     "evidence": "Level walking, foot minus slope after the zero: 0.0° for all 11 people. On 10° slopes the foot reads the slope within about 3° as a median over people."
+    },
+    {
+     "verdict": "Also wrong, fixed",
+     "signal": "Pressure point forward and up, in the foot's frame",
+     "line": "Turned by the same angle as the foot. Sideways is unchanged.",
+     "evidence": "Matches an independent rotation to 1e-16 m in probed strides."
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Hip, knee, pelvis, thigh and shank angles; speeds, moments, powers, forces",
+     "line": "Unchanged.",
+     "evidence": "Identical in the probed strides and recordings."
+    },
+    {
+     "verdict": "Left out",
+     "signal": "Ankle limit failures rose from 9 to 24 observations",
+     "line": "The median shift of +6.7° moves ankle readings up. 15 more observations now exceed the +50° upper limit; all are in jumps, lunges and a lifting task, none in walking or stairs. The largest is 57.3°. They are left out of the cleaned version. They look like real deep dorsiflexion made visible, marginally over a coarse limit, not a conversion problem; the cause was not examined further.",
+     "evidence": "AB11 jump (7 observations), AB01 and AB06 lunges (3 each), AB10 lunges (1), AB05 lifting (1). The pressure-point limit: 9 newly fail and 23 recover."
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "AB07",
+     "line": "No offset, so AB07's foot and ankle are as measured and are not comparable with the others.",
+     "evidence": "1,711 observations, 40 recordings."
+    },
+    {
+     "verdict": "Not checked",
+     "signal": "Whether the foot is flat in every level stride, and the cause of the offsets",
+     "line": "The zero is one number per person from mid-stance of level walking. On the 10° decline the person medians still range from −7.3° to +6.4°, so one number does not make every task read the slope.",
+     "evidence": ""
+    }
+   ]
+  }
+ ]
 }

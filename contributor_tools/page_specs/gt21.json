@@ -5,7 +5,7 @@
  "title": "Georgia Tech 2021 · LocoHub",
  "css_class": "gt21d",
  "r01_task_id": "GT21-R01",
- "bundle": "converted_datasets/reconversion_v2/gt21_r01_package_v1",
+ "bundle": "converted_datasets/reconversion_v2/gt21_r01_package_v2",
  "handoff": "docs/maintainers/handoffs/GT21-R01.json",
  "scope": null,
  "card_source": "spec",
@@ -29,14 +29,14 @@
   "other_recordings_in_source": 2990,
   "source_steps_segmented": 107367,
   "observations_full": 84793,
-  "observations_filtered": 83547,
+  "observations_filtered": 83567,
   "phase_observations_full": 81647,
   "time_observations_full": 3146,
-  "phase_observations_filtered": 81145,
+  "phase_observations_filtered": 81163,
   "time_observations_filtered": 2402,
   "phase_rows_full": 12247050,
   "time_rows_full": 14415683,
-  "exclusion_rows": 26967,
+  "exclusion_rows": 26947,
   "phase_observations_by_mode": {
    "levelground": 14252,
    "ramp": 19953,
@@ -55,13 +55,13 @@
   {
    "src": "page-failures.svg",
    "question": "How many observations fail each coarse limit?",
-   "alt": "Bars of observations failing each coarse limit: joint range 186, sudden 30 degree jump 1,134, pressure point 4, left-right side check 16.",
-   "caption": "The limits are coarse physical limits written before any Georgia Tech 2021 data were read, the same numbers as for Umich 2021 and Georgia Tech 2023. They are not reference ranges. An observation can fail more than one limit. 1,246 observations fail at least one and are left out of the cleaned version."
+   "alt": "Bars of observations failing each coarse limit: joint range 152, sudden 30 degree jump 1,134, pressure point 8, left-right side check 16.",
+   "caption": "The limits are coarse physical limits written before any Georgia Tech 2021 data were read, the same numbers as for Umich 2021 and Georgia Tech 2023. They are not reference ranges. An observation can fail more than one limit. 1,226 observations fail at least one and are left out of the cleaned version."
   },
   {
    "src": "page-left-out.svg",
    "question": "What was left out, and why?",
-   "alt": "Bars of items left out by reason on a log scale. The largest is 23,393 steps dropped by the authors' rule; 1,246 observations that failed a coarse limit are left out of the cleaned version only.",
+   "alt": "Bars of items left out by reason on a log scale. The largest is 23,393 steps dropped by the authors' rule; 1,226 observations that failed a coarse limit are left out of the cleaned version only.",
    "caption": "Dark bars were left out of both versions at export; the orange bar is left out of the cleaned version only. The scale is logarithmic."
   },
   {
@@ -364,7 +364,7 @@
    "scope": {
     "participants": "Spread across participants; the most failing observations (counting every limit) are AB21 96, AB25 88, AB11 84, AB17 77, AB12 73 and AB10 73",
     "tasks": "All four modes; 743 of 3,146 whole recordings (23.6%) contain a failing angle",
-    "share": "1,134 of 84,793 observations (1.3%) fail the jump check; 1,246 fail at least one check"
+    "share": "1,134 of 84,793 observations (1.3%) fail the jump check; 1,226 fail at least one check"
    },
    "wrong": "A joint or segment angle changes by 30 degrees or more between two neighbouring samples, 5 ms apart. At that rate the angle would move much faster than a person can.",
    "how": "The check runs on the 200 Hz time table. A stride fails when a jump falls inside its span. Testing the 150-sample phase grid directly was rejected: Georgia Tech 2023 showed that this makes false jumps by resampling. A second agent recomputed the check for 292 recordings and 50 strides with 0 mismatches.",
@@ -384,7 +384,7 @@
      "verdict": "Left out",
      "signal": "1,134 observations in the cleaned version",
      "line": "They stay in the full version with the failure noted.",
-     "evidence": "Combined with the other limits, 1,246 observations are cleaned away."
+     "evidence": "Combined with the other limits, 1,226 observations are cleaned away."
     },
     {
      "verdict": "Open limit",
@@ -415,25 +415,25 @@
   {
    "key": "ankle_extremes",
    "section": "Observations that fail a coarse limit",
-   "title": "Ankle angles outside the joint limit (zero point unreviewed)",
+   "title": "Ankle angles outside the joint limit",
    "status": "documented",
-   "short": "186 observations fail the joint-range check, almost all ankle",
+   "short": "152 observations fail the joint-range check, almost all ankle",
    "scope": {
-    "participants": "Spread across participants (for example AB17 44 failing observations, AB10 18, AB30 16)",
+    "participants": "Spread across participants (for example AB30 42 failing observations, AB10 17, AB21 13)",
     "tasks": "Ramp recordings hold the ten largest values (AB30, AB23, AB24); other modes were not broken down",
-    "share": "186 of 84,793 observations (0.2%); 915 ankle samples (565 in the time table, 350 in the phase table)"
+    "share": "152 of 84,793 observations (0.2%); 686 ankle samples (432 in the time table, 254 in the phase table)"
    },
-   "wrong": "The joint-range check allows hip −50 to 150°, knee −30 to 165° and ankle −80 to 50°. 186 observations fall outside, nearly all at the ankle. The ten largest ankle values are 167 to 178°, which is 117 to 128° beyond the upper limit.",
+   "wrong": "The joint-range check allows hip −50 to 150°, knee −30 to 165° and ankle −80 to 50°. 152 observations fall outside after the foot-flat zero (186 before it), nearly all at the ankle. The ten largest ankle values are 167 to 178°, which is 117 to 128° beyond the upper limit.",
    "how": "The limits are the same numbers used for Umich 2021 and Georgia Tech 2023, written before any of these data were read. A second agent recomputed them for 2 participants with 0 mismatches.",
-   "did": "Nothing was changed. Failing observations stay in the full version and are left out of the cleaned version. Caveat: the ankle angle is the difference of the foot and shank angles measured against gravity, and where it is zero has not been reviewed. The ankle failures may reflect that zero point and are not evidence of measurement errors.",
-   "checked": "Q01 passes with a note: the 186 ankle failures should not be read as measurement errors until the zero point is reviewed.",
+   "did": "Nothing was changed for these failures. Failing observations stay in the full version and are left out of the cleaned version. The ankle angle is the difference of the foot and shank angles measured against gravity; its zero is now set per person from level walking (see the foot-flat card), which left 34 fewer failing observations. The ankle failures that remain are not shown to be measurement errors.",
+   "checked": "Q01 passes with a note: the ankle failures should not be read as measurement errors. The counts were re-made after the foot-flat zero (152 observations).",
    "example": "The second figure shows the ten largest failing values, chosen by size (not at random): all ankle angles in ramp recordings of AB30, AB23 and AB24.",
    "figures": [
     {
      "src": "gt21-ankle-extremes-by-signal.svg",
      "question": "Which signals go outside the joint limit?",
-     "alt": "Bars of samples outside the joint limit in the time table by signal. The right ankle has 323 and the left ankle 242; the right knee has 101; the left knee, left hip and right hip have fewer.",
-     "caption": "Time table. Ankle angles in orange. The phase table adds 350 ankle samples."
+     "alt": "Bars of samples outside the joint limit in the time table by signal. The left ankle has 225 and the right ankle 207; the right knee has 101; the left knee, left hip and right hip have fewer.",
+     "caption": "Time table. Ankle angles in orange. The phase table adds 254 ankle samples."
     },
     {
      "src": "gt21-ankle-worst-values.svg",
@@ -446,19 +446,19 @@
     {
      "verdict": "Open limit",
      "signal": "Ankle zero point",
-     "line": "Where the ankle angle is zero has not been reviewed, so a passing ankle angle does not prove the zero is right.",
+     "line": "The zero is set per person from level walking (foot-flat card); a passing ankle angle does not prove the zero is right in other tasks.",
      "evidence": ""
     },
     {
      "verdict": "Open limit",
      "signal": "Ankle speed and power",
-     "line": "They are computed from the same angle and inherit its zero point where the angle is off.",
+     "line": "They are computed from the same angle; a constant zero shift does not change speeds.",
      "evidence": ""
     },
     {
      "verdict": "Left out",
      "signal": "Failing observations in the cleaned version",
-     "line": "186 joint-range failures, 93 of which also fail the jump check.",
+     "line": "152 joint-range failures, 82 of which also fail the jump check.",
      "evidence": ""
     },
     {
@@ -659,6 +659,116 @@
    ]
   },
   {
+   "key": "foot_flat",
+   "section": "Foot angle zero (new in this version)",
+   "title": "Foot angle zeroed to foot-flat",
+   "status": "fixed",
+   "short": "All 22 people shifted (median +1.2°, range −1.8 to +5.2°)",
+   "scope": {
+    "participants": "22 of 22",
+    "tasks": "Every task: all 3,146 recordings",
+    "share": "All 84,793 observations"
+   },
+   "wrong": "Where the foot angle reads zero depends on the markers and the model, not on the foot lying flat. In level walking at 20 to 35 percent of the stride the 22 people read between −1.8° and +5.2° with the foot flat (median +1.2°). The ankle angle and the pressure point in the foot's frame inherit that tilt.",
+   "how": "For each person we took the level-walking strides at 1.2 m/s (plus or minus 0.05), the median foot angle over 20 to 35 percent of each stride, and then the median of those over the person's strides. That is the person's offset. The choice of this correction was decision D-REF-6.",
+   "did": "Each person's foot angle was shifted by minus that person's offset, so a foot lying flat on level ground reads 0. The ankle angle (foot minus shank) shifts by the same amount, and the pressure point in the foot's frame (forward and up) is turned by the same angle inside the leg plane; its sideways value is unchanged. Pelvis, thigh, shank, hip and knee angles, all speeds, moments, powers, forces, identities and times are unchanged.",
+   "checked": "A second agent recomputed the offsets of 3 people (AB07, AB25, AB14) from the earlier version and matched them exactly. In 20 strides and 3 recordings each of AB07 and AB25, foot and ankle equal the earlier value minus the offset to 0°, ankle equals foot minus shank to 3e-14°, and the pressure point matches an independent rotation to 1e-16 m. Every other column was identical in the probes.",
+   "now": "The cleaned version has 83,567 observations (83,547 before): 26 observations newly fail a coarse limit and 46 no longer do. Joint-range failures fell from 186 to 152 observations; pressure-point failures rose from 4 to 8.",
+   "example": "AB17 has the largest offset (+5.2°): its 44 joint-range failures fell to 0. AB30 (−1.8°) went the other way, from 16 to 42. Ramp check, on about 10° slopes, median over people of the foot angle minus the slope: incline +0.4° (before +1.9°), decline −0.6° (before +0.4°); people range from −2.2° to +2.9° on the incline and from −2.5° to +1.5° on the decline.",
+   "figures": [
+    {
+     "src": "foot-flat-offsets.svg",
+     "question": "How far was each person's foot from zero when it lay flat?",
+     "alt": "One dot per person on a degree axis: the foot angle at 20 to 35 percent of level-walking strides, from −1.8° to +5.2°. Gray lines show the spread over each person's strides.",
+     "caption": "One dot per person: the offset, the median stride. Gray line: range over that person's strides. Dashed blue line: median over people. Zero is a foot lying flat."
+    }
+   ],
+   "knock_on": [
+    {
+     "verdict": "Also wrong, fixed",
+     "signal": "Foot and ankle angles",
+     "line": "They read 0 for a flat foot in level walking, person by person.",
+     "evidence": "Level walking, foot minus slope after the zero: 0.0° for all 22 people. On 10° slopes the foot reads the slope within about 3° as a median over people."
+    },
+    {
+     "verdict": "Also wrong, fixed",
+     "signal": "Pressure point forward and up, in the foot's frame",
+     "line": "Turned by the same angle as the foot. Sideways is unchanged.",
+     "evidence": "Matches an independent rotation to 1e-16 m in probed strides."
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Hip, knee, pelvis, thigh and shank angles; speeds, moments, powers, forces",
+     "line": "Unchanged.",
+     "evidence": "Identical in the probed strides and recordings."
+    },
+    {
+     "verdict": "Left out",
+     "signal": "Observations that newly fail",
+     "line": "26 observations newly fail a coarse limit (23 at the ankle, 3 at the pressure point) and are left out of the cleaned version; 46 that failed before no longer fail.",
+     "evidence": "Counts by table: 16 stride and 10 time observations newly fail; 34 stride and 12 time observations recover."
+    },
+    {
+     "verdict": "Not checked",
+     "signal": "Whether the foot is flat in every level stride, and the cause of the offsets",
+     "line": "The zero is one number per person from mid-stance of level walking.",
+     "evidence": ""
+    }
+   ]
+  },
+  {
+   "key": "knee_more_bent",
+   "section": "How the angles compare with other datasets",
+   "title": "GT2021 knee about 8° more bent than the other datasets",
+   "status": "documented",
+   "short": "Level-walking knee reads 7.6° more bent than GT23 and UM21; no processing cause found",
+   "scope": {
+    "participants": "22 of 22 (the gap varies by person, spread 4.2°)",
+    "tasks": "Level walking at 1.2 m/s, 20 to 35 percent of the stride; other tasks were not compared",
+    "share": "The knee angle is carried by all 84,793 observations; the gap was measured on level walking only"
+   },
+   "wrong": "At mid-stance of level walking, the knee of the 22 people reads on average 7.6° more bent than the mean of the Georgia Tech 2023 and Umich 2021 people (the average of the two datasets' person means). Nothing in the GT21 data was changed for this.",
+   "how": "Two checks, each on all 22 people. First, the standing trial of each person was converted with the same code: the mean standing knee is 6.7°, so with standing taken as zero the gap would fall from 7.6° to 0.9°. People stand about as bent as the whole group walks bent. Second, the knee centre was moved from the model's position to the one the markers give (assumed joint widths of 90 mm at the knee and 70 mm at the ankle, which are not in the data): the standing knee changes from 6.7° to 5.5° and the walking gap from 7.6° to 7.5°. By our own rule, which is not a reference range, this reads as a real posture and not a placement error.",
+   "did": "Nothing was changed. The knee angle stays as converted, and no standing zero was applied to it. A real difference between the groups is the most likely reading, but it is not proven: the groups differ in population, protocol and model.",
+   "checked": "Both checks ran read-only on 22 of 22 people. The standing trials were steady (knee spread at most 2° inside the trial) and the authors' own offset angles average zero over standing. The standing knee on the model's knee centres matches the first check within 0.5°. They are reported on the local review sheets for the standing pose and the knee centre.",
+   "now": "The knee gap stays at 7.6° on average.",
+   "example": "Across people the link is weak: people who stand more bent do walk somewhat more bent (correlation 0.32), so the standing pose explains the average gap better than the differences between people.",
+   "figures": [
+    {
+     "src": "gt21-knee-gap.svg",
+     "question": "Does the standing pose or the knee centre explain the GT21 knee gap?",
+     "alt": "Bars of knee flexion in degrees, mean over 22 people. Walking knee gap as converted 7.6; standing knee 6.7; gap left if standing were zero 0.9; standing knee with marker knee centres 5.5; walking gap with marker knee centres 7.5.",
+     "caption": "Mean over the 22 people. The reference is the mean of the GT23 and UM21 person means at level walking."
+    }
+   ],
+   "knock_on": [
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Knee angle as converted",
+     "line": "No processing step was found that explains the gap; the knee angle is as converted.",
+     "evidence": "Standing check and knee-centre check, 22 of 22 people."
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "Cause of the difference",
+     "line": "Not established. Standing explains the average gap but only weakly the differences between people.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Not checked",
+     "signal": "Standing poses of GT23 and UM21",
+     "line": "They have no standing trials here, so the same check could not be run on them.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Not checked",
+     "signal": "Joint widths",
+     "line": "The knee and ankle widths were assumed, not measured; they moved the standing knee by at most 1.2°.",
+     "evidence": ""
+    }
+   ]
+  },
+  {
    "key": "plane_glitch",
    "section": "Source and checks",
    "title": "The leg-plane glitch check could not be run",
@@ -709,10 +819,12 @@
   "ab27_right_thigh_held_frames": "AB27 right thigh: the thigh marker leaves the rigid thigh in about 22 percent of right-leg frames, so those frames are held.",
   "ab28_pelvis_angle_offset": "AB28 pelvis angle: about −24° in every mode, while other participants show −4 to −18°. Consistent within the participant; not corrected.",
   "p1_unchecked": "Leg-plane glitch (P1) could not be checked, because the export has no per-frame plane. Never a pass.",
-  "ankle_zero_offset_unreviewed": "Ankle failures may reflect an unreviewed zero offset: the ankle angle is the difference of the foot and shank angles measured against gravity, and where it is zero has not been reviewed. The coarse limits are a draft, not approved reference ranges.",
+  "ankle_zero_offset_unreviewed": "Ankle failures may still reflect the zero: the ankle angle is the difference of the foot and shank angles measured against gravity, and its zero is set per person from level walking only. The coarse limits are a draft, not approved reference ranges.",
   "source_is_authors_2024_copy": "The source files of all 22 participants are the authors' 2024 copy without publisher checksums. Compared with the 2021 archive for AB17 only (1,464 of 1,466 files identical).",
   "power_from_moment_and_speed": "Hip, knee and ankle power are the published moment times LocoHub's joint speed. The build checked every row and found no difference. Power is missing wherever the moment or the speed is missing.",
-  "authors_rule_exclusions": "Strides left out by the authors' rule, steps whose case was not found, steps of a recording that was not converted, and one recording with too few fitted markers. Every one is a row in the left-out list."
+  "authors_rule_exclusions": "Strides left out by the authors' rule, steps whose case was not found, steps of a recording that was not converted, and one recording with too few fitted markers. Every one is a row in the left-out list.",
+  "foot_flat_zero_applied": "Foot-flat zero: each person's foot angle, ankle angle and foot-frame pressure point (forward and up) were shifted by a per-person offset taken from level walking, so a flat foot reads 0. The offset is one number per person; other tasks were not checked against it.",
+  "foot_flat_zero_not_applied": "No one is in this group: all 22 people have an offset."
  },
  "limit_unchecked_intro": "Signal families with no limit, so not checked: ",
  "limit_unchecked_plain": [
@@ -774,18 +886,18 @@
  "accounting_note": "Accounting: {total:,} rows. {upstream:,} steps or recordings are left out of both versions. {failed:,} observations are left out of the cleaned version only. The full version has {full:,} observations and the cleaned version has {filtered:,}, which is the full version minus those {failed:,}. The left-out list has one row each.",
  "checked": {
   "checked": [
-   "Every exported observation set was read back by separate code: the observations equal the exports' own lists, the 150-sample grid runs 0 to 100 percent, time is strictly increasing, the cleaned version is the full version minus exactly the 1,246 failed observations, and all file hashes match.",
+   "Every exported observation set was read back by separate code: the observations equal the exports' own lists, the 150-sample grid runs 0 to 100 percent, time is strictly increasing, the cleaned version is the full version minus exactly the 1,226 failed observations, and all file hashes match.",
    "A random sample (seed 20261207; AB09, AB10, AB28; 30 strides and 3 recordings each, 5,544 column values) equals the export value for value, and power equals moment times joint speed on every sampled row.",
    "The first export was checked on all 81,647 strides and 3,146 recordings against the processed tables (largest difference 5.7e-14), and every force of 88 random recordings was re-derived from the 1 kHz plate (largest difference 1.6e-12 body weights).",
    "Power equals moment times joint speed on every row of both tables for all 12 power columns: 0 deviating rows.",
-   "Joint angles against coarse limits (hip −50 to 150°, knee −30 to 165°, ankle −80 to 50°), angles for jumps of 30° or more between neighbouring samples, the pressure point against 0.5 m forward and 0.3 m up and sideways of the foot, and a left-right side check. 83,547 of 84,793 observations pass; 1,246 fail. A second agent recomputed the assessment with 0 mismatches.",
+   "Joint angles against coarse limits (hip −50 to 150°, knee −30 to 165°, ankle −80 to 50°), angles for jumps of 30° or more between neighbouring samples, the pressure point against 0.5 m forward and 0.3 m up and sideways of the foot, and a left-right side check. 83,567 of 84,793 observations pass; 1,226 fail. A second agent recomputed the assessment with 0 mismatches.",
    "The left toe-off rule reproduces the right foot's source toe-off: median 0 ms, 95th percentile 15 ms, worst 195 ms over 20,447 strides.",
-   "Every item left out of either version has a row and a reason in the left-out list: 26,967 rows."
+   "Every item left out of either version has a row and a reason in the left-out list: 26,947 rows."
   ],
   "not_checked": [
    "Joint speeds, moments, powers, ground forces and the foot-frame pressure point beyond its coarse limit have no limit, so they were not assessed. A missing or unassessed signal is not evidence of passing.",
    "The leg-plane glitch check (P1) could not be run on any observation.",
-   "Where the ankle angle is zero has not been reviewed.",
+   "Each person's ankle zero is set from level walking (see the foot-flat card); other tasks were not checked against it.",
    "The limits are a draft written before any of these data were read. They are not approved reference ranges.",
    "Source files of 21 of 22 participants were not compared with the 2021 publisher archive.",
    "The rebuilt left toe-off was tested on the right foot only, not against an independent left event.",
@@ -971,7 +1083,7 @@
   },
   "offset_unverified": {
    "label": "Checked; zero point not checked",
-   "note": "Checked only against clearly impossible values. Where the ankle angle is zero has not been checked."
+   "note": "Checked only against clearly impossible values. Each person's ankle zero is set from level walking (see the foot-flat card); other tasks were not checked against it."
   },
   "partly_checked": {
    "label": "Partly checked",
@@ -1022,7 +1134,7 @@
     "ankle_dorsiflexion_angle_ipsi_rad",
     "ankle_dorsiflexion_angle_contra_rad"
    ],
-   "note": "Difference of the shank and foot angles; its zero point is unreviewed."
+   "note": "Difference of the shank and foot angles; its zero is set per person from level walking."
   },
   {
    "name": "Hip, knee and ankle angle speeds",
@@ -1104,5 +1216,5 @@
   }
  ],
  "columns_note": "\"Have a value\" is the share of observations with at least one value in the column; a column that is only partly empty (held frames, masked stance) still counts as having a value. Columns are listed for the stride files; the time files carry the same signals with left and right names instead of this-leg and other-leg names. A column can be empty in an observation where a plate or marker is missing; the reason is written in the file's list of empty signals.",
- "downloads_text": "<strong>Local review files, not published yet.</strong> The full version, the cleaned version (each as a stride table and a time table), the list of left-out items and the list of limitations exist only on the maintainer's computer (22 participants, 84,793 observations full, 83,547 cleaned). They will get download links when they are released."
+ "downloads_text": "<strong>Local review files, not published yet.</strong> The full version, the cleaned version (each as a stride table and a time table), the list of left-out items and the list of limitations exist only on the maintainer's computer (22 participants, 84,793 observations full, 83,567 cleaned). They will get download links when they are released."
 }

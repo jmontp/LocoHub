@@ -26,7 +26,7 @@
    "note": "Checked against coarse physical limits (angles against impossible ranges and sudden jumps, pressure point against distance from the foot)."
   }
  },
- "bundle": "converted_datasets/reconversion_v2/um21_r01_package_v5",
+ "bundle": "converted_datasets/reconversion_v2/um21_r01_package_v6",
  "handoff": "docs/maintainers/handoffs/UM21-R01-v3.json",
  "scope": "docs/quality/audits/um21-problem-scope.json",
  "verified_date": "2026-11-26",
@@ -35,8 +35,8 @@
   {
    "src": "um21-left-out-v5.svg",
    "question": "What was left out of the cleaned version, and why?",
-   "alt": "Bars of items left out: 21 strides with a pressure point too far from the foot, 15 strides too short or too long, 2 strides with a sudden ankle jump, 1 stride with an ankle angle outside the possible range, and 1 time recording with sudden jumps.",
-   "caption": "Gray bars were left out of both versions (17 strides); orange-red bars are left out of the cleaned version only (23 items: 22 strides and 1 time recording)."
+   "alt": "Bars of items left out: 19 strides with a pressure point too far from the foot, 15 strides too short or too long, 2 strides with a sudden ankle jump, 1 stride with an ankle angle outside the possible range, and 1 time recording with sudden jumps.",
+   "caption": "Gray bars were left out of both versions (17 strides); orange-red bars are left out of the cleaned version only (21 items: 20 strides and 1 time recording)."
   },
   {
    "src": "page-limitations.svg",
@@ -74,7 +74,7 @@
    "status": "fixed",
    "did": "All hip, knee, ankle, thigh, shank and foot angles are computed from markers, as differences of segment angles measured from gravity. Foot angle and its speed are released. Missing markers leave the angle missing; nothing is filled.",
    "checked": "A second implementation recomputed 16 legs: no difference.",
-   "now": "The ankle zero caveat of the earlier version no longer applies.",
+   "now": "The ankle zero caveat of the earlier version no longer applies. Each person's foot and ankle zero is now set from level walking (see the foot-flat card).",
    "knock_on": "keep"
   },
   "knee_markers": {
@@ -149,7 +149,9 @@
   "moments_from_source_sign_applied": "Time table: moments are the source moments with the same sign step as the phase table. At every stride they reproduce the phase table moments to rounding.",
   "time_pelvis_vicon_single_column": "Time table: pelvis tilt is the source's, in one column for the whole recording. Where the phase table holds a stride's pelvis and hip angle, the time table holds them over that stride's frames too; frames between strides are not checked against markers.",
   "time_grf_plate_force": "Time table: ground force is the plate force of each foot's belt in the walking direction, divided by body weight. Under 20 N it is written as 0, not as missing. In AB03 and AB10 the plates read 3 to 9 percent under body weight; the values are published as recorded.",
-  "time_grf_held_leg": "Time table: the force columns are empty for the whole recording in 6 recordings (12 legs): five are held back by ruling and AB04 at 5° incline has its plate loaded at fewer than 95 percent of heel strikes."
+  "time_grf_held_leg": "Time table: the force columns are empty for the whole recording in 6 recordings (12 legs): five are held back by ruling and AB04 at 5° incline has its plate loaded at fewer than 95 percent of heel strikes.",
+  "foot_flat_zero_applied": "Foot-flat zero: each person's foot angle, ankle angle and foot-frame pressure point (forward and up) were shifted by a per-person offset taken from level walking, so a flat foot reads 0. The offset is one number per person; other tasks were not checked against it.",
+  "foot_flat_zero_not_applied": "UM21 AB10: no matched level walking, so no foot-flat zero. People with no matched level-walking stride have no offset and keep the foot angle, ankle angle and pressure point as measured; their ankle angle is not comparable with the corrected people."
  },
  "limit_unchecked_intro": "Signal families with no limit, so not checked: ",
  "limit_unchecked_plain": [
@@ -188,7 +190,7 @@
     "L5"
    ],
    "where": "Full version only, marked failed",
-   "why": "The pressure point is 0.30 to 0.36 m above the foot, mostly late in stance, in 21 strides of 11 legs. Not investigated further."
+   "why": "The pressure point is 0.30 to 0.36 m above the foot, mostly late in stance, in 19 strides of 11 legs. Not investigated further."
   },
   {
    "what": "Ankle angle outside the possible range (AB04, 5° incline, left leg)",
@@ -211,16 +213,16 @@
    "why": "4 samples jump by 44 to 48° between neighbouring samples (limit 30°), in 2 places. None is inside a stride of the phase table, so no stride is affected. The whole recording is left out of the cleaned time table; the cause was not examined."
   }
  ],
- "accounting_note": "Accounting: {total} rows. {both} strides are left out of both versions (15 too short or too long, 2 with sudden ankle jumps) and {failed} items are left out of the cleaned version only (22 strides and 1 time recording). The full version has {full:,} observations (7,545 phase and 44 time) and the cleaned version {filtered:,}, which is the full version minus those {failed}. Six of the 50 treadmill recordings were left out whole before any stride existed (see the timing card), so they are not counted here.",
+ "accounting_note": "Accounting: {total} rows. {both} strides are left out of both versions (15 too short or too long, 2 with sudden ankle jumps) and {failed} items are left out of the cleaned version only (20 strides and 1 time recording). The full version has {full:,} observations (7,545 phase and 44 time) and the cleaned version {filtered:,}, which is the full version minus those {failed}. Six of the 50 treadmill recordings were left out whole before any stride existed (see the timing card), so they are not counted here.",
  "checked": {
   "checked": [
-   "The cleaned version is the full version minus 23 failures and nothing else: every kept observation has identical values in both, every stride has exactly 150 samples from 0 to 100 percent, every time recording has one row per 0.01 s, and every left-out item has a row and a reason (40 rows). A second agent recomputed this from the files.",
-   "Hip, knee and ankle angles against coarse physical limits, all angles for sudden jumps between neighbouring samples, and the pressure point against its distance from the foot. 7,523 of 7,545 strides pass and 22 fail; 43 of 44 time recordings pass and 1 fails (sudden jumps).",
+   "The cleaned version is the full version minus 21 failures and nothing else: every kept observation has identical values in both, every stride has exactly 150 samples from 0 to 100 percent, every time recording has one row per 0.01 s, and every left-out item has a row and a reason (38 rows). A second agent recomputed this from the files.",
+   "Hip, knee and ankle angles against coarse physical limits, all angles for sudden jumps between neighbouring samples, and the pressure point against its distance from the foot. 7,525 of 7,545 strides pass and 20 fail; 43 of 44 time recordings pass and 1 fails (sudden jumps).",
    "Angles, speeds and the pressure point were recomputed by a second implementation on 16 legs: angles and speeds agree to 0.0 rad and the pressure point to 7e-16 m.",
    "Power equals moment times joint speed to 1e-12 in a separate readback of every row, and to 1e-9 in an independent check of 10 strides.",
    "The pressure-point decision (published or held) was recomputed for all 88 legs: 60 published, 28 held, identical to the build.",
    "No angle jump of 30° or more between neighbouring frames in 1,031 stride windows of 12 legs, by a simpler second method.",
-   "The phase table is identical to the earlier version in every data column, full and cleaned. A second agent compared all 1,131,750 rows.",
+   "Apart from the foot angle, ankle angle and foot-frame pressure point (changed by the foot-flat zero, see its card), the phase table is identical to the earlier version in every data column. A second agent compared all 1,131,750 rows of the earlier version before the zero was added; after it, a second agent probed 20 strides each of three people and found every other column unchanged.",
    "The time table was compared with the phase table at all 7,545 stride windows: angles within 2e-16 rad, moments exactly equal, pressure point within about 1 mm for 59 of 60 published legs (see the AB04 card for the other).",
    "Ground force: the two feet add up to a median of 0.994 body weights over the 38 recordings with force. An independent recompute of 200 frames per foot in 2 recordings differed by 0.0 body weights, and a second agent re-read 100 frames per foot from the source in one recording and matched to 2e-13 N."
   ],
@@ -532,13 +534,13 @@
    "how": "The earlier page and data reference said so. The source has the full recording at 100 samples per second.",
    "did": "We added a time table: one continuous recording each, on the source clock at 100 samples per second (time = (frame - 1) / 100), nothing resampled. It holds the same angles, moments, powers and pressure point as the phase table, plus ground force. The phase table did not change.",
    "checked": "Held next to the phase table at all 7,545 stride windows: angles within 2e-16 rad, moments equal, pressure point within about 1 mm (one leg is noisier, see its card). Start times of all 7,545 strides match the clock. A readback of every file found no unlisted file and matching hashes.",
-   "now": "The full version has 7,545 phase strides and 44 time recordings (7,589 observations); the cleaned version has 7,523 and 43 (7,566).",
+   "now": "The full version has 7,545 phase strides and 44 time recordings (7,589 observations); the cleaned version has 7,525 and 43 (7,568).",
    "example": "AB04 at level, where the pelvis sign is flipped twice, matches the phase table exactly (largest difference 2.8e-17 rad).",
    "figures": [
     {
      "src": "um21-time-tables.svg",
      "question": "How many samples does each table hold?",
-     "alt": "Bars of rows: phase full 1,131,750, phase cleaned 1,128,450, time full 772,821, time cleaned 755,206.",
+     "alt": "Bars of rows: phase full 1,131,750, phase cleaned 1,128,750, time full 772,821, time cleaned 755,206.",
      "caption": "Rows in the phase table and the time table, full and cleaned."
     }
    ],
@@ -547,7 +549,7 @@
      "verdict": "Checked, not affected",
      "signal": "Phase table",
      "line": "Every data column equals the earlier version.",
-     "evidence": "All 1,131,750 full and 1,128,450 cleaned rows compared by a second agent."
+     "evidence": "All 1,131,750 full and 1,128,450 cleaned rows of the earlier version were compared by a second agent; the foot-flat zero came later."
     },
     {
      "verdict": "Open limit",
@@ -605,7 +607,7 @@
      "verdict": "Checked, not affected",
      "signal": "Angles, moments, powers and the pressure point",
      "line": "Adding force changed none of them.",
-     "evidence": "Phase table identical to the earlier version; time table agrees at every stride."
+     "evidence": "Phase table identical to the version before force was added; time table agrees at every stride."
     }
    ]
   },
@@ -771,6 +773,64 @@
      "verdict": "Open limit",
      "signal": "Cause of the jumps",
      "line": "Not examined.",
+     "evidence": ""
+    }
+   ]
+  },
+  {
+   "key": "foot_flat",
+   "section": "Foot angle zero (new in this version)",
+   "title": "Foot angle zeroed to foot-flat",
+   "status": "fixed",
+   "short": "9 of 10 people shifted (median +1.5°, range +0.3 to +4.7°); AB10 left uncorrected",
+   "scope": {
+    "participants": "9 of 10 (UM21 AB10 has no matched level walking and is left as measured)",
+    "tasks": "Every task of those 9 people: 40 of 44 time recordings and their strides",
+    "share": "6,892 of 7,589 observations (90.8%); AB10's 697 observations are uncorrected"
+   },
+   "wrong": "Where the foot angle reads zero depends on the markers and the model, not on the foot lying flat. In level walking at 20 to 35 percent of the stride the 9 people read between −4.7° and −0.3° with the foot flat (median −1.5°). The ankle angle and the pressure point in the foot's frame inherit that tilt.",
+   "how": "For each person we took the level-walking strides at 1.2 m/s (plus or minus 0.05), the median foot angle over 20 to 35 percent of each stride, and then the median of those over the person's strides. That is the person's offset. The choice of this correction was decision D-REF-6.",
+   "did": "Each person's foot angle was shifted by minus that person's offset, so a foot lying flat on level ground reads 0. The ankle angle (foot minus shank) shifts by the same amount, and the pressure point in the foot's frame (forward and up) is turned by the same angle inside the leg plane; its sideways value is unchanged. Pelvis, thigh, shank, hip and knee angles, all speeds, moments, powers, forces, identities and times are unchanged. UM21 AB10 has no matched level walking, so the angles stay as measured and their ankle angle is not comparable with the corrected people.",
+   "checked": "A second agent recomputed the offsets of 3 people (AB01, AB05, AB09) from the earlier version and matched them exactly. In 20 strides and 3 recordings each of UM21 AB01 and AB05, foot and ankle equal the earlier value minus the offset to 0°, ankle equals foot minus shank to 3e-14°, and the pressure point matches an independent rotation to 1e-16 m. Every other column was identical in the probes, and UM21 AB10 is bit-identical to the earlier version.",
+   "now": "The cleaned version has 7,568 observations (7,566 before): no observation newly fails and 2 recover (pressure point).",
+   "example": "UM21 AB04 has the largest offset: the foot read −4.7° with the foot flat, so every foot and ankle value of AB04 is raised by 4.7°. Ramp check, on 10° slopes, median over people of the foot angle minus the slope: incline +1.1° (before −1.3°), decline −2.3° (before −4.2°); people range from −1.3° to +2.6° on the incline and from −6.4° to −1.5° on the decline.",
+   "figures": [
+    {
+     "src": "foot-flat-offsets.svg",
+     "question": "How far was each person's foot from zero when it lay flat?",
+     "alt": "One dot per person on a degree axis: the foot angle at 20 to 35 percent of level-walking strides, from −4.7° to −0.3°. Gray lines show the spread over each person's strides.",
+     "caption": "One dot per person: the offset, the median stride. Gray line: range over that person's strides. Dashed blue line: median over people. Zero is a foot lying flat."
+    }
+   ],
+   "knock_on": [
+    {
+     "verdict": "Also wrong, fixed",
+     "signal": "Foot and ankle angles",
+     "line": "They read 0 for a flat foot in level walking, person by person.",
+     "evidence": "Level walking, foot minus slope after the zero: 0.0° for all 9 people. On 10° slopes the foot reads the slope within about 3° as a median over people."
+    },
+    {
+     "verdict": "Also wrong, fixed",
+     "signal": "Pressure point forward and up, in the foot's frame",
+     "line": "Turned by the same angle as the foot. Sideways is unchanged.",
+     "evidence": "Matches an independent rotation to 1e-16 m in probed strides."
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Hip, knee, pelvis, thigh and shank angles; speeds, moments, powers, forces",
+     "line": "Unchanged.",
+     "evidence": "Identical in the probed strides and recordings."
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "UM21 AB10",
+     "line": "No offset, so AB10's foot and ankle are as measured and are not comparable with the others.",
+     "evidence": "697 observations, 4 recordings."
+    },
+    {
+     "verdict": "Not checked",
+     "signal": "Whether the foot is flat in every level stride, and the cause of the offsets",
+     "line": "The zero is one number per person from mid-stance of level walking; on the 10° decline the person medians range from −6.4° to −1.5°.",
      "evidence": ""
     }
    ]

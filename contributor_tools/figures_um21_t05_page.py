@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
-PKG = ROOT / "converted_datasets/reconversion_v2/um21_r01_package_v5"
+PKG = ROOT / "converted_datasets/reconversion_v2/um21_r01_package_v6"
 OUT = ROOT / "docs/datasets/um21/figures"
 BLUE, ORANGE, VERMIL, GREY = "#0072B2", "#E69F00", "#D55E00", "#8c8c8c"
 
@@ -142,7 +142,28 @@ def left_out():
     save(fig, "um21-left-out-v5.svg")
 
 
+def limitations():
+    """Strides touched by each phase-table limitation of the current package (limitations.json), as on the page."""
+    short = {"moments_from_v2": "Moments carried over", "power_from_moment_and_speed": "Power recomputed", "knee_marker_labels_swapped": "Knee marker names reversed",
+             "cop_estimated_plate_position": "Pressure point, estimated plate", "cop_held_leg": "Pressure point held (leg)",
+             "cop_held_pending_ruling": "Held-back recordings", "angle_columns_missing_in_stride": "Angle columns missing",
+             "plane_glitch_hold": "Leg-plane glitch held", "plate_position_fitted": "Plate position fitted, not measured"}
+    lim = {x["id"]: x for x in json.loads((PKG / "limitations.json").read_text())["limitations"]}
+    rows = [(short[k], lim[k]["observations"]) for k in short]
+    # the two foot-flat limitations also count whole time recordings; the phase table holds the individual cycles only
+    rows += [("Foot angle zeroed to foot-flat", lim["foot_flat_zero_applied"]["by_type"]["individual_cycle"]),
+             ("Foot-flat zero not applied (AB10)", lim["foot_flat_zero_not_applied"]["by_type"]["individual_cycle"])]
+    rows.sort(key=lambda r: r[1])
+    fig, ax = new(3.6)
+    ax.barh([r[0] for r in rows], [r[1] for r in rows], color=GREY)
+    for i, r in enumerate(rows):
+        ax.text(r[1], i, f" {r[1]:,}", va="center")
+    ax.set_xlim(0, max(r[1] for r in rows) * 1.2)
+    ax.set_xlabel("Strides touched")
+    save(fig, "page-limitations.svg")
+
+
 if __name__ == "__main__":
-    for fn in (left_out, tables, under20, force_held, time_jump, cop_noise, shortfall):
+    for fn in (left_out, tables, under20, force_held, time_jump, cop_noise, shortfall, limitations):
         fn()
     print("peak RSS MiB", resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024)

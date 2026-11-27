@@ -16,6 +16,8 @@ from the figure files and page_figures.json, and it stops if its peak memory exc
 from __future__ import annotations
 
 import argparse
+import collections
+import csv
 import json
 import random
 import re
@@ -31,7 +33,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 ROOT = Path(__file__).resolve().parents[1]
 AUD = ROOT / "docs/quality/audits"
 HAND = ROOT / "docs/maintainers/handoffs"
-PKG = ROOT / "converted_datasets/reconversion_v2/gt21_r01_package_v1"
+PKG = ROOT / "converted_datasets/reconversion_v2/gt21_r01_package_v2"
 OUT = ROOT / "docs/datasets/gt21/figures"
 MAX_JSON_BYTES = 20 * 1024 * 1024
 MAX_RSS_MIB = 300
@@ -82,10 +84,17 @@ def participant_label(ax, names, rotation=90):
 
 
 # ---------- overview figures ----------
+def failures_by_check():
+    """Observations failing each check in the current package: L1, L2, L5 from its manifest; the side check (S5) is not
+    touched by the foot-flat zero, so it is read from the first assessment summary."""
+    by = load(PKG / "manifest.json")["counts"]["assessment_failures_by_cause"]
+    return {"L1": by["L1"], "L2": by["L2"], "L5": by["L5"], "S5": load(AUD / "gt21-q01-summary.json")["totals_per_check"]["S5"]["failed"]}
+
+
 def page_failures():
-    t = load(AUD / "gt21-q01-summary.json")["totals_per_check"]
-    rows = [("Joint range", t["L1"]["failed"]), ("Sudden 30° jump", t["L2"]["failed"]),
-            ("Pressure point", t["L5"]["failed"]), ("Left-right side check", t["S5"]["failed"])]
+    t = failures_by_check()
+    rows = [("Joint range", t["L1"]), ("Sudden 30° jump", t["L2"]),
+            ("Pressure point", t["L5"]), ("Left-right side check", t["S5"])]
     fig, ax = new(2.3)
     ax.barh([r[0] for r in rows][::-1], [r[1] for r in rows][::-1], color=VERMIL)
     for i, v in enumerate([r[1] for r in rows][::-1]):
@@ -120,6 +129,7 @@ LIMIT_SHORT = {
     "ab28_pelvis_angle_offset": "AB28 pelvis offset", "p1_unchecked": "Plane glitch not checked",
     "ankle_zero_offset_unreviewed": "Ankle zero unreviewed", "source_is_authors_2024_copy": "Authors' 2024 copy",
     "power_from_moment_and_speed": "Power = moment x speed", "authors_rule_exclusions": "Left out by export",
+    "foot_flat_zero_applied": "Foot angle zeroed to foot-flat", "foot_flat_zero_not_applied": "Foot-flat zero not applied",
 }
 
 
@@ -226,6 +236,12 @@ def stance_mask():
     save(fig, "gt21-stance-mask.svg")
 
 
+def failed_samples():
+    """Failing samples of the current package, from evidence/assessment_failure_samples.csv (one row per sample)."""
+    with (PKG / "evidence/assessment_failure_samples.csv").open(newline="", encoding="utf-8") as fh:
+        return list(csv.DictReader(fh))
+
+
 def jumps_by_signal():
     f = load(AUD / "gt21-q01-summary.json")["failed_samples_by_limit_and_channel"]
     rows = sorted(((plain_signal(k.split(":", 2)[2]), v) for k, v in f.items() if k.startswith("time:L2:")), key=lambda r: r[1])
@@ -236,8 +252,8 @@ def jumps_by_signal():
 
 
 def ankle_extremes_by_signal():
-    f = load(AUD / "gt21-q01-summary.json")["failed_samples_by_limit_and_channel"]
-    rows = sorted(((plain_signal(k.split(":", 2)[2]), v) for k, v in f.items() if k.startswith("time:L1:")), key=lambda r: r[1])
+    f = collections.Counter(r["channel"] for r in failed_samples() if r["table"] == "time" and r["limit"] == "L1")
+    rows = sorted(((plain_signal(k), v) for k, v in f.items()), key=lambda r: r[1])
     fig, ax = new(2.8)
     ax.barh([r[0] for r in rows], [r[1] for r in rows], color=[VERMIL if "Ankle" in r[0] else BLUE for r in rows])
     ax.set_xlabel("Samples outside the joint limit")
@@ -245,8 +261,8 @@ def ankle_extremes_by_signal():
 
 
 def ankle_worst_values():
-    worst = load(AUD / "gt21-q01-summary.json")["worst_examples"]
-    vals = [w["value"] for w in worst if w["limit"] == "L1"]
+    l1 = sorted((float(r["value"]) for r in failed_samples() if r["limit"] == "L1"), key=lambda v: -abs(v))
+    vals = l1[:10]
     fig, ax = new(2.2)
     ax.axvspan(-80, 50, color=SKY, alpha=.35, label="Allowed ankle range")
     ax.scatter(vals, [0] * len(vals), color=VERMIL, s=26, label="Ten largest values")
@@ -327,7 +343,14 @@ def source_compared():
 
 
 def checks_run():
-    t = load(AUD / "gt21-q01-summary.json")["totals_per_check"]
+    t = json.loads(json.dumps(load(AUD / "gt21-q01-summary.json")["totals_per_check"]))
+    # The foot-flat zero moved observations across the joint-range (L1) and pressure-point (L5) limits only. Missing counts
+    # do not change (NaN patterns are identical), so passed = total - failed - missing with failed from the package manifest.
+    now = failures_by_check()
+    for code in ("L1", "L5"):
+        total = sum(t[code].values())
+        t[code]["failed"] = now[code]
+        t[code]["passed"] = total - now[code] - t[code].get("missing", 0)
     order = [("L1", "Joint range"), ("L2", "Sudden 30° jump"), ("L4", "Missing values"), ("L5", "Pressure point"),
              ("P1", "Plane glitch"), ("PD", "Plate dropout"), ("S1", "Grid and clock"), ("S2", "Identity fields"),
              ("S3", "Constant metadata"), ("S4", "Span inside recording"), ("S5", "Left-right side check")]
