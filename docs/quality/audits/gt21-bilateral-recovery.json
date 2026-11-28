@@ -1,0 +1,36 @@
+{
+  "status": "native_pilots_prepared_and_queued_not_yet_run",
+  "scientific_approval": false,
+  "pilots": [
+    {
+      "mode": "levelground",
+      "recording": "levelground_ccw_fast_01_01",
+      "plan_sha256": "6936530e5aa04f6f1e58ff00ff1a429a5ac3ec45e73745681c10a31cde51fbff",
+      "baseline_sha256": "166a1db1c3b438b637e6b35f882b519b99911fc272b07b834cb50dada63ce410"
+    },
+    {
+      "mode": "treadmill",
+      "recording": "treadmill_01_01",
+      "plan_sha256": "6c78b15927fbf80898bcfd7edae27e8b5fdfd170321206fd0bbe86feca382203",
+      "baseline_sha256": "225188558f1c3143bf41622010495a91f6d9b3e04ce662dfae40b20d8f49d60a"
+    }
+  ],
+  "change": "Process both reference legs using their own heel-strike times; retain the existing signal conversion code",
+  "required_checks": [
+    "Every original observation remains identical in all columns",
+    "Each added observation has a unique source identity",
+    "Source timing, joint angles, moments, derivatives and measured participant mass match independent readback"
+  ],
+  "resource_guards": {
+    "native_memory_mib": 2048,
+    "native_timeout_s": 300,
+    "python_address_space_mib": 768,
+    "one_bulk_conversion_at_a_time": true
+  },
+  "limitations": [
+    "Native execution and source readback are pending",
+    "Force/COP checks for added cycles remain required",
+    "Bilateral observations overlap in time and are not independent trials",
+    "The active full converter is unchanged until the recovery passes review"
+  ]
+}

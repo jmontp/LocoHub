@@ -1,0 +1,48 @@
+{
+ "task_id": "UM21-C02",
+ "status": "review",
+ "scientific_approval": false,
+ "canonical_3d_approval": false,
+ "planar_formula_adopted": false,
+ "last_checked_at_utc": "2026-11-03T00:45:00Z",
+ "summary": "Yes, the normalized and streaming pelvis fields describe the same physical stride. All 7,224 normalized strides in the 44 T03 treadmill recordings bind exactly (explicit StrideDetails side and frames, consecutive same-side heel strikes, duration = end - start; no concatenation order used). For every one, all three normalized pelvis components equal the same-side streaming pelvis resampled to the same 150 points (largest difference 2.8e-14 deg, no missing-value or zero-fill differences). The opposite-side streaming pelvis matches tilt but fails obliquity and rotation in all 7,224 (left and right tilt are identical, so tilt cannot tell them apart); a sign-flipped pelvis fails everywhere. A same-side hip control matches 7,224/7,224 with the 1-based frame base and 0 with a one-frame shift. AB04/i0 normalized carries the same reversed pelvis as streaming, so the two are not independent evidence there. No planar formula adopted; canonical 3D unapproved; not scientific approval.",
+ "checks": [
+  "Read AGENTS.md, UM21-C01/C03/P01/P02/T03/T03-verify handoffs and the pelvis pilot review and author-recipe audits.",
+  "Wrote the probe and 7 synthetic tests (tests/test_probe_um21_pelvis_correspondence.py: 7 passed; known values by construction).",
+  "Pilot: AB04/d10 as a read-only probe (nice 19, ionice idle, wrote nothing under converted_datasets, peak RSS 52.9 MiB): 176 strides, all matched.",
+  "Full: one guarded-launcher job (plain dry run, one background launch, exit 0, clean_success, verify-cleanup proven, wall 4.8 s, peak RSS 73.6 MiB). Records, ledgers and output roots taken from the seven T03 receipts and scope v1/v2, never a glob; the invalid batch2 root was not used.",
+  "Sources (Normalized.mat c83cad34..., Streaming.mat df8b3e31...) hashed by the launcher before and after; bindings unchanged."
+ ],
+ "decision_drafted": null,
+ "decision_reason": "Not needed. The two pelvis hypotheses do not both remain plausible: the opposite-side hypothesis fails obliquity and rotation in 7,224 of 7,224 strides. The only place they agree (tilt) is the sagittal component, so the planar release is the same either way.",
+ "findings_for_followup": [
+  "768 of the 7,562 released observations have no Normalized stride, so they cannot be backed by the normalized series; 430 normalized strides are not in the T03 release (reason not examined).",
+  "AB04/i0: Normalized and Streaming both carry the reversed pelvis; D-UM21-P01-1 = C correction applies to both alike.",
+  "No missing values in any compared pelvis stride; the gap path was not exercised by data."
+ ],
+ "changed_files": [
+  "contributor_tools/audit_probes/2026_11_02/probe_um21_pelvis_correspondence.py",
+  "tests/test_probe_um21_pelvis_correspondence.py",
+  "docs/quality/audits/um21-c02-spec.json",
+  "docs/quality/audits/um21-c02-launcher-receipt.json",
+  "docs/quality/audits/um21-c02-launcher-receipt.log",
+  "docs/quality/audits/um21-c02-pelvis-correspondence.json",
+  "docs/maintainers/handoffs/UM21-C02.json",
+  "docs/maintainers/backlog.json",
+  "docs/maintainers/backlog.html"
+ ],
+ "untracked_output_not_for_commit": "converted_datasets/reconversion_v2/um21_c02_pelvis_20261102/pelvis_correspondence_report.json (sha256 66999178c64a493a482677494cb1504b4f2359f2d397307c31d1366c385b9cd1)",
+ "deliverable_hashes_sha256": {
+  "contributor_tools/audit_probes/2026_11_02/probe_um21_pelvis_correspondence.py": "7572d80d40f060998a8fe3517bdcf2657e01bbec241d07dcc06659a600bc3b3e",
+  "tests/test_probe_um21_pelvis_correspondence.py": "4913142a442a5ea13b025317a7217fdf2c0fb8d9d29f8c3617cf699654a9c114",
+  "docs/quality/audits/um21-c02-spec.json": "0dbfc06faea087ce4fefcebda3d551662375633447d3453a8487eb3983c6d2d2",
+  "docs/quality/audits/um21-c02-launcher-receipt.json": "6aa3465c1cb8a9f67e4f5fb9dec17a177de670bd4c2cebc9873d8373c4bf3443",
+  "docs/quality/audits/um21-c02-launcher-receipt.log": "856aae799c1ffa291867fffa00c55cc76dbb8fe2ec8f651c1845e56e2ede6b07",
+  "docs/quality/audits/um21-c02-pelvis-correspondence.json": "19085222e6aa02a8043618e60c066572232c8b14cc49f54e09553d8c82ed69ba"
+ },
+ "remaining": [
+  "Independent verification (review).",
+  "Planar formula adoption and CORE-11 treatment are separate tasks; unchanged here."
+ ],
+ "next_action": "Independent reviewer re-runs the unit tests and spot-checks 3 records against the report."
+}

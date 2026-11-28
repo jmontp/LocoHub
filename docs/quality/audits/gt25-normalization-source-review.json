@@ -1,0 +1,53 @@
+{
+  "status": "source_documented_normalization_revision_prepared_not_executed",
+  "scientific_approval": false,
+  "source_readme": {
+    "path": "/mnt/s/locomotion_data/GaTech_2025_DomainAdaptation/readme.txt",
+    "sha256": "aabd45edb66e565a5238f86e26e5c1c1b47469764f3fd611014caf742d20ab63",
+    "mass_lines": "55-64: without exoskeleton | with exoskeleton for all eight subjects",
+    "force_lines": "38 and 362-365: global-frame measured force in N; y vertical",
+    "moment_lines": "196-212: filtered net and biological joint moments in Nm/kg; no denominator selection stated",
+    "interaction_lines": "250-264: estimated torque Nm/kg and measured/desired torque Nm; actual torque_interaction columns absent"
+  },
+  "canonical_reference": {
+    "path": "docs/reference/index.html",
+    "sha256": "e101e9b1a2539c59d4f4122e203958327819bb19dc405342da26a6d16b5401f2",
+    "lines": "149-157: mass-normalized moment Nm/kg and ground reaction force in body weights",
+    "interpretation": "Body weight refers to participant body mass, while worn exoskeleton mass remains separate source metadata. The source README explicitly distinguishes these masses."
+  },
+  "confirmed_v3_defects": [
+    "Canonical vertical BW divides measured N by participant plus worn exoskeleton mass rather than participant body mass.",
+    "Canonical net/biological Nm/kg and source metadata assert a source model mass denominator that the pinned README does not identify.",
+    "Canonical assistance divides torque_interaction by mass despite actual source column units missing from README definitions. Independent raw audit previously mirrored these assumptions."
+  ],
+  "v4_decisions": [
+    "Use all eight README participant-without-exoskeleton masses for canonical vertical BW; preserve both reported masses in subject metadata.",
+    "Retain net and biological source moments with original source sign and source Nm/kg values, never divide them again; withhold canonical mass-normalized moments until denominator provenance is established.",
+    "Preserve actual interaction values with source_units suffix and explicit unknown-unit metadata; do not normalize them or publish canonical assistance.",
+    "Keep ankle angle/velocity/acceleration negation from README-positive plantarflexion; retain source ankle aliases.",
+    "Keep raw global horizontal forces unchanged and anatomical horizontal force labels missing."
+  ],
+  "examples": {
+    "BT07_participant_mass_kg": 73.95,
+    "BT07_mass_with_worn_exo_kg": 81.23,
+    "canonical_vertical_BW_expression": "source fp_<side>_force_y / (73.95 * 9.81)"
+  },
+  "required_missing_evidence": [
+    "Source producer code or exact field-specific definition establishing torque_interaction units.",
+    "Source producer normalization code establishing the denominator used in moment_filt and moment_filt_bio for this source version."
+  ],
+  "prepared_snapshot": {
+    "manifest": "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt25_ankle_normalization_proposal_v4_20261021/preparation_manifest.json",
+    "sha256": "df283afe4ec2d24d37c610018196dc81d35783e5138cc9ea90bf75a5ee788c48"
+  },
+  "verification": {
+    "static_tests": "2 passed; 4 numerical fixtures awaiting coordinator slot",
+    "actual_data_run": false,
+    "expected_independent_audit_features": 92
+  },
+  "adoption_gates": [
+    "Preserve v3 as ankle-only preparation; do not use its 74-feature handoff for v4.",
+    "Review all synthetic fixtures and prepare new v4 conversion/readback plans before real execution.",
+    "Retain exact 676-recording inventory in subsequent full replacement; unresolved source semantics remain explicit."
+  ]
+}

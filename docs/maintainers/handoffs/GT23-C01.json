@@ -1,0 +1,87 @@
+{
+  "task_id": "GT23-C01",
+  "status": "review",
+  "last_checked_at_utc": "2026-10-31T23:20:00Z",
+  "summary": "Metadata-only consolidation of GT23 events and frames for all 26 publisher activities (the backlog's 19 = the base tasks with publisher Segmentation files; 7 more are unsegmented). Events: 6 activities are per-leg heel-strike cycles (20 N plate threshold, 50 N treadmill running; skip ignores the mid-stride heel strike; README 272-274), 2 are plate-pass windows (toe-off before to heel strike after the plates: cutting, tire_run), 11 are pelvis- or trunk-velocity task windows (transfers, not leg events), 7 have no source events (continuous only). Parsing files hold start/end only; toe-off is not in them. turn_and_step's definition conflicts (README vs author plot titles 'segmented by toe off'). Frames: vertical GRF Y up and positive support are established; horizontal GRF/global CoP are lab X/Z that turn with the person, so forward needs a heading: measurable for forward walking (CORE-04 pelvis facing), undefined for 15 activities (D-GT23-C01-1: A facing everywhere, B direction of travel as the current rule reads literally, C forward walking only, or defer). Sideways sign is already decided (outward per leg). Converter CoP is in the calcn body frame, a frame mismatch with the data reference's ground-frame CoP. Joint sagittal signs under rule B (hip +1, knee -1, ankle +1; powers +1) are source-supported for all activities and data-reproduced only in CORE-04's 7 gait conditions. Segment angles unsupported; kinetics blocked by D-GT23-C04-1. Converter findings F1-F6: the phase export drops the second leg (498 gait cycles in running and stairs; 4948 intervals overall, plus 127 hop contact intervals; most of the rest possibly duplicate whole-body windows), the time export merges all fields of a parsing file into one window, an unused LocoHub GRF fallback segmentation with absolute 600/400 N thresholds exists, running and skipping are labelled level_walking, and curb/step-up heights are invented (stair rise is 152 mm per paper Table 1). Event validity stays 'source_defined_unverified' until probe P1-P3 runs. Round 2 (verifier back_to_worker): decision option set rebuilt, probe P2 now covers hop, counts and notes corrected.",
+  "checks": [
+    "Read AGENTS.md, the GT23-C01 backlog entry, gtech23-source-probe, gt23-source-frame-review, gt23-global-force-frame-correction, gt23-cop-and-joint-coordinate-review, gt23-correction-composition-gate, gt23-oversized-transform-container-review, gt23-joint-sign-and-segment-evidence, gt23-known-pose-preparation, gt23-full-source-scope, GT23-C02/C03/C04 entries, core04-gt23-pilot.json, the GT23 sign-survey entry and docs/reference Signs and frames.",
+    "Read publisher README copy (lines 1-278), paper XML text (Methods: GRF 20/50 N steps, ID NaN off plates, virtual insoles; Table 1 stair 152 mm, run 2.0-2.5 m/s; Table 3), Code.zip GroupTasks.m, example_script_plotting.m and Plot_3x3_plots.m 150-160.",
+    "Read converters: time window_from_parsing (320-357), GRF mapping (495-530); phase leading-leg rule (440-490), GRF/jump fallback (195-245, 498-579), expand_parsing_conditions (1573-1597); parse_gtech_activity_matlab.m; segment_sit_stand_transitions.m / segment_jump_cycles.m headers.",
+    "Listed Segmentation and RawData directory names (787 parsing files, 488 recordings, 26 base tasks; 19 with parsing files). Interval counts per field came from the existing 2026-10-20 field inventory (source_coverage.json, sha256 1dc0199e...); no parsing values or CSV arrays were loaded. During exploration I printed the first 400 bytes of one AB01 normal_walk_1 GroundFrame_GRFs.csv and Activity_Flag.csv to read column headers; those leading rows are not used as evidence.",
+    "`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 contributor_tools/review_gt23_c01_events_frames.py report` then `... sheet`: report totals {\"activities\": 26, \"segmented_activities\": 19, \"recordings\": 488, \"recordings_with_parsing\": 398, \"parsing_files\": 787, \"empty_parsing_files\": 9, \"intervals_left\": 7721, \"intervals_right\": 5398, \"phase_kept\": 8171, \"phase_dropped\": 4948, \"phase_dropped_cycles\": 498}. GroupTasks.m port spot-checked (2-0 -> run, skip -> calisthenics, toe-walk -> misc, hop -> jump_in_place).",
+    "Probe helpers smoke-tested on a synthetic 4-row CSV and synthetic interval dict in the scratchpad (not a repository test); `probe` itself was not run.",
+    "Sheets review_sheets/GT23-C01 (8 chips: 2 pass, 4 failed, 2 not checked; 2 figures) and review_sheets/D-GT23-C01-1 (2 chips, 1 made-up figure, options table with 'Left out' first, defer row, recommendation only in the fold, decision.json equal to this handoff's decision). Rendered with headless Chrome at 1100 px and in a 390 px iframe and inspected; the forward figure was enlarged after the first phone render. Renders rv_wide_/rv_phone_{GT23-C01,D-GT23-C01-1}_r2.png in the session scratchpad.",
+    "`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_backlog_workflow.py`: 71 passed. `python3 contributor_tools/build_backlog_page.py --check`: 'Backlog valid; HTML current (103 tasks).' backlog.json/html not edited.",
+    "Round 2: `OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 contributor_tools/review_gt23_c01_events_frames.py report` and `... sheet`; sheets re-rendered at 1100 px and in a 390 px iframe and inspected (rv_wide_/rv_phone_{GT23-C01,D-GT23-C01-1}_r4.png in the session scratchpad); option C text gained 'obstacle walk' after the r3 render.",
+    "Round 2 gates: tests/test_backlog_workflow.py 71 passed; build_backlog_page.py --check 'Backlog valid; HTML current (103 tasks).' Hashes: builder df07312b..., audit e93cb592..., decision.json 0af11878...."
+  ],
+  "acceptance_mapping": {
+    "Per-task event/transfer/continuous distinction supported by source parser": "Per activity in the audit (events.definition, readme_line, proposed_observation_type, interval_fields). Supported by README 271-278, README 51 and the field inventory; values not yet probed.",
+    "Force, COP and joint conventions traced to original models or source documentation": "frames per activity plus 'established' list: README 30/38, paper Table 3 and Methods, author Plot_3x3_plots.m 155-160, model +Z axes (prior audit), CORE-04 data reproduction. Unsupported mappings listed explicitly.",
+    "Independent verification plan includes contact missingness and non-gait activities": "verification_plan and probe_plan (P1 all 787 parsing files; P2 contact NaN and 20/50 N events; P3 Activity_Flag) with a seeded 38-file selection covering all 19 segmented activities."
+  },
+  "remaining": [
+    "D-GT23-C01-1 (forward axis outside forward walking) needs José. Only one other decision (D-GT23-C05-1) is open.",
+    "Run probe P1-P3 in the serial numerical slot via the guarded launcher; until then event validity is unverified.",
+    "Resolve turn_and_step event definition, AB02 curb filename/field mismatch, weighted_walk speed, running right-leg events vs README line 93, and the AB07 treadmill raw recordings that README says were removed.",
+    "Native known-pose pilot remains prepared, not run (launcher has no reviewed native extension); corroborating only for sagittal signs.",
+    "Converter fixes F1-F6 belong to the GT23 adapter task (GT23-F01), not done here."
+  ],
+  "next_action": "Independent verifier re-derives the activity table from README 144-278, GroupTasks.m and source_coverage.json; coordinator schedules `review_gt23_c01_events_frames.py probe` through the guarded launcher when the numerical slot frees, and surfaces D-GT23-C01-1 when a decision slot opens.",
+  "changed_files": [
+    "contributor_tools/review_gt23_c01_events_frames.py",
+    "docs/maintainers/handoffs/GT23-C01.json",
+    "docs/quality/audits/gt23-c01-events-and-frames.json",
+    "review_sheets/D-GT23-C01-1/decision.json",
+    "review_sheets/D-GT23-C01-1/fig1_forward.png",
+    "review_sheets/D-GT23-C01-1/index.html",
+    "review_sheets/GT23-C01/fig1_kept.png",
+    "review_sheets/GT23-C01/fig2_coverage.png",
+    "review_sheets/GT23-C01/index.html"
+  ],
+  "evidence_paths": [
+    "docs/quality/audits/gt23-c01-events-and-frames.json",
+    "contributor_tools/review_gt23_c01_events_frames.py",
+    "review_sheets/GT23-C01/index.html",
+    "review_sheets/D-GT23-C01-1/index.html"
+  ],
+  "decisions": [
+    {
+      "id": "D-GT23-C01-1",
+      "task_id": "GT23-C01",
+      "question": "Our sign rule defines forward (+x) as the walking direction. In GaTech 2023, 15 of 26 activities have no single forward walk (backward walking, side shuffle, squats, sit-to-stand, lifts, jumps, lunges, turns, cutting, meander and others). What should forward mean there for forward and sideways ground force and centre of pressure?",
+      "options": [
+        {
+          "key": "A",
+          "label": "The person's facing direction in every activity",
+          "consequence": "Forward and sideways force and pressure filled for all 26 activities from pelvis facing measured per window; windows without a steady facing left out; the sign-rule wording is extended for all datasets. Reversible."
+        },
+        {
+          "key": "B",
+          "label": "The direction of travel (the current rule read literally)",
+          "consequence": "Filled for the 13 activities with steady travel: forward walking plus backward walking and side shuffle, where forward force is opposite or sideways to the person's facing while joint angles stay in the facing frame. The other 13 (in place or turning) keep lab-axis values only. Reversible."
+        },
+        {
+          "key": "C",
+          "label": "Forward walking only",
+          "consequence": "Filled for the 11 forward-walking activities (curb_down, curb_up, dynamic_walk, incline_walk, normal_walk, obstacle_walk, stairs, start_stop, step_ups, tire_run, weighted_walk) from the measured heading; the other 15, including meander (turning heading), keep lab-axis values only. Reversible."
+        }
+      ],
+      "options_order": "By GaTech 2023 activities with forward and sideways values: 26, 13, 11.",
+      "recommended": "C",
+      "confidence": "medium",
+      "why": "In forward walking, facing and travel agree, so forward is unambiguous and matches the frame used for joint angles. Travel splits force from the angle frame in backward walking and side shuffle, and facing needs a new rule for turning and in-place tasks that would bind every dataset.",
+      "check": "Decision sheet figure: in the backward-walking example the blue facing arrow and the orange travel arrow point opposite ways.",
+      "cost_of_waiting": "GaTech 2023 forward and sideways force and pressure stay out of any release (lab values kept); vertical force, joint angles and other datasets are unaffected.",
+      "decide_before_recommendation": true,
+      "status": "open"
+    }
+  ],
+  "round_2_fixes": [
+    "D-GT23-C01-1: old C (lab only) dropped because it equalled defer. New option set in neutral order by activities with values (26, 13, 11): A facing everywhere; B direction of travel (current rule read literally; walk_backward and side_shuffle filled, forward force opposite or sideways to facing); C forward walking only, naming all 11 activities incl. start_stop, tire_run and obstacle_walk and saying meander is excluded (turning heading); plus defer. Recommendation (C, medium) only in the fold. decision.json is now written by the builder and copied verbatim into decisions[0]. Stale queue_note removed.",
+    "Probe P2: the 20 N contact check now runs for every jump hop file (README 274), and the plan always adds one extra seeded hop file (AB07 jump_1_hop) and one running file (AB01 normal_walk_1_2-0, for README 93 vs right-leg events). Bounds text corrected: each CSV is read whole under the 64 MiB cap, not streamed. Probe still not run.",
+    "F1 now reports 127 hop contact intervals dropped by the leg rule, separate from the 498 gait cycles. F2 now says 90 recordings have no source intervals (85 without parsing files, 5 with only empty ones).",
+    "README line 272 'shuffling' ambiguity noted on normal_walk and side_shuffle (read as normal_walk shuffle; side_shuffle stays pelvis-velocity windows until probe P1).",
+    "No data read in round 2."
+  ]
+}

@@ -71,7 +71,7 @@ Able-Bodied/
 ## Data Notes
 
 - Source angles are in degrees, converted to radians
-- Knee angle is extension-positive in source, negated to flexion-positive standard
+- Knee angle is extension-positive in source, negated to flexion-positive standard (consistent with the current [sign rule](../../../docs/reference/index.html#signs-and-frames); describes the mapping, not a verification of existing files)
 - Moments are in Nm, normalized by body mass to Nm/kg
 - GRF is vertical only (Newtons), normalized by body weight to BW
 - Phase normalized from 101 to 150 points to match standard format

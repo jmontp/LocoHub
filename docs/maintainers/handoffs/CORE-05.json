@@ -1,0 +1,76 @@
+{
+  "task_id": "CORE-05",
+  "title": "Make release publishing work on the Windows-mounted repo drive",
+  "status": "review",
+  "last_checked_at_utc": "2026-10-31T00:00:00Z",
+  "resource_class": "fixture",
+  "research_data_read": false,
+  "scientific_approval": false,
+  "authorizes_publication": false,
+  "summary": "G1 reproduced on /mnt/s (9p, aname=drvfs): renameat2(RENAME_NOREPLACE) returns EINVAL for a new destination; hard links, O_EXCL and mkdir EEXIST work there. _publish_directory still tries the atomic no-replace rename first. It falls back only on EINVAL, ENOSYS or EOPNOTSUPP, or when libc has no renameat2 (previously a ReleaseError). The fallback runs under the existing sibling lock and, before touching the destination, requires the staged files to equal manifest.json artifacts plus manifest.sha256. It then makes the destination with exclusive os.mkdir and writes RELEASE_INCOMPLETE.txt (O_EXCL) first. Each file is placed by os.link, or by an O_EXCL-create copy with fsync when the filesystem lacks hard links; EEXIST always propagates, so no file is ever replaced. manifest.json and manifest.sha256 go last. It then checks that the directory holds exactly the expected entries and that every hash matches, and removes the marker last. On any exception, including KeyboardInterrupt, it removes the files it placed. It removes the marker and the directory only if nothing foreign was added; otherwise the marker stays. A hard kill leaves the marker and the lock. The Windows-native branch and the atomic Linux path are unchanged.",
+  "changed_files": [
+    "contributor_tools/build_dataset_release.py (_publish_directory split into _rename_noreplace + fallback _publish_files_exclusively/_place_exclusively; INCOMPLETE_MARKER constant; build_release docstring and publish comment; pre-existing CORE-02 edits preserved)",
+    "contributor_tools/DATA_CONTRACT.md (one paragraph in 'Release creation' after the overwrite sentence; no other section touched)",
+    "tests/test_release_publish_drvfs.py (new, synthetic; each filesystem case runs on pytest tmp_path and on a temporary directory beside the repo on /mnt/s, removed after each test)",
+    "docs/maintainers/handoffs/CORE-05.json (this file)"
+  ],
+  "unchanged_files_confirmed": [
+    "tests/test_release_lineage_adversarial.py",
+    "tests/test_release_lineage_verify.py",
+    "tests/test_dataset_release.py",
+    "docs/maintainers/backlog.json",
+    "docs/maintainers/backlog.html",
+    "AGENTS.md"
+  ],
+  "checks": [
+    {
+      "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_release_publish_drvfs.py tests/test_release_lineage_adversarial.py tests/test_release_lineage_verify.py tests/test_dataset_release.py tests/test_backlog_workflow.py -rxXs",
+      "result": "175 passed, 2 xfailed (strict, pre-existing CORE-02 G7 and G8), 0 skipped. The new file contributes 35 tests; its drvfs cases ran (not skipped)."
+    },
+    {
+      "command": "python3 contributor_tools/build_backlog_page.py --check",
+      "result": "Backlog valid; HTML current (88 tasks)."
+    },
+    {
+      "command": "ls -a /mnt/s/workspace | grep core05",
+      "result": "No residue: the temporary drvfs test directories were removed."
+    }
+  ],
+  "test_coverage": {
+    "both_filesystems": [
+      "full build_release publishes a bundle whose file set equals manifest artifacts + manifest files, with matching hashes, sizes and seal; the fallback is used on drvfs and not on Linux tmp (spy)",
+      "fallback places byte-identical files via hard link and via exclusive copy (os.link patched to EPERM)",
+      "existing destination (empty dir, dir with file, plain file) is untouched by both _publish_directory and the fallback, and the stage is intact",
+      "destination created during the build is refused by build_release; the foreign content is untouched; no staging or lock residue remains",
+      "a file created by another writer at a target name is not replaced (hard-link and copy modes); the foreign file and the marker remain",
+      "an unexpected foreign entry blocks completion; the marker remains",
+      "a staged file that disagrees with its manifest publishes nothing (no destination is created)",
+      "a published hash mismatch rolls back the whole destination",
+      "a KeyboardInterrupt after 3 placed files leaves no destination, staging or lock",
+      "a hard kill (os._exit in a subprocess after 2 files) leaves the destination with RELEASE_INCOMPLETE.txt and without manifest.json or manifest.sha256"
+    ],
+    "linux_tmp_only": [
+      "build_release through the fallback with a simulated EINVAL rename"
+    ],
+    "not_covered": [
+      "Native Windows Python (the os.name == 'nt' branch is unchanged and untested here)",
+      "Non-drvfs filesystems that lack both RENAME_NOREPLACE and hard links, other than the simulated EPERM case",
+      "Power loss between the copy fsync and the directory entry: no directory fsync is performed, so durability is not claimed; the marker-first order still holds"
+    ]
+  },
+  "evidence_paths": [
+    "tests/test_release_publish_drvfs.py",
+    "contributor_tools/build_dataset_release.py",
+    "contributor_tools/DATA_CONTRACT.md"
+  ],
+  "file_sha256": {
+    "contributor_tools/build_dataset_release.py": "379b806ad2d22c069d071f44c11ca1bb09a81dc121f6dd44c6efd921aa47d36a",
+    "tests/test_release_publish_drvfs.py": "41c3fd79d691a0b52b15062d1e99a86c728228615026ac17d6ea545f6f0b4825"
+  },
+  "remaining": [
+    "Independent verification by a second agent, which moves the task to done; the coordinator updates backlog.json.",
+    "A hard-interrupted fallback leaves a marked directory plus the sibling lock. Cleanup is manual by design and is documented in DATA_CONTRACT.md; no automatic stale-lock recovery was added.",
+    "Readers of release directories (docs, loaders) do not yet check RELEASE_INCOMPLETE.txt; checking manifest.sha256 and the artifact hashes also detects an unfinished bundle."
+  ],
+  "next_action": "Verifier: rerun the check commands on this host, where /mnt/s is drvfs, and review _publish_files_exclusively against the acceptance criteria."
+}

@@ -642,6 +642,21 @@ def segment_standing_action_cycles(
                 )
                 segments.append(seg)
 
+    # Several motion bursts can expand to the same standing-to-standing
+    # interval when the intervening low-velocity samples are not weight-bearing.
+    # Count that measured interval once, before duplicates can bias IQR limits.
+    # Flight events remain separate: this rule only concerns velocity bursts.
+    if not require_flight:
+        unique = {}
+        for segment in segments:
+            key = (segment.start_idx, segment.end_idx, segment.segment_type)
+            if key in unique:
+                unique[key].metadata['candidate_count'] += 1
+            else:
+                segment.metadata['candidate_count'] = 1
+                unique[key] = segment
+        segments = list(unique.values())
+
     # IQR filtering
     if config.use_iqr_filtering and len(segments) >= 4:
         segments, _, _ = filter_segments_by_duration_iqr(

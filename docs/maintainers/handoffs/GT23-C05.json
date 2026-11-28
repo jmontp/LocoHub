@@ -1,0 +1,112 @@
+{
+  "task_id": "GT23-C05",
+  "status": "review",
+  "last_checked_at_utc": "2026-10-31T22:50:00Z",
+  "summary": "Answer to José's condition on D-GT23-C04-1 ('is the rescaled error lower than the original error? if so rescale everything, else get back to me'): NO for everything, so this goes back to José as D-GT23-C05-1. Computed from the committed GT23-C04 audit only (no data arrays read). For each of 488 trials, original error = |ln(d / own mass)| and rescaled error = |ln(d_hat / d)|, evaluated for every plausible publisher divisor d (README table masses inside the trial's estimator interval; all 8 exact divisors are table masses) and, as a check without that assumption, for a continuous grid over the interval. Rescale method: exact divisor where known, else the README mass nearest the force-plate (lever) estimate. Interval = lever x exp(+/-k), k = max(C03 band 0.0488 log, the largest second-vs-lever estimator disagreement measured in that task family in the C04 screen: 0.039 dynamic walk to 0.095 meander, 0.136 tire run, 0.157 cutting), widened to cover the trial's own second estimate +/-0.0488 when it exists. Results by class: lower with confidence 52 (lower in every plausible case, with and without the recorded-mass assumption; 7 exact + 45 walking/tire-run trials; subjects AB03 10, AB05 9, AB08 11, AB10 8, AB07 7, AB09 3, AB12 2, AB06 1, AB13 1); lower only if the divisor is a recorded mass 15 (AB06 6, AB07 3, AB11 3, AB09/AB10/AB13 1); own mass the only plausible divisor 2 (AB01 normal_walk_1 exact, AB03 cutting_1); unchanged by rescaling but another mass plausible, published error unknown up to 23 % 24; could rise or fall 41 (own mass and another recorded mass both plausible: AB01, AB02, AB09, AB11, AB12, AB13 mostly); no validated estimator 316 (non-gait 195, curb 24, stairs 87, other walking/tire-run under 10 stances or ankle corr < 0.98 10); no estimate at all 38. In the 52, published error is 1.7-58.7 % (factor) and remaining error after rescaling is at most 10.6 % (median of trial worst cases 4.2 %) if the divisor is a recorded mass, at most 16.8 % otherwise. Rescaling by the raw force-plate estimate instead of the nearest recorded mass is no better: 44 lower with confidence and it adds error in 5 trials whose estimate sits next to the own mass (AB01 incline_walk_1/2, side_shuffle_1, turn_and_step_1; AB07 cutting_1). Relation to D-GT23-C04-1: of its option-B 25 trials, 15 are lower with confidence, 1 own-mass-only, 6 lower only if a recorded mass (AB06 walking: interval reaches the midpoint to own 79.1 when widened), 3 could rise or fall (AB09 incline_walk_1, meander_1, obstacle_walk_1: own 84.1 enters the widened interval). Rescaling lowers error in trials C04 left ambiguous (all AB03 walking: every plausible divisor 78.9-87.6 is far from own 113.5). Nothing rescaled or excluded.",
+  "answer_to_jose": "Not for everything. Rescaled error is lower in every plausible case for 52 of 488 trials (all walking-type: AB03, AB05, AB08, AB10, AB07 most). It could go up in 41 walking trials where the own mass is as plausible as another mass, it is lower in 15 only if the divisor is one of the recorded masses, rescaling changes nothing in 26 (estimate nearest the own mass), and for 354 trials (non-gait, curb, short stairs) no estimator is validated, so a lower error cannot be claimed. Decision D-GT23-C05-1 asks which set gets kinetics.",
+  "verdict": {
+    "by_class": {"lower_confident": 52, "lower_if_recorded_mass": 15, "own_mass_only": 2, "no_change": 24, "mixed": 41, "not_validated": 316, "no_estimate": 38},
+    "by_group": {
+      "level walking (12)": {"lower_confident": 9, "own_mass_only": 1, "no_change": 1, "mixed": 1},
+      "other walking (108)": {"lower_confident": 40, "lower_if_recorded_mass": 13, "no_change": 15, "mixed": 31, "not_validated": 9},
+      "tire run, cutting (24)": {"lower_confident": 3, "lower_if_recorded_mass": 2, "own_mass_only": 1, "no_change": 8, "mixed": 9, "not_validated": 1},
+      "stairs (124)": {"not_validated": 87, "no_estimate": 37},
+      "curb (24)": {"not_validated": 24},
+      "non-gait (196)": {"not_validated": 195, "no_estimate": 1}
+    },
+    "lower_for_everything": false,
+    "sensitivity": {
+      "c04_band_only_no_family_widening": "validated trials: lower_confident 61, lower_if_recorded_mass 20, mixed 27, no_change 25, own_mass_only 1",
+      "raw_estimate_policy": "validated walking trials: lower_confident 44, lower_if_recorded_mass 14, mixed 56, worse 5, no_change 6, lower_or_same 1 (AB09 no-match)",
+      "not_validated_indicative_only": "with the largest measured disagreement (0.157 log) as half width: lower_confident 61, lower_if_recorded_mass 33, no_change 44, mixed 178. Not a claim: no estimator is calibrated for these tasks (C04 verifier: non-gait estimators disagree up to 7 %, split halves 4.7 %; no exact reference)."
+    },
+    "c04_options_cross_tab": {"B_well_separated_25": {"lower_confident": 15, "own_mass_only": 1, "lower_if_recorded_mass": 6, "mixed": 3}, "C_all_matched_35": {"lower_confident": 17, "own_mass_only": 1, "lower_if_recorded_mass": 8, "no_change": 5, "mixed": 4}}
+  },
+  "method": {
+    "definitions": "m = own README mass (force plates within 1 % in 12/12, C03). d = unknown publisher divisor. Published value / correct = m / d; rescaled value (x d_hat / m) / correct = d_hat / d. Errors in |log|, shown as factor percent exp(|log|) - 1 (37 % low counts as 59 %); the coordinator's |d / m - 1| equals this when d > m. Lower / no change / worse / mixed decided per plausible d with a 0.5 % equality tolerance (the C04 same-value spread).",
+    "plausible_divisors": "exact: re-run slope only. Validated walking (C04 reliable family, >= 10 gait stances, ankle corr >= 0.98): README table masses within the interval (recorded-mass assumption; all 8 exact divisors are table values, a random value would match within 0.005 kg about 0.2 % of the time per the C03 verifier) and, as a check, 401 log-spaced values over the interval. lower_confident requires lower under both; lower_if_recorded_mass is lower only under the assumption. AB09 dynamic_walk_1 and weighted_walk_1 have no table mass in the interval (lever ~92 kg); they are lower in the continuous check against rescaling to 87.6 kg and counted as lower_confident.",
+    "interval_half_width": "max(0.0488, family max |ln(second / lever)| from the 61 C04 screen trials); trial's own second estimate +/- 0.0488 added when present. Level walking: lever errors on the 8 exact trials -1.3 to +4.8 % (within 0.0488); other families validated only by agreement of two mass-free estimators, widened to their worst measured disagreement.",
+    "not_validated": "non-gait and curb families, fewer than 10 gait stances (C04 screen rule), ankle corr < 0.98, or no lever estimate. Classified not_validated regardless of numbers; indicative numbers recorded per trial.",
+    "policies": "T (primary): exact divisor, else README mass nearest the lever estimate. E: exact divisor, else the lever estimate itself."
+  },
+  "tolerance": {
+    "fixed_from_prior_audits": "Band 0.0488 log, equality tolerance 0.005 log, 10-stance rule, reliable families and the per-family disagreements are read from the C04 audit; none re-tuned.",
+    "honesty_note": "Rules were not pre-registered. I looked at the per-family second-vs-lever disagreements (from the audit) before choosing to widen intervals to the family maximum. After the first full run I split 'no change' into own-mass-only (2) and own-mass-nearest (24) because the first sheet text wrongly called all 26 'already divided by own mass'; class membership did not change otherwise. Two sensitivity variants (C04 band only; raw-estimate policy) are reported so the effect of these choices is visible.",
+    "not_tuned_to_target": "No threshold was moved to change the count of any class."
+  },
+  "checks": [
+    "Read AGENTS.md, the GT23-C05 backlog entry, D-GT23-C04-1, docs/quality/audits/gt23-c04-trial-divisors.json (rules, trials, summary, sensitivity, screen) and its link to the C03 audit, docs/maintainers/handoffs/GT23-C04.json, GT23-C04-verify.json and GT23-C03-verify.json.",
+    "No data arrays read; no numerical job, MATLAB or download. The only input is the committed C04 audit (sha256 484c1c07..., unchanged). The 94 trials without a lever estimate would be not_validated under any estimate, so no bounded probe was needed.",
+    "`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 contributor_tools/audit_probes/2026_10_31/probe_gt23_c05_rescale_error.py compute` then `... sheets` (final run 2026-10-31T22:45:57Z; audit records the probe sha256 767ed200..., equal to the file).",
+    "Spot checks by hand from the audit: AB05 incline_walk_1 lever 115.32 -> plausible {113.5} only -> published 58.7 % (factor) -> rescaled 0 %; AB03 normal_walk_1 lever 83.25, plausible 78.9-84.1, own 113.5 -> published 35-44 % (factor), rescaled <= 4.2 %; AB11 normal_walk_1 plausible {64.0, 65.1 own, 67.5, 67.6}, pick 67.5 -> mixed (rescaling adds 3.7 % if the divisor is the own mass).",
+    "Review sheet review_sheets/D-GT23-C05-1/ built with contributor_tools/common/review_sheet.py (8 chips: 2 pass, 2 failed, 4 not checked; 2 figures; options table with 'Left out' first, defer row, recommendation only in the fold; prose budget enforced). PNGs 765 px at 170 dpi = 4.5 in, fonts >= 10 pt. Figure 1 contrast: dashed equal-error line with the shaded 'rescaling adds error' region; mixed trials visibly cross it. Rendered with headless Chrome at 1100 px and in a 390 px iframe and inspected (scratchpad rv_wide_D-GT23-C05-1.png, rv_phone_D-GT23-C05-1.png); fixed an axis that clipped AB05 at 58.7 %.",
+    "`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_backlog_workflow.py`: 71 passed.",
+    "`python3 contributor_tools/build_backlog_page.py --check`: 'Backlog valid; HTML current (103 tasks).' backlog.json/html and AGENTS.md not edited.",
+    "decision.json appended to an in-memory copy of backlog.json passes validate_backlog; open decisions would be D-GT23-C04-1 and D-GT23-C05-1."
+  ],
+  "deviations": [
+    "The coordinator's definition 'original error = |published divisor / own mass - 1|' is replaced by the symmetric |log| (shown as factor percent) so a divisor too low and too high count alike; for d > m the numbers are identical."
+  ],
+  "remaining": [
+    "Independent verification (second agent) of the classes from the C04 audit, ideally with its own interval rule.",
+    "José: D-GT23-C05-1. It answers the question behind D-GT23-C04-1; the coordinator should record D-GT23-C04-1 as superseded (or answered via D-GT23-C05-1) when copying, so the two are not answered inconsistently.",
+    "Non-gait, curb and short-stair trials (354): no exact reference exists; any lower-error claim needs a new validated estimator or author-confirmed divisors.",
+    "AB09 dynamic_walk_1 and weighted_walk_1: lever reads ~5 % above the nearest table mass (87.6); counted lower_confident only through the continuous check, with rescaling to 87.6 kg.",
+    "Tire run and cutting: estimators disagree up to 17 % (cause unknown); 3 tire-run trials are lower with confidence only because every plausible divisor is far from the own mass (AB03, AB05, AB08).",
+    "Implementing any rescale needs its own guarded task, a pilot and review; powers take the same per-trial factor (C04 verifier: 6 Hz filtered moment x velocity)."
+  ],
+  "changed_files": [
+    "contributor_tools/audit_probes/2026_10_31/probe_gt23_c05_rescale_error.py (new)",
+    "docs/quality/audits/gt23-c05-rescale-error.json (new)",
+    "docs/maintainers/handoffs/GT23-C05.json (new)",
+    "review_sheets/D-GT23-C05-1/ (gitignored: index.html, fig1_errors.png, fig2_groups.png, decision.json)"
+  ],
+  "evidence_paths": [
+    "docs/quality/audits/gt23-c05-rescale-error.json",
+    "contributor_tools/audit_probes/2026_10_31/probe_gt23_c05_rescale_error.py",
+    "review_sheets/D-GT23-C05-1/index.html",
+    "review_sheets/D-GT23-C05-1/decision.json"
+  ],
+  "output_sha256": {
+    "docs/quality/audits/gt23-c05-rescale-error.json": "befedeae32d53244a510020e2b4e736ddec69b2932ee4024cd2b53a0ee081792",
+    "contributor_tools/audit_probes/2026_10_31/probe_gt23_c05_rescale_error.py": "767ed200dfdb42e191561f7fdfe3cd65c6dbd96a4674818800efbe0684d10f5e",
+    "review_sheets/D-GT23-C05-1/index.html": "6a7e75bf9e14a7949f88ef79e512a86a072477a215ba35c9869b421f78a4f6c8",
+    "review_sheets/D-GT23-C05-1/decision.json": "f02e221d571d58edacba866f89f54d973de7af818e73e818b4c572464d81ab23",
+    "input docs/quality/audits/gt23-c04-trial-divisors.json": "484c1c079e08035a823fc8770a54a3f53191b65329b586250690be391c6e9184"
+  },
+  "resources": {"data_arrays_read": 0, "workers": 1, "note": "Audit-only computation (< 2 s); no numerical slot used."},
+  "next_action": "Verifier checks the classes and sheet; then the main session copies D-GT23-C05-1 (identical to review_sheets/D-GT23-C05-1/decision.json) into backlog.json and marks D-GT23-C04-1 superseded.",
+  "decisions": [
+    {
+      "id": "D-GT23-C05-1",
+      "task_id": "GT23-C05",
+      "question": "Rescaling GT23 moments to each participant's own mass lowers the error in only some trials. Which GT23 trials should carry moments and powers? Trials left out keep kinematics and forces; their moments and powers are withheld.",
+      "options": [
+        {
+          "key": "A",
+          "label": "Rescale only where error falls in every plausible case (54 trials)",
+          "consequence": "52 trials rescaled (remaining error at most 11 %, median 4 %, if the divisor is a recorded mass) and 2 kept whose only plausible divisor is the own mass. Other trials keep kinematics and forces; their moments and powers are withheld. Reversible."
+        },
+        {
+          "key": "B",
+          "label": "Also trials that improve only if the divisor is a recorded mass, or stay unchanged (93 trials)",
+          "consequence": "As the previous option plus 15 trials whose error falls only if the divisor is a recorded mass (else up to 17 %), and 24 kept as published because the estimate is nearest the own mass, though another mass is plausible (published error up to 23 %). Reversible."
+        },
+        {
+          "key": "C",
+          "label": "Rescale every trial with an estimate (450 trials)",
+          "consequence": "Also 41 walking trials where error could rise or fall and 316 trials without a validated estimator (non-gait, curb, short or low-correlation trials), so error rises in some trials by an unknown amount. Reversible."
+        }
+      ],
+      "options_order": "By GT23 trials released with kinetics: 54, 93, 450.",
+      "recommended": "A",
+      "confidence": "medium",
+      "why": "Rescaling lowers the error in every plausible case only for 52 trials. In the others the own mass and another mass are both plausible, the gain depends on the divisor being a recorded mass, or no estimator is validated, so rescaling everything would raise the error in some trials.",
+      "check": "Sheet, second figure: the non-gait bar is all grey, so no non-gait trial gets kinetics under A or B.",
+      "cost_of_waiting": "GT23 moments and powers stay out of any release; GT23 kinematics, forces and other datasets are unaffected.",
+      "decide_before_recommendation": true,
+      "status": "open"
+    }
+  ],
+  "decision_note": "decisions[0] is identical to review_sheets/D-GT23-C05-1/decision.json. Options in neutral order by trials released with kinetics (54, 93, 450); the builder sorts on that count and derives the recommended letter from the option identity."
+}

@@ -1,0 +1,173 @@
+{
+  "task_id": "HIST-01",
+  "verifier_role": "independent second agent; metadata only (file sizes and SHA-256 of three small UM24K files, a ZIP central directory already on disk, Crossref/DataCite/Dryad/Zenodo metadata fetched to the scratchpad); no data arrays, B3D bytes or archives read or downloaded; worker files, backlog and AGENTS.md not edited",
+  "verdict": "done",
+  "decision_ready_to_copy": true,
+  "last_checked_at_utc": "2026-10-31T15:30:00Z",
+  "round_2": {
+    "verdict": "done",
+    "decision_ready_to_copy": true,
+    "last_checked_at_utc": "2026-10-31T15:30:00Z",
+    "summary": "F1 and F2 are done. Every per-study route size and both totals reproduce from repository metadata. D-HIST-01-1 now asks the source question, meets the schema, is neutrally ordered and leaks nothing. Both sheets carry the bounded wording and render cleanly at 390 and 1100 px. The free-disk figure is right as written.",
+    "file_checks": [
+      {
+        "item": "per-study original-route sizes",
+        "result": "pass",
+        "evidence": "Carter (Bath BATH-01341): the DataCite sizes strings for the 50 participant ZIPs plus 3 documentation files sum to 28,882 MB, which matches 28,882,233,915 B. Both sides sum rounded-MB strings, so the precision is ±25 MB. Moore (Zenodo 13030): 2,444,992,214 B, matching my Zenodo API fetch (2.44 GB). Wang (Zenodo 6457662): 31,012,438,583 B, matching (31.01 GB). Lencioni (figshare collection 4494755): I fetched all 54 articles and summed the file sizes, 515,231,189 B, exact match. van der Zee (collection 5897423): 4 articles, 15,593,203,562 B, exact match."
+      },
+      {
+        "item": "~108 GB total",
+        "result": "pass",
+        "evidence": "Originals: 28,882,233,915 + 2,444,992,214 + 515,231,189 + 15,593,203,562 + 31,012,438,583 = 78,448,099,463 B, equal to the audit's original_route_bytes_five_studies. AddBiomechanics for fa16, fr12, ha13, ha23, ta21 and ta22: 107,949,218,906 − 78,448,099,463 = 29,501,119,443 B. That agrees with my round-1 central-directory sums (0.54 + 0.68 + 0.14 + 6.04 + 12.23 + 9.88 = 29.51 GB). Option B is therefore about 107.95 GB. Option C stays 346.71 GB."
+      },
+      {
+        "item": "new licence fact",
+        "result": "pass",
+        "evidence": "The figshare article API reports every item licence as CC0, in both collections (54 Lencioni and 4 van der Zee items), while DataCite lists the collections as CC BY 4.0. The audit records this as not reconciled, and the decision sheet shows it as a 'not checked' chip. Both licences are open, so the question's statement that these five have openly licensed original data still holds."
+      },
+      {
+        "item": "free-disk units ruling",
+        "result": "pass",
+        "evidence": "Keep '164 GB (153 GiB)'. The audit records 164,307,197,952 free bytes. In decimal GB that is 164.3, the same unit as every download size on the sheet, which come from byte counts ÷ 1e9; in GiB it is 153.0. My round-1 'df -B1G' reading of 154 was in GiB, taken after other writes. Using decimal GB everywhere is consistent, and the GiB note prevents confusion with df output."
+      },
+      {
+        "item": "D-HIST-01-1 schema, order, leak, completeness",
+        "result": "pass",
+        "evidence": [
+          "All fields are present. The question has no paths, hashes or PIDs and now uses the bounded form ('not found in the searched folders'). decide_before_recommendation is false, which is acceptable for a scope and source item.",
+          "Order: by total download (none, about 108 GB, about 347 GB), stated on the sheet as 'Options ordered by total download size'.",
+          "No leak: the chips, headline and reply line 'A | B | C | defer' are neutral. 'why' and the recommendation are only in the fold.",
+          "Complete: archive; originals where open with AddBiomechanics otherwise; AddBiomechanics only; plus defer. Option B applies its rule consistently even where an original is larger (Wang 31 GB versus 4 GB derivative). Each consequence states the adapter cost. A subset-first rebuild, the old B, can be chosen later within B or C, so leaving it out is acceptable."
+        ]
+      },
+      {
+        "item": "sheets",
+        "result": "pass",
+        "evidence": "Playwright with system Chrome, true viewports: HIST-01 at 390 and 1100 px with overflow 0 (heights 1,440 and 1,567); D-HIST-01-1 likewise with overflow 0 (heights 2,371 and 2,128). Headlines are now bounded: 'only the knee-exoskeleton source was found in the searched folders' and 'no source found in searched folders; all are in AddBiomechanics, five also have open publisher data'. The decision figure is a log-scale grouped bar chart with a free-disk line. Its check (Carter's 245 GB blue bar crosses the line, its 29 GB orange bar does not) is visible. Figure labels are small at 390 px but legible."
+      }
+    ],
+    "artifact_hashes": {
+      "contributor_tools/review_hist01_source_dispositions.py": "b3676912fd3fe1c5...",
+      "docs/quality/audits/hist01-source-dispositions.json": "231a34bebf902aab...",
+      "review_sheets/D-HIST-01-1/index.html": "e68319b918c651b2...",
+      "review_sheets/HIST-01/index.html": "21a545640ee9b780..."
+    },
+    "test_runs": [
+      {
+        "command": "curl figshare /v2/collections/{4494755,5897423}/articles and /v2/articles/<id> (scratchpad)",
+        "result": "515,231,189 B and 15,593,203,562 B; all item licences CC0"
+      },
+      {
+        "command": "Playwright renders of both sheets at 390 and 1100 px",
+        "result": "overflow 0"
+      },
+      {
+        "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_backlog_workflow.py",
+        "result": "71 passed"
+      },
+      {
+        "command": "python3 contributor_tools/build_backlog_page.py --check",
+        "result": "Backlog valid; HTML current (94 tasks)"
+      }
+    ],
+    "questions_for_jose": [
+      "D-HIST-01-1, ready to copy from docs/maintainers/handoffs/HIST-01.json."
+    ]
+  },
+  "round_1_verdict": "back_to_worker",
+  "summary": "The audit's facts check out. UM24K S1/S2 are byte-identical to Dryad v6. The archive totals are exact (eleven studies 346.70 GB, Carter 244.91 GB, six smallest 13.78 GB). All 13 DOIs and 6 data licences resolve as stated. The ledger includes sa17 and has no um24k entry, and the absence of local B3D files is stated as bounded in the audit. D-HIST-01-1 should not be copied yet. It asks which studies to rebuild from the AddBiomechanics derivative release, but at least five studies have openly licensed original publisher data, and that changes the cost picture the options rest on. Carter's original Bath archive lists about 28.9 GB against 244.9 GB for the derivative. The decision sheet's headline that the eleven studies 'exist only as old files plus the official AddBiomechanics release' is therefore false. Two headlines also state 'not on this computer' without the audit's bounded-search qualifier.",
+  "checks": [
+    {
+      "id": 1,
+      "area": "UM24K hashes",
+      "result": "pass",
+      "evidence": "sha256sum (peak RSS 3,596 KiB, /usr/bin/time -v): dataset_S1.mat 890,361 B efb525cc…f77c; dataset_S2.mat 16,092 B 3f347db3…3c8f. Both equal the Dryad version 314890 digests in source_evidence/um24k/publisher-files.json and in a fresh Dryad API fetch (scratchpad). The Dryad API lists only version 6 (2024-09-04). The members of dataset.zip (S1, S2, README.md 5,898 B) hash to the publisher digests, and README.md equals 5bc99c98…."
+    },
+    {
+      "id": 2,
+      "area": "archive totals",
+      "result": "pass",
+      "evidence": "I parsed the on-disk central_directory.bin (sha256 88d494cc…, 2,335 entries, ZIP64 extra fields) independently of the ledger's aggregation and summed compressed .b3d sizes for each study's source folders, both model variants. Eleven page studies: 346.70 GB; with sa17 (Santos2017, 11.38 GB), 358.08 GB. ca23 is 244.91 GB (651 members). The six smallest are ha13 0.14, fa16 0.54, fr12 0.68, ti19 2.33, wa23 4.05 and ha23 6.04, totalling 13.78 GB: Hamner, Falisse, Fregly, Lencioni, Wang and Han, as option B says. The other ten studies sum to 101.8 GB. Free space on /mnt/s is now 154 GB, against the 164 GB on the sheet; the conclusion that Carter alone exceeds the free disk is unchanged."
+    },
+    {
+      "id": 3,
+      "area": "DOIs and licences",
+      "result": "pass",
+      "evidence": "Crossref (first author, year): TBME.2016.2630009 Falisse 2017; jor.22023 Fregly 2011; jbiomech.2012.11.024 Hamner 2013; 3610548.3618247 Han 2023; peerj.918 Moore 2015; jbiomech.2022.111145 Tan 2022; TII.2022.3189648 Tan 2023; s41597-019-0323-z Lencioni 2019; scirobotics.adr8282 Divekar 2024; s41597-022-01817-1 van der Zee 2022; wtc.2023.7 Wang 2023. The legacy DOIs are wrong as claimed: 10.1007/s10439-016-1591-9 is De Groote 2016 and 10.1016/j.jbiomech.2012.08.014 is Kobayashi 2012. DataCite: BATH-01341 v1 cc-by-4.0; dryad.z34tmpgks v6 cc0-1.0; zenodo.13030 CC0 1.0; zenodo.6457662 v1.0 CC BY 3.0 Netherlands; figshare c.4494755 CC BY 4.0; c.5897423 cc-by-4.0. The ti19 conflict between the collection's CC BY 4.0 and the earlier CC0 seen on the Subject3 item is correctly left unreconciled. ca23's original-study DOI is marked not_checked, which is honest."
+    },
+    {
+      "id": 4,
+      "area": "ledger versus pages",
+      "result": "pass",
+      "evidence": "The ledger's historical_studies are ca23, fa16, fr12, ha13, ha23, mo15, sa17, ta21, ta22, ti19, vz22 and wa23. docs/datasets has no sa17 page or metadata, but does have a um24k page, which the ledger lacks."
+    },
+    {
+      "id": 5,
+      "area": "'no local B3D' stated as bounded",
+      "result": "pass in the audit; failed on two sheet/decision headlines",
+      "evidence": "Audit records give local_source.status 'not_found_in_bounded_search', list the search roots and depths, and set not_a_global_absence_claim: true. My own find over /mnt/s/locomotion_data, /mnt/s/Downloads and /home/jmontp (depth 5) also found no .b3d. But the D-HIST-01-1 question says 'Their source files are not on this computer', and the HIST-01 sheet headline says 'only the knee-exoskeleton source is on this computer'. Both state as fact what was a bounded search."
+    },
+    {
+      "id": 6,
+      "area": "D-HIST-01-1: needed, complete, neutral, no leak",
+      "result": "failed (completeness and one false headline); schema, order and leaks pass",
+      "evidence": [
+        "Needed: yes. What to rebuild sets scope and download cost, which is José's call.",
+        "Schema: every required field is present. The question contains no paths, hashes or PIDs. options_order is neutral (download size: none, about 14 GB, about 347 GB), as is the sheet's 'Options ordered by download size'. decide_before_recommendation is false; that is acceptable for a scope item, though not required. Leak check: the chips, reply line ('A | B | C | defer') and options table do not reveal B; 'why' is only in the fold. Pass.",
+        "Incomplete: the options consider only the AddBiomechanics derivative. Openly licensed original publisher data exists, sizes from repository metadata fetched to the scratchpad: ca23 Bath BATH-01341, 50 participant ZIPs summing to about 28.9 GB (DataCite sizes) against 244.9 GB derivative; mo15 Zenodo 13030, 2.44 GB against 31.85 GB; wa23 Zenodo 6457662, 31.0 GB against 4.05 GB; ti19 and vz22 on figshare (sizes not fetched). Option C's '347 GB, more than the free disk; Carter alone 245 GB' is driven by choosing the derivative route for Carter. The worker itself lists 'rebuild from originals' as not asked, and the sheet lists it under 'Not shown'. Deferring that question would let José pick a size-driven option on a premise the evidence contradicts. Originals are also primary sources rather than reprocessed derivatives, which bears on AGENTS.md's 'preserve source identities'.",
+        "False headline: 'Eleven historical studies exist only as old files plus the official AddBiomechanics release' is contradicted by the five open original-data records the audit itself cites (Bath, Zenodo ×2, figshare ×2)."
+      ]
+    },
+    {
+      "id": 7,
+      "area": "sheet rendering",
+      "result": "pass (layout)",
+      "evidence": "Playwright with system Chrome at true 390x900 and 1100x900 viewports: horizontal overflow 0 px on both sheets (HIST-01 page height 1,411/1,567 px; D-HIST-01-1 2,083/1,753 px). Structure is ask strip, headline, chips, one figure each, decision table with 'left out' first plus defer, then 'Not shown', reply line and folded details. The figures are legible: the download bar chart has a free-disk line, and the participant dot plot is on a log scale. Only the headline wording issues above fail."
+    },
+    {
+      "id": 8,
+      "area": "tests",
+      "result": "pass",
+      "evidence": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_backlog_workflow.py → 71 passed; python3 contributor_tools/build_backlog_page.py --check → Backlog valid; HTML current (93 tasks). Builder and audit hashes match the handoff (fc6fce39…, c8fc6479…)."
+    }
+  ],
+  "required_fixes": [
+    "F1 (D-HIST-01-1 options): account for the original-data route before asking. Either restructure the question as which studies to rebuild and from which source, or add an option such as 'rebuild from openly licensed original publisher data where it exists, AddBiomechanics otherwise', with per-route download sizes taken from repository metadata. Known sizes: Carter Bath about 28.9 GB, Moore Zenodo 2.44 GB, Wang Zenodo 31.0 GB; fetch the figshare sizes for Lencioni and van der Zee. Keep 2-3 options plus defer, ordered by a neutral attribute stated on the sheet, with the recommendation only in the fold. Rebuild the decision sheet and its figure, e.g. a bar per study and route.",
+    "F2 (wording): replace the decision-sheet headline 'exist only as old files plus the official AddBiomechanics release' with a true statement, e.g. that no source files were found locally and that both derivative and, for some studies, original publisher data are available. Change 'not on this computer' in the D-HIST-01-1 question and in the HIST-01 sheet headline to the bounded form, e.g. 'not found in a search of this computer's data folders'."
+  ],
+  "optional": [
+    "Update the free-disk line to the current figure (154 GB at verification time), or label it with its measurement date."
+  ],
+  "questions_for_jose": [],
+  "test_runs": [
+    {
+      "command": "/usr/bin/time -v sha256sum UM24K dataset_S1.mat dataset_S2.mat dataset.zip; unzip -p member hashes",
+      "result": "S1/S2/README match Dryad v6; peak RSS 3,596 KiB"
+    },
+    {
+      "command": "curl Dryad /api/v2/versions/314890/files and dataset versions (scratchpad)",
+      "result": "digests match; only v6"
+    },
+    {
+      "command": "independent ZIP64 central-directory parse of central_directory.bin (scratchpad script)",
+      "result": "346.70 GB eleven; 244.91 GB ca23; 13.78 GB six smallest"
+    },
+    {
+      "command": "Crossref /works for 13 DOIs; DataCite /dois for 6 data DOIs; Zenodo /api/records for 13030 and 6457662 (scratchpad)",
+      "result": "as in checks 3 and 6"
+    },
+    {
+      "command": "Playwright renders of review_sheets/HIST-01 and D-HIST-01-1 at 390 and 1100 px",
+      "result": "overflow 0"
+    },
+    {
+      "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_backlog_workflow.py",
+      "result": "71 passed"
+    },
+    {
+      "command": "python3 contributor_tools/build_backlog_page.py --check",
+      "result": "Backlog valid; HTML current (93 tasks)"
+    }
+  ],
+  "next_action": "Worker applies F1 and F2, rebuilds both sheets and returns HIST-01 to review. The coordinator should not copy D-HIST-01-1 into backlog.json until the revised decision is verified."
+}

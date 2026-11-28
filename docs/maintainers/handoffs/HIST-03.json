@@ -1,0 +1,119 @@
+{
+ "task_id": "HIST-03",
+ "title": "Find original sources for the AddBiomechanics studies and test GRF-only extraction",
+ "status": "review",
+ "scientific_approval": false,
+ "last_checked_at_utc": "2026-10-31T19:30:00Z",
+ "repository_head": "80705045fc291864beed13bbfc83b5404e5786ca",
+ "decision_context": {
+  "id": "D-HIST-01-1",
+  "answer": "B",
+  "answer_note_premise": "AddBiomechanics adds predicted GRF; add only that column if obtainable without the full download."
+ },
+ "summary": "José's premise does not hold: AddBiomechanics 1.0 GRF are measured force-plate data, assigned to the feet and possibly filtered per processing pass; frames without trusted GRF are kept and flagged, not predicted. The legacy files came from older converters that wrote one row per frame from processingPasses[1] (70 kg mass fallback in cc94be4), so extra legacy rows are most plausibly the kept flagged frames, not pass expansion (download page, ECCV dataset paper, PLoS ONE 2023 paper, B3D schema). Predicted GRF exist only as benchmark baselines. GRF-only extraction: the archive host supports single and multi-range requests and any zip member can be fetched alone, but members are deflate-compressed, so GRF needs the whole member. The official Google Drive tree also serves each subject's uncompressed B3D with single-range (not multi-range) support. B3D layout confirmed on one 0.5 MB member: int64 header length, header protobuf, then fixed-size records (sensor frame plus one frame per pass); GRF fields are about 3% of each record, interleaved in every frame. So a GRF-only partial read needs about one HTTP request per frame (about 10^7 for these studies, estimated) and is not practical. The practical route streams each No_Arm member and keeps only the GRF: 153.1 GB transferred for all 11, 22.3 GB for fa16+ta21+ta22, peak disk 1.64 GB. Originals: eight studies have full originals with markers and force plates (ca23, mo15, ti19, vz22, wa23 known; new: ha13 and fr12 on SimTK with an MIT-style license and login required, ha23 GroundLink with no data license stated). ta22 has only the authors' right-stance windows (SimTK HDF5, 1.98 GB); the README points to AddBiomechanics for the full marker/force data. fa16 has no original found. ta21's supposed author Drive folder is the official AddBiomechanics Drive folder Tan2021_Formatted_No_Arm. For the eight studies, AddBiomechanics GRF would duplicate measured GRF already in the originals.",
+ "changed_files": [
+  "docs/quality/audits/hist03-originals-and-grf.json",
+  "docs/quality/audits/source_evidence/hist03/fetch-receipts.json",
+  "docs/quality/audits/source_evidence/hist03/b3d-header-tiziana2019-subject29.json",
+  "docs/quality/audits/source_evidence/hist03/adb-archive-study-member-stats.json",
+  "docs/quality/audits/source_evidence/hist03/adb-drive-tree-depth2.json",
+  "docs/maintainers/handoffs/HIST-03.json"
+ ],
+ "not_changed": [
+  "docs/maintainers/backlog.json",
+  "docs/maintainers/backlog.html",
+  "AGENTS.md",
+  "contributor_tools/",
+  "converted_datasets/"
+ ],
+ "checks": [
+  "Archive http://archive.simtk.org/addbiomechanics/addbiomechanics.zip: HEAD 200, Accept-Ranges bytes, Content-Length 417665422113, ETag \"613ecc9321-631d01550d044\" (same as HIST-01). Range 0-1023 -> 206 with Content-Range; two-range request -> 206 multipart/byteranges.",
+  "Zip64 tail (65,536 B) and central directory (331,662 B at offset 417665090353) fetched by range and parsed by a separate parser: 2,335 entries, sha256 88d494ccf3b1026ded8c37b9fcbf093e5f76adf0f1bda3d2956b19d3f508ce09 = HIST-01 value. Per-study No_Arm/With_Arm member counts and compressed/expanded bytes match HIST-01 records.",
+  "One B3D only: train/No_Arm/Tiziana2019_Formatted_No_Arm/Subject29/Subject29.b3d, 503,665 B compressed (sha256 f99ca4c8...5fce), expanded 3,605,883 B, CRC32 matches the central directory. Header only parsed: version 4, 23 DOFs, header 3,103,603 B, sensor frame 849 B, pass frame 2,333 B, passes kinematics/lowPassFilter/dynamics, 1 trial of 64 frames, contact bodies calcn_r/calcn_l, 48 of 64 frames GRF-flagged. Data section 502,272 B = 64 x (849 + 3 x 2,333): layout confirmed. Frames not decoded.",
+  "A 64 KiB compressed prefix expanded to 1,428,033 B, less than the 3,103,603-B header, so even the header needs about 0.1 MB of compressed bytes and any frame needs all preceding compressed bytes.",
+  "Official download page redirect -> Google Drive folder addb_dataset_publication (test|train / No_Arm|With_Arm / study folders); listed to depth 2 and per-subject for Hamner2013 and Tiziana2019 (HTML listing only). Drive Subject29.b3d (3.4 MB shown): Range 0-1023 -> 206, Content-Range bytes 0-1023/3605883, bytes equal the expanded zip member prefix; two-range request -> 416.",
+  "B3D layout read from nimblephysics master c405b056 (SubjectOnDisk.proto sha256 37c6c94d...54bf; SubjectOnDisk.cpp sha256 eedac783...1c8d): read lines 308-365, write lines 415-500, readFrames seek lines 960-1060.",
+  "GRF provenance quotes: download page (saved, sha256 7dcb3f20...c791, same as HIST-01 receipt); FAQ (sha256 3f893b61...047e); nimblephysics docs page; ECCV/arXiv 2406.18537 and PLoS ONE 10.1371/journal.pone.0295152 read through an automated web reader (quotes not re-checked against PDFs).",
+  "Originals: SimTK nmbl_running (10 subject ZIPs + EMG, about 2.06 GB, MIT-style Stanford license text embedded per package) and kneeloads (6 competition packages, about 8.11 GB as displayed; MIT-style license for competitions 4-6, none shown for 1-3); SimTK download links redirect to login (tested on nmbl_running subject01). imukinetics all_17_subjects.h5 1976 MB, MIT-style license (SJTU Wearable Systems Lab); README describes 100 Hz stance windows, plate 2 = right foot. GroundLink HEAD: c3d.zip 2,694,867,241 B, force.zip 50,489,052 B, Accept-Ranges bytes; no data license on the page; code repo MIT (GitHub API). Zenodo 13030/6457662, figshare 4494755/5897423 and DataCite BATH-01341 descriptions fetched for contents. Every URL and response sha256 is in fetch-receipts.json.",
+  "Falisse 2017: no data repository found (official table links only PubMed; PubMed abstract has no data statement; web searches). Manuscript PDF fetched but text extraction unavailable here. This is a bounded search, not a claim that no data exist.",
+  "Tan running: Drive folder 1ZDy_JIj3j0wsXdHaC1Bpw1vTE-LGwoJ6 is titled Tan2021_Formatted_No_Arm and appears as train/No_Arm/Tan2021_Formatted_No_Arm in the official AddBiomechanics Drive tree, so HIST-01's 'author Google Drive folder' is an AddBiomechanics copy.",
+  "Total downloaded: under 3 MB of headers/listings/metadata plus the one 503,665-B member; no original-data file opened; nothing launched; no numerical job.",
+  "Rework 2026-10-31: OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_backlog_workflow.py and python3 contributor_tools/build_backlog_page.py --check (results in final report); D-HIST-03-1 re-validated with validate_backlog on an in-memory copy. backlog.json/html not edited. Legacy converter lines read with git show cc94be4 and the _archive script; no downloads in the rework."
+ ],
+ "acceptance_coverage": {
+  "every_claim_cites_url_or_doi": "Each per_study.original entry has citations/url/doi; GRF premise evidence entries carry source and quote; fetch receipts list URL + sha256.",
+  "no_full_archive_downloaded": "Only metadata, listings, byte ranges and one 503,665-B B3D member (smallest in the eleven studies).",
+  "grf_only_bytes_per_study": "per_study[].addbiomechanics_grf_only: exact whole-member transfer bytes (zip route and Drive route), largest member, and order-of-magnitude partial-read bytes and request counts (estimate from one subject's layout)."
+ },
+ "per_study_summary": {
+  "ca23": "Original Bath C3D, CC-BY-4.0, 28.9 GB, markers+GRF. ADB GRF-only transfer 95.6 GB.",
+  "fa16": "No original found. ADB No_Arm 0.24 GB.",
+  "fr12": "Original SimTK kneeloads (login; MIT-style for 4-6, none shown 1-3), 8.1 GB all / 4.5 GB motion, markers+GRF+EMG+contact force. ADB 0.38 GB.",
+  "ha13": "Original SimTK nmbl_running (login; MIT-style), 2.06 GB, markers+GRF+EMG+IK/RRA/CMC. ADB 0.06 GB.",
+  "ha23": "Original GroundLink (open; data license not stated), C3D+Force 2.75 GB, markers+GRF. ADB 2.24 GB.",
+  "mo15": "Original Zenodo CC0, 2.44 GB, markers+GRF. ADB 12.7 GB.",
+  "ta21": "No original; only the ADB copy. ADB 12.2 GB.",
+  "ta22": "Authors' right-stance windows only (SimTK HDF5, MIT-style, 1.98 GB). ADB 9.9 GB.",
+  "ti19": "Original figshare, 0.52 GB, markers+GRF+angles+moments+EMG. ADB 1.0 GB.",
+  "vz22": "Original figshare, 15.6 GB, C3D/CMO/MAT with GRF, angles, moments. ADB 14.7 GB.",
+  "wa23": "Original Zenodo CC BY 3.0 NL, 31.0 GB (RAR), markers+treadmill GRF+insoles+IMU+EMG. ADB 4.05 GB."
+ },
+ "remaining": [
+  "D-HIST-03-1 (José): source for the three studies without a full original (Falisse, Tan running, Tan walking).",
+  "José's D-HIST-01-1 note assumed AddBiomechanics GRF are predicted; the coordinator should tell him they are measured plate data (duplicates for the eight studies with originals), so no separate GRF column is planned for those eight. Legacy extra rows: the legacy converters wrote one row per frame (processingPasses[1]); the plausible cause is kept GRF-flagged frames, unverified against legacy files.",
+  "Not checked: inner formats of SimTK and Wang archives; GroundLink data license; kneeloads competitions 1-3 license; whether the six kneeloads subjects are distinct people; participant crosswalks (Moore 15 vs 12, Wang 12 vs 9, Tan running 16 vs 8); whether No_Arm and With_Arm GRF are identical; frame sizes for any B3D but one; Falisse manuscript text; Drive quotas.",
+  "For HIST-01/02: legacy converters read processingPasses[1], which in Subject29 is the low-pass-filter pass (order kinematics, lowPassFilter, dynamics), not dynamics; legacy angles/moments/GRF may come from a pre-dynamics pass. One subject checked.",
+  "HIST-01 record ta21 original_data ('Author Google Drive folder') should be corrected to 'AddBiomechanics official Drive copy' when HIST-01 artifacts are next rebuilt.",
+  "Licensing for redistribution of ha23 (no stated data license) and fr12 competitions 1-3 must be settled before any release that includes them.",
+  "No review sheet built for this task (caller asked for audit + handoff only); a decision sheet is needed only if the coordinator queues D-HIST-03-1 with figures."
+ ],
+ "next_action": "Independent reviewer: re-check the GRF premise quotes against the download page and B3D schema, the Range results (archive 206/multipart; Drive 206 single, 416 multi), the Subject29 layout arithmetic, and the new originals (SimTK nmbl_running/kneeloads/imukinetics pages, GroundLink HEAD sizes, Tan2021 Drive folder title). Coordinator: after verification, copy D-HIST-03-1 into backlog decisions and have HIST-02 plan per-study adapters: originals for ca23, mo15, ti19, vz22, wa23, ha13, fr12, ha23; fa16/ta21/ta22 per D-HIST-03-1.",
+ "evidence_paths": [
+  "docs/quality/audits/hist03-originals-and-grf.json",
+  "docs/quality/audits/source_evidence/hist03/fetch-receipts.json",
+  "docs/quality/audits/source_evidence/hist03/b3d-header-tiziana2019-subject29.json",
+  "docs/quality/audits/source_evidence/hist03/adb-archive-study-member-stats.json",
+  "docs/quality/audits/source_evidence/hist03/adb-drive-tree-depth2.json",
+  "docs/quality/audits/hist01-source-dispositions.json",
+  "converted_datasets/reconversion_v2/swarm_backlog_20261021/adb_official_release_metadata_20261021/zip_metadata.json"
+ ],
+ "decisions": [
+  {
+   "id": "D-HIST-03-1",
+   "task_id": "HIST-03",
+   "question": "Three historical studies have no complete original data outside AddBiomechanics: Falisse (none found), Tan running (only the AddBiomechanics copy), and Tan walking (the authors share only cut-out right-foot stance steps). AddBiomechanics force data turned out to be measured plate forces, not predictions. What should LocoHub do with these three?",
+   "options": [
+    {
+     "key": "A",
+     "label": "Keep all three archived",
+     "consequence": "Pages stay labelled legacy with corrected citations; nothing downloaded; no new adapter. Reversible."
+    },
+    {
+     "key": "B",
+     "label": "Tan walking from the authors' stance steps; archive the other two",
+     "consequence": "About 2 GB; one new adapter; only right-leg stance windows, not full strides or continuous recordings. Reversible."
+    },
+    {
+     "key": "C",
+     "label": "AddBiomechanics for all three",
+     "consequence": "About 22 GB transferred one participant at a time, under 2 GB on disk at once; measured forces. The current adapter writes 4 rows per frame (raw plus 3 passes) and keeps flagged frames: about 15 million rows (rough estimate); output size not estimated. No converter change assumed. Reversible."
+    }
+   ],
+   "options_order": "By data to download: none, about 2 GB, about 22 GB.",
+   "cost_of_waiting": "The three pages stay legacy and unreviewed; the other eight studies can proceed from their originals; no active dataset is affected.",
+   "recommended": "C",
+   "confidence": "medium",
+   "why": "C is the only complete source for all three, and streaming keeps disk use under 2 GB. The premise behind avoiding AddBiomechanics (predicted forces) does not hold, but the rows-and-storage cost remains and the output size is unestimated, and José's note preferred originals over AddBiomechanics, so this needs his fresh choice. A is the low-cost alternative if derivatives are unwanted.",
+   "check": "Open the Tan running Google Drive folder from the HIST-01 record: its title is 'Tan2021_Formatted_No_Arm', an AddBiomechanics export name.",
+   "decide_before_recommendation": true,
+   "status": "open"
+  }
+ ],
+ "rework": {
+  "verifier_report": "docs/maintainers/handoffs/HIST-03-verify.json (back_to_worker)",
+  "F1_extra_rows": "Audit grf_premise.likely_source_of_extra_rows and the handoff now attribute legacy rows to the cc94be4 and _archive converters (one row per frame from processingPasses[1]; cc94be4 70 kg fallback at line 287; _archive uses getMassKg() without a fallback, lines 272-278). The 1+P expansion is recorded separately as current-adapter behaviour (current_converter_rows). Pass-index side finding added (legacy_pass_index_note).",
+  "F2_option_C_output": "Option C consequence now states the current adapter's 1+P rows per frame (about 15 million rows, estimate), that output size is not estimated, and that no converter change is assumed. Detail in audit option_c_output_estimate.",
+  "F3_why": "'why' no longer claims C matches José's answer; decide_before_recommendation set to true.",
+  "F4_tan_readme": "ta22 limitation reworded: the README names AddBiomechanics as the route to the full data, not the source of the SimTK windows."
+ }
+}

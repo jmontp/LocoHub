@@ -1,0 +1,19 @@
+{
+ "task_id": "GT21-RB06",
+ "verifier": "independent agent (did not write the work)",
+ "verdict": "done",
+ "scientific_approval": false,
+ "checked_at": "2026-11-25",
+ "checks": {
+  "1_copy": "Read-only probe, own code, reading gcLeft/gcRight one recording at a time (pre-existing gt21_numeric_source reader only; no RB06 code imported). Seed 20261212 sample of 8 treadmill recordings in 8 participants: ToeOff and Header identical left vs right, HeelStrike differs in all 8. Full scan: 157 of 157 treadmill recordings identical, 0 of 2,990 non-treadmill recordings identical, 0 read errors. Peak RSS 71 MiB, prlimit 600 MiB, nice 19.",
+  "2_receipts": "52 receipts (22 seg, 22 export, 2 pilots, 6 readback). Every spec binds identical code hashes per file across pilots and batches; the five RB06 code files on disk match the handoff hashes. All receipts clean_success, no launcher/finalisation errors, no orphans, bindings before equal after, no missing outputs, except c4 (failed, exit 1, readback.json missing, no gt21_rb06_readback_c4 directory exists). c1,c2,c3,c5,c6 readback.json status passed with zero failures, and their subjects (3+7+7+2+3) cover all 22 participants once. Stray-output check: only expected RB06 roots exist. The deleted refused c5 receipt cannot be inspected; the only c5 receipt is one completed run (04:36-04:40 UTC) with output, and no extra output roots exist, so nothing found hiding a run (a refusal means no launch).",
+  "3_nothing_else_moved": "Seed 20261212: 6 non-treadmill phase observations bit-identical old vs new in every column. 4 treadmill observations: right-reference ones identical in every column; left-reference ones differ only in task_info stance fields (stance_samples, force_missing_stance_samples, force_missing_stance_fraction), no force value changes in these two. Full streamed compare r2 vs r1 of all 12,247,050 phase rows and 14,415,683 time rows: differing numeric columns are only left-foot grf (vertical, anterior, lateral; phase ipsi in left-reference and contra in right-reference observations, time *_left_*), treadmill only, zero unexpected differences. 44 phase observations and 79 continuous recordings have changed force values (handoff says 91 continuous; the 79 vs 91 gap is not explained, likely recordings counted for flag-only changes; no effect on the verdict). RB03: all 2,990 non-treadmill mask layers identical; treadmill layers have identical time and right mask; new left mask has no true values in any treadmill layer; 86,795 + 20,572 steps compared, all steps that are not left treadmill identical.",
+  "4_counts": "Observations 84,793 = 81,647 phase + 3,146 continuous, same observation ids in same order in r1 and r2; exclusions.jsonl byte-identical in all 22 participants.",
+  "5_tests": "43 passed (tests/test_gt21_rb_segment.py, tests/test_gt21_rb_export.py). build_backlog_page.py --check: valid, HTML current."
+ },
+ "observations_for_record": [
+  "Observation metadata changes only for treadmill: flags (22 observations lose incomplete_stance_force) and force_missing_stance_fraction (18,667, now null for left treadmill).",
+  "Verifier probe scripts were temporary files outside the repo; nothing under converted_datasets or source folders was written; nothing left running."
+ ],
+ "decision": "The gt21_rb06_export_<ID>_r2 exports replace gt21_rb05_export_<ID>_r1 as the current RB05 export; r1 is superseded (kept on disk). Left treadmill stance and left-foot treadmill force are marked unavailable at source; scientific approval of the dataset is not conferred."
+}

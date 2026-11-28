@@ -1,0 +1,301 @@
+{
+ "task": "SIGN-SURVEY",
+ "generated": "2026-10-30",
+ "scientific_approval": false,
+ "question": "Source sagittal sign conventions of UM21 and GT21/GT23/GT24; gait2392 (knee flexion -) vs Rajagopal (knee flexion +) vs clinical.",
+ "method": "Read-only: existing audits, shipped .osim ranges (regex), publisher READMEs, local paper text/page image, and bounded numerical slices (GT23 AB01 normal_walk_1 first 60 s CSV; GT21 AB06 treadmill_07_01 ik/id/fp via gt21_numeric_source reader; GT24 BT01 normal_walk_1 zip prefix ~2.5 MB per file). One worker, nice 19/ionice idle, nothing written under converted_datasets. Scripts in session scratchpad, not committed.",
+ "datasets": {
+  "UM21": {
+   "verdict": "clinical/Vicon: hip flexion +, knee flexion +, ankle dorsiflexion +, pelvis anterior tilt +; internal moments. Not OpenSim.",
+   "model": "Vicon Plug-in Gait (Nexus; exact version not stated)",
+   "signals": {
+    "hip_flexion_angle": {
+     "source_sign": "flexion positive",
+     "tool": "Vicon Plug-in Gait (Nexus; exact version not stated)",
+     "evidence": [
+      "Reznick 2021 Methods 'Motion capture': 'ankle dorsiflexion, knee flexion, and hip flexion are defined in the positive directions' (doi:10.1038/s41597-021-01057-9)",
+      "Vicon Nexus 2.16 PiG kinematic variables: positive hip = knee in front of body",
+      "um21-c03-conventions.json: marker-derived hip angle best matches source comp 1 sign +1 in 16/16 legs (8 recordings, 2 seeds); UM21-C01 verifier"
+     ],
+     "evidence_strength": "1 paper quote + vendor doc + numerical (marker comparison, not event-based)",
+     "status": "checked"
+    },
+    "knee_flexion_angle": {
+     "source_sign": "flexion positive",
+     "tool": "Vicon Plug-in Gait (Nexus; exact version not stated)",
+     "evidence": [
+      "Reznick 2021 same quote",
+      "Vicon doc: positive knee = flexed",
+      "um21-c03: marker knee angle matches comp 1 sign +1 under 'clinical' option, 16/16 legs"
+     ],
+     "evidence_strength": "paper quote + vendor doc + numerical",
+     "status": "checked"
+    },
+    "ankle_dorsiflexion_angle": {
+     "source_sign": "dorsiflexion positive",
+     "tool": "Vicon Plug-in Gait (Nexus; exact version not stated)",
+     "evidence": [
+      "Reznick 2021 same quote",
+      "Vicon doc: positive ankle = dorsiflexion",
+      "um21-c03: marker ankle 16/16 legs; ankle zero includes unpublished static offsets; AB07/i10 and AB08/i0 have ankle branch jumps (about -170 deg)"
+     ],
+     "evidence_strength": "paper quote + vendor doc + numerical",
+     "status": "checked"
+    },
+    "pelvis_anterior_tilt": {
+     "source_sign": "anterior tilt positive (PSIS above ASIS = +). Absolute (lab) angle, not relative.",
+     "tool": "Vicon Plug-in Gait (Nexus; exact version not stated)",
+     "evidence": [
+      "Vicon doc: positive pelvic tilt = PSIS higher than ASIS",
+      "um21-c01 probe P1: source comp 1 minus marker tilt median within 0.1 deg in 5 author + 5 verifier trials",
+      "README p.6: pelvis/foot angles absolute"
+     ],
+     "evidence_strength": "vendor doc + numerical (strong)",
+     "status": "checked"
+    },
+    "hip_moment": {
+     "source_sign": "flexor positive; INTERNAL; N*m/kg",
+     "tool": "Vicon Plug-in Gait (Nexus; exact version not stated)",
+     "evidence": [
+      "README p.3 (R01 Dataset README.pdf): moments 'Corrected to reflect the internal moment', N*m/kg",
+      "Reznick quote gives flexion-positive",
+      "um21-c03: lever-arm moments agree only 8/16 legs for hip (weak; ignores inertia); um21-c01: hip/knee moment sign has no independent physical check"
+     ],
+     "evidence_strength": "README quote (internal, units); sign from paper quote; numerical weak",
+     "status": "partly_verified"
+    },
+    "knee_moment": {
+     "source_sign": "flexion positive (flexor +); INTERNAL; N*m/kg",
+     "tool": "Vicon Plug-in Gait (Nexus; exact version not stated)",
+     "evidence": [
+      "Same README/paper quotes",
+      "um21-c03 lever-arm: 15/16 legs match clinical sign"
+     ],
+     "evidence_strength": "README + paper quote + moderate numerical",
+     "status": "partly_verified"
+    },
+    "ankle_moment": {
+     "source_sign": "dorsiflexor positive (plantarflexor negative); INTERNAL; N*m/kg",
+     "tool": "Vicon Plug-in Gait (Nexus; exact version not stated)",
+     "evidence": [
+      "um21-c01 P3: ankle moment c1 1st pct -1.15 to -1.90 N*m/kg in every leg; own-plate stance means -0.68 to -0.82 in 10/10 verifier legs: plantarflexor stance moment negative, consistent with internal + DF positive",
+      "um21-c03 lever-arm 14/16 legs"
+     ],
+     "evidence_strength": "numerical (event-based, strong) + README",
+     "status": "checked"
+    }
+   },
+   "caveats": [
+    "Power sign in source is opposite to internal moment x velocity (layout 1) and differs by recording (layout 2); not a sagittal angle/moment issue.",
+    "Segment (thigh/shank) angles are derived locally and are not source signals.",
+    "UM21 statuses are proposals; scientific_approval false in the audits."
+   ]
+  },
+  "GT21": {
+   "verdict": "closer to OpenSim gait2392: hip flexion +, knee flexion NEGATIVE, ankle dorsiflexion +, internal OpenSim ID moments. Pelvis tilt coordinate is not a clean sagittal tilt.",
+   "model": "OpenSim, subject-scaled gait2392-family model (shipped AB06.osim etc.: 23 DOF, lumbar_extension, mtp, 'Delp ... Thelen' credits). Not Rajagopal.",
+   "signals": {
+    "hip_flexion_angle": {
+     "source_sign": "flexion positive (OpenSim hip_flexion_r/l, ik)",
+     "tool": "OpenSim IK, gait2392 family",
+     "evidence": "model file hip_flexion range -2.094..2.094 rad (symmetric; does not itself fix sign); bounded numeric AB06 treadmill_07_01 (read-only, one trial): hip +27 deg at stance start, -18 deg late stance; p1/p99 -26/+34 deg",
+     "evidence_strength": "numerical (event-based) + model family",
+     "status": "checked"
+    },
+    "knee_flexion_angle": {
+     "source_sign": "flexion NEGATIVE (knee_angle range -2.094..0.175 rad)",
+     "tool": "OpenSim IK, gait2392 family",
+     "evidence": "shipped AB06.osim knee_angle_r range [-2.0943951, 0.17453293] rad; numerical AB06 treadmill_07_01: median swing minimum -68.8 deg, p1 -69.7 deg; adapter negates ('Gtech dataset has inverted knee flexion', convert_gtech_2021_phase_to_parquet.m lines 7, 1117)",
+     "evidence_strength": "model file + numerical (event-based, strong)",
+     "status": "checked"
+    },
+    "ankle_dorsiflexion_angle": {
+     "source_sign": "dorsiflexion positive",
+     "tool": "OpenSim IK, gait2392 family",
+     "evidence": "numerical: stance angle +5 to +18 deg through stance, swing median min -9 deg, p99 +24 (ik, not ik_offset); model range symmetric so no sign from file; no author statement",
+     "evidence_strength": "numerical (single trial; weaker, no toe-off PF event isolated)",
+     "status": "checked"
+    },
+    "pelvis_anterior_tilt": {
+     "source_sign": "pelvis_tilt coordinate: axis +Z (derived: positive = posterior tilt, front up) but NOT a sagittal tilt here because model heading about 90 deg (faces lab -Z)",
+     "tool": "OpenSim IK, gait2392 family",
+     "evidence": "ground_pelvis rotation1 axis (0 0 1) in AB06.osim, right-hand rule with x forward, y up -> + is nose up; gt21-c01-conventions.json: pelvis_rotation median ~90 deg, no source-derived tilt validates at stride level (r 0.03-0.71)",
+     "evidence_strength": "model axis derivation (inference) + prior audit; numeric sign NOT checked",
+     "status": "not_checked"
+    },
+    "hip_moment": {
+     "source_sign": "flexor positive on hip_flexion coordinate; INTERNAL (OpenSim ID); absolute N*m in source (divided by mass in adapter)",
+     "tool": "OpenSim inverse dynamics",
+     "evidence": "numerical AB06: stance-decile means -82 (early) to +35 (late) N*m: extensor early, flexor late. Camargo 2021 sec 2.1 says OpenSim ID used; no explicit sign statement; internal-vs-external is OpenSim-ID default, not quoted",
+     "evidence_strength": "numerical event-based + tool default",
+     "status": "checked"
+    },
+    "knee_moment": {
+     "source_sign": "coordinate-direction = extension positive (knee_angle flexion negative); source sign inverse of flexion; adapter negates",
+     "tool": "OpenSim inverse dynamics",
+     "evidence": "adapter negates ('Always flip knee moment'); numerical AB06 stance deciles +7 (10-20%) to -50 (60-80%): not diagnostic of sign (no clean extensor event in bounded slice)",
+     "evidence_strength": "inference from coordinate; numeric inconclusive",
+     "status": "not_checked"
+    },
+    "ankle_moment": {
+     "source_sign": "dorsiflexor positive (plantarflexor negative); INTERNAL",
+     "tool": "OpenSim inverse dynamics",
+     "evidence": "numerical AB06: stance-decile mean grows to -149 N*m at 70-80% stance (push-off): plantarflexor negative",
+     "evidence_strength": "numerical event-based",
+     "status": "checked"
+    }
+   },
+   "caveats": [
+    "Camargo 2021 (doi:10.1016/j.jbiomech.2021.110320) Sec 2.1 p.3 says only: tools from OpenSim determine 'joint angles and moments in the sagittal, frontal, and transverse planes'; it has no sign statement. README lists no signs.",
+    "Which gait2392 variant: file credits say Gait 2392/2354 family; exact base-model name not stated by authors.",
+    "Moments in source are N*m (not per kg) from my magnitudes; mass unit issue tracked in GT21-A02/S01."
+   ]
+  },
+  "GT23": {
+   "verdict": "closer to OpenSim gait2392: hip flexion +, knee flexion NEGATIVE, ankle dorsiflexion + in source; no pelvis in Joint_Angle.csv.",
+   "model": "OpenSim, subject-scaled gait2392 (shipped AB01-Scaled1.osim; credits 'Gait 2392 and 2354 Models'; OpenSim 3.3 per README line 41; paper ref 40 cites Gait 2392/2354). Not Rajagopal.",
+   "signals": {
+    "hip_flexion_angle": {
+     "source_sign": "flexion positive",
+     "tool": "OpenSim IK gait2392",
+     "evidence": "author code Plot_3x3_plots.m lines 155-160: 'flip hip and ankle for angle and moment since OpenSim defines them differently' (hip negated for plots where paper says 'hip extension is positive'); numerical AB01 normal_walk_1 first 60 s: hip p1 -10.6 / p99 +23.2 deg",
+     "evidence_strength": "author code + paper (Sci Data 2023, doi:10.1038/s41597-023-02840-6, Fig. 5 caption) + numerical",
+     "status": "checked"
+    },
+    "knee_flexion_angle": {
+     "source_sign": "flexion NEGATIVE (extension positive)",
+     "tool": "OpenSim IK gait2392",
+     "evidence": "same code leaves knee unchanged; Fig. 5 caption 'knee extension is positive'; model knee_angle range [-2.094, 0.175]; numerical: knee p1 -63.9, swing median min -60.9 deg (AB01 normal_walk_1, 46 swings)",
+     "evidence_strength": "author code + paper + model file + numerical (strong)",
+     "status": "checked"
+    },
+    "ankle_dorsiflexion_angle": {
+     "source_sign": "dorsiflexion positive",
+     "tool": "OpenSim IK gait2392",
+     "evidence": "Fig. 5 caption 'ankle plantarflexion is positive' but code negates ankle, so source is DF positive; numerical: ankle swing median min -16.7 deg (toe-off PF), p99 +11",
+     "evidence_strength": "author code + paper + numerical (strong)",
+     "status": "checked"
+    },
+    "pelvis_anterior_tilt": {
+     "source_sign": "NOT in Joint_Angle.csv. Pelvis only via locally generated Link_Angle.csv (YZX Euler of rotation matrices, plus +pi/2 offset); sign unassessed",
+     "tool": "none published",
+     "evidence": "gt23-joint-sign-and-segment-evidence.json: Link_Angle is local, not publisher archive member; anatomical_mapping_unassessed",
+     "evidence_strength": "not available / not checked",
+     "status": "not_checked"
+    },
+    "hip_moment": {
+     "source_sign": "flexor positive (hip_flexion coordinate); INTERNAL OpenSim ID; raw values behave like N*m/kg despite README 'Nm'",
+     "tool": "OpenSim inverse dynamics",
+     "evidence": "author code negates hip moment for plots; numerical left leg: early stance mean -0.43, late +0.30 (47 stances): extensor early, flexor late",
+     "evidence_strength": "author code + numerical",
+     "status": "checked"
+    },
+    "knee_moment": {
+     "source_sign": "extension positive on knee_angle coordinate (code leaves unchanged; paper 'knee extension is positive'); INTERNAL",
+     "tool": "OpenSim inverse dynamics",
+     "evidence": "author code + paper; numerical bounded slice inconclusive (early stance -0.26 then ~0)",
+     "evidence_strength": "author code + paper; numerical inconclusive",
+     "status": "partly_verified"
+    },
+    "ankle_moment": {
+     "source_sign": "dorsiflexor positive (plantarflexor negative); INTERNAL",
+     "tool": "OpenSim inverse dynamics",
+     "evidence": "code negates ankle moment for plots; numerical left leg: late-stance mean -0.87, negative in 47/47 stances; stance min -1.83",
+     "evidence_strength": "author code + numerical (strong)",
+     "status": "checked"
+    }
+   },
+   "caveats": [
+    "Normalization conflict: publisher README says Joint_Moments.csv is Nm; my AB01 numbers (ankle about -1.6 to -1.8) look mass-normalized (peak PF for 79 kg would be near -100 Nm). The audit gt23-publisher-units-and-mass-review.json concluded raw is Nm and converters mislabel Nm_kg. Not resolved here; needs a native check against a known mass.",
+    "Right-leg treadmill moments are NaN (broken plate per README).",
+    "Integer note: scale uncertainty affects none of the signs."
+   ]
+  },
+  "GT24": {
+   "verdict": "data closer to OpenSim gait2392 (hip flexion +, knee flexion negative, ankle DF + by my numerical check) BUT the publisher README states 'ankle plantarflexion is positive'; the two conflict and need Jos\u00e9/author resolution.",
+   "model": "OpenSim, subject-specific scaled gait2354 per Molinaro 2024 Supplement p.3 (printed), Data Processing & Biomechanical Modeling (doi:10.1038/s41586-024-08157-7). No .osim inspected in this survey (models are inside Complete zips; not extracted).",
+   "signals": {
+    "hip_flexion_angle": {
+     "source_sign": "flexion positive",
+     "tool": "OpenSim IK gait2354",
+     "evidence": "README lines 90-91: 'Hip flexion, knee extension, and ankle plantarflexion is positive' (doi:10.35090/gatech/75759); numerical BT01 normal_walk_1 Joint_Angles_Filt first 57 s: hip p1 -13, p99 +26 deg",
+     "evidence_strength": "README quote + numerical",
+     "status": "checked"
+    },
+    "knee_flexion_angle": {
+     "source_sign": "flexion NEGATIVE (extension positive)",
+     "tool": "OpenSim IK gait2354",
+     "evidence": "README quote 'knee extension is positive'; numerical: left swing median min -60 deg, p1 -64 (right p1 -92, 34 swings)",
+     "evidence_strength": "README quote + numerical (strong)",
+     "status": "checked"
+    },
+    "ankle_dorsiflexion_angle": {
+     "source_sign": "README says plantarflexion positive; my numeric check shows DORSIFLEXION positive (conflict)",
+     "tool": "OpenSim IK gait2354",
+     "evidence": "BT01 normal_walk_1: ankle p1 -16.9 / p99 +9.4 deg (L), -22.1/+9.6 (R); left swing range -16 to -3.4 deg (toe-off PF appears as negative). Human walking has larger PF (about 15-20) than DF (about 10) peak, so negative = PF. Prior audits gt24-ankle-evidence-ranking/convention-review rely on the README and propose negation; that would flip data that appear already DF-positive",
+     "evidence_strength": "README (PF+) vs numerical (DF+): CONFLICT, unresolved",
+     "status": "conflict"
+    },
+    "pelvis_anterior_tilt": {
+     "source_sign": "not in Joint_Angles(_Filt).csv (12 columns: hip, knee, ankle, subtalar both sides)",
+     "tool": "none",
+     "evidence": "header read of BT01 Joint_Angles_Filt.csv",
+     "evidence_strength": "not available",
+     "status": "not_checked"
+    },
+    "hip_moment": {
+     "source_sign": "flexor positive on hip_flexion coordinate; net (Joint_Moments_Filt) and bio (Bio_Joint_Moments); Nm/kg per README, denominator unverified",
+     "tool": "OpenSim ID",
+     "evidence": "numerical BT01 left: early stance -0.28, late +0.15 (34 stances): extensor early, flexor late; internal-vs-external not quoted",
+     "evidence_strength": "numerical event-based; README units",
+     "status": "checked"
+    },
+    "knee_moment": {
+     "source_sign": "extension positive on knee_angle coordinate (inferred)",
+     "tool": "OpenSim ID",
+     "evidence": "numerical: stance deciles -0.05..+0.04 early, -0.39 mid-late: not diagnostic",
+     "evidence_strength": "inference; numeric inconclusive",
+     "status": "not_checked"
+    },
+    "ankle_moment": {
+     "source_sign": "plantarflexor NEGATIVE (peak -1.26 Nm/kg in late stance, left) i.e. DF-positive coordinate, matches angle observation, contradicts README PF+",
+     "tool": "OpenSim ID",
+     "evidence": "BT01 normal_walk_1 left: stance decile means fall to -1.26 at 70-80%; p1 -1.48",
+     "evidence_strength": "numerical event-based (strong) vs README PF+: CONFLICT",
+     "status": "conflict"
+    }
+   },
+   "caveats": [
+    "Only one subject (BT01), one trial (normal_walk_1, exo on, speed 0.6), first 5-10 percent of file via zip prefix read; right-leg moments NaN.",
+    "Exo coordinates: extension positive, flexion negative (README line 92-93); not a biological signal.",
+    "Unverified: whether Joint_Angles_Filt ankle is sign-flipped relative to the README intent; ask authors (Molinaro/Inan lab)."
+   ]
+  }
+ },
+ "reference_models": {
+  "model": "contributor_tools/conversion_scripts/Gait120/rajagopal_gait120.osim (Rajagopal2016, doi:10.1109/TBME.2016.2586891): knee_angle_r 0..2.094 (flexion +), hip_flexion_r -0.524..2.094, ankle_angle_r -0.698..0.524, pelvis_tilt axis (0 0 1) as gait2392",
+  "gait2392_reference": "gait2392/2354: knee_angle range -2.094..0.175 (flexion -); matches shipped GT21/GT23 models. https://opensimconfluence.atlassian.net/wiki/spaces/OpenSim/pages/53086215/Gait%2B2392%2Band%2B2354%2BModels"
+ },
+ "headline": {
+  "gait2392_group": [
+   "GT21",
+   "GT23",
+   "GT24 (data)"
+  ],
+  "clinical_vicon_group": [
+   "UM21"
+  ],
+  "rajagopal": "none of the four sources use Rajagopal sign (knee flexion +) natively; UM21 matches it only by coincidence of the clinical convention",
+  "open_issues": [
+   "GT24 ankle sign: README PF+ vs data DF+ (new, from this survey)",
+   "GT23 moment normalization: README Nm vs magnitudes that look per-kg",
+   "GT21 pelvis_tilt not sagittal (heading ~90 deg)",
+   "knee moment sign numerically undetermined in all three GT sets from bounded slices"
+  ]
+ },
+ "limitations": [
+  "Single-trial numeric checks; sign of knee moment inconclusive",
+  "Rajagopal pelvis sign not numerically tested; derived from axis only",
+  "Camargo 2021 page 3 read as image; no sign statement exists in it"
+ ]
+}

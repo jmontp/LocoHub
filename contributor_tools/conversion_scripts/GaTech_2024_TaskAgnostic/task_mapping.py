@@ -47,9 +47,9 @@ FULL_TASK_MAPPING: Dict[str, Tuple[str, str, Dict]] = {
     r'step_ups.*_right': ('stair_ascent', 'step_up_right', {'surface': 'platform', 'leading_leg': 'right'}),
 
     # Backward walking
-    r'walk_backward.*_0-6': ('backward_walking', 'backward_0.6ms', {'speed_m_s': 0.6, 'surface': 'treadmill'}),
-    r'walk_backward.*_0-8': ('backward_walking', 'backward_0.8ms', {'speed_m_s': 0.8, 'surface': 'treadmill'}),
-    r'walk_backward.*_1-0': ('backward_walking', 'backward_1.0ms', {'speed_m_s': 1.0, 'surface': 'treadmill'}),
+    r'walk_backward.*_0-6': ('walk_backward', 'backward_0.6ms', {'speed_m_s': 0.6, 'surface': 'treadmill'}),
+    r'walk_backward.*_0-8': ('walk_backward', 'backward_0.8ms', {'speed_m_s': 0.8, 'surface': 'treadmill'}),
+    r'walk_backward.*_1-0': ('walk_backward', 'backward_1.0ms', {'speed_m_s': 1.0, 'surface': 'treadmill'}),
 
     # Weighted walking
     r'weighted_walk.*_25lbs': ('level_walking', 'weighted_25lbs', {'speed_m_s': 1.0, 'surface': 'treadmill', 'weight_lbs': 25}),
@@ -98,12 +98,12 @@ FULL_TASK_MAPPING: Dict[str, Tuple[str, str, Dict]] = {
     # Other activities
     r'side_shuffle': ('level_walking', 'side_shuffle', {'gait_type': 'side_shuffle'}),
     r'tire_run': ('level_walking', 'tire_run', {'gait_type': 'tire_run'}),
-    r'ball_toss': ('functional', 'ball_toss', {'activity': 'ball_toss'}),
-    r'lift_weight': ('functional', 'lift_weight', {'activity': 'lifting'}),
-    r'poses': ('standing', 'poses', {'activity': 'static_poses'}),
-    r'push': ('functional', 'push', {'activity': 'push_pull'}),
-    r'tug_of_war': ('functional', 'tug_of_war', {'activity': 'push_pull'}),
-    r'twister': ('functional', 'twister', {'activity': 'twister'}),
+    r'ball_toss': ('load_handling', 'ball_toss', {'activity': 'ball_toss'}),
+    r'lift_weight': ('load_handling', 'lift_weight', {'activity': 'lifting'}),
+    r'poses': ('balance_pose', 'poses', {'activity': 'static_poses'}),
+    r'push': ('perturbation', 'push', {'activity': 'push_pull'}),
+    r'tug_of_war': ('perturbation', 'tug_of_war', {'activity': 'push_pull'}),
+    r'twister': ('functional_task', 'twister', {'activity': 'twister'}),
 }
 
 # Activities that should be skipped (non-cyclic or special)

@@ -65,7 +65,7 @@ The conversion script (`convert_umich_2024_phase_to_parquet.py`) processes `data
 
 1. Resamples from 101 to 150 points per cycle
 2. Converts angles from degrees to radians
-3. Inverts torque sign (extension positive → flexion positive)
+3. Inverts torque sign (extension positive → flexion positive; consistent with the current [sign rule](../../../docs/reference/index.html#signs-and-frames), knee flexor moment +)
 4. Maps tasks to standardized names:
    - LL → squat
    - LW → level_walking

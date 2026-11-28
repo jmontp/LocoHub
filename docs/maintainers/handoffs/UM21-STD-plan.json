@@ -1,0 +1,3806 @@
+{
+ "task_id": "UM21-S02",
+ "part": "plan (UM21-STD-plan)",
+ "status": "plan_ready_for_review",
+ "scientific_approval": false,
+ "last_checked_at_utc": "2026-11-23T22:00:00Z",
+ "scope": "Plan only. No conversion, no guarded job, nothing written under converted_datasets/ or source folders. Read-only probes on three recordings (one at a time).",
+ "summary": "The bundle um21_r01_review_v2 (44 recordings, 1,131,750 rows) follows neither new rule. Joint angles are Vicon values with Vicon zero; thigh/shank are hip-minus-pelvis recipes; no foot angle; no centre of pressure and no ground force. The source Streaming.mat has what is needed: 18 lower-body and pelvis markers at 100 Hz (ASIS, PSIS, GT, knee lateral/medial, ankle lateral/medial, heel, toe, both sides) and per-leg plate force and centre of pressure at 1000 Hz. It does NOT give the plate position in the lab frame, so the centre of pressure needs a fitted registration; that is the one real risk. Plan: one new runner computes segment angles from markers, derives joint angles as differences, and converts the centre of pressure to the foot frame per stride, then Q01 and R01 are re-run for a v3 bundle. About 8 guarded jobs.",
+ "bundle_inventory": {
+  "root": "converted_datasets/reconversion_v2/um21_r01_review_v2",
+  "columns_present": [
+   "pelvis_sagittal_angle_rad",
+   "hip_flexion_angle_ipsi_rad",
+   "knee_flexion_angle_ipsi_rad",
+   "ankle_dorsiflexion_angle_ipsi_rad",
+   "thigh_sagittal_angle_ipsi_rad",
+   "shank_sagittal_angle_ipsi_rad",
+   "pelvis_sagittal_velocity_rad_s",
+   "thigh_sagittal_velocity_ipsi_rad_s",
+   "shank_sagittal_velocity_ipsi_rad_s",
+   "hip/knee/ankle moments (Nm_kg)",
+   "hip/knee/ankle power (W_kg, held)",
+   "quality_status",
+   "failed_limits",
+   "held_signals",
+   "ankle_reexpressed",
+   "lineage_id",
+   "assessment_id"
+  ],
+  "absent": [
+   "foot_sagittal_angle_ipsi_rad",
+   "foot velocity",
+   "cop_anterior/vertical/lateral_ipsi_m",
+   "grf_*"
+  ],
+  "evidence": "pyarrow schema read of full.parquet (metadata only); runner COLUMNS and NOT_RELEASED in contributor_tools/run_um21_r01_bundle.py"
+ },
+ "columns_changed_by_the_rules": {
+  "value_changes": {
+   "hip_flexion_angle_ipsi_rad": "becomes thigh - pelvis from markers (was Vicon hip, Vicon zero)",
+   "knee_flexion_angle_ipsi_rad": "becomes thigh - shank from markers (was Vicon knee)",
+   "ankle_dorsiflexion_angle_ipsi_rad": "becomes foot - shank from markers (was Vicon ankle with unpublished static offset; status offset_unverified goes away). The Euler alternate-branch re-expression of the AB07/i10 right ankle is no longer needed.",
+   "thigh_sagittal_angle_ipsi_rad": "absolute from markers, zero straight down (was hip - pelvis planar recipe)",
+   "shank_sagittal_angle_ipsi_rad": "absolute from markers, zero straight down (was thigh - knee)",
+   "thigh_sagittal_velocity_ipsi_rad_s, shank_sagittal_velocity_ipsi_rad_s": "follow the new angles; same derivative method as before (sa.derive_angular_velocities)"
+  },
+  "new_columns": {
+   "foot_sagittal_angle_ipsi_rad": "heel-to-toe line from forward horizontal; previously withheld because of the ankle zero offset",
+   "foot_sagittal_velocity_ipsi_rad_s": "derivative of the foot angle",
+   "cop_anterior_ipsi_m, cop_vertical_ipsi_m, cop_lateral_ipsi_m": "centre of pressure in the foot frame (origin 100 mm forward of the ankle centre along heel-to-toe)"
+  },
+  "kept_with_a_check": {
+   "pelvis_sagittal_angle_rad": "Vicon pelvis already equals the marker PSIS-to-ASIS angle from forward horizontal with anterior tilt negative (probe: published + marker tilt median 0.01 deg on AB06/i5, -0.05 deg on AB08/d10; C03: 0.03-0.14 deg over 16 legs). Keep the source values; the job re-checks against markers on every stride."
+  },
+  "unchanged": [
+   "moments",
+   "powers (still held where the sign layout is unsettled)",
+   "identity, phase, lineage columns"
+  ],
+  "must_be_rerun": [
+   "quality_status, failed_limits, assessment_id (Q01 re-assessment on the new angles; coarse limits unchanged, foot angle gets the same L2 only)",
+   "exclusions.csv (jump and limit strides were judged on the Vicon ankle)",
+   "ankle_reexpressed column and ankle_reexpression_log.csv (retired)",
+   "README, manifest, dataset page text ('ankle zero offset unverified')"
+  ]
+ },
+ "source_check": {
+  "location": "contributor_tools/conversion_scripts/Umich_2021/Streaming.mat (2.2 GB, HDF5), path Streaming/<AB##>/Tread/<cond>; sha256 bound by the T04/R01 receipts",
+  "markers": "4 x N at 100 Hz (x,y,z m, 4th row = camera-visible flag): L/R ASI, PSI, GT, KNE, KNEM, ANK, ANKM, HEE, TOE, plus TIB, THI, 1M, 5M, IC, L1M, L5M. Sufficient for pelvis, thigh, shank, foot, ankle centre. No hip joint centre and no ankle joint centre channel; both must be derived.",
+  "forceplates": "Force, Moment, CoP as 3 x 10N at 1000 Hz per leg. CoP is in millimetres (README says metres; values -388..353 on the long axis), vertical CoP is exactly 0, unloaded samples are exact 0 (zero fill, must become missing), plate vertical force is negative (force on the plate; ground force on the person is its negative).",
+  "plate_frame_in_lab": "Not given. Plate long axis flips between trials (probe slope of ankle forward position versus CoP long axis: +0.0014 to +0.0016 in AB06/i5 and AB03/i10, -0.0010 in AB08/d10), the frame is tilted with the belt slope (C03), and the plate origin relative to the marker frame is absent. C03 fitted a per-plate shift against Vicon moments: forward 0.6 to 6.2 cm, up -21 to +6 cm across 16 legs.",
+  "existing_evidence": [
+   "UM21-C01 (markers and plates read; pelvis tilt, thigh/shank recipes, plate units and axis flips)",
+   "UM21-C03 (angle census: exact zero fill in 241 of 500 angle channels, ankle alternate branch AB07/i10 R, plate registration)",
+   "UM21-P01 (AB04/i0 is the only reversed-heading recording; forward axis from PSIS-to-ASIS)",
+   "UM21-C02 (pelvis fields)",
+   "UM21-T02/T03/T04 (stride windows and observation ids)",
+   "UM21-X01 is ready and unstarted; this plan covers only the treadmill columns the rules change"
+  ],
+  "probes": [
+   {
+    "name": "structure listing AB06/i5",
+    "peak_rss_kb": 40928,
+    "reads": "HDF5 metadata only"
+   },
+   {
+    "name": "marker/plate check AB06/i5",
+    "peak_rss_kb": 76752,
+    "script": "contributor_tools/audit_probes/2026_11_23/probe_um21_std_plan_source_check.py"
+   },
+   {
+    "name": "marker/plate check AB08/d10",
+    "peak_rss_kb": 76424
+   },
+   {
+    "name": "marker/plate check AB03/i10",
+    "peak_rss_kb": 78292
+   }
+  ],
+  "probe_rules_followed": "flock /tmp/locohub-probe.lock, nice 19, ionice idle, /usr/bin/time -v, RLIMIT_AS 1 GiB, one recording at a time, nothing written under converted_datasets/ or source folders. Memory before probes: Linux available about 8.6 GB, Windows free about 8.3 GB. No process left running. (One probe call earlier failed on an argument typo and one on a missing import; no data effect.)",
+  "marker_coverage": "AB06/i5: 17 of 18 needed markers 100 % visible, LGT 99.5 %. AB08/d10 all 18 at 100 %. Other recordings not checked; the pilot reports per-marker coverage for every recording.",
+  "probe_numbers_AB06_i5_AB08_d10_AB03_i10": {
+   "pelvis_published_plus_marker_median_deg": [
+    0.01,
+    -0.05,
+    "AB03/i10 not printed"
+   ],
+   "knee_published_minus_marker_median_deg": {
+    "AB06/i5": {
+     "R": -2.6,
+     "L": 4.1
+    }
+   },
+   "ankle_published_minus_marker_median_deg": {
+    "AB06/i5": {
+     "R": 4.7,
+     "L": 6.1
+    },
+    "AB08/d10": {
+     "R": 3.5,
+     "L": 2.1
+    },
+    "AB03/i10": {
+     "R": 6.5,
+     "L": 0.3
+    }
+   },
+   "ankle_published_vs_marker_correlation": {
+    "AB06/i5": {
+     "R": 0.51,
+     "L": 0.96
+    },
+    "AB08/d10": {
+     "R": 0.69,
+     "L": 0.45
+    },
+    "AB03/i10": {
+     "R": 0.98,
+     "L": 1.0
+    }
+   },
+   "note": "The offsets are the size of the change the new zero will make (0.3 to 6.5 deg) and differ by leg and trial, so they are not one constant. The low correlations (0.45-0.69 in three leg-trials) are NOT explained: the Vicon ankle is not defined from the heel-to-toe markers, and the hip centre proxy here was the GT marker. Treat as a not-checked chip until the pilot separates marker dropouts, foot definition and hip-centre choice. Hip difference up to 5 deg in AB06/i5 R comes from using GT as hip centre in the probe.",
+   "foot_marker_angle_p5_p95_deg": "-60 to 19 (R, AB06/i5), toe-off plantarflexion included",
+   "heel_toe_length_m": 0.21,
+   "ankle_to_heel_fwd_m": -0.07,
+   "ankle_to_toe_fwd_m": 0.13,
+   "malleolar_width_m": 0.089
+  }
+ },
+ "computation_and_checks": [
+  {
+   "column": "pelvis, thigh, shank, foot segment angles",
+   "how": "Per recording: forward axis = mean horizontal PSIS-to-ASIS direction (the person's facing; handles AB04/i0), vertical = marker Z (gravity; C01 checked). Pelvis = angle of PSIS-to-ASIS from forward horizontal, counterclockwise. Thigh = angle of hip centre to knee centre from straight down, knee centre = midpoint(KNE, KNEM). Shank = knee centre to ankle centre, ankle centre = midpoint(ANK, ANKM). Foot = HEE to TOE from forward horizontal. Sagittal projection. Hip centre: Davis/Harrington regression from ASIS positions and leg length (ParticipantDetails), the model Vicon used; GT marker kept only as a cross-check. Markers where the visible flag is not 1 are missing; no gap filling; a stride with a missing needed marker gets that column missing and the reason logged. Interpolate to the 150-point inclusive phase grid exactly as T04 (stride frames a..b from the T04 observation maps).",
+   "known_value_check": "Synthetic markers built by construction from chosen segment angles (thigh +30, shank -10, foot +20, pelvis -12 deg; both legs; forward along -X to mimic AB04/i0; a tilted treadmill case) with expected joint angles written down first: hip 42, knee 40, ankle 30 deg. Tests in tests/ labeled synthetic.",
+   "independent_check": "A separate audit script that does not import the runner: rebuilds segment angles with rotation matrices on the pilot/full outputs' source frames and compares stride by stride (max difference below 1e-6 rad). Also compares pelvis with the kept Vicon pelvis (median below 0.2 deg per stride, as C03) and hip/knee/ankle with Vicon after removing the median offset: reported as agreement with the source up to its zero, not as pass/fail of the values. Shape agreement below correlation 0.9 is listed per stride."
+  },
+  {
+   "column": "hip, knee, ankle joint angles",
+   "how": "hip = thigh - pelvis, knee = thigh - shank, ankle = foot - shank, computed from the arrays, never read from Vicon.",
+   "check": "Composition holds to 1e-12 rad in the written table (thigh = pelvis + hip, shank = thigh - knee, foot = shank + ankle); straight standing pose in synthetic gives 0 for knee and ankle."
+  },
+  {
+   "column": "segment velocities (thigh, shank, foot; pelvis unchanged)",
+   "how": "Same derivative method and spacing rule as T04 (stride duration over 149).",
+   "check": "Known-value test: constant-rate synthetic angle returns the rate; the derived velocity integrates back to within the stride's angle change."
+  },
+  {
+   "column": "cop_anterior/vertical/lateral_ipsi_m",
+   "how": "(1) Plate to metres (CoP mm / 1000), CoP zero when plate force is below 20 N (README noise level; one threshold, logged) becomes missing, never zero. (2) Plate frame to lab frame: rotate about the belt tilt (from the task slope, checked against the marker path as C03 did), sign and axis of the long direction fixed per recording from the data (stance-time regression of ankle forward position on CoP axes, as in the probe). (3) Register the plate origin per recording and plate by fitting a forward and an up shift, the C03 method, with the lateral shift from the mean CoP lateral position inside the foot. (4) Express in the foot frame: origin = ankle centre + 0.1 m along heel-to-toe (sagittal projection), forward along heel-to-toe, up perpendicular, lateral outward from that leg (+z right leg, -z left leg). (5) Plate 1000 Hz to the phase grid by linear interpolation on loaded samples only; a phase point is missing if either neighbouring plate sample is unloaded.",
+   "known_value_check": "Synthetic foot at a chosen angle with CoP placed at a known foot-frame point (+0.15 m, -0.08 m, +0.02 m) in the plate frame, with flipped axis, tilted belt, reversed walking direction and left leg: round-trip must return the point to 1e-9 m.",
+   "independent_check": "(a) Endpoint test not used in the fit: in at least 95 % of loaded strides the first loaded CoP lies within 3 cm of the heel marker position along the foot and the last within 3 cm of the toe (tolerances to be set from the pilot, written down before the full run). (b) Hold-out ankle moment: fit on hip and knee only, compare predicted with Vicon ankle moment. (c) Left and right plate assignment: plate stance overlaps the same-side heel strikes. (d) Registration spread: shifts per recording reported; if the independent checks fail the CoP columns are held for that recording (present but missing with a reason), never filled."
+  }
+ ],
+ "pilot": {
+  "recordings": [
+   "AB03/i10 (incline plate forward positive, held power, R ankle offset 6.5 deg)",
+   "AB04/i0 (the one reversed-heading recording)",
+   "AB07/i10 (right ankle stretch where Vicon had alternate-branch frames)",
+   "AB08/d10 (decline: plate long axis flipped, low ankle correlation)",
+   "one clean recording drawn with a recorded seed (20261124) from the other 40"
+  ],
+  "why": "covers each failure the new code must survive: flipped plate axis, tilted belt both ways, reversed heading, former ankle branch, and an unexplained marker-versus-Vicon ankle mismatch.",
+  "bound_code": "runner, audit script, Q01 and R01 runners, T03/T04/Q01 receipts, and the committed pilot record; the full run uses identical bytes."
+ },
+ "job_structure": [
+  "0. Write contributor_tools/run_um21_s02_frame.py (pattern of run_um21_t04_signs.py: plan / run, bound spec, one recording at a time, new output root converted_datasets/reconversion_v2/um21_s02_frame_v1, source hashed before and after) and the audit script contributor_tools/audit_um21_s02_frame.py; synthetic tests first; both reviewed before launch. No data read.",
+  "1. Dry run, then S02 pilot (5 recordings), one guarded job.",
+  "2. Independent audit of the pilot output, one guarded job; stop for review if any check fails.",
+  "3. S02 full (44 recordings, one job; per-recording memory was about 80 MiB in the probe, R01 full peaked 280 MiB with 44 recordings; if a pilot peak exceeds 450 MiB split into 5 two-subject jobs).",
+  "4. Independent audit of the full output, one guarded job.",
+  "5. Q01 v3 assessment: pilot (2 recordings) then full, two guarded jobs, bound to the S02 receipts; coarse limits unchanged, foot angle L2 only, CoP unchecked (no limit).",
+  "6. R01 v3 bundle: pilot then full, two guarded jobs, new root um21_r01_review_v3 (the v2 root is kept and stays labeled legacy-zero), COLUMNS extended, ankle re-expression retired, exclusions re-accounted.",
+  "7. Read-only independent probe of the v3 bundle (counts, composition, CoP missing where unloaded), then regenerate the UMich page text."
+ ],
+ "estimated_guarded_jobs": "8 (pilot, pilot audit, full, full audit, Q01 pilot, Q01 full, R01 pilot, R01 full); up to 12 if the S02 full run is split by subject. Dry runs and read-only probes not counted.",
+ "undefined_in_the_standard": {
+  "agent_decides_and_logs": [
+   "Hip joint centre method (the standard defines the thigh axis but not its proximal end). Plan: Davis/Harrington regression as Vicon used; report the difference to the GT-based thigh.",
+   "Ankle joint centre method. Plan: midpoint of the two malleolus markers (ANK, ANKM), marker radius ignored; logged.",
+   "Foot orientation for the CoP frame is sagittal (planar) versus 3D heel-to-toe direction (toe-out up to about 10 deg moves up to 1.5 cm between forward and sideways). Plan: planar rotation about the sideways axis, sideways axis horizontal.",
+   "Walking direction per recording from the pelvis markers (not the lab axis).",
+   "No marker gap filling and no marker filtering before differencing (velocity method unchanged); a stride with a gap loses that column, not the whole stride.",
+   "CoP when the foot is unloaded: missing, with a 20 N threshold from the source README.",
+   "Foot-line landmarks: heel and toe markers as the heel-to-toe line (the marker heights above the sole are unknown, so the flat-foot angle is marker-defined, not sole-defined)."
+  ],
+  "source_limits_not_standard_gaps": [
+   "No plate position in the lab frame; vertical CoP depends on the unknown marker-to-sole offset (C03 fitted up shifts spread over 27 cm, so the vertical foot-frame coordinate is the weakest value)."
+  ],
+  "true_gap_for_jose": "None blocks the plan. The standard answers the zero and the CoP frame. One scientific call will be needed after the pilot, not before: whether a centre of pressure whose plate registration was fitted (not measured) may be published, and which pilot tolerance counts as verified. A decision will be drafted from pilot evidence; nothing is queued now (one decision, D-GT23-C05-3, is open for another dataset)."
+ },
+ "not_done": [
+  "No conversion or guarded job; no runner written.",
+  "Plate registration accuracy not measured in this plan.",
+  "Marker coverage only checked on two recordings.",
+  "Cause of the low Vicon-versus-marker ankle correlations not found."
+ ],
+ "changed_files": [
+  "docs/maintainers/handoffs/UM21-STD-plan.json",
+  "contributor_tools/audit_probes/2026_11_23/probe_um21_std_plan_source_check.py",
+  "docs/maintainers/backlog.json",
+  "docs/maintainers/backlog.html"
+ ],
+ "next_action": "Launch the v3 pilot (spec docs/quality/audits/um21-s02-pilot-spec-v3.json, unlaunched) when the launcher is free; then decide the CoP publication question and tolerances with José; then the audit script.",
+ "pilot_results": {
+  "status": "pilot v3 (final runner) completed: receipt um21-s02-pilot-launcher-receipt-v3.json, clean_success true, cleanup proven, peak RSS 231.6 MiB, 21.6 s. Output um21_s02_frame_pilot_v3. v1 numbers above kept as history; shifts, ESML gaps and angle results are unchanged in v3.",
+  "recordings": [
+   "AB03/i10",
+   "AB04/i0",
+   "AB07/i10",
+   "AB08/d10",
+   "AB04/d10 (seed 20261124, random.Random(seed).choice over the 40 others sorted)"
+  ],
+  "resources": {
+   "peak_rss_mib_job": 231.1,
+   "largest_process_rss_kib_launcher": 236688,
+   "wall_seconds": 25.7,
+   "address_space_limit_bytes": 805306368,
+   "clean_success": false,
+   "why_not_clean": "checks.linux_no_new_worker false (other agents' processes started during the run); cleanup proven; verify-cleanup run, proven true; bindings and envelope unchanged; Streaming.mat unchanged"
+  },
+  "outputs": "converted_datasets/reconversion_v2/um21_s02_frame_pilot_v1 (s02_summary.json, s02_ledger.json, components/ABxx/cond/s02.parquet and cop_unheld.parquet)",
+  "angles_vs_v2": "Joint angles from markers correlate 0.97-1.00 pooled with the v2 (Vicon-zero) angles on every leg of every pilot recording (hip 0.998-1.0, knee 0.997-0.999, ankle 0.969-0.998), with a stride-to-stride offset spread (IQR) of 0.1-0.5 deg. The offsets are the zero change: per-leg medians of v2 minus new, ankle: AB03 R 7.2 L 0.4; AB04/i0 R 7.2 L 5.4; AB04/d10 R 7.4 L 6.3; AB07 R 2.8 L 3.8; AB08 R 4.0 L 2.2 deg; knee 1.7-9.5 deg; hip -0.9 to 4.0 deg. Composition (thigh=pelvis+hip, etc.) holds to 2.2e-16 rad in all five written tables.",
+  "ankle_difference_explained": "The plan's 0.3-6.5 deg ankle difference (and its low correlations 0.45-0.69) is not noise: with the v2 angles the pilot correlation is 0.97-0.998, so the earlier low values came from comparing raw source arrays (source sign, before the T04 sign step; GT as hip centre). The offset is a constant per subject and leg: AB04 gives 7.2/7.4 (R) and 5.4/6.3 (L) deg on i0 and d10, AB03 gives 7.2 (R) against 0.4 (L). That fits Vicon's static-calibration zero (an unpublished per-subject offset), not a marker or geometry problem. Alternative foot line (ankle centre to toe, as the Plug-in Gait foot vector) did not improve agreement (correlation unchanged, offset 14-28 deg), so the heel-to-toe line is not the cause. Not independently proven: the static trial is not in the source.",
+  "hip_centre": "Harrington regression; thigh angle differs from the greater-trochanter-marker thigh by a median -1.7 to +3.8 deg (IQR up to 7 deg) per leg. Pelvic depth measured 0.18-0.20 m (ASIS-mid to PSIS-mid), about twice the 0.10 m I assumed when writing the synthetic test; the regression coefficients were written from memory of Harrington 2007 and are not checked against the paper (limitation).",
+  "pelvis_check_v1_limit_0p2deg": "per-stride median difference to the marker pelvis: median 0.05-0.15 deg, max 0.39 deg; at the 0.2 deg limit 1-14 of 80-92 strides per leg failed. Runner v3 flags above 0.2 deg and holds only above 1.0 deg (nothing in the pilot reaches 1 deg). Decision of the agent, logged.",
+  "marker_gaps": "No stride lost a column to a marker gap in any pilot recording; lowest marker visible fraction 0.954 (AB04/d10).",
+  "cop": {
+   "fitted_shifts_m": {
+    "AB03/i10": {
+     "R": {
+      "fwd": 0.796,
+      "up": 0.314
+     },
+     "L": {
+      "fwd": 0.774,
+      "up": 0.161
+     }
+    },
+    "AB04/i0": {
+     "R": {
+      "fwd": 0.948,
+      "up": 0.065
+     },
+     "L": {
+      "fwd": 0.951,
+      "up": 0.069
+     }
+    },
+    "AB07/i10": {
+     "R": {
+      "fwd": 0.807,
+      "up": 0.132
+     },
+     "L": {
+      "fwd": 0.797,
+      "up": 0.136
+     }
+    },
+    "AB08/d10": {
+     "R": {
+      "fwd": -0.909,
+      "up": 0.197
+     },
+     "L": {
+      "fwd": -0.889,
+      "up": 0.186
+     }
+    },
+    "AB04/d10": {
+     "R": {
+      "fwd": -0.835,
+      "up": 0.142
+     },
+     "L": {
+      "fwd": -0.835,
+      "up": 0.162
+     }
+    }
+   },
+   "spread": "per-stride refits: forward IQR 1-6 mm; up IQR 11-30 mm. Between legs of one recording the up shift differs by up to 15 cm (AB03/i10) and the forward shift by up to 2.2 cm: up is the weak value, as planned.",
+   "axis": "plate long axis is axis 1 on all ten plates; sign +1 on i0/i10 and -1 on both d10 recordings (flip handled); belt tilt used +10/0/-10 deg (heel-path magnitude 8-17 deg is not used, only its sign).",
+   "holdout_ankle_moment": "fit on hip and knee, ankle held out: correlation 0.975-0.999, RMSE 0.045-0.231 Nm/kg (observed 95th percentile 1.1-2.1); without the shift RMSE 6.5-8.5. Quasi-static prediction under-reads the moment (slope 0.79-0.95).",
+   "endpoint_check_v1": "v1 logic was wrong (it needed the first loaded sample not at phase 0, so 80-92 of 80-92 strides were skipped; only 1-9 strides were checked on four plates). Where checked: AB04/d10 first loaded CoP was 0.27-0.28 m from the heel marker, AB08/d10 R 0.13 m, AB04/i0 0.04 m, AB07/i10 L 0.025 m. ESML's own contact-minus-heel diagnostic is also 0.20 m for AB04/d10, so this is in the data (light-load CoP or heel strike offset), not only my method. Runner v3 uses the first contiguous stance run and two thresholds (20 N and 0.2 BW); not re-run.",
+   "plate_assignment": "same plate loaded within 5 frames of the leg's heel strikes in 96-100 percent; the other plate is also loaded at the same time in 97-100 percent of strides (double support), so this check cannot tell legs apart by itself.",
+   "lateral": "markers vs plate lateral position correlation across stances 0.89-0.99 on all plates (handedness assumption holds).",
+   "gate_v1": "provisional; 9 of 10 plates held by the v1 gate only because of the endpoint logic; ankle hold-out passed on all ten (>=0.9)."
+  },
+  "esml_cross_check": {
+   "source": "cop_reference_um21.py (energy-shaping-ML project), re-implemented; never imported or run, no parquet opened.",
+   "gap_in_plate_offset_along_belt_m_mine_minus_esml_own_moment": {
+    "AB03/i10": {
+     "R": -0.0682,
+     "L": -0.0157
+    },
+    "AB04/i0": {
+     "R": 0.0051,
+     "L": -0.0074
+    },
+    "AB07/i10": {
+     "R": -0.0018,
+     "L": -0.0029
+    },
+    "AB08/d10": {
+     "R": 0.0187,
+     "L": 0.0132
+    },
+    "AB04/d10": {
+     "R": 0.0037,
+     "L": -0.0056
+    }
+   },
+   "summary": "Median absolute gap 7 mm (9 of 10 plates within 19 mm); one outlier, AB03/i10 R, 68 mm, where my up shift (0.314 m) disagrees with its left plate (0.161 m) while ESML's offsets for R and L agree to 5 mm. The older midpoint rule (heel-toe midpoint, as the sign adapter did) differs from ESML by 9-79 mm (median 57 mm).",
+   "pig_ankle_centre_claim": "Plug-in Gait ankle centre minus malleolar midpoint along the foot, per subject and leg at loaded foot-flat (8 subject-legs): -30.1, -6.6, -20.9, -18.4, -20.5, -13.4, -13.9, -11.6 mm; median -16.2 mm, range -6.6 to -30.1. Matches the claimed -16 mm median. That is a marker-geometry result (the chord function): it does not prove the source moments are taken about that point. What supports it: lever-arm fit residual IQR 5-9 mm, correlation 0.86-0.998 between marker-geometry and moment-implied lever, and agreement of my independent fit with its offsets. The 35.7 mm GT23 drop was not used.",
+   "ankle_height_above_belt_m": "0.079-0.101 (level-treadmill reference, push-off rotation centre minus 12 mm, a constant measured on GT21, not UM21)."
+  },
+  "ported_pieces": {
+   "source_file": "/mnt/s/workspace_docs/energy shaping ml/esml_research/code/training/cop_reference_um21.py",
+   "pig_ankle_centre": "cop_reference_um21.pig_ankle_centre",
+   "belt_frame": "cop_reference_um21._walking_frame (forward is the pelvis heading here)",
+   "sole_reference": "cop_reference_um21.sole_reference",
+   "esml_plate_sign": "cop_reference_um21.plate_sign",
+   "moment_registration": "cop_reference_um21.moment_registration",
+   "leave_subject_out_offsets": "cop_reference_um21.leave_subject_out_offsets and .condition (donor step synthetic-tested only; needs all subjects; not exercised on data)",
+   "tread_segments": "cop_reference_um21.recordings (treadmill branch)",
+   "leg_segment": "cop_reference_um21._segment",
+   "constants": "PIG_MARKER_RADIUS_M, CONTACT_BW, REGISTRATION_MIN_BW, REGISTRATION_MAX_IQR_M, MIN_DONOR_SUBJECTS, FOOT_FLAT_MAX_PITCH_RATE, PUSH_OFF_MIN_BW, PUSH_OFF_MAX_PITCH_RATE, ROCKER_ABOVE_BELT_M (all from that file)",
+   "not_ported": "ANKLE_DROP_ALONG_SHANK_M (GT23 constant), gt23_ankle_drop, ankle_joint_estimate, cop_ankle output model, extract/main",
+   "not_yet_used_to_publish": "The ESML donor offset is not applied to the output CoP; the runner publishes the fitted registration (unheld/held per gate) and reports ESML as cross-check. Using donor offsets needs every subject's own-moment offset first (a separate all-subject pass)."
+  },
+  "tests": "tests/test_um21_s02_frame.py: 45 tests, all synthetic and labeled so, pass (known-value joints 42/40/30 deg, composition 1e-12, second independent rotation-matrix/complex implementation with reversed heading, hip-centre by hand, CoP round trip for both plate axes, both signs, belt tilt -10/0/+10, left and right leg, reversed heading, unloaded masking, plate interpolation, shift fit, whole-recording synthetic with marker gap and pelvis hold, ported-method tests: Plug-in Gait chord geometry, own-moment offset recovery, donor median, level reference with a known rotation centre).",
+  "open_for_jose": "1) May a CoP built on a fitted (not measured) plate position be published? Numbers: fitted shifts reproduce the held-out ankle moment with r 0.975-0.999 and RMSE 0.05-0.23 Nm/kg (p95 of the moment 1.1-2.1); forward shift per-stride IQR <= 6 mm; independent ESML own-moment offsets agree within 19 mm on 9 of 10 plates (median 7 mm), 68 mm on one; up shift is weak (legs differ by up to 15 cm) so the vertical coordinate is the least trustworthy. ESML reports a leave-subject-out donor offset error of 4-11 mm median, 34 mm p95. 2) What tolerance counts as verified: endpoint check (CoP near heel marker at contact, near toe at toe-off) has no usable numbers yet (v1 logic bug); proposed values to decide after the v3 rerun: endpoint within 3 cm in 95 percent, ankle hold-out r >= 0.9.",
+  "not_done": "v3 pilot rerun (launcher refused repeatedly by other agents' jobs and polling; an aggressive retry loop was then blocked by the permission classifier and was not retried); independent audit script; Q01 v3 and R01 v3; full run; endpoint numbers; contralateral ESML own-moment for the left leg is unvalidated (their code is right-leg only; sign of left source moments not checked).",
+  "endpoint_v3_mm": {
+   "note": "first loaded CoP minus heel marker / last loaded CoP minus toe marker, per plate, median at 20 N then at 0.2 BW; fraction within 3 cm heel/toe at 20 N. 95th percentile was not stored by the runner (only quartiles and max); IQR and max below.",
+   "AB03/i10 R": {
+    "20N heel/toe median": [
+     -38.5,
+     62.3
+    ],
+    "0.2BW": [
+     0.0,
+     -31.9
+    ],
+    "within3cm": [
+     0.3,
+     0.05
+    ]
+   },
+   "AB03/i10 L": {
+    "20N": [
+     -143.1,
+     200.5
+    ],
+    "0.2BW": [
+     -76.3,
+     76.7
+    ],
+    "within3cm": [
+     0.0,
+     0.0
+    ]
+   },
+   "AB04/i0 R": {
+    "20N": [
+     50.9,
+     -12.3
+    ],
+    "0.2BW": [
+     64.9,
+     -5.6
+    ],
+    "within3cm": [
+     0.01,
+     0.99
+    ]
+   },
+   "AB04/i0 L": {
+    "20N": [
+     42.1,
+     -18.2
+    ],
+    "0.2BW": [
+     68.8,
+     -8.8
+    ],
+    "within3cm": [
+     0.07,
+     0.79
+    ]
+   },
+   "AB07/i10 R": {
+    "20N": [
+     29.1,
+     25.9
+    ],
+    "0.2BW": [
+     36.4,
+     22.9
+    ],
+    "within3cm": [
+     0.54,
+     0.83
+    ]
+   },
+   "AB07/i10 L": {
+    "20N": [
+     28.4,
+     14.3
+    ],
+    "0.2BW": [
+     40.2,
+     18.6
+    ],
+    "within3cm": [
+     0.6,
+     0.9
+    ]
+   },
+   "AB08/d10 R": {
+    "20N": [
+     9.6,
+     -36.3
+    ],
+    "0.2BW": [
+     19.9,
+     -19.7
+    ],
+    "within3cm": [
+     0.9,
+     0.16
+    ]
+   },
+   "AB08/d10 L": {
+    "20N": [
+     40.1,
+     -21.9
+    ],
+    "0.2BW": [
+     43.5,
+     -19.3
+    ],
+    "within3cm": [
+     0.13,
+     0.8
+    ]
+   },
+   "AB04/d10 R": {
+    "20N": [
+     246.5,
+     -3.3
+    ],
+    "0.2BW": [
+     197.4,
+     -1.7
+    ],
+    "within3cm": [
+     0.01,
+     1.0
+    ]
+   },
+   "AB04/d10 L": {
+    "20N": [
+     283.4,
+     -22.4
+    ],
+    "0.2BW": [
+     204.6,
+     -14.9
+    ],
+    "within3cm": [
+     0.0,
+     0.84
+    ]
+   }
+  },
+  "endpoint_v3_summary": "Endpoints fail the provisional 3 cm gate on 10 of 10 plates (heel on 10, toe on 6). Toe end is mostly within 2-4 cm at 0.2 BW; heel end is 2-8 cm off on most plates and 20-28 cm off on AB04/d10 (ESML sees 20 cm there too). Held by the provisional gate: all ten plates; held CoP columns are all-missing with the reason in the summary and ledger; unheld values are in cop_unheld.parquet. Pelvis: 0 strides held (limit 1 deg), 1-14 flagged above 0.2 deg per leg. No stride lost to marker gaps."
+ },
+ "full_run_v4": {
+  "decision": "D-UM21-S02-1 = A (publish CoP on the estimated plate position, labelled so); gate: hold-out ankle moment r >= 0.95 and toe-off end within 4 cm at 0.2 BW in >= 95 percent of strides; heel end reported only; AB04/d10 held until its 20 cm heel offset is explained.",
+  "runs": "pilot v4 (5 recordings) then full v4 (44 recordings), same bound runner; receipts um21-s02-pilot-launcher-receipt-v4.json and um21-s02-full-launcher-receipt-v4.json; both clean_success true, cleanup proven; Streaming.mat unchanged; v2 bundle untouched.",
+  "resources": {
+   "peak_rss_mib": 256.0,
+   "rss_cap_mib": 450.0,
+   "rlimit_as_bytes": [
+    805306368,
+    805306368
+   ],
+   "nice": 19,
+   "wall_seconds": 197.8
+  },
+  "outputs": "converted_datasets/reconversion_v2/um21_s02_frame_full_v4 (components/ABxx/cond/s02.parquet = published, held CoP all-missing; cop_unheld.parquet; s02_summary.json; s02_ledger.json)",
+  "totals": {
+   "recordings": 44,
+   "legs_cop_pass": 48,
+   "legs": 88,
+   "recordings_both_legs_pass": 19,
+   "recordings_both_held": 15,
+   "recordings_mixed": 10,
+   "composition_error_max_rad": 2.220446049250313e-16,
+   "reload_findings": 0,
+   "pelvis_held_strides": 0
+  },
+  "both_legs_pass": [
+   "AB01/i0",
+   "AB02/d5",
+   "AB02/i0",
+   "AB02/i5",
+   "AB03/d5",
+   "AB03/i0",
+   "AB03/i5",
+   "AB04/d5",
+   "AB05/d5",
+   "AB05/i0",
+   "AB05/i10",
+   "AB06/d5",
+   "AB06/i0",
+   "AB06/i5",
+   "AB07/i5",
+   "AB08/d10",
+   "AB08/d5",
+   "AB08/i0",
+   "AB08/i5"
+  ],
+  "both_legs_held": [
+   "AB01/i10",
+   "AB02/d10",
+   "AB02/i10",
+   "AB03/d10",
+   "AB03/i10",
+   "AB04/d10",
+   "AB04/i5",
+   "AB06/d10",
+   "AB07/d10",
+   "AB09/d10",
+   "AB09/d5",
+   "AB09/i0",
+   "AB09/i5",
+   "AB10/d5",
+   "AB10/i10"
+  ],
+  "per_recording": {
+   "AB01/i0": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9982467905038792,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.009342168156886313,
+     "heel_p95_abs_m_0p2bw": 0.05191170704109037,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": -1.3010359177144046,
+      "knee_angle": -0.10624811380081522,
+      "ankle_angle": 1.9956049747716376
+     },
+     "gap_to_esml_mm": 6.9,
+     "strides": 80,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 0
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.998380942211958,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.011622870161261557,
+     "heel_p95_abs_m_0p2bw": 0.03980600012493794,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": -1.4213130217121235,
+      "knee_angle": -0.9039805586891292,
+      "ankle_angle": 0.4112533933084667
+     },
+     "gap_to_esml_mm": 16.5,
+     "strides": 80,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 0
+    }
+   },
+   "AB01/i10": {
+    "right": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 54 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9981243996604422,
+     "toe_within_4cm_0p2bw": 0.5394736842105263,
+     "toe_p95_abs_m_0p2bw": 0.05517362392419281,
+     "heel_p95_abs_m_0p2bw": 0.052070660742867564,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 0.05619651574489509,
+      "knee_angle": 1.8873426756522111,
+      "ankle_angle": 2.1690574634061983
+     },
+     "gap_to_esml_mm": -4.9,
+     "strides": 77,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 5
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 0 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9980581227982146,
+     "toe_within_4cm_0p2bw": 0.0,
+     "toe_p95_abs_m_0p2bw": 0.0784455815797052,
+     "heel_p95_abs_m_0p2bw": 0.027961004479496652,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": -0.5469426935300055,
+      "knee_angle": 0.4381251871569936,
+      "ankle_angle": 1.061727813770009
+     },
+     "gap_to_esml_mm": 8.7,
+     "strides": 77,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 4
+    }
+   },
+   "AB02/d10": {
+    "right": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 27 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9882277674349561,
+     "toe_within_4cm_0p2bw": 0.2727272727272727,
+     "toe_p95_abs_m_0p2bw": 0.09306758637893608,
+     "heel_p95_abs_m_0p2bw": 0.034334503470393955,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 0.2161719536632743,
+      "knee_angle": 2.0033137052407612,
+      "ankle_angle": 1.0841784169602364
+     },
+     "gap_to_esml_mm": 13.2,
+     "strides": 88,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 15
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 47 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9828854522628296,
+     "toe_within_4cm_0p2bw": 0.47126436781609193,
+     "toe_p95_abs_m_0p2bw": 0.07771452735617852,
+     "heel_p95_abs_m_0p2bw": 0.16990451177606405,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": -0.39671253249470056,
+      "knee_angle": 2.71468519315097,
+      "ankle_angle": 1.8780266164741075
+     },
+     "gap_to_esml_mm": 3.6,
+     "strides": 88,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 12
+    }
+   },
+   "AB02/d5": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9923431365413811,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.03276126449428091,
+     "heel_p95_abs_m_0p2bw": 0.02400383427968404,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 0.3106126818757317,
+      "knee_angle": 2.04574207324975,
+      "ankle_angle": 1.5677759465244026
+     },
+     "gap_to_esml_mm": 12.0,
+     "strides": 83,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 5
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9901481270469313,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.014501511356419442,
+     "heel_p95_abs_m_0p2bw": 0.041452665880961075,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": -0.23926492333883112,
+      "knee_angle": 2.6695011889351186,
+      "ankle_angle": 1.8169995501297351
+     },
+     "gap_to_esml_mm": 2.4,
+     "strides": 84,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 11
+    }
+   },
+   "AB02/i0": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9976986875914302,
+     "toe_within_4cm_0p2bw": 0.9746835443037974,
+     "toe_p95_abs_m_0p2bw": 0.03181833473266348,
+     "heel_p95_abs_m_0p2bw": 0.05018840880478021,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 0.5655165498088971,
+      "knee_angle": 1.972165594365971,
+      "ankle_angle": 1.138928319112091
+     },
+     "gap_to_esml_mm": 6.4,
+     "strides": 80,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 12
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9927724066263564,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.027263933195693833,
+     "heel_p95_abs_m_0p2bw": 0.05509341246407061,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 0.10568279106508287,
+      "knee_angle": 2.4764044317522704,
+      "ankle_angle": 1.791849807688612
+     },
+     "gap_to_esml_mm": -1.5,
+     "strides": 78,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 18
+    }
+   },
+   "AB02/i10": {
+    "right": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 38 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9977330058260557,
+     "toe_within_4cm_0p2bw": 0.37662337662337664,
+     "toe_p95_abs_m_0p2bw": 0.06034151538928746,
+     "heel_p95_abs_m_0p2bw": 0.03215408746399738,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 1.2549073277182121,
+      "knee_angle": 2.962472526549559,
+      "ankle_angle": 0.6891170667438841
+     },
+     "gap_to_esml_mm": -3.6,
+     "strides": 77,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 6
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 35 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9969740107153318,
+     "toe_within_4cm_0p2bw": 0.35135135135135137,
+     "toe_p95_abs_m_0p2bw": 0.06973383307373027,
+     "heel_p95_abs_m_0p2bw": 0.0371888834438902,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 0.7656399460511029,
+      "knee_angle": 3.3710702817715577,
+      "ankle_angle": 1.3197731223354574
+     },
+     "gap_to_esml_mm": -12.4,
+     "strides": 74,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 10
+    }
+   },
+   "AB02/i5": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9984076612635663,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.03440966653195382,
+     "heel_p95_abs_m_0p2bw": 0.0438256423578514,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 0.8443514577922966,
+      "knee_angle": 2.4494705960897907,
+      "ankle_angle": 1.0153543274169614
+     },
+     "gap_to_esml_mm": 2.1,
+     "strides": 74,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 5
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9973373855481426,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.02003741331029235,
+     "heel_p95_abs_m_0p2bw": 0.0622891476671553,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 0.30994396561536947,
+      "knee_angle": 3.0244195716406734,
+      "ankle_angle": 1.79573216592717
+     },
+     "gap_to_esml_mm": -6.6,
+     "strides": 74,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 6
+    }
+   },
+   "AB03/d10": {
+    "right": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 0 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9640893632585525,
+     "toe_within_4cm_0p2bw": 0.0,
+     "toe_p95_abs_m_0p2bw": 0.11150772984117774,
+     "heel_p95_abs_m_0p2bw": 0.10422610005202453,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 2.5363327974409975,
+      "knee_angle": 9.36798737366043,
+      "ankle_angle": 7.068737836180691
+     },
+     "gap_to_esml_mm": -17.7,
+     "strides": 88,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 2
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 0 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9793698235033925,
+     "toe_within_4cm_0p2bw": 0.0,
+     "toe_p95_abs_m_0p2bw": 0.08771744985580834,
+     "heel_p95_abs_m_0p2bw": 0.1065006061535434,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 0.26453339404674364,
+      "knee_angle": 1.8374690892443433,
+      "ankle_angle": 0.13553871311844615
+     },
+     "gap_to_esml_mm": -1.1,
+     "strides": 87,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 1
+    }
+   },
+   "AB03/d5": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9971426165634617,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.020874488131780545,
+     "heel_p95_abs_m_0p2bw": 0.060469579823472216,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 2.9208020955915313,
+      "knee_angle": 9.577185794636067,
+      "ankle_angle": 6.558672030961253
+     },
+     "gap_to_esml_mm": -23.9,
+     "strides": 86,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 3
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9963597233555885,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.009900183644861792,
+     "heel_p95_abs_m_0p2bw": 0.05099155023069947,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 0.341954382449863,
+      "knee_angle": 1.6196199272712832,
+      "ankle_angle": -0.05772101900176274
+     },
+     "gap_to_esml_mm": -8.7,
+     "strides": 87,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 3
+    }
+   },
+   "AB03/i0": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9960829188734358,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.019386841397054305,
+     "heel_p95_abs_m_0p2bw": 0.06521293574820905,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 3.626197351344323,
+      "knee_angle": 9.948502384335931,
+      "ankle_angle": 6.494257913494225
+     },
+     "gap_to_esml_mm": -6.0,
+     "strides": 79,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 1
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.996261384176648,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.01266098606545547,
+     "heel_p95_abs_m_0p2bw": 0.0702469139717842,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 0.5293939122647899,
+      "knee_angle": 1.7473947659378437,
+      "ankle_angle": -0.39468200306678075
+     },
+     "gap_to_esml_mm": -14.0,
+     "strides": 80,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 1
+    }
+   },
+   "AB03/i10": {
+    "right": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 57 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9817971476753448,
+     "toe_within_4cm_0p2bw": 0.569620253164557,
+     "toe_p95_abs_m_0p2bw": 0.09997018602313067,
+     "heel_p95_abs_m_0p2bw": 0.054892337898998535,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 4.020277114400784,
+      "knee_angle": 9.469367558051989,
+      "ankle_angle": 7.165741014308605
+     },
+     "gap_to_esml_mm": -68.2,
+     "strides": 80,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 13
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 24 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9985951210668573,
+     "toe_within_4cm_0p2bw": 0.24096385542168675,
+     "toe_p95_abs_m_0p2bw": 0.12569149264367463,
+     "heel_p95_abs_m_0p2bw": 0.10806029618090253,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 1.1702863606672855,
+      "knee_angle": 1.6842831916178465,
+      "ankle_angle": 0.4432236026120814
+     },
+     "gap_to_esml_mm": -15.7,
+     "strides": 83,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 12
+    }
+   },
+   "AB03/i5": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9950168751658067,
+     "toe_within_4cm_0p2bw": 0.987012987012987,
+     "toe_p95_abs_m_0p2bw": 0.01910121909897692,
+     "heel_p95_abs_m_0p2bw": 0.06102576168467423,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 3.761363918487131,
+      "knee_angle": 9.470731883357006,
+      "ankle_angle": 6.729012484635741
+     },
+     "gap_to_esml_mm": -7.7,
+     "strides": 79,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 12
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9980512797421041,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.015286794798097246,
+     "heel_p95_abs_m_0p2bw": 0.07326299496722644,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 0.9044275233406753,
+      "knee_angle": 1.4965924685581655,
+      "ankle_angle": 0.03666416906039072
+     },
+     "gap_to_esml_mm": -15.1,
+     "strides": 80,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 10
+    }
+   },
+   "AB04/d10": {
+    "right": {
+     "cop": "held",
+     "reasons": [
+      "held until the 20 cm heel-end offset is explained (D-UM21-S02-1)"
+     ],
+     "holdout_r": 0.9934292153965855,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.005714741990866373,
+     "heel_p95_abs_m_0p2bw": 0.21523874173692875,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": -0.8721424249891869,
+      "knee_angle": 1.8508473470915665,
+      "ankle_angle": 7.384942193338571
+     },
+     "gap_to_esml_mm": 3.7,
+     "strides": 90,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 6
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "held until the 20 cm heel-end offset is explained (D-UM21-S02-1)"
+     ],
+     "holdout_r": 0.9902201385858317,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.01981464695776548,
+     "heel_p95_abs_m_0p2bw": 0.22385114981850904,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 0.4013844457882689,
+      "knee_angle": 2.4731183834794126,
+      "ankle_angle": 6.287080357087799
+     },
+     "gap_to_esml_mm": -5.6,
+     "strides": 90,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 9
+    }
+   },
+   "AB04/d5": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9948459630394835,
+     "toe_within_4cm_0p2bw": 0.9887640449438202,
+     "toe_p95_abs_m_0p2bw": 0.017244668811405364,
+     "heel_p95_abs_m_0p2bw": 0.14200250958845378,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": -0.751405525654853,
+      "knee_angle": 1.8278877446798911,
+      "ankle_angle": 7.579834402103801
+     },
+     "gap_to_esml_mm": 6.3,
+     "strides": 89,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 5
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9912477459000408,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.02602743835955037,
+     "heel_p95_abs_m_0p2bw": 0.09574319576923268,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 0.3717866303450732,
+      "knee_angle": 1.9359639325785927,
+      "ankle_angle": 5.83994759815324
+     },
+     "gap_to_esml_mm": -6.3,
+     "strides": 87,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 6
+    }
+   },
+   "AB04/i0": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9774108501499386,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.010712440941179126,
+     "heel_p95_abs_m_0p2bw": 0.09615874641356636,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": -0.3946835054410307,
+      "knee_angle": 2.0262900678939255,
+      "ankle_angle": 7.206652650218437
+     },
+     "gap_to_esml_mm": 5.1,
+     "strides": 82,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 14
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 94 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9968225514964022,
+     "toe_within_4cm_0p2bw": 0.9390243902439024,
+     "toe_p95_abs_m_0p2bw": 0.06330000302212029,
+     "heel_p95_abs_m_0p2bw": 0.09330459821560726,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 0.466611135287755,
+      "knee_angle": 2.0040704488138523,
+      "ankle_angle": 5.412287663231279
+     },
+     "gap_to_esml_mm": -7.4,
+     "strides": 83,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 12
+    }
+   },
+   "AB04/i10": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9950463995328949,
+     "toe_within_4cm_0p2bw": 0.9861111111111112,
+     "toe_p95_abs_m_0p2bw": 0.02517964699135419,
+     "heel_p95_abs_m_0p2bw": 0.07517492255314241,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 0.19598690970128974,
+      "knee_angle": 2.658459441903412,
+      "ankle_angle": 7.103592956277163
+     },
+     "gap_to_esml_mm": -1.2,
+     "strides": 75,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 48
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 89 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9895587146654735,
+     "toe_within_4cm_0p2bw": 0.8873239436619719,
+     "toe_p95_abs_m_0p2bw": 0.15641652563023167,
+     "heel_p95_abs_m_0p2bw": 0.11956329395345527,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 0.7138249228227966,
+      "knee_angle": 2.341829731175336,
+      "ankle_angle": 5.515891028521462
+     },
+     "gap_to_esml_mm": -10.4,
+     "strides": 76,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 47
+    }
+   },
+   "AB04/i5": {
+    "right": {
+     "cop": "held",
+     "reasons": [
+      "plate not loaded at this leg's heel strikes"
+     ],
+     "holdout_r": 0.9877881912977767,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.012100575733371302,
+     "heel_p95_abs_m_0p2bw": 0.060065128544675946,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": -0.13909508682595328,
+      "knee_angle": 2.398196342010712,
+      "ankle_angle": 7.111754494641878
+     },
+     "gap_to_esml_mm": 4.1,
+     "strides": 73,
+     "marker_gap_events": 28,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 30
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 62 percent of strides (needs 95)",
+      "plate not loaded at this leg's heel strikes"
+     ],
+     "holdout_r": 0.9958237783368038,
+     "toe_within_4cm_0p2bw": 0.6231884057971014,
+     "toe_p95_abs_m_0p2bw": 0.1351179685928115,
+     "heel_p95_abs_m_0p2bw": 0.10212767295602174,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 0.465433708361706,
+      "knee_angle": 1.8501025312508448,
+      "ankle_angle": 5.174354118289486
+     },
+     "gap_to_esml_mm": -7.3,
+     "strides": 76,
+     "marker_gap_events": 6,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 28
+    }
+   },
+   "AB05/d10": {
+    "right": {
+     "cop": "held",
+     "reasons": [
+      "hold-out ankle moment r = 0.930 below 0.95"
+     ],
+     "holdout_r": 0.9297982464973662,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.018838296480707395,
+     "heel_p95_abs_m_0p2bw": 0.0250467153022379,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": -4.074968957039245,
+      "knee_angle": -4.053579265347113,
+      "ankle_angle": 3.1348564248736475
+     },
+     "gap_to_esml_mm": 27.8,
+     "strides": 97,
+     "marker_gap_events": 71,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 3
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9891670691238649,
+     "toe_within_4cm_0p2bw": 0.9897959183673469,
+     "toe_p95_abs_m_0p2bw": 0.012971989352112806,
+     "heel_p95_abs_m_0p2bw": 0.038143389520121265,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": -5.323866057007052,
+      "knee_angle": -4.158027726089797,
+      "ankle_angle": -1.9448468589001298
+     },
+     "gap_to_esml_mm": 24.7,
+     "strides": 98,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 4
+    }
+   },
+   "AB05/d5": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.996478204165213,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.012861706537680834,
+     "heel_p95_abs_m_0p2bw": 0.01587756501649309,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": -4.222545594228413,
+      "knee_angle": -4.867206149844287,
+      "ankle_angle": 3.0050443891799214
+     },
+     "gap_to_esml_mm": 23.2,
+     "strides": 91,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 5
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9942333308518652,
+     "toe_within_4cm_0p2bw": 0.978021978021978,
+     "toe_p95_abs_m_0p2bw": 0.02419045258212181,
+     "heel_p95_abs_m_0p2bw": 0.03038551909630466,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": -5.265479403572428,
+      "knee_angle": -4.5474767489297925,
+      "ankle_angle": -2.0626554414888716
+     },
+     "gap_to_esml_mm": 19.1,
+     "strides": 92,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 1
+    }
+   },
+   "AB05/i0": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9825533588345534,
+     "toe_within_4cm_0p2bw": 0.9882352941176471,
+     "toe_p95_abs_m_0p2bw": 0.007828608925401577,
+     "heel_p95_abs_m_0p2bw": 0.043737167436793734,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": -3.808868619657308,
+      "knee_angle": -3.6440213481048356,
+      "ankle_angle": 3.381962097298559
+     },
+     "gap_to_esml_mm": 24.4,
+     "strides": 86,
+     "marker_gap_events": 2,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 5
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9955684969388735,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.013933345982784258,
+     "heel_p95_abs_m_0p2bw": 0.03482759281048761,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": -5.264735269516907,
+      "knee_angle": -4.548823124353564,
+      "ankle_angle": -1.6015495331359897
+     },
+     "gap_to_esml_mm": 18.8,
+     "strides": 88,
+     "marker_gap_events": 2,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 3
+    }
+   },
+   "AB05/i10": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9950453774655529,
+     "toe_within_4cm_0p2bw": 0.9878048780487805,
+     "toe_p95_abs_m_0p2bw": 0.023587942254915048,
+     "heel_p95_abs_m_0p2bw": 0.04097592984682896,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": -4.2437102447845,
+      "knee_angle": -4.052609445966469,
+      "ankle_angle": 2.8822458548384082
+     },
+     "gap_to_esml_mm": 18.7,
+     "strides": 82,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 12
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9930730794795413,
+     "toe_within_4cm_0p2bw": 0.975609756097561,
+     "toe_p95_abs_m_0p2bw": 0.03231716619611182,
+     "heel_p95_abs_m_0p2bw": 0.032170556408688496,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": -5.239714216605714,
+      "knee_angle": -4.360410070025287,
+      "ankle_angle": -2.1237551871664397
+     },
+     "gap_to_esml_mm": 20.7,
+     "strides": 82,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 8
+    }
+   },
+   "AB05/i5": {
+    "right": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 84 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9905324860249102,
+     "toe_within_4cm_0p2bw": 0.8414634146341463,
+     "toe_p95_abs_m_0p2bw": 0.04358218315420786,
+     "heel_p95_abs_m_0p2bw": 0.06036693378692301,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": -4.101871544219349,
+      "knee_angle": -4.611239099182644,
+      "ankle_angle": 3.100631460655374
+     },
+     "gap_to_esml_mm": 27.3,
+     "strides": 85,
+     "marker_gap_events": 10,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 2
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9899116784879676,
+     "toe_within_4cm_0p2bw": 0.9629629629629629,
+     "toe_p95_abs_m_0p2bw": 0.03454541677203844,
+     "heel_p95_abs_m_0p2bw": 0.04984809365934384,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": -5.249047898344625,
+      "knee_angle": -4.954247558754177,
+      "ankle_angle": -1.9699239215325464
+     },
+     "gap_to_esml_mm": 20.9,
+     "strides": 86,
+     "marker_gap_events": 4,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 2
+    }
+   },
+   "AB06/d10": {
+    "right": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 67 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9890717513966769,
+     "toe_within_4cm_0p2bw": 0.673469387755102,
+     "toe_p95_abs_m_0p2bw": 0.04388194689609332,
+     "heel_p95_abs_m_0p2bw": 0.04696444503339185,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": -0.038164707956909766,
+      "knee_angle": 3.0749481721940928,
+      "ankle_angle": 5.993320120667692
+     },
+     "gap_to_esml_mm": 23.5,
+     "strides": 98,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 0
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 48 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9826956717351615,
+     "toe_within_4cm_0p2bw": 0.48484848484848486,
+     "toe_p95_abs_m_0p2bw": 0.04782980657304808,
+     "heel_p95_abs_m_0p2bw": 0.08425456150592366,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 0.1672549009518647,
+      "knee_angle": 4.432458737183426,
+      "ankle_angle": 4.855130806047736
+     },
+     "gap_to_esml_mm": 2.0,
+     "strides": 99,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 0
+    }
+   },
+   "AB06/d5": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9929039071696673,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.029657774561790112,
+     "heel_p95_abs_m_0p2bw": 0.03895013526347329,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 0.2657116872424413,
+      "knee_angle": 3.2286216567963337,
+      "ankle_angle": 4.898183938323368
+     },
+     "gap_to_esml_mm": 10.6,
+     "strides": 91,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 0
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9893658309418474,
+     "toe_within_4cm_0p2bw": 0.989247311827957,
+     "toe_p95_abs_m_0p2bw": 0.0370044824053157,
+     "heel_p95_abs_m_0p2bw": 0.05896838174254271,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 0.29452210976730314,
+      "knee_angle": 4.540820374065363,
+      "ankle_angle": 5.504534186187111
+     },
+     "gap_to_esml_mm": -6.6,
+     "strides": 93,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 0
+    }
+   },
+   "AB06/i0": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9973320649574328,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.00714911014388593,
+     "heel_p95_abs_m_0p2bw": 0.0487104792231249,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 0.1721026680057383,
+      "knee_angle": 2.6486203649574915,
+      "ankle_angle": 4.859546099413864
+     },
+     "gap_to_esml_mm": 9.0,
+     "strides": 84,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 0
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.996559843940101,
+     "toe_within_4cm_0p2bw": 0.9882352941176471,
+     "toe_p95_abs_m_0p2bw": 0.015870804095506206,
+     "heel_p95_abs_m_0p2bw": 0.0655781947494904,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": -0.06216177560584749,
+      "knee_angle": 4.272684325663742,
+      "ankle_angle": 5.896592436823034
+     },
+     "gap_to_esml_mm": -7.6,
+     "strides": 85,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 0
+    }
+   },
+   "AB06/i10": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9968552895779502,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.013924249416766418,
+     "heel_p95_abs_m_0p2bw": 0.06239441872219414,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 0.4980527042700021,
+      "knee_angle": 3.434221171589641,
+      "ankle_angle": 6.1195982894160785
+     },
+     "gap_to_esml_mm": -3.3,
+     "strides": 84,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 0
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 94 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9960095665905323,
+     "toe_within_4cm_0p2bw": 0.9411764705882353,
+     "toe_p95_abs_m_0p2bw": 0.04042427821860913,
+     "heel_p95_abs_m_0p2bw": 0.09008623160550466,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": -0.00429197425546284,
+      "knee_angle": 4.18675226353271,
+      "ankle_angle": 7.284055574087732
+     },
+     "gap_to_esml_mm": -28.2,
+     "strides": 85,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 0
+    }
+   },
+   "AB06/i5": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9981118481200845,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.01561952626282084,
+     "heel_p95_abs_m_0p2bw": 0.060424075187738326,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 0.2696738459304754,
+      "knee_angle": 2.745352954151419,
+      "ankle_angle": 4.936710320897261
+     },
+     "gap_to_esml_mm": 2.6,
+     "strides": 77,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 0
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.997893459140347,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.014202731584283666,
+     "heel_p95_abs_m_0p2bw": 0.07741533763219832,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 0.19689217977581627,
+      "knee_angle": 4.384670838218945,
+      "ankle_angle": 6.443744499555171
+     },
+     "gap_to_esml_mm": -14.0,
+     "strides": 80,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 0
+    }
+   },
+   "AB07/d10": {
+    "right": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 91 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9847161870794373,
+     "toe_within_4cm_0p2bw": 0.9148936170212766,
+     "toe_p95_abs_m_0p2bw": 0.07359095320956575,
+     "heel_p95_abs_m_0p2bw": 0.03711522999016724,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": -0.5383101516877389,
+      "knee_angle": 2.6845476268232327,
+      "ankle_angle": 2.6088307492324696
+     },
+     "gap_to_esml_mm": 16.7,
+     "strides": 97,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 0
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 94 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9731744837641815,
+     "toe_within_4cm_0p2bw": 0.9375,
+     "toe_p95_abs_m_0p2bw": 0.04027551817279789,
+     "heel_p95_abs_m_0p2bw": 0.04056668068047992,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": -1.0231495267820163,
+      "knee_angle": 1.8890344228365288,
+      "ankle_angle": 2.862003198553717
+     },
+     "gap_to_esml_mm": 19.6,
+     "strides": 97,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 0
+    }
+   },
+   "AB07/d5": {
+    "right": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 85 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9824928801646678,
+     "toe_within_4cm_0p2bw": 0.8494623655913979,
+     "toe_p95_abs_m_0p2bw": 0.0425511402599037,
+     "heel_p95_abs_m_0p2bw": 0.03826764519845646,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": -0.5981712345939212,
+      "knee_angle": 1.937337004655753,
+      "ankle_angle": 2.3677893032898374
+     },
+     "gap_to_esml_mm": 9.4,
+     "strides": 94,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 9
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.990644384734689,
+     "toe_within_4cm_0p2bw": 0.9891304347826086,
+     "toe_p95_abs_m_0p2bw": 0.027757850869848326,
+     "heel_p95_abs_m_0p2bw": 0.028825416385676355,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": -0.8246221864490753,
+      "knee_angle": 1.579854959470473,
+      "ankle_angle": 2.8151638558452747
+     },
+     "gap_to_esml_mm": 11.2,
+     "strides": 92,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 10
+    }
+   },
+   "AB07/i0": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9730420686711373,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.007297246157937117,
+     "heel_p95_abs_m_0p2bw": 0.07050415632978763,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": -0.2859289650528347,
+      "knee_angle": 3.016351105524288,
+      "ankle_angle": 2.9971527365304347
+     },
+     "gap_to_esml_mm": 3.8,
+     "strides": 90,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 6
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 80 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9964598082547746,
+     "toe_within_4cm_0p2bw": 0.7954545454545454,
+     "toe_p95_abs_m_0p2bw": 0.09405168581348224,
+     "heel_p95_abs_m_0p2bw": 0.07852632688608008,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": -0.5147227509509295,
+      "knee_angle": 1.7459093826580077,
+      "ankle_angle": 3.399328078691517
+     },
+     "gap_to_esml_mm": 5.5,
+     "strides": 89,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 5
+    }
+   },
+   "AB07/i10": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9821967770741509,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.02853486212335086,
+     "heel_p95_abs_m_0p2bw": 0.05255673031206401,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": -0.5338597252835112,
+      "knee_angle": 2.547908152500078,
+      "ankle_angle": 2.7478677420451363
+     },
+     "gap_to_esml_mm": -1.8,
+     "strides": 82,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 6
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 90 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9965893248733023,
+     "toe_within_4cm_0p2bw": 0.9024390243902439,
+     "toe_p95_abs_m_0p2bw": 0.08814543420284639,
+     "heel_p95_abs_m_0p2bw": 0.06225216116671479,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": -0.6983636672698023,
+      "knee_angle": 2.417073565041858,
+      "ankle_angle": 3.7910735936684716
+     },
+     "gap_to_esml_mm": -2.9,
+     "strides": 85,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 6
+    }
+   },
+   "AB07/i5": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9806731497734172,
+     "toe_within_4cm_0p2bw": 0.9736842105263158,
+     "toe_p95_abs_m_0p2bw": 0.02218366357749339,
+     "heel_p95_abs_m_0p2bw": 0.06323880038831228,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": -0.4961054806549875,
+      "knee_angle": 3.0708414541831384,
+      "ankle_angle": 3.4040468766108525
+     },
+     "gap_to_esml_mm": -0.2,
+     "strides": 83,
+     "marker_gap_events": 12,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 4
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9982574950740435,
+     "toe_within_4cm_0p2bw": 0.95,
+     "toe_p95_abs_m_0p2bw": 0.01932612775360926,
+     "heel_p95_abs_m_0p2bw": 0.06530198388988497,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": -0.6737557837390504,
+      "knee_angle": 1.7354142727451343,
+      "ankle_angle": 3.5121280320037394
+     },
+     "gap_to_esml_mm": -1.5,
+     "strides": 85,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 5
+    }
+   },
+   "AB08/d10": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9747682535104403,
+     "toe_within_4cm_0p2bw": 0.9782608695652174,
+     "toe_p95_abs_m_0p2bw": 0.027867517331105415,
+     "heel_p95_abs_m_0p2bw": 0.04325369641116201,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 2.336321057556897,
+      "knee_angle": 5.636317323178971,
+      "ankle_angle": 3.9645401372873725
+     },
+     "gap_to_esml_mm": 18.7,
+     "strides": 92,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 1
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.984010370594295,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.025832002171806572,
+     "heel_p95_abs_m_0p2bw": 0.13758900486416614,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 2.13985982053926,
+      "knee_angle": 4.425601164512814,
+      "ankle_angle": 2.1508963123825238
+     },
+     "gap_to_esml_mm": 13.2,
+     "strides": 90,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 2
+    }
+   },
+   "AB08/d5": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9887886640159521,
+     "toe_within_4cm_0p2bw": 0.9879518072289156,
+     "toe_p95_abs_m_0p2bw": 0.009494263251542507,
+     "heel_p95_abs_m_0p2bw": 0.03567041509470255,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 2.808713879655792,
+      "knee_angle": 5.881683850192122,
+      "ankle_angle": 3.3009131639500877
+     },
+     "gap_to_esml_mm": 9.1,
+     "strides": 83,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 0
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9878799408587468,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.013830605077412047,
+     "heel_p95_abs_m_0p2bw": 0.07662362055908077,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 2.470992077052396,
+      "knee_angle": 4.752701536846029,
+      "ankle_angle": 2.0321984140345593
+     },
+     "gap_to_esml_mm": 4.0,
+     "strides": 82,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 0
+    }
+   },
+   "AB08/i0": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.995152600260121,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.021054017760758992,
+     "heel_p95_abs_m_0p2bw": 0.08538736208285158,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 2.819705834325722,
+      "knee_angle": 5.605435648893427,
+      "ankle_angle": 2.703753369934269
+     },
+     "gap_to_esml_mm": 7.0,
+     "strides": 82,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 14
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9953961777639203,
+     "toe_within_4cm_0p2bw": 0.9875,
+     "toe_p95_abs_m_0p2bw": 0.020431728478467307,
+     "heel_p95_abs_m_0p2bw": 0.09398265800511928,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 2.5949323124527073,
+      "knee_angle": 4.438754078345532,
+      "ankle_angle": 1.6292759962157155
+     },
+     "gap_to_esml_mm": 3.0,
+     "strides": 80,
+     "marker_gap_events": 26,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 15
+    }
+   },
+   "AB08/i5": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9982894659529307,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.029251806196510424,
+     "heel_p95_abs_m_0p2bw": 0.07828629969738285,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 2.654434431289431,
+      "knee_angle": 5.5906054306852715,
+      "ankle_angle": 2.1479003302769564
+     },
+     "gap_to_esml_mm": 0.9,
+     "strides": 77,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 0
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9982536478323389,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.027630571917968375,
+     "heel_p95_abs_m_0p2bw": 0.11650712180046778,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 2.521619932636069,
+      "knee_angle": 4.377629371196218,
+      "ankle_angle": 1.2025747355189114
+     },
+     "gap_to_esml_mm": -1.0,
+     "strides": 76,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 1
+    }
+   },
+   "AB09/d10": {
+    "right": {
+     "cop": "held",
+     "reasons": [
+      "hold-out ankle moment r = 0.948 below 0.95",
+      "toe-off end within 4 cm in 2 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9484751668081173,
+     "toe_within_4cm_0p2bw": 0.018867924528301886,
+     "toe_p95_abs_m_0p2bw": 0.08809749444085951,
+     "heel_p95_abs_m_0p2bw": 0.08726934409882366,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 1.4219060224500175,
+      "knee_angle": 4.972602768203846,
+      "ankle_angle": 5.15994116432496
+     },
+     "gap_to_esml_mm": 28.7,
+     "strides": 107,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 1
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 0 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9671001780064091,
+     "toe_within_4cm_0p2bw": 0.0,
+     "toe_p95_abs_m_0p2bw": 0.07326875956791509,
+     "heel_p95_abs_m_0p2bw": 0.08594476117979279,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 2.1325063344802206,
+      "knee_angle": 6.817881134468607,
+      "ankle_angle": 6.533703789077651
+     },
+     "gap_to_esml_mm": 15.4,
+     "strides": 107,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 0
+    }
+   },
+   "AB09/d5": {
+    "right": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 0 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9528112372112311,
+     "toe_within_4cm_0p2bw": 0.0,
+     "toe_p95_abs_m_0p2bw": 0.06739413568454747,
+     "heel_p95_abs_m_0p2bw": 0.04424194445490658,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 1.6244494804627179,
+      "knee_angle": 5.0647072743316475,
+      "ankle_angle": 4.9228279177965
+     },
+     "gap_to_esml_mm": 15.3,
+     "strides": 94,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 9
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 15 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9694379279429826,
+     "toe_within_4cm_0p2bw": 0.15151515151515152,
+     "toe_p95_abs_m_0p2bw": 0.050790765918047695,
+     "heel_p95_abs_m_0p2bw": 0.058019578799081074,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 1.950555014970193,
+      "knee_angle": 6.407778188145622,
+      "ankle_angle": 5.40508525376268
+     },
+     "gap_to_esml_mm": 2.6,
+     "strides": 99,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 9
+    }
+   },
+   "AB09/i0": {
+    "right": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 1 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9789622587725145,
+     "toe_within_4cm_0p2bw": 0.010869565217391304,
+     "toe_p95_abs_m_0p2bw": 0.05962633088695439,
+     "heel_p95_abs_m_0p2bw": 0.04986811172018662,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 1.7588553965460096,
+      "knee_angle": 5.158454490876359,
+      "ankle_angle": 4.029759181258295
+     },
+     "gap_to_esml_mm": 8.8,
+     "strides": 92,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 1
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 3 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.974125709937703,
+     "toe_within_4cm_0p2bw": 0.03296703296703297,
+     "toe_p95_abs_m_0p2bw": 0.05764659705378378,
+     "heel_p95_abs_m_0p2bw": 0.06529730556989077,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 2.491524532755954,
+      "knee_angle": 7.014645330554585,
+      "ankle_angle": 6.88386042039305
+     },
+     "gap_to_esml_mm": -0.6,
+     "strides": 93,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 1
+    }
+   },
+   "AB09/i5": {
+    "right": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 3 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9731267201881902,
+     "toe_within_4cm_0p2bw": 0.034482758620689655,
+     "toe_p95_abs_m_0p2bw": 0.05188635950856261,
+     "heel_p95_abs_m_0p2bw": 0.07033788708388143,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 1.7496795256338604,
+      "knee_angle": 4.964935604168205,
+      "ankle_angle": 3.4925072782130995
+     },
+     "gap_to_esml_mm": -2.7,
+     "strides": 88,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 0
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 94 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9912416432784359,
+     "toe_within_4cm_0p2bw": 0.9431818181818182,
+     "toe_p95_abs_m_0p2bw": 0.040051528578753715,
+     "heel_p95_abs_m_0p2bw": 0.07223631956942471,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 2.5278979837622453,
+      "knee_angle": 6.770984184847103,
+      "ankle_angle": 5.54281713665818
+     },
+     "gap_to_esml_mm": -11.0,
+     "strides": 89,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 0
+    }
+   },
+   "AB10/d10": {
+    "right": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 92 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9957921080197093,
+     "toe_within_4cm_0p2bw": 0.9195402298850575,
+     "toe_p95_abs_m_0p2bw": 0.061061055503030336,
+     "heel_p95_abs_m_0p2bw": 0.06042873784846672,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 1.2174235420171766,
+      "knee_angle": 0.8159456255655755,
+      "ankle_angle": 0.733436848037753
+     },
+     "gap_to_esml_mm": -0.9,
+     "strides": 91,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 2
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9857222774376182,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.02197286794432307,
+     "heel_p95_abs_m_0p2bw": 0.07796991331291041,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 2.7456707369565203,
+      "knee_angle": 5.637303557916844,
+      "ankle_angle": 1.0638279090802656
+     },
+     "gap_to_esml_mm": -4.4,
+     "strides": 91,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 1
+    }
+   },
+   "AB10/d5": {
+    "right": {
+     "cop": "held",
+     "reasons": [
+      "plate not loaded at this leg's heel strikes"
+     ],
+     "holdout_r": 0.9971715206800243,
+     "toe_within_4cm_0p2bw": 0.9534883720930233,
+     "toe_p95_abs_m_0p2bw": 0.00864522972503523,
+     "heel_p95_abs_m_0p2bw": 0.07100086907498326,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 1.4367589581682516,
+      "knee_angle": 1.1449714747479294,
+      "ankle_angle": 0.6732386288732153
+     },
+     "gap_to_esml_mm": -1.5,
+     "strides": 90,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 0
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "plate not loaded at this leg's heel strikes"
+     ],
+     "holdout_r": 0.994845498972635,
+     "toe_within_4cm_0p2bw": 0.9775280898876404,
+     "toe_p95_abs_m_0p2bw": 0.022361470494604078,
+     "heel_p95_abs_m_0p2bw": 0.07522706572432383,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 2.034570532968543,
+      "knee_angle": 4.370006147774376,
+      "ankle_angle": 0.5801785698060785
+     },
+     "gap_to_esml_mm": -3.8,
+     "strides": 91,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 0
+    }
+   },
+   "AB10/i10": {
+    "right": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 3 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.99751398612243,
+     "toe_within_4cm_0p2bw": 0.025974025974025976,
+     "toe_p95_abs_m_0p2bw": 0.06592095931749775,
+     "heel_p95_abs_m_0p2bw": 0.0728423145499047,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 1.4284969460951293,
+      "knee_angle": 0.9476007041373691,
+      "ankle_angle": 0.33370319603898235
+     },
+     "gap_to_esml_mm": 2.1,
+     "strides": 80,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 0
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 0 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9990797786310709,
+     "toe_within_4cm_0p2bw": 0.0,
+     "toe_p95_abs_m_0p2bw": 0.13513050516161723,
+     "heel_p95_abs_m_0p2bw": 0.059383123120618525,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 2.3954859804575497,
+      "knee_angle": 5.757931660686643,
+      "ankle_angle": 1.673644589289695
+     },
+     "gap_to_esml_mm": 1.5,
+     "strides": 80,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 0
+    }
+   },
+   "AB10/i5": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9989425085757687,
+     "toe_within_4cm_0p2bw": 1.0,
+     "toe_p95_abs_m_0p2bw": 0.03365134912314072,
+     "heel_p95_abs_m_0p2bw": 0.06739479565367416,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 1.5348614915524346,
+      "knee_angle": 0.7006416149042349,
+      "ankle_angle": -0.15499025985292858
+     },
+     "gap_to_esml_mm": -0.5,
+     "strides": 84,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 0
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 56 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9995166273109573,
+     "toe_within_4cm_0p2bw": 0.5595238095238095,
+     "toe_p95_abs_m_0p2bw": 0.0746983909050203,
+     "heel_p95_abs_m_0p2bw": 0.04945533809810628,
+     "offset_deg_v2_minus_new_median": {
+      "hip_angle": 1.9324566125272757,
+      "knee_angle": 4.0743197728789236,
+      "ankle_angle": 1.1352845001413514
+     },
+     "gap_to_esml_mm": 1.2,
+     "strides": 86,
+     "marker_gap_events": 0,
+     "pelvis_held_above_1deg": 0,
+     "pelvis_flagged": 0
+    }
+   }
+  },
+  "reading": "Held reasons are mainly the toe-off end (all of AB09, AB01/i10, AB02/d10 and i10, AB03/d10 and i10, AB10/i10 fail it by a wide margin: a constant forward error of several cm, not noise), a few recordings fail by 1-6 points of the 95 percent line (AB04/i0 L 94, AB06/i10 L 94, AB07/d10 L 94). AB05/d10 R r 0.930 and AB09/d10 R r 0.948 fail the moment check. AB04/i5 and AB10/d5 fail plate assignment. AB05/d10 R has 71 and AB04/i5 R 28 marker-gap events (columns missing, not filled).",
+  "esml_gap": "gap_to_esml_mm per leg is in per_recording; ESML own-moment offsets are right/left-leg-agnostic here; the left-leg moment sign is unvalidated.",
+  "not_done": "independent audit script; Q01 v3 and R01 v3 on the new columns; heel-end offset explanation (AB04/d10); mixed-pass recordings (one leg published) need a decision on whether to publish a single leg."
+ },
+ "toe_error_investigation": {
+  "question": "Why does the toe-off CoP gate fail mostly on +-10 degree recordings while the ankle hold-out passes?",
+  "probe": "read-only, one recording at a time, nice 19 / ionice idle, peak RSS 234-247 MiB, 12-19 s, wrote nothing under converted_datasets (probe script was in /tmp; runner got a debug hook that only hands out inputs).",
+  "observed": "Toe-off error (CoP minus toe marker, 0.2 BW) grows with belt tilt: about +4.5 mm per degree (AB01, AB02, AB08, AB10), positive on inclines, negative on declines, and AB09 has an extra -50 mm at every tilt.",
+  "effects_tested": {
+   "belt_tilt_sign": "Not a sign bug. Flipping the tilt sign drops the hold-out ankle r to 0.48-0.79 and moves the toe end by 150-300 mm; sign is right.",
+   "belt_tilt_magnitude": "Toe error changes ~17 mm per degree of tilt. Scaling the tilt to 0.5 would zero the toe error on inclines but costs hold-out r (AB02/d10 0.988 to 0.926, AB08/d10 0.975 to 0.874, AB09/d10 0.948 to 0.874); r peaks at the nominal tilt. Plate-force-implied tilt (atan of summed along-belt over normal force, both plates): AB01/i10 9.7, AB02/i10 9.8, AB02/d10 10.5, AB03/i10 8.4, AB03/d10 7.2, AB09/d10 10.1, AB10/i10 8.8, others 10.0. Using it did not improve r on AB03/d10 (0.964 to 0.932). Nominal tilt kept; AB03 is the only recording where force-implied and nominal tilt differ by more than 1.2 degrees.",
+   "toe_marker_height": "Cannot explain a tilt-dependent error: it is a constant offset in the foot frame (order 1 cm); not tilt dependent.",
+   "planar_foot_frame": "Planar versus belt: the foot frame is built from the heel-toe line in the gravity frame; the same frame passes on AB08/d10 and AB04/d10. Not the cause.",
+   "plate_shift_error": "This is the cause. The up (plate-normal) shift is not identifiable from the hip and knee moments: it moved the CoP 3-30 cm above the foot (CoP minus toe marker vertical offset in the foot frame +35 to +287 mm where about -25 mm is expected; the free two-parameter up shift differs from the marker rule by 4-20 cm). The along-foot toe error is about 0.7 times the up error at toe-off (foot plantarflexed 48 degrees), so a 5-9 cm up error gives the observed 4-8 cm toe error. The along-belt offset was right all the time (own-moment ESML gap median 7 mm)."
+  },
+  "fix": "Runner v5: up shift from the foot-on-belt marker rule (CoP at the height of the lowest heel/toe marker in mid-stance; marker height above the sole is unknown and not subtracted), forward shift fitted from the moments with the up shift fixed (fit_forward_shift); the free two-parameter fit is kept as a diagnostic (fit.free_two_parameter_fit_*). Vertical offsets at both ends are now reported. Same gate (r >= 0.95, toe within 4 cm in 95 percent at 0.2 BW). Synthetic tests added (56 pass).",
+  "recheck_v5": "recheck stage (7 recordings): AB09/d10 and AB09/i0 (all four legs) now pass (toe median -4 to +16 mm, p95 14-27 mm, hold-out r 0.982-0.996, was 0.948-0.979); AB01/i0 and AB08/d10 stay passing. AB01/i10, AB02/d10, AB03/i10 stay held.",
+  "full_v5": "full run v5 of 44: legs published 59 of 88 (was 48); gained 13, lost 2 (AB05/i5 L: toe 62 percent, AB08/i5 R: 93 percent); recordings passing on both legs 24 (was 19), held on both 9 (AB01/i10, AB02/d10, AB02/i10, AB03/d10, AB03/i10, AB04/d10 by rule, AB04/i5, AB05/i5, AB10/d5). Hold-out r below 0.95 on one leg (AB05/d10 R 0.924). Peak RSS 256.1 MiB, 197.6 s, clean_success true, cleanup proven. Output um21_s02_frame_full_v5; v4 kept as history.",
+  "not_explained": "AB01/i10, AB02/i10 and AB03/i10 (10 degree inclines, three subjects) still have toe errors of +49 to +110 mm and CoP 24-149 mm above the toe marker after the fix: the marker rule is also wrong there. AB03 is also where force-implied tilt (8.4, 7.2) and heel-path slope (7.9) disagree with the nominal 10. A likely candidate is the true belt tilt on those sessions, but the tilt scan did not settle it. AB02/d10, AB03/d10 improved to -9 to -31 mm but still miss 95 percent (62-85 percent within 4 cm). Not changed: the gate.",
+  "full_v5_per_recording": {
+   "AB01/i0": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9983926210246591,
+     "toe_f4": 1.0,
+     "toe_med_m": 0.01750736240885499,
+     "toe_p95abs_m": 0.02152825166255922,
+     "heel_med_m": 0.038214681316094526,
+     "heel_p95abs_m": 0.05057193727483491,
+     "vert_toe_med_m": 0.01982815596348674,
+     "fwd": 0.9074618715185865,
+     "up": 0.044939900000000095,
+     "free_up": 0.0625905944832414,
+     "gap_esml_mm": 6.7
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9986140431908379,
+     "toe_f4": 1.0,
+     "toe_med_m": 0.018670154247986084,
+     "toe_p95abs_m": 0.02250303734806069,
+     "heel_med_m": 0.02091453825702083,
+     "heel_p95abs_m": 0.03839313554084649,
+     "vert_toe_med_m": 0.012631639688514697,
+     "fwd": 0.8914797780815101,
+     "up": 0.042949839999999996,
+     "free_up": 0.056620927265548175,
+     "gap_esml_mm": 16.4
+    }
+   },
+   "AB01/i10": {
+    "right": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 0 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9977162094633092,
+     "toe_f4": 0.0,
+     "toe_med_m": 0.05885770218069988,
+     "toe_p95abs_m": 0.07263627324619895,
+     "heel_med_m": -0.03455812162446016,
+     "heel_p95abs_m": 0.05751642805630343,
+     "vert_toe_med_m": 0.04245250612795538,
+     "fwd": 0.824370446035634,
+     "up": 0.10714023450536389,
+     "free_up": 0.1351661027611471,
+     "gap_esml_mm": -0.1
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 0 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9976788827819698,
+     "toe_f4": 0.0,
+     "toe_med_m": 0.07280322587045726,
+     "toe_p95abs_m": 0.08821468680016024,
+     "heel_med_m": -0.01683904436956933,
+     "heel_p95abs_m": 0.03158169151815032,
+     "vert_toe_med_m": 0.06031637070253061,
+     "fwd": 0.8091808028301329,
+     "up": 0.10352922265439266,
+     "free_up": 0.12016627253125223,
+     "gap_esml_mm": 11.3
+    }
+   },
+   "AB02/d10": {
+    "right": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 62 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9950369742010516,
+     "toe_f4": 0.625,
+     "toe_med_m": -0.0310179460916363,
+     "toe_p95abs_m": 0.07290654689396915,
+     "heel_med_m": 0.007337402462399598,
+     "heel_p95abs_m": 0.03535219369479407,
+     "vert_toe_med_m": -0.035538385689916574,
+     "fwd": -0.8846833878470273,
+     "up": 0.12054247811733457,
+     "free_up": 0.15280617836781227,
+     "gap_esml_mm": 6.4
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 76 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9938509030723328,
+     "toe_f4": 0.7586206896551724,
+     "toe_med_m": -0.016994858142734784,
+     "toe_p95abs_m": 0.05343117889957917,
+     "heel_med_m": 0.032923091131444066,
+     "heel_p95abs_m": 0.17828794299585426,
+     "vert_toe_med_m": -0.02020352679406566,
+     "fwd": -0.8599086712315708,
+     "up": 0.12247559350490947,
+     "free_up": 0.15660084222658835,
+     "gap_esml_mm": -3.3
+    }
+   },
+   "AB02/d5": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9945889956272124,
+     "toe_f4": 1.0,
+     "toe_med_m": -0.008324129241324363,
+     "toe_p95abs_m": 0.021183825699283232,
+     "heel_med_m": 0.008834877255944257,
+     "heel_p95abs_m": 0.02094732206426438,
+     "vert_toe_med_m": -0.015152710049069415,
+     "fwd": -0.9725484298886224,
+     "up": 0.07861822060300659,
+     "free_up": 0.09691514076120836,
+     "gap_esml_mm": 10.2
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9928522050796262,
+     "toe_f4": 1.0,
+     "toe_med_m": 0.008833111242587663,
+     "toe_p95abs_m": 0.015526091383065132,
+     "heel_med_m": 0.024694993394496323,
+     "heel_p95abs_m": 0.03964157298731446,
+     "vert_toe_med_m": 4.183031687841898e-05,
+     "fwd": -0.9367197652991689,
+     "up": 0.08189400323070994,
+     "free_up": 0.10233231753752217,
+     "gap_esml_mm": 0.4
+    }
+   },
+   "AB02/i0": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9977953089523974,
+     "toe_f4": 0.9746835443037974,
+     "toe_med_m": -0.0006887784050113588,
+     "toe_p95abs_m": 0.033437502614382573,
+     "heel_med_m": 0.015678804703895294,
+     "heel_p95abs_m": 0.049740774381330004,
+     "vert_toe_med_m": 0.0011179306596817914,
+     "fwd": 0.9420607333899387,
+     "up": 0.039372859999999996,
+     "free_up": 0.04149778492821033,
+     "gap_esml_mm": 6.4
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9936633894283492,
+     "toe_f4": 0.987012987012987,
+     "toe_med_m": 0.004446501705009237,
+     "toe_p95abs_m": 0.027330496564866517,
+     "heel_med_m": 0.019781455437744233,
+     "heel_p95abs_m": 0.05251782012677053,
+     "vert_toe_med_m": 0.003839066244769977,
+     "fwd": 0.9567465933909626,
+     "up": 0.038593415000000006,
+     "free_up": 0.0514441528530203,
+     "gap_esml_mm": -1.6
+    }
+   },
+   "AB02/i10": {
+    "right": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 19 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9976648130077368,
+     "toe_f4": 0.19480519480519481,
+     "toe_med_m": 0.04919386933046413,
+     "toe_p95abs_m": 0.06452271748117831,
+     "heel_med_m": 0.002381211550144341,
+     "heel_p95abs_m": 0.032640480245050445,
+     "vert_toe_med_m": 0.02450294153728834,
+     "fwd": 0.8404493393498277,
+     "up": 0.10732476362115335,
+     "free_up": 0.11369325400886852,
+     "gap_esml_mm": -2.6
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 0 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9964054610216947,
+     "toe_f4": 0.0,
+     "toe_med_m": 0.06869699249370166,
+     "toe_p95abs_m": 0.08682480548097557,
+     "heel_med_m": -0.002458500323508847,
+     "heel_p95abs_m": 0.033191733768819426,
+     "vert_toe_med_m": 0.04264913554252546,
+     "fwd": 0.8522702955312635,
+     "up": 0.10538147813561625,
+     "free_up": 0.13973772459478004,
+     "gap_esml_mm": -6.4
+    }
+   },
+   "AB02/i5": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.998326342036064,
+     "toe_f4": 1.0,
+     "toe_med_m": 0.019149170041858288,
+     "toe_p95abs_m": 0.0244617899430822,
+     "heel_med_m": 0.03771185616295705,
+     "heel_p95abs_m": 0.04675509258825381,
+     "vert_toe_med_m": 0.013124834889412858,
+     "fwd": 0.8934511188978019,
+     "up": 0.07838680321338212,
+     "free_up": 0.06550397935236726,
+     "gap_esml_mm": 0.9
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.997426065420916,
+     "toe_f4": 1.0,
+     "toe_med_m": 0.026173110218769446,
+     "toe_p95abs_m": 0.033748953736948695,
+     "heel_med_m": 0.046549106950009314,
+     "heel_p95abs_m": 0.05848867102145473,
+     "vert_toe_med_m": 0.010519025339963906,
+     "fwd": 0.9077982846339324,
+     "up": 0.07291904821492357,
+     "free_up": 0.09100258676983877,
+     "gap_esml_mm": -5.0
+    }
+   },
+   "AB03/d10": {
+    "right": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 74 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9977346519756454,
+     "toe_f4": 0.7441860465116279,
+     "toe_med_m": -0.013636502200860802,
+     "toe_p95abs_m": 0.05677856908353672,
+     "heel_med_m": 0.05409027455948163,
+     "heel_p95abs_m": 0.09054887465647365,
+     "vert_toe_med_m": -0.017926976408530634,
+     "fwd": -0.8348986114593946,
+     "up": 0.11893804241211783,
+     "free_up": 0.20372803624116226,
+     "gap_esml_mm": -27.3
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 85 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9972772657166366,
+     "toe_f4": 0.8470588235294118,
+     "toe_med_m": -0.00864564024385063,
+     "toe_p95abs_m": 0.0453483684721462,
+     "heel_med_m": 0.07581742525566287,
+     "heel_p95abs_m": 0.0953642891046981,
+     "vert_toe_med_m": -0.020169648244041508,
+     "fwd": -0.8367195416519898,
+     "up": 0.12172824118645333,
+     "free_up": 0.18112315983956861,
+     "gap_esml_mm": -10.7
+    }
+   },
+   "AB03/d5": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9992413066055571,
+     "toe_f4": 1.0,
+     "toe_med_m": 0.01233990913102475,
+     "toe_p95abs_m": 0.01930120851467213,
+     "heel_med_m": 0.038760411394705346,
+     "heel_p95abs_m": 0.054615862894913075,
+     "vert_toe_med_m": 0.014979613591734147,
+     "fwd": -0.8639325812972731,
+     "up": 0.08495677619306381,
+     "free_up": 0.11983225355806071,
+     "gap_esml_mm": -25.2
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9976640104416695,
+     "toe_f4": 1.0,
+     "toe_med_m": 0.0029910961657754614,
+     "toe_p95abs_m": 0.00886370693206974,
+     "heel_med_m": 0.0395573171439101,
+     "heel_p95abs_m": 0.048409807939998495,
+     "vert_toe_med_m": 0.0034114205186660806,
+     "fwd": -0.8699274961854155,
+     "up": 0.08683948574977184,
+     "free_up": 0.09976792530832551,
+     "gap_esml_mm": -9.2
+    }
+   },
+   "AB03/i0": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9965387240919257,
+     "toe_f4": 1.0,
+     "toe_med_m": -0.003387641749742938,
+     "toe_p95abs_m": 0.026644871763232467,
+     "heel_med_m": 0.05710759747683374,
+     "heel_p95abs_m": 0.06719473399056528,
+     "vert_toe_med_m": 0.014195461615700431,
+     "fwd": 0.9123811498615854,
+     "up": 0.047619419999999996,
+     "free_up": 0.03731135641112253,
+     "gap_esml_mm": -6.2
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9972565530298639,
+     "toe_f4": 1.0,
+     "toe_med_m": 0.007121962728763739,
+     "toe_p95abs_m": 0.016929749881714497,
+     "heel_med_m": 0.05627425149166418,
+     "heel_p95abs_m": 0.06799906959525236,
+     "vert_toe_med_m": 0.020723981089697568,
+     "fwd": 0.9244242398695545,
+     "up": 0.0482895,
+     "free_up": 0.05688437421719078,
+     "gap_esml_mm": -13.9
+    }
+   },
+   "AB03/i10": {
+    "right": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 0 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9985322753832937,
+     "toe_f4": 0.0,
+     "toe_med_m": 0.11037794894311753,
+     "toe_p95abs_m": 0.13438983199456478,
+     "heel_med_m": -0.05366211433271448,
+     "heel_p95abs_m": 0.09246187572081413,
+     "vert_toe_med_m": 0.14337323339419256,
+     "fwd": 0.7995585943383177,
+     "up": 0.11861758591164312,
+     "free_up": 0.31444801479892254,
+     "gap_esml_mm": -37.8
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 0 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9992063990366115,
+     "toe_f4": 0.0,
+     "toe_med_m": 0.10475672902142258,
+     "toe_p95abs_m": 0.15118918303068068,
+     "heel_med_m": -0.08619991438321306,
+     "heel_p95abs_m": 0.1183827145990354,
+     "vert_toe_med_m": 0.14924910640278738,
+     "fwd": 0.776840385870019,
+     "up": 0.12340678227398613,
+     "free_up": 0.16108835228124635,
+     "gap_esml_mm": -11.5
+    }
+   },
+   "AB03/i5": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9956654033815754,
+     "toe_f4": 0.987012987012987,
+     "toe_med_m": 0.0031418349004964374,
+     "toe_p95abs_m": 0.009533298072290265,
+     "heel_med_m": 0.04935472305628258,
+     "heel_p95abs_m": 0.06454510921432087,
+     "vert_toe_med_m": 0.01613198818551665,
+     "fwd": 0.8673453175697168,
+     "up": 0.08886008333160203,
+     "free_up": 0.07467714274858553,
+     "gap_esml_mm": -8.9
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9985306866695772,
+     "toe_f4": 1.0,
+     "toe_med_m": 0.015150683708926277,
+     "toe_p95abs_m": 0.019757370948832516,
+     "heel_med_m": 0.05738779162727735,
+     "heel_p95abs_m": 0.07164276961505063,
+     "vert_toe_med_m": 0.018933212008270743,
+     "fwd": 0.878185217968141,
+     "up": 0.08881269918300536,
+     "free_up": 0.09549225013688158,
+     "gap_esml_mm": -14.5
+    }
+   },
+   "AB04/d10": {
+    "right": {
+     "cop": "held",
+     "reasons": [
+      "held until the 20 cm heel-end offset is explained (D-UM21-S02-1)"
+     ],
+     "holdout_r": 0.9948690954838941,
+     "toe_f4": 1.0,
+     "toe_med_m": 0.004738937432039847,
+     "toe_p95abs_m": 0.010415225464372532,
+     "heel_med_m": 0.20044794265226695,
+     "heel_p95abs_m": 0.21844670102778463,
+     "vert_toe_med_m": 0.009978340290761119,
+     "fwd": -0.8348644674837296,
+     "up": 0.1345424352914832,
+     "free_up": 0.14227530082507145,
+     "gap_esml_mm": 2.1
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "held until the 20 cm heel-end offset is explained (D-UM21-S02-1)"
+     ],
+     "holdout_r": 0.9960157154243827,
+     "toe_f4": 1.0,
+     "toe_med_m": 0.0048116598815386435,
+     "toe_p95abs_m": 0.011963599229402402,
+     "heel_med_m": 0.21458228602440543,
+     "heel_p95abs_m": 0.23350722128736867,
+     "vert_toe_med_m": 0.012438034931030767,
+     "fwd": -0.833951305594834,
+     "up": 0.13709367239735015,
+     "free_up": 0.1618606682520237,
+     "gap_esml_mm": -10.8
+    }
+   },
+   "AB04/d5": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9963750536467296,
+     "toe_f4": 0.9887640449438202,
+     "toe_med_m": -0.0010338425624749625,
+     "toe_p95abs_m": 0.00917309237946329,
+     "heel_med_m": 0.05366369552022811,
+     "heel_p95abs_m": 0.14386462050188525,
+     "vert_toe_med_m": 0.0052949663283474585,
+     "fwd": -0.904210955471281,
+     "up": 0.09498939840742338,
+     "free_up": 0.10700167242244231,
+     "gap_esml_mm": 5.0
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9962200899493053,
+     "toe_f4": 1.0,
+     "toe_med_m": -0.0033799626841275743,
+     "toe_p95abs_m": 0.008106399524330912,
+     "heel_med_m": 0.0715815976849888,
+     "heel_p95abs_m": 0.09671651855751126,
+     "vert_toe_med_m": 0.01067639974896132,
+     "fwd": -0.8991280807733985,
+     "up": 0.09996616118423732,
+     "free_up": 0.12185297147275065,
+     "gap_esml_mm": -8.5
+    }
+   },
+   "AB04/i0": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9775669003378085,
+     "toe_f4": 1.0,
+     "toe_med_m": 0.00033557946178407183,
+     "toe_p95abs_m": 0.005301974038321266,
+     "heel_med_m": 0.06372605235106646,
+     "heel_p95abs_m": 0.09579881916238508,
+     "vert_toe_med_m": 0.025764027505170803,
+     "fwd": 0.9481446069423533,
+     "up": 0.0568237800000002,
+     "free_up": 0.06458617043046995,
+     "gap_esml_mm": 5.0
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 93 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9971259256195767,
+     "toe_f4": 0.926829268292683,
+     "toe_med_m": -0.00016618193680729976,
+     "toe_p95abs_m": 0.07228311471792585,
+     "heel_med_m": 0.06738765240916388,
+     "heel_p95abs_m": 0.09280703875807686,
+     "vert_toe_med_m": 0.02784584523937868,
+     "fwd": 0.950597985396392,
+     "up": 0.05871060000000001,
+     "free_up": 0.06935425122310548,
+     "gap_esml_mm": -7.5
+    }
+   },
+   "AB04/i10": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9950836504007097,
+     "toe_f4": 0.9722222222222222,
+     "toe_med_m": -0.005051284377246196,
+     "toe_p95abs_m": 0.027772165808393926,
+     "heel_med_m": 0.0482680364736015,
+     "heel_p95abs_m": 0.07611157293772176,
+     "vert_toe_med_m": 0.0010607933510825146,
+     "fwd": 0.8364460974306672,
+     "up": 0.13468700899138808,
+     "free_up": 0.13086284989476016,
+     "gap_esml_mm": -1.8
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 90 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9894579148003325,
+     "toe_f4": 0.9014084507042254,
+     "toe_med_m": -0.00750268934432155,
+     "toe_p95abs_m": 0.15832615452061188,
+     "heel_med_m": 0.08128410771057032,
+     "heel_p95abs_m": 0.11868040336426894,
+     "vert_toe_med_m": -0.0022506625584350626,
+     "fwd": 0.8314034897203159,
+     "up": 0.13312366198302655,
+     "free_up": 0.13662976512133598,
+     "gap_esml_mm": -9.8
+    }
+   },
+   "AB04/i5": {
+    "right": {
+     "cop": "held",
+     "reasons": [
+      "plate not loaded at this leg's heel strikes"
+     ],
+     "holdout_r": 0.9879071466685996,
+     "toe_f4": 1.0,
+     "toe_med_m": -0.010969909566488079,
+     "toe_p95abs_m": 0.013237994970834135,
+     "heel_med_m": 0.04707238283159304,
+     "heel_p95abs_m": 0.06480384411197943,
+     "vert_toe_med_m": 0.010565932708622813,
+     "fwd": 0.8994977072055431,
+     "up": 0.10370119048420187,
+     "free_up": 0.08432174651434514,
+     "gap_esml_mm": 2.5
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 62 percent of strides (needs 95)",
+      "plate not loaded at this leg's heel strikes"
+     ],
+     "holdout_r": 0.995836047656714,
+     "toe_f4": 0.6231884057971014,
+     "toe_med_m": 0.0024662106873228895,
+     "toe_p95abs_m": 0.13449815566168705,
+     "heel_med_m": 0.05202853708441761,
+     "heel_p95abs_m": 0.10220268263691895,
+     "vert_toe_med_m": 0.014295670032627494,
+     "fwd": 0.8993337424631334,
+     "up": 0.10123709554985946,
+     "free_up": 0.10054128644340568,
+     "gap_esml_mm": -7.4
+    }
+   },
+   "AB05/d10": {
+    "right": {
+     "cop": "held",
+     "reasons": [
+      "hold-out ankle moment r = 0.924 below 0.95"
+     ],
+     "holdout_r": 0.9242585013777226,
+     "toe_f4": 1.0,
+     "toe_med_m": 0.0025495207576315404,
+     "toe_p95abs_m": 0.010618291459569718,
+     "heel_med_m": 0.011680329473469059,
+     "heel_p95abs_m": 0.02558900463354427,
+     "vert_toe_med_m": -0.015571661083699687,
+     "fwd": -0.8957364283208464,
+     "up": 0.14096065272749383,
+     "free_up": 0.1310468550108973,
+     "gap_esml_mm": 29.8
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9904912162264224,
+     "toe_f4": 0.9897959183673469,
+     "toe_med_m": 0.005046757039737962,
+     "toe_p95abs_m": 0.014006506943471537,
+     "heel_med_m": 0.01099114636873319,
+     "heel_p95abs_m": 0.03853764255177889,
+     "vert_toe_med_m": -0.014006077530661808,
+     "fwd": -0.8742502139155848,
+     "up": 0.14052141003595583,
+     "free_up": 0.14776391451415635,
+     "gap_esml_mm": 23.3
+    }
+   },
+   "AB05/d5": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.995801572550877,
+     "toe_f4": 0.9888888888888889,
+     "toe_med_m": -0.012463192278128171,
+     "toe_p95abs_m": 0.021133042151912203,
+     "heel_med_m": 0.0020866779272570857,
+     "heel_p95abs_m": 0.015205323038659506,
+     "vert_toe_med_m": -0.021341976781859843,
+     "fwd": -0.9347477850286474,
+     "up": 0.10473762302129762,
+     "free_up": 0.09018854510490416,
+     "gap_esml_mm": 24.7
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9945556746443045,
+     "toe_f4": 0.978021978021978,
+     "toe_med_m": -0.007341479697026171,
+     "toe_p95abs_m": 0.021010535660680667,
+     "heel_med_m": 0.012374922528020721,
+     "heel_p95abs_m": 0.03022760735226261,
+     "vert_toe_med_m": -0.017389165975927497,
+     "fwd": -0.9212797639819099,
+     "up": 0.10265668989118923,
+     "free_up": 0.10907387723402288,
+     "gap_esml_mm": 18.4
+    }
+   },
+   "AB05/i0": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9808104889848357,
+     "toe_f4": 0.9882352941176471,
+     "toe_med_m": -0.014509847201458925,
+     "toe_p95abs_m": 0.019942757504073406,
+     "heel_med_m": 0.028404524802261466,
+     "heel_p95abs_m": 0.04510347476734391,
+     "vert_toe_med_m": -0.00388086603812092,
+     "fwd": 0.9159668332821502,
+     "up": 0.06863536,
+     "free_up": 0.04589873625956636,
+     "gap_esml_mm": 24.7
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.99600318977165,
+     "toe_f4": 1.0,
+     "toe_med_m": -0.008366297211798851,
+     "toe_p95abs_m": 0.021215978541006607,
+     "heel_med_m": 0.023636268148579387,
+     "heel_p95abs_m": 0.03856019701630955,
+     "vert_toe_med_m": -0.0012823502149673094,
+     "fwd": 0.9305393168144197,
+     "up": 0.06735302,
+     "free_up": 0.04793293431164053,
+     "gap_esml_mm": 18.8
+    }
+   },
+   "AB05/i10": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9965805906143009,
+     "toe_f4": 0.9878048780487805,
+     "toe_med_m": -0.007444559950188945,
+     "toe_p95abs_m": 0.013206299161282518,
+     "heel_med_m": 0.030381523471739197,
+     "heel_p95abs_m": 0.048163153657483394,
+     "vert_toe_med_m": -0.009224357276249213,
+     "fwd": 0.8304183114533303,
+     "up": 0.1397139402269921,
+     "free_up": 0.10203011618938573,
+     "gap_esml_mm": 12.4
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9954215107877896,
+     "toe_f4": 0.9878048780487805,
+     "toe_med_m": -0.005483451217331736,
+     "toe_p95abs_m": 0.014660500416441928,
+     "heel_med_m": 0.023685327798107406,
+     "heel_p95abs_m": 0.04344740792401399,
+     "vert_toe_med_m": -0.01868336796660701,
+     "fwd": 0.8432988181130113,
+     "up": 0.133984257572456,
+     "free_up": 0.0892032349045964,
+     "gap_esml_mm": 12.5
+    }
+   },
+   "AB05/i5": {
+    "right": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 0 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.987625045044679,
+     "toe_f4": 0.0,
+     "toe_med_m": -0.05153783058682528,
+     "toe_p95abs_m": 0.06689998459983065,
+     "heel_med_m": -0.037641886921954415,
+     "heel_p95abs_m": 0.0475057849292704,
+     "vert_toe_med_m": -0.04177201235475486,
+     "fwd": 0.8097943963581258,
+     "up": 0.108448042562202,
+     "free_up": 0.06769063738965919,
+     "gap_esml_mm": 24.0
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 62 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9897542078185477,
+     "toe_f4": 0.6172839506172839,
+     "toe_med_m": -0.037705119674145415,
+     "toe_p95abs_m": 0.05538186449195155,
+     "heel_med_m": -0.024538287256613722,
+     "heel_p95abs_m": 0.03223538790776431,
+     "vert_toe_med_m": -0.038776096094181686,
+     "fwd": 0.8298662605019463,
+     "up": 0.10168390308702338,
+     "free_up": 0.04879551133763181,
+     "gap_esml_mm": 15.8
+    }
+   },
+   "AB06/d10": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9929630600986827,
+     "toe_f4": 1.0,
+     "toe_med_m": 0.01576852368519576,
+     "toe_p95abs_m": 0.02116633191851345,
+     "heel_med_m": 0.032529010379899234,
+     "heel_p95abs_m": 0.04323978965933457,
+     "vert_toe_med_m": 0.0026159426101306886,
+     "fwd": -0.876868483511224,
+     "up": 0.1596063104864997,
+     "free_up": 0.2232834230038038,
+     "gap_esml_mm": 10.9
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 94 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9977546984945267,
+     "toe_f4": 0.9393939393939394,
+     "toe_med_m": 0.026075179178948277,
+     "toe_p95abs_m": 0.04032351848767248,
+     "heel_med_m": 0.06628697115621482,
+     "heel_p95abs_m": 0.07307771800581095,
+     "vert_toe_med_m": 0.011852655984455125,
+     "fwd": -0.8415597073238046,
+     "up": 0.16073033710093254,
+     "free_up": 0.24461400753212897,
+     "gap_esml_mm": -13.9
+    }
+   },
+   "AB06/d5": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9951349368026027,
+     "toe_f4": 1.0,
+     "toe_med_m": 0.0038543528131116597,
+     "toe_p95abs_m": 0.00930558690897306,
+     "heel_med_m": 0.024840562146130202,
+     "heel_p95abs_m": 0.03576272843556069,
+     "vert_toe_med_m": -0.004991560298052287,
+     "fwd": -0.912555627866455,
+     "up": 0.1198204884502451,
+     "free_up": 0.15481645845921457,
+     "gap_esml_mm": 6.8
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9967355420183956,
+     "toe_f4": 0.989247311827957,
+     "toe_med_m": 0.01319345583143608,
+     "toe_p95abs_m": 0.01785580364978558,
+     "heel_med_m": 0.0420728700911924,
+     "heel_p95abs_m": 0.05111545318631998,
+     "vert_toe_med_m": 0.0010183600378544447,
+     "fwd": -0.8887535909573424,
+     "up": 0.12044856808234887,
+     "free_up": 0.18063573847492662,
+     "gap_esml_mm": -12.2
+    }
+   },
+   "AB06/i0": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9973553788762574,
+     "toe_f4": 1.0,
+     "toe_med_m": 0.0023697207850877713,
+     "toe_p95abs_m": 0.006298806879719969,
+     "heel_med_m": 0.03836071660636815,
+     "heel_p95abs_m": 0.047245273824196334,
+     "vert_toe_med_m": 0.011570192462323641,
+     "fwd": 0.9023173003629735,
+     "up": 0.08155462000000001,
+     "free_up": 0.08962500394887213,
+     "gap_esml_mm": 8.9
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9977283864517209,
+     "toe_f4": 0.9764705882352941,
+     "toe_med_m": 0.022060241454389937,
+     "toe_p95abs_m": 0.027016901286980526,
+     "heel_med_m": 0.04443211993084534,
+     "heel_p95abs_m": 0.05530613739831477,
+     "vert_toe_med_m": 0.022598327326723316,
+     "fwd": 0.908638754331616,
+     "up": 0.08184593999999994,
+     "free_up": 0.12671233033394808,
+     "gap_esml_mm": -7.4
+    }
+   },
+   "AB06/i10": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9961029601561913,
+     "toe_f4": 1.0,
+     "toe_med_m": 0.0086382950876457,
+     "toe_p95abs_m": 0.014279668784612561,
+     "heel_med_m": 0.04563522438613482,
+     "heel_p95abs_m": 0.05581194840159565,
+     "vert_toe_med_m": -0.0013244145060506939,
+     "fwd": 0.8277306282438051,
+     "up": 0.15401001143863516,
+     "free_up": 0.1819770279853573,
+     "gap_esml_mm": 1.7
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9962230193801418,
+     "toe_f4": 0.9764705882352941,
+     "toe_med_m": 0.022629066951535742,
+     "toe_p95abs_m": 0.026426034686491493,
+     "heel_med_m": 0.05293250972598354,
+     "heel_p95abs_m": 0.0683846756020689,
+     "vert_toe_med_m": 0.0018081965140189643,
+     "fwd": 0.8406876246048036,
+     "up": 0.15275150527701736,
+     "free_up": 0.23738897426086739,
+     "gap_esml_mm": -14.0
+    }
+   },
+   "AB06/i5": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9981387564860392,
+     "toe_f4": 1.0,
+     "toe_med_m": 0.011281898375665483,
+     "toe_p95abs_m": 0.013609879451942905,
+     "heel_med_m": 0.05574290661818575,
+     "heel_p95abs_m": 0.06108986702758802,
+     "vert_toe_med_m": 0.01877038935859321,
+     "fwd": 0.872739248863128,
+     "up": 0.12416376421909103,
+     "free_up": 0.12154183911707558,
+     "gap_esml_mm": 2.3
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9978811423023779,
+     "toe_f4": 1.0,
+     "toe_med_m": 0.025082919476568377,
+     "toe_p95abs_m": 0.028371232093450684,
+     "heel_med_m": 0.06271831876931262,
+     "heel_p95abs_m": 0.07236377469647312,
+     "vert_toe_med_m": 0.02277683802684477,
+     "fwd": 0.8794241905705021,
+     "up": 0.12379101809078058,
+     "free_up": 0.14870044946024283,
+     "gap_esml_mm": -11.8
+    }
+   },
+   "AB07/d10": {
+    "right": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 90 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9959915102928523,
+     "toe_f4": 0.9042553191489362,
+     "toe_med_m": 0.00912913769923572,
+     "toe_p95abs_m": 0.11862884998739684,
+     "heel_med_m": 0.022254702972279522,
+     "heel_p95abs_m": 0.03822576675421529,
+     "vert_toe_med_m": 0.00017589375633478288,
+     "fwd": -0.8557519858171603,
+     "up": 0.1513837829588933,
+     "free_up": 0.1975438090759241,
+     "gap_esml_mm": 7.3
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9811201449218027,
+     "toe_f4": 1.0,
+     "toe_med_m": 0.005794890318008589,
+     "toe_p95abs_m": 0.012900431543158779,
+     "heel_med_m": 0.018746338740811233,
+     "heel_p95abs_m": 0.043932581606201185,
+     "vert_toe_med_m": -0.007664235234684045,
+     "fwd": -0.85332335543243,
+     "up": 0.1503557806661817,
+     "free_up": 0.1944268508770205,
+     "gap_esml_mm": 10.8
+    }
+   },
+   "AB07/d5": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9971166563065156,
+     "toe_f4": 0.978494623655914,
+     "toe_med_m": 0.005713686535934598,
+     "toe_p95abs_m": 0.010987654200679682,
+     "heel_med_m": 0.02098155214352304,
+     "heel_p95abs_m": 0.03583781983232913,
+     "vert_toe_med_m": -0.0021373789877473584,
+     "fwd": -0.8916411305443385,
+     "up": 0.11021358577644935,
+     "free_up": 0.15544313590931585,
+     "gap_esml_mm": 4.7
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.997140215971534,
+     "toe_f4": 0.9891304347826086,
+     "toe_med_m": 0.005164019164180064,
+     "toe_p95abs_m": 0.009382207054674258,
+     "heel_med_m": 0.011674650004886739,
+     "heel_p95abs_m": 0.02553614395201964,
+     "vert_toe_med_m": -0.0029353542042937115,
+     "fwd": -0.8916777392529783,
+     "up": 0.11100430545332235,
+     "free_up": 0.14359366858267197,
+     "gap_esml_mm": 7.7
+    }
+   },
+   "AB07/i0": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9740594185361044,
+     "toe_f4": 1.0,
+     "toe_med_m": 0.00956816936566679,
+     "toe_p95abs_m": 0.014485414728869328,
+     "heel_med_m": 0.04659540506315374,
+     "heel_p95abs_m": 0.06843744591515029,
+     "vert_toe_med_m": 0.01292082835826771,
+     "fwd": 0.91146199781889,
+     "up": 0.07252546,
+     "free_up": 0.08860855896402163,
+     "gap_esml_mm": 3.7
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 80 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9973583464482842,
+     "toe_f4": 0.7954545454545454,
+     "toe_med_m": 0.013945248997516396,
+     "toe_p95abs_m": 0.11035760143476511,
+     "heel_med_m": 0.03910393238155205,
+     "heel_p95abs_m": 0.08188916633293081,
+     "vert_toe_med_m": 0.021259232470905956,
+     "fwd": 0.9057686026379388,
+     "up": 0.072082515,
+     "free_up": 0.08916247403190092,
+     "gap_esml_mm": 5.4
+    }
+   },
+   "AB07/i10": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9823888105677272,
+     "toe_f4": 1.0,
+     "toe_med_m": 0.018417434576450314,
+     "toe_p95abs_m": 0.023607187038157333,
+     "heel_med_m": 0.03904609698728406,
+     "heel_p95abs_m": 0.054191320143049504,
+     "vert_toe_med_m": 0.0018996103268792905,
+     "fwd": 0.8068935571247264,
+     "up": 0.138650949980762,
+     "free_up": 0.1316665930974051,
+     "gap_esml_mm": -2.9
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 90 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9966996281050219,
+     "toe_f4": 0.9024390243902439,
+     "toe_med_m": 0.015361667380605973,
+     "toe_p95abs_m": 0.08471606340728653,
+     "heel_med_m": 0.04147667615153233,
+     "heel_p95abs_m": 0.0632064087502292,
+     "vert_toe_med_m": -0.0030835011275182587,
+     "fwd": 0.7971965381370432,
+     "up": 0.14104454762916238,
+     "free_up": 0.13631411141972224,
+     "gap_esml_mm": -3.7
+    }
+   },
+   "AB07/i5": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.98061829846554,
+     "toe_f4": 0.9736842105263158,
+     "toe_med_m": 0.02077059521427148,
+     "toe_p95abs_m": 0.02570666802287624,
+     "heel_med_m": 0.04385800268451427,
+     "heel_p95abs_m": 0.06256250953516795,
+     "vert_toe_med_m": 0.010226912527472053,
+     "fwd": 0.8615390741250377,
+     "up": 0.10773213299156512,
+     "free_up": 0.11226464568760598,
+     "gap_esml_mm": 0.2
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9982486702975135,
+     "toe_f4": 0.95,
+     "toe_med_m": 0.010729109736797957,
+     "toe_p95abs_m": 0.02487540176346904,
+     "heel_med_m": 0.04333078223875197,
+     "heel_p95abs_m": 0.06438270289935692,
+     "vert_toe_med_m": 0.0058023056188560955,
+     "fwd": 0.85475945733471,
+     "up": 0.11095153834389171,
+     "free_up": 0.11894962323018665,
+     "gap_esml_mm": -0.8
+    }
+   },
+   "AB08/d10": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9899779312742671,
+     "toe_f4": 0.9782608695652174,
+     "toe_med_m": 0.015307646152923564,
+     "toe_p95abs_m": 0.025384588777722487,
+     "heel_med_m": 0.011309787680238562,
+     "heel_p95abs_m": 0.04439114737901436,
+     "vert_toe_med_m": -0.006572428866133448,
+     "fwd": -0.9073177959661731,
+     "up": 0.1513359432026137,
+     "free_up": 0.19667116193633966,
+     "gap_esml_mm": 9.5
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9904563794627157,
+     "toe_f4": 1.0,
+     "toe_med_m": 0.005598152961646605,
+     "toe_p95abs_m": 0.013088935113642798,
+     "heel_med_m": 0.03980395920783775,
+     "heel_p95abs_m": 0.14464484554638213,
+     "vert_toe_med_m": -0.007402754582631749,
+     "fwd": -0.8879816731674952,
+     "up": 0.1530848402722967,
+     "free_up": 0.1854630878607178,
+     "gap_esml_mm": 6.7
+    }
+   },
+   "AB08/d5": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9938512555945125,
+     "toe_f4": 0.9879518072289156,
+     "toe_med_m": 0.01794967611686407,
+     "toe_p95abs_m": 0.02565711848045323,
+     "heel_med_m": 0.018001360596400756,
+     "heel_p95abs_m": 0.03018142942947471,
+     "vert_toe_med_m": 0.002984471698316886,
+     "fwd": -0.9589439843692293,
+     "up": 0.11168979240119074,
+     "free_up": 0.13821026586235363,
+     "gap_esml_mm": 6.3
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9907903635007849,
+     "toe_f4": 1.0,
+     "toe_med_m": -0.0002134032396665514,
+     "toe_p95abs_m": 0.0077137331811657035,
+     "heel_med_m": 0.043309883278611724,
+     "heel_p95abs_m": 0.0764231126668532,
+     "vert_toe_med_m": -0.004179280074087216,
+     "fwd": -0.9335959085252581,
+     "up": 0.11386885985564152,
+     "free_up": 0.12428208450520574,
+     "gap_esml_mm": 2.9
+    }
+   },
+   "AB08/i0": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9969522294224521,
+     "toe_f4": 1.0,
+     "toe_med_m": 0.02779652706181371,
+     "toe_p95abs_m": 0.03715890365036177,
+     "heel_med_m": 0.0603523020607588,
+     "heel_p95abs_m": 0.08170753541820247,
+     "vert_toe_med_m": 0.02163135925395318,
+     "fwd": 0.9573284957481074,
+     "up": 0.0662551899999997,
+     "free_up": 0.08983464031434163,
+     "gap_esml_mm": 6.8
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9971337822917598,
+     "toe_f4": 0.9875,
+     "toe_med_m": 0.021307319354315027,
+     "toe_p95abs_m": 0.03154810274081313,
+     "heel_med_m": 0.07157494006257076,
+     "heel_p95abs_m": 0.09241480726473146,
+     "vert_toe_med_m": 0.027376238301761155,
+     "fwd": 0.970124454974429,
+     "up": 0.07028643999999995,
+     "free_up": 0.08636202959744547,
+     "gap_esml_mm": 2.9
+    }
+   },
+   "AB08/i5": {
+    "right": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 93 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9981554571446837,
+     "toe_f4": 0.9264705882352942,
+     "toe_med_m": 0.037900340823751336,
+     "toe_p95abs_m": 0.040362893863149514,
+     "heel_med_m": 0.05700714816495496,
+     "heel_p95abs_m": 0.07389564200380552,
+     "vert_toe_med_m": 0.013256387538534028,
+     "fwd": 0.913730962698986,
+     "up": 0.09762402483120243,
+     "free_up": 0.11517016818190376,
+     "gap_esml_mm": 2.4
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9983377032226954,
+     "toe_f4": 1.0,
+     "toe_med_m": 0.025114827550052954,
+     "toe_p95abs_m": 0.029532852420214306,
+     "heel_med_m": 0.07063123209367339,
+     "heel_p95abs_m": 0.11619955021942491,
+     "vert_toe_med_m": 0.019012762469567283,
+     "fwd": 0.9274461440179192,
+     "up": 0.10515197070181961,
+     "free_up": 0.10765631411101007,
+     "gap_esml_mm": -0.7
+    }
+   },
+   "AB09/d10": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9901842339785614,
+     "toe_f4": 0.9811320754716981,
+     "toe_med_m": 0.0070073673883254,
+     "toe_p95abs_m": 0.021401451767755535,
+     "heel_med_m": 0.02528471721389386,
+     "heel_p95abs_m": 0.10826426445448346,
+     "vert_toe_med_m": -0.013323911818672981,
+     "fwd": -0.8890083595642905,
+     "up": 0.12558706217798798,
+     "free_up": 0.23985873078684838,
+     "gap_esml_mm": 5.7
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9958633178671474,
+     "toe_f4": 1.0,
+     "toe_med_m": 0.01570909820857805,
+     "toe_p95abs_m": 0.026874536361860407,
+     "heel_med_m": 0.03549783017619301,
+     "heel_p95abs_m": 0.10770432684199056,
+     "vert_toe_med_m": -0.0018685937687767384,
+     "fwd": -0.8731720651010287,
+     "up": 0.13027361458216566,
+     "free_up": 0.23709787952365402,
+     "gap_esml_mm": -6.4
+    }
+   },
+   "AB09/d5": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.996320374762031,
+     "toe_f4": 1.0,
+     "toe_med_m": 0.009504615424367563,
+     "toe_p95abs_m": 0.018924640974173786,
+     "heel_med_m": 0.02740556930936279,
+     "heel_p95abs_m": 0.03875485315433109,
+     "vert_toe_med_m": -0.0013119028632457945,
+     "fwd": -0.9502213275103277,
+     "up": 0.08635868005799761,
+     "free_up": 0.18076510103388854,
+     "gap_esml_mm": 5.6
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9970085662401511,
+     "toe_f4": 1.0,
+     "toe_med_m": 0.01162662007885995,
+     "toe_p95abs_m": 0.019015348875451202,
+     "heel_med_m": 0.03232668913371739,
+     "heel_p95abs_m": 0.06098694642039867,
+     "vert_toe_med_m": 0.004071898944315838,
+     "fwd": -0.9272136963336971,
+     "up": 0.09405425423940124,
+     "free_up": 0.17235069946579962,
+     "gap_esml_mm": -6.2
+    }
+   },
+   "AB09/i0": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.988211688738804,
+     "toe_f4": 0.9891304347826086,
+     "toe_med_m": -0.0038267165068261305,
+     "toe_p95abs_m": 0.013805500105184164,
+     "heel_med_m": 0.019881965651157144,
+     "heel_p95abs_m": 0.04410082858901263,
+     "vert_toe_med_m": -0.007793910429376275,
+     "fwd": 0.8805491760923768,
+     "up": 0.04883793000000001,
+     "free_up": 0.11426251179188901,
+     "gap_esml_mm": 9.0
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9816196537468208,
+     "toe_f4": 0.989010989010989,
+     "toe_med_m": 0.009887253610161795,
+     "toe_p95abs_m": 0.018995864373701557,
+     "heel_med_m": 0.03648480574491525,
+     "heel_p95abs_m": 0.0635431668788462,
+     "vert_toe_med_m": 0.008152019796807061,
+     "fwd": 0.8735710925597948,
+     "up": 0.0460362,
+     "free_up": 0.12884389269040106,
+     "gap_esml_mm": -1.6
+    }
+   },
+   "AB09/i5": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9785891999382492,
+     "toe_f4": 0.9770114942528736,
+     "toe_med_m": 0.0116970777845809,
+     "toe_p95abs_m": 0.018629839924207487,
+     "heel_med_m": 0.04127533003582949,
+     "heel_p95abs_m": 0.054479016737802255,
+     "vert_toe_med_m": 0.0016750833726416336,
+     "fwd": 0.8650389735211477,
+     "up": 0.08838019547925455,
+     "free_up": 0.1721535085810102,
+     "gap_esml_mm": 5.2
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9938740404639019,
+     "toe_f4": 0.9886363636363636,
+     "toe_med_m": 0.018692401221053714,
+     "toe_p95abs_m": 0.027962087203675417,
+     "heel_med_m": 0.04274898468443707,
+     "heel_p95abs_m": 0.06360329137038143,
+     "vert_toe_med_m": 0.01218076484012071,
+     "fwd": 0.8630974866247892,
+     "up": 0.0867562262803049,
+     "free_up": 0.16366444931590998,
+     "gap_esml_mm": -4.9
+    }
+   },
+   "AB10/d10": {
+    "right": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 92 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9957453413633454,
+     "toe_f4": 0.9195402298850575,
+     "toe_med_m": 0.00826737674553868,
+     "toe_p95abs_m": 0.06080440210879888,
+     "heel_med_m": 0.04742641669816641,
+     "heel_p95abs_m": 0.06042692502371283,
+     "vert_toe_med_m": -0.001549062150212388,
+     "fwd": -0.8181151337731093,
+     "up": 0.15582516534680013,
+     "free_up": 0.15546630111704296,
+     "gap_esml_mm": -0.8
+    },
+    "left": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9874107440434315,
+     "toe_f4": 1.0,
+     "toe_med_m": 0.016469178970725654,
+     "toe_p95abs_m": 0.024962565691373385,
+     "heel_med_m": 0.05289060823242547,
+     "heel_p95abs_m": 0.07819028354292587,
+     "vert_toe_med_m": -0.0011749653729425658,
+     "fwd": -0.8237720342692311,
+     "up": 0.153443077662556,
+     "free_up": 0.15718362536932443,
+     "gap_esml_mm": -4.9
+    }
+   },
+   "AB10/d5": {
+    "right": {
+     "cop": "held",
+     "reasons": [
+      "plate not loaded at this leg's heel strikes"
+     ],
+     "holdout_r": 0.9971696395644667,
+     "toe_f4": 0.9534883720930233,
+     "toe_med_m": 0.0031525542163398507,
+     "toe_p95abs_m": 0.00862006327576225,
+     "heel_med_m": 0.05232691418367624,
+     "heel_p95abs_m": 0.07100193199587124,
+     "vert_toe_med_m": 0.0027352961135420698,
+     "fwd": -0.8734162526011431,
+     "up": 0.11972506550111395,
+     "free_up": 0.119694343187327,
+     "gap_esml_mm": -1.5
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "plate not loaded at this leg's heel strikes"
+     ],
+     "holdout_r": 0.9938363476010131,
+     "toe_f4": 0.9775280898876404,
+     "toe_med_m": 0.012826394528483817,
+     "toe_p95abs_m": 0.01782971460146487,
+     "heel_med_m": 0.054953064983684574,
+     "heel_p95abs_m": 0.07542026356545546,
+     "vert_toe_med_m": 0.0053176380823616864,
+     "fwd": -0.8750549457506931,
+     "up": 0.11634372458742226,
+     "free_up": 0.11056564575851723,
+     "gap_esml_mm": -3.5
+    }
+   },
+   "AB10/i10": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9986620962656992,
+     "toe_f4": 1.0,
+     "toe_med_m": 0.020111031398034163,
+     "toe_p95abs_m": 0.03208250253165623,
+     "heel_med_m": 0.06574504089146432,
+     "heel_p95abs_m": 0.08263498081501414,
+     "vert_toe_med_m": 0.004071051000144758,
+     "fwd": 0.828959827675334,
+     "up": 0.14545502455716502,
+     "free_up": 0.09866597868261202,
+     "gap_esml_mm": -4.5
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 90 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.998751073821572,
+     "toe_f4": 0.9,
+     "toe_med_m": 0.027887529874749434,
+     "toe_p95abs_m": 0.10101399535187958,
+     "heel_med_m": 0.05189821730326133,
+     "heel_p95abs_m": 0.07048736371941454,
+     "vert_toe_med_m": 0.0027564722833922396,
+     "fwd": 0.8215984401824838,
+     "up": 0.14332014565136753,
+     "free_up": 0.0970095328257938,
+     "gap_esml_mm": -5.3
+    }
+   },
+   "AB10/i5": {
+    "right": {
+     "cop": "pass",
+     "reasons": [],
+     "holdout_r": 0.9992205404092561,
+     "toe_f4": 1.0,
+     "toe_med_m": 0.013692707977280977,
+     "toe_p95abs_m": 0.01721613989362448,
+     "heel_med_m": 0.05052243632349694,
+     "heel_p95abs_m": 0.07072356337281567,
+     "vert_toe_med_m": 0.012621280147252816,
+     "fwd": 0.8715290064119884,
+     "up": 0.11630201377678516,
+     "free_up": 0.09232395293485467,
+     "gap_esml_mm": -2.2
+    },
+    "left": {
+     "cop": "held",
+     "reasons": [
+      "toe-off end within 4 cm in 93 percent of strides (needs 95)"
+     ],
+     "holdout_r": 0.9989791766333701,
+     "toe_f4": 0.9285714285714286,
+     "toe_med_m": 0.01699622365190262,
+     "toe_p95abs_m": 0.053390032153972096,
+     "heel_med_m": 0.04452500066290149,
+     "heel_p95abs_m": 0.05703852011886657,
+     "vert_toe_med_m": 0.012689317017279596,
+     "fwd": 0.8639188057308668,
+     "up": 0.11462471950367806,
+     "free_up": 0.08090147135992422,
+     "gap_esml_mm": -1.4
+    }
+   }
+  }
+ }
+}

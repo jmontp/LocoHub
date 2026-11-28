@@ -1,0 +1,19 @@
+{
+ "task_id": "UM21-E01",
+ "verdict": "done",
+ "scientific_approval": false,
+ "verified_at_utc": "2026-11-02",
+ "verifier": "independent second agent, read-only",
+ "probes": "Own script (not the worker's), h5py direct reads of Streaming.mat, one recording per process, nice 19 / ionice idle, nothing written under converted_datasets or source folders. Peak RSS: AB04/d10 41.4 MiB (time -f 42.4 MiB); AB03/i10 60.8 MiB (62.2 MiB). Well under 300 MiB.",
+ "reproduced": [
+  {"claim": "AB04/d10 right NaN stride = source zero fill", "result": "Reproduced. 17,584 frames; exactly 773 frames with exact (0,0,0) in pelvis, hip, knee and ankle angles, frames 1-773. RHS = 763, 814, 1475, ... First pair 763-814 is 51 frames long (52 inclusive); 11 of its frames are zero fill, about 32 of 150 resampled samples (worker: 33)."},
+  {"claim": "AB03/i10 CoP excursion about 0.33 m against 0.20 m foot", "result": "Reproduced with an independent method (plate CoP projected on the heel-to-toe horizontal direction, loaded frames, 2-98 percentile range per stride): right 0.317 m (111 units), left 0.332 m (115 units); median horizontal heel-toe span 0.200 and 0.198 m. Cause remains unexplained, as the worker states."}
+ ],
+ "checked_from_artefacts_not_reproduced": [
+  "Leg-gate artefact on incline and the CoP-progression vote on decline (read from pilot v4 logs and worker numbers; not re-derived).",
+  "Worker's claim that the release baseline excludes the 763:814 pair: AB04/d10 baseline ledger not re-read; the clock census shows 180 of 257 pairs exported, 77 excluded, consistent."
+ ],
+ "bound_files": "All 5 bound-build files and the adapter and runner named in pilot_summary.json (v4) re-hashed: identical. git shows no modified file under contributor_tools/common or adapters. The only modified tracked contributor_tools file is build_fixes_page.py, unrelated.",
+ "overall_reading": "Accepted: no published sign is affected (audited signs apply, per the v4 pilot) and nothing here blocks the full run. The CoP excursion and decline CoP behaviour stay documented limitations, not explained.",
+ "backlog_change": "UM21-E01 status review -> done; next_action text only."
+}

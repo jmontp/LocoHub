@@ -1,0 +1,489 @@
+#!/usr/bin/env python3
+"""
+Convert GaTech 2024 TaskAgnostic dataset to standardized time-indexed parquet format.
+
+This exporter preserves native trial timing (`time_s`) while reusing the same
+task metadata, variable naming, and sign conventions as the phase-indexed
+converter. It uses coarse trial-level `step` identifiers rather than exact
+stride semantics.
+"""
+
+import argparse
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+
+import numpy as np
+import pandas as pd
+from tqdm import tqdm
+
+from convert_gtech_2024_phase_to_parquet import (
+    GRF_THRESHOLD_N,
+    SAMPLING_RATE,
+    SegmentationArchetype,
+    TASK_ARCHETYPE_MAP,
+    get_collection_phase,
+    get_exo_state,
+    get_subject_mass,
+    is_day2_trial,
+    load_trial_data,
+    map_task_name,
+)
+
+
+def _gradient_over_time(values: np.ndarray, time_s: np.ndarray) -> np.ndarray:
+    """Return d(values)/dt with minimal assumptions."""
+    if len(values) < 2 or len(time_s) != len(values):
+        return np.full(len(values), np.nan)
+    try:
+        return np.gradient(values, time_s)
+    except Exception:
+        return np.full(len(values), np.nan)
+
+
+def _series_or_nan(df: Optional[pd.DataFrame], column: str, n_samples: int) -> np.ndarray:
+    if df is None or column not in df.columns:
+        return np.full(n_samples, np.nan)
+    return df[column].to_numpy(dtype=float)[:n_samples]
+
+
+def _find_subjects_path(phase_path: Path) -> Optional[Path]:
+    """Find the directory containing BT subject folders."""
+    direct_subjects = [f for f in phase_path.iterdir() if f.is_dir() and f.name.startswith("BT")]
+    if direct_subjects:
+        return phase_path
+
+    parsed_path = phase_path / "Parsed"
+    if parsed_path.exists():
+        nested_subjects = [f for f in parsed_path.iterdir() if f.is_dir() and f.name.startswith("BT")]
+        if nested_subjects:
+            return parsed_path
+
+    return None
+
+
+def _get_input_paths(args: argparse.Namespace) -> List[Tuple[str, Path]]:
+    input_paths: List[Tuple[str, Path]] = []
+
+    if args.base_path:
+        base = Path(args.base_path)
+        for phase12_name in ["Phase1And2", "Phase1And2_Parsed"]:
+            phase12_path = base / phase12_name
+            if phase12_path.exists():
+                subjects_path = _find_subjects_path(phase12_path)
+                if subjects_path:
+                    input_paths.append(("Phase1And2", subjects_path))
+                    break
+        for phase3_name in ["Phase3", "Phase3_Parsed"]:
+            phase3_path = base / phase3_name
+            if phase3_path.exists():
+                subjects_path = _find_subjects_path(phase3_path)
+                if subjects_path:
+                    input_paths.append(("Phase3", subjects_path))
+                    break
+        return input_paths
+
+    if args.input:
+        input_path = Path(args.input)
+        if input_path.exists():
+            return [(input_path.name, input_path)]
+        return []
+
+    default_base = Path("/mnt/s/locomotion_data/GaTech_2024_TaskAgnostic")
+    if default_base.exists():
+        for phase12_name in ["Phase1And2", "Phase1And2_Parsed"]:
+            phase12_path = default_base / phase12_name
+            if phase12_path.exists():
+                subjects_path = _find_subjects_path(phase12_path)
+                if subjects_path:
+                    input_paths.append(("Phase1And2", subjects_path))
+                    break
+        for phase3_name in ["Phase3", "Phase3_Parsed"]:
+            phase3_path = default_base / phase3_name
+            if phase3_path.exists():
+                subjects_path = _find_subjects_path(phase3_path)
+                if subjects_path:
+                    input_paths.append(("Phase3", subjects_path))
+                    break
+
+    return input_paths
+
+
+def _determine_reference_leg(data: Dict[str, pd.DataFrame], task: str) -> str:
+    """
+    Choose a single ipsilateral reference leg for time-indexed export.
+
+    For gait tasks, use a lightweight first-contact heuristic based on vertical
+    GRF threshold crossings. For non-gait tasks, default to left.
+    For non-gait tasks, default to left.
+    """
+    archetype = TASK_ARCHETYPE_MAP.get(task, SegmentationArchetype.GAIT)
+    if archetype != SegmentationArchetype.GAIT:
+        return "l"
+
+    grf_df = data.get("grf")
+    if grf_df is None or grf_df.empty:
+        return "l"
+
+    first_events: Dict[str, int] = {}
+    for leg_side in ["l", "r"]:
+        col = f"fp_{leg_side}_force_y"
+        if col not in grf_df.columns:
+            continue
+
+        values = grf_df[col].to_numpy(dtype=float)
+        above = values > GRF_THRESHOLD_N
+        crossings = np.where(np.diff(np.concatenate(([False], above.astype(bool)))) == 1)[0]
+        if len(crossings) > 0:
+            first_events[leg_side] = int(crossings[0])
+
+    if not first_events:
+        return "l"
+
+    return min(first_events.items(), key=lambda item: item[1])[0]
+
+
+def _build_task_info_string(
+    task_info: Dict,
+    reference_leg: str,
+    exo_state: str,
+    data_source: str,
+    sample_rate_hz: float,
+) -> str:
+    parts = [
+        "time_scope:continuous_trial",
+        "time_reset_per:trial",
+        f"collection_source:{data_source}",
+        f"sampling_rate_hz:{sample_rate_hz:.3f}",
+        f"reference_leg:{reference_leg}",
+        f"exo_state:{exo_state}",
+    ]
+    if exo_state in ("powered", "worn_unpowered"):
+        parts.append("exo_joints:hip_knee")
+    for key, value in task_info.items():
+        if value is not None:
+            parts.append(f"{key}:{value}")
+    return ",".join(parts)
+
+
+def _build_subject_metadata(subject_mass: float, collection_phase: int, is_day2: bool) -> str:
+    day_str = "2" if is_day2 else "1"
+    return f"weight_kg:{subject_mass:.1f},phase:{collection_phase},day:{day_str}"
+
+
+def process_trial_time(
+    trial_path: Path,
+    subject_id: str,
+    data_source: str,
+    exo_filter: str = "all",
+) -> pd.DataFrame:
+    """Convert one source trial into one coarse time-indexed standardized table."""
+    task_folder = trial_path.name
+    task, task_id, task_info = map_task_name(task_folder)
+    if task is None:
+        return pd.DataFrame()
+
+    collection_phase = get_collection_phase(subject_id, data_source)
+    exo_state = get_exo_state(task_folder, collection_phase)
+    is_day2 = is_day2_trial(task_folder)
+
+    if exo_filter == "exo" and exo_state == "no_exo":
+        return pd.DataFrame()
+    if exo_filter == "noexo" and exo_state != "no_exo":
+        return pd.DataFrame()
+
+    subject_mass = get_subject_mass(subject_id, data_source, exo_state, is_day2)
+    data = load_trial_data(trial_path, subject_id, exo_state)
+    if data is None:
+        return pd.DataFrame()
+
+    required_lengths = [len(data[name]) for name in ["angle_filt", "moment_filt", "grf", "velocity", "insole_sim"] if name in data]
+    if not required_lengths:
+        return pd.DataFrame()
+    n_samples = min(required_lengths)
+    if n_samples < 2:
+        return pd.DataFrame()
+
+    angle_df = data["angle_filt"].iloc[:n_samples].reset_index(drop=True)
+    moment_df = data["moment_filt"].iloc[:n_samples].reset_index(drop=True)
+    grf_df = data["grf"].iloc[:n_samples].reset_index(drop=True)
+    velocity_df = data.get("velocity", pd.DataFrame()).iloc[:n_samples].reset_index(drop=True)
+    insole_df = data["insole_sim"].iloc[:n_samples].reset_index(drop=True)
+    bio_moment_df = data.get("moment_filt_bio")
+    if bio_moment_df is not None:
+        bio_moment_df = bio_moment_df.iloc[:n_samples].reset_index(drop=True)
+    exo_df = data.get("exo")
+    if exo_df is not None:
+        exo_df = exo_df.iloc[:n_samples].reset_index(drop=True)
+
+    time_s = np.arange(n_samples, dtype=float) / SAMPLING_RATE
+    sample_rate_hz = float(SAMPLING_RATE)
+
+    reference_leg = _determine_reference_leg(data, task)
+    ipsi = reference_leg
+    contra = "r" if reference_leg == "l" else "l"
+
+    deg2rad = np.pi / 180.0
+    body_weight_N = subject_mass * 9.81
+
+    hip_ipsi = _series_or_nan(angle_df, f"hip_flexion_{ipsi}", n_samples) * deg2rad
+    hip_contra = _series_or_nan(angle_df, f"hip_flexion_{contra}", n_samples) * deg2rad
+    knee_ipsi = -_series_or_nan(angle_df, f"knee_angle_{ipsi}", n_samples) * deg2rad
+    knee_contra = -_series_or_nan(angle_df, f"knee_angle_{contra}", n_samples) * deg2rad
+    ankle_ipsi = _series_or_nan(angle_df, f"ankle_angle_{ipsi}", n_samples) * deg2rad
+    ankle_contra = _series_or_nan(angle_df, f"ankle_angle_{contra}", n_samples) * deg2rad
+
+    hip_vel_ipsi = _series_or_nan(velocity_df, f"hip_flexion_{ipsi}_velocity", n_samples) * deg2rad
+    hip_vel_contra = _series_or_nan(velocity_df, f"hip_flexion_{contra}_velocity", n_samples) * deg2rad
+    knee_vel_ipsi = _series_or_nan(velocity_df, f"knee_angle_{ipsi}_velocity", n_samples) * deg2rad
+    knee_vel_contra = _series_or_nan(velocity_df, f"knee_angle_{contra}_velocity", n_samples) * deg2rad
+    ankle_vel_ipsi = _series_or_nan(velocity_df, f"ankle_angle_{ipsi}_velocity", n_samples) * deg2rad
+    ankle_vel_contra = _series_or_nan(velocity_df, f"ankle_angle_{contra}_velocity", n_samples) * deg2rad
+
+    if np.isnan(hip_vel_ipsi).all():
+        hip_vel_ipsi = _gradient_over_time(hip_ipsi, time_s)
+    if np.isnan(hip_vel_contra).all():
+        hip_vel_contra = _gradient_over_time(hip_contra, time_s)
+    if np.isnan(knee_vel_ipsi).all():
+        knee_vel_ipsi = _gradient_over_time(knee_ipsi, time_s)
+    if np.isnan(knee_vel_contra).all():
+        knee_vel_contra = _gradient_over_time(knee_contra, time_s)
+    if np.isnan(ankle_vel_ipsi).all():
+        ankle_vel_ipsi = _gradient_over_time(ankle_ipsi, time_s)
+    if np.isnan(ankle_vel_contra).all():
+        ankle_vel_contra = _gradient_over_time(ankle_contra, time_s)
+
+    hip_acc_ipsi = _gradient_over_time(hip_vel_ipsi, time_s)
+    hip_acc_contra = _gradient_over_time(hip_vel_contra, time_s)
+    knee_acc_ipsi = _gradient_over_time(knee_vel_ipsi, time_s)
+    knee_acc_contra = _gradient_over_time(knee_vel_contra, time_s)
+    ankle_acc_ipsi = _gradient_over_time(ankle_vel_ipsi, time_s)
+    ankle_acc_contra = _gradient_over_time(ankle_vel_contra, time_s)
+
+    hip_mom_ipsi = _series_or_nan(moment_df, f"hip_flexion_{ipsi}_moment", n_samples)
+    hip_mom_contra = _series_or_nan(moment_df, f"hip_flexion_{contra}_moment", n_samples)
+    knee_mom_ipsi = -_series_or_nan(moment_df, f"knee_angle_{ipsi}_moment", n_samples)
+    knee_mom_contra = -_series_or_nan(moment_df, f"knee_angle_{contra}_moment", n_samples)
+    ankle_mom_ipsi = _series_or_nan(moment_df, f"ankle_angle_{ipsi}_moment", n_samples)
+    ankle_mom_contra = _series_or_nan(moment_df, f"ankle_angle_{contra}_moment", n_samples)
+
+    hip_bio_ipsi = _series_or_nan(bio_moment_df, f"hip_flexion_{ipsi}_moment", n_samples)
+    hip_bio_contra = _series_or_nan(bio_moment_df, f"hip_flexion_{contra}_moment", n_samples)
+    knee_bio_ipsi = -_series_or_nan(bio_moment_df, f"knee_angle_{ipsi}_moment", n_samples)
+    knee_bio_contra = -_series_or_nan(bio_moment_df, f"knee_angle_{contra}_moment", n_samples)
+    ankle_bio_ipsi = _series_or_nan(bio_moment_df, f"ankle_angle_{ipsi}_moment", n_samples)
+    ankle_bio_contra = _series_or_nan(bio_moment_df, f"ankle_angle_{contra}_moment", n_samples)
+
+    if exo_df is not None:
+        hip_assist_ipsi = -_series_or_nan(exo_df, f"hip_angle_{ipsi}_torque_interaction", n_samples) / subject_mass
+        hip_assist_contra = -_series_or_nan(exo_df, f"hip_angle_{contra}_torque_interaction", n_samples) / subject_mass
+        knee_assist_ipsi = -_series_or_nan(exo_df, f"knee_angle_{ipsi}_torque_interaction", n_samples) / subject_mass
+        knee_assist_contra = -_series_or_nan(exo_df, f"knee_angle_{contra}_torque_interaction", n_samples) / subject_mass
+    else:
+        hip_assist_ipsi = np.zeros(n_samples)
+        hip_assist_contra = np.zeros(n_samples)
+        knee_assist_ipsi = np.zeros(n_samples)
+        knee_assist_contra = np.zeros(n_samples)
+    ankle_assist_ipsi = np.zeros(n_samples)
+    ankle_assist_contra = np.zeros(n_samples)
+
+    grf_vert_ipsi = _series_or_nan(grf_df, f"fp_{ipsi}_force_y", n_samples) / body_weight_N
+    grf_vert_contra = _series_or_nan(grf_df, f"fp_{contra}_force_y", n_samples) / body_weight_N
+    grf_ant_ipsi = -_series_or_nan(grf_df, f"fp_{ipsi}_force_z", n_samples) / body_weight_N
+    grf_ant_contra = -_series_or_nan(grf_df, f"fp_{contra}_force_z", n_samples) / body_weight_N
+    grf_lat_ipsi = _series_or_nan(grf_df, f"fp_{ipsi}_force_x", n_samples) / body_weight_N
+    grf_lat_contra = _series_or_nan(grf_df, f"fp_{contra}_force_x", n_samples) / body_weight_N
+
+    stance_mask = grf_vert_ipsi > 0.05
+    if stance_mask.any():
+        lat_mean = np.nanmean(grf_lat_ipsi[stance_mask])
+        if np.isfinite(lat_mean) and lat_mean > 0:
+            grf_lat_ipsi = -grf_lat_ipsi
+            grf_lat_contra = -grf_lat_contra
+
+    cop_ant_ipsi = _series_or_nan(insole_df, f"insole_{ipsi}_cop_x", n_samples)
+    cop_ant_contra = _series_or_nan(insole_df, f"insole_{contra}_cop_x", n_samples)
+    cop_lat_ipsi = _series_or_nan(insole_df, f"insole_{ipsi}_cop_z", n_samples)
+    cop_lat_contra = _series_or_nan(insole_df, f"insole_{contra}_cop_z", n_samples)
+    cop_vert_ipsi = np.zeros(n_samples)
+    cop_vert_contra = np.zeros(n_samples)
+
+    nan_signal = np.full(n_samples, np.nan)
+    subject_metadata = _build_subject_metadata(subject_mass, collection_phase, is_day2)
+    task_info_str = _build_task_info_string(
+        task_info,
+        reference_leg,
+        exo_state,
+        data_source,
+        sample_rate_hz,
+    )
+
+    return pd.DataFrame(
+        {
+            "subject": f"GT24_{subject_id}",
+            "subject_metadata": subject_metadata,
+            "task": task,
+            "task_id": task_id,
+            "task_info": task_info_str,
+            "step": trial_path.name,
+            "time_s": time_s,
+            "sampling_rate_hz": sample_rate_hz,
+            "assistance_active": (exo_state == "powered"),
+            "hip_flexion_angle_ipsi_rad": hip_ipsi,
+            "hip_flexion_angle_contra_rad": hip_contra,
+            "knee_flexion_angle_ipsi_rad": knee_ipsi,
+            "knee_flexion_angle_contra_rad": knee_contra,
+            "ankle_dorsiflexion_angle_ipsi_rad": ankle_ipsi,
+            "ankle_dorsiflexion_angle_contra_rad": ankle_contra,
+            "hip_flexion_velocity_ipsi_rad_s": hip_vel_ipsi,
+            "hip_flexion_velocity_contra_rad_s": hip_vel_contra,
+            "knee_flexion_velocity_ipsi_rad_s": knee_vel_ipsi,
+            "knee_flexion_velocity_contra_rad_s": knee_vel_contra,
+            "ankle_dorsiflexion_velocity_ipsi_rad_s": ankle_vel_ipsi,
+            "ankle_dorsiflexion_velocity_contra_rad_s": ankle_vel_contra,
+            "hip_flexion_acceleration_ipsi_rad_s2": hip_acc_ipsi,
+            "hip_flexion_acceleration_contra_rad_s2": hip_acc_contra,
+            "knee_flexion_acceleration_ipsi_rad_s2": knee_acc_ipsi,
+            "knee_flexion_acceleration_contra_rad_s2": knee_acc_contra,
+            "ankle_dorsiflexion_acceleration_ipsi_rad_s2": ankle_acc_ipsi,
+            "ankle_dorsiflexion_acceleration_contra_rad_s2": ankle_acc_contra,
+            "hip_flexion_moment_ipsi_Nm_kg": hip_mom_ipsi,
+            "hip_flexion_moment_contra_Nm_kg": hip_mom_contra,
+            "knee_flexion_moment_ipsi_Nm_kg": knee_mom_ipsi,
+            "knee_flexion_moment_contra_Nm_kg": knee_mom_contra,
+            "ankle_dorsiflexion_moment_ipsi_Nm_kg": ankle_mom_ipsi,
+            "ankle_dorsiflexion_moment_contra_Nm_kg": ankle_mom_contra,
+            "hip_flexion_assistance_moment_ipsi_Nm_kg": hip_assist_ipsi,
+            "hip_flexion_assistance_moment_contra_Nm_kg": hip_assist_contra,
+            "knee_flexion_assistance_moment_ipsi_Nm_kg": knee_assist_ipsi,
+            "knee_flexion_assistance_moment_contra_Nm_kg": knee_assist_contra,
+            "ankle_dorsiflexion_assistance_moment_ipsi_Nm_kg": ankle_assist_ipsi,
+            "ankle_dorsiflexion_assistance_moment_contra_Nm_kg": ankle_assist_contra,
+            "hip_flexion_biological_moment_ipsi_Nm_kg": hip_bio_ipsi,
+            "hip_flexion_biological_moment_contra_Nm_kg": hip_bio_contra,
+            "knee_flexion_biological_moment_ipsi_Nm_kg": knee_bio_ipsi,
+            "knee_flexion_biological_moment_contra_Nm_kg": knee_bio_contra,
+            "ankle_dorsiflexion_biological_moment_ipsi_Nm_kg": ankle_bio_ipsi,
+            "ankle_dorsiflexion_biological_moment_contra_Nm_kg": ankle_bio_contra,
+            "grf_vertical_ipsi_BW": grf_vert_ipsi,
+            "grf_vertical_contra_BW": grf_vert_contra,
+            "grf_anterior_ipsi_BW": grf_ant_ipsi,
+            "grf_anterior_contra_BW": grf_ant_contra,
+            "grf_lateral_ipsi_BW": grf_lat_ipsi,
+            "grf_lateral_contra_BW": grf_lat_contra,
+            "cop_anterior_ipsi_m": cop_ant_ipsi,
+            "cop_anterior_contra_m": cop_ant_contra,
+            "cop_lateral_ipsi_m": cop_lat_ipsi,
+            "cop_lateral_contra_m": cop_lat_contra,
+            "cop_vertical_ipsi_m": cop_vert_ipsi,
+            "cop_vertical_contra_m": cop_vert_contra,
+            "thigh_sagittal_angle_ipsi_rad": nan_signal,
+            "thigh_sagittal_angle_contra_rad": nan_signal,
+            "shank_sagittal_angle_ipsi_rad": nan_signal,
+            "shank_sagittal_angle_contra_rad": nan_signal,
+            "foot_sagittal_angle_ipsi_rad": nan_signal,
+            "foot_sagittal_angle_contra_rad": nan_signal,
+            "thigh_sagittal_velocity_ipsi_rad_s": nan_signal,
+            "thigh_sagittal_velocity_contra_rad_s": nan_signal,
+            "shank_sagittal_velocity_ipsi_rad_s": nan_signal,
+            "shank_sagittal_velocity_contra_rad_s": nan_signal,
+            "foot_sagittal_velocity_ipsi_rad_s": nan_signal,
+            "foot_sagittal_velocity_contra_rad_s": nan_signal,
+        }
+    )
+
+
+def process_subject_time(
+    subject_path: Path,
+    subject_id: str,
+    data_source: str,
+    exo_filter: str = "all",
+) -> pd.DataFrame:
+    trial_folders = sorted([f for f in subject_path.iterdir() if f.is_dir()])
+    all_trials: List[pd.DataFrame] = []
+
+    for trial_path in tqdm(trial_folders, desc=f"  {subject_id} trials", leave=False):
+        trial_df = process_trial_time(trial_path, subject_id, data_source, exo_filter)
+        if not trial_df.empty:
+            all_trials.append(trial_df)
+
+    if all_trials:
+        return pd.concat(all_trials, ignore_index=True)
+    return pd.DataFrame()
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Convert GaTech 2024 TaskAgnostic to time-indexed parquet")
+    parser.add_argument("--input", "-i", type=str, default=None, help="Path to data folder")
+    parser.add_argument("--base-path", type=str, default=None, help="Base path containing Phase1And2 and Phase3 subfolders")
+    parser.add_argument("--output", "-o", type=str, default="gtech_2024_time.parquet", help="Output parquet filename")
+    parser.add_argument("--output-dir", type=str, default="../../../converted_datasets", help="Output directory")
+    parser.add_argument("--subjects", "-s", nargs="+", type=str, default=None, help="Specific subjects to process")
+    parser.add_argument("--test", action="store_true", help="Test mode: process only first subject")
+    parser.add_argument("--include-noexo", action="store_true", help="Include no-exo trials")
+    parser.add_argument("--noexo-only", action="store_true", help="Only process no-exo trials")
+    parser.add_argument(
+        "--exo-filter",
+        type=str,
+        choices=["all", "exo", "noexo"],
+        default="all",
+        help="Filter by exo state",
+    )
+    args = parser.parse_args()
+
+    if args.noexo_only:
+        args.exo_filter = "noexo"
+    elif not args.include_noexo and args.exo_filter == "all":
+        args.exo_filter = "all"
+
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    input_paths = _get_input_paths(args)
+    if not input_paths:
+        print("Error: No input specified or no valid subject folders found")
+        return
+
+    subject_folders: List[Tuple[str, Path]] = []
+    for data_source, input_path in input_paths:
+        folders = sorted([f for f in input_path.iterdir() if f.is_dir() and f.name.startswith("BT")])
+        for folder in folders:
+            subject_folders.append((data_source, folder))
+
+    if args.subjects:
+        subject_folders = [(ds, f) for ds, f in subject_folders if f.name in args.subjects]
+
+    if not subject_folders:
+        print("No subjects matched the requested filters")
+        return
+
+    if args.test:
+        subject_folders = subject_folders[:1]
+        print(f"Test mode: processing only {subject_folders[0][1].name}")
+
+    all_data: List[pd.DataFrame] = []
+    for data_source, subject_path in tqdm(subject_folders, desc="Processing subjects"):
+        subject_id = subject_path.name
+        print(f"\nProcessing {subject_id} from {data_source}...")
+        subject_df = process_subject_time(subject_path, subject_id, data_source, args.exo_filter)
+        if not subject_df.empty:
+            all_data.append(subject_df)
+            print(f"  Extracted {len(subject_df)} rows")
+        else:
+            print("  No valid time-series rows found")
+
+    if not all_data:
+        print("No data to save!")
+        return
+
+    combined_df = pd.concat(all_data, ignore_index=True)
+    output_path = output_dir / args.output
+    combined_df.to_parquet(output_path, index=False)
+
+    print(f"\nSaved to {output_path}")
+    print(f"Total rows: {len(combined_df)}")
+    print(f"Unique subjects: {combined_df['subject'].nunique()}")
+    print(f"Tasks: {sorted(combined_df['task'].dropna().unique().tolist())}")
+
+
+if __name__ == "__main__":
+    main()

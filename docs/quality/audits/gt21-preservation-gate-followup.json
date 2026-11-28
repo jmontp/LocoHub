@@ -1,0 +1,44 @@
+{
+  "status": "isolated_preservation_gate_fix_not_adopted",
+  "scientific_approval": false,
+  "reviewed_on": "2026-10-21",
+  "confirmed_defect": {
+    "path": "contributor_tools/prepare_gt21_bilateral_recovery.py",
+    "function": "verify_preserved",
+    "evidence": "The original gate constructs originals=dict(curves(baseline)) and immediately asserts len(originals)*150 == Parquet metadata num_rows. Default Python therefore rejects duplicate baseline identities. Under python -O that assertion, candidate uniqueness, missing-baseline and required-addition assertions are disabled. The dictionary retains only the last duplicate. pd.testing.assert_frame_equal remains active but checks only that retained observation. Earlier unconditional-acceptance claim was incorrect.",
+    "synthetic_counterexample": "Persisted synthetic baseline A(value2), A(value1), 300 rows; candidate A(value1), B, 300 rows. Unchanged original verify_preserved AST rejects with AssertionError at optimize=0 and accepts at optimize=2 in a python -O subprocess. New gate raises ValueError in both default and optimized subprocesses. No actual GT21 data were read."
+  },
+  "new_gate": {
+    "path": "contributor_tools/check_gt21_bilateral_preservation_v2.py",
+    "entrypoint": "verify_preserved(baseline,recovered)",
+    "tests": "tests/test_gt21_bilateral_preservation_v2.py",
+    "synthetic_tests_passed": 16,
+    "integrated_into_frozen_pilots": false,
+    "scope": "One bounded recording. Explicit errors remain active under -O. Stores baseline fingerprints only; max 25000 observations, 150 rows/observation, 8 MiB batch. Arrow wrapper requires exact schema metadata and input hashes unchanged. This is hardening against optimization-sensitive assertions, not evidence default queued pilots accepted duplicate baselines.",
+    "validation": "16 tests passed in 2.75 seconds under a 768 MiB address-space cap with single-thread numerical libraries. Actual tiny Parquet row groups of 73 rows exercise 150-row batch assembly, metadata mismatch, partial observations, mixed identity and interval, and default/-O duplicate-baseline behavior. Original function AST extracted without importing its surrounding native preparation module.",
+    "added_cycles_compatibility": "Retains observation_id, reference_side, start_s and end_s. Source interval fields must be finite, constant across all 150 rows, with end greater than start."
+  },
+  "remaining_gates": [
+    "Native levelground/treadmill/ramp/stair combined pilots must verify complete bilateral eligible-pair coverage, exact old observations and force/COP for additions.",
+    "Per-contiguous-region50sample admission is a proposed policy only; current ledgers intentionally retain MATLAB aggregate50label rule. Do not claim this review resolves that policy.",
+    "All2301inventory records need terminal dispositions and source checks. A preservation pass cannot establish fullscope completion.",
+    "Source lab-axis sign/plate agreement remains distinct from an approved anatomical force/COP frame."
+  ],
+  "authoritative_source_context": [
+    {
+      "url": "https://www.epic.gatech.edu/opensource-biomechanics-camargo-et-al/",
+      "supports": "Authors describe source locomotion modes, terrain conditions and collection; does not validate this preservation implementation."
+    },
+    {
+      "url": "https://pubmed.ncbi.nlm.nih.gov/33677231/",
+      "supports": "Original22participant study; local reconstruction coverage must not be equated with original cohort coverage."
+    }
+  ],
+  "code_sha256": {
+    "contributor_tools/prepare_gt21_bilateral_recovery.py": "f9d52c0be121cac3f294eb8c3325d0fa0673951a2a1b62f3671e65af73b59272",
+    "contributor_tools/gt21_adoption_coverage.py": "b025906220b6b2ee2bc229ca3ecb5d8611694e52da7c83b7b6531d7699d76266",
+    "contributor_tools/audit_gt21_adoption_ledger.py": "5327e84d30eb41735edc7666924445d28f01cf6bb4db2b0b4da7c431586ac95f",
+    "contributor_tools/audit_gt21_terrain_adoption.py": "61f0b7b9c65ac9b4e0fca41874e75f1a0713a58fc3f18fe102ec725485665987",
+    "contributor_tools/check_gt21_bilateral_preservation_v2.py": "235bef8fe39512d83e79d5e8ce1d7c9f440fa0bf234c03402b736d252ac58cb3"
+  }
+}

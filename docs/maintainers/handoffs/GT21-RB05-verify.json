@@ -1,0 +1,128 @@
+{
+ "task_id": "GT21-RB05 (+ RB02 MATLAB force item)",
+ "role": "independent verifier",
+ "verified_at_utc": "2026-11-25T02:41:31+00:00",
+ "scientific_approval": false,
+ "verdict": "RB05 done. RB02 left done: the MATLAB force item does NOT pass at 1e-9 for every sample; every difference is at an unloaded sample or a contact-edge tail (rule effects, listed). Two findings sent on: left-leg treadmill stance in RB03 is wrong; the unloaded and edge-tail force rule is a convention to confirm.",
+ "scripts": {
+  "phase_and_continuous_recompute": "docs/quality/audits/gt21-rb05-verify-derive.py (+ results docs/quality/audits/gt21-rb05-verify-results.json)",
+  "matlab_force_comparison": "docs/quality/audits/gt21-rb05-verify-matlab-compare.py (+ .json, classes json)",
+  "missing_force_sort": "docs/quality/audits/gt21-rb05-verify-missing.py (+ .json)",
+  "contract": "docs/quality/audits/gt21-rb05-verify-contract.py"
+ },
+ "independence": "Own maths for all of it. Only repo import is gt21_numeric_source.read_numeric_table (data access) and, for the contract run, the repo contract checker itself. I read the worker's docstrings to learn the stated rules (ownership interval, sign from loaded run, 45 degree gate, 20 N mask, unloaded foot = 0) and wrote the code separately. Shared inputs: the pass ledger (plate contacts, plate names, body weight), the pass tables (200 Hz clock, stance, heading) and the force-mask layers.",
+ "receipts": {
+  "export": "22 export receipts: status completed, exit 0, bindings before = after = frozen hashes (gt21_rb_export 309f8008, run_gt21_rb_export a0181b0d, gt21_rb_pass b199962c, run_gt21_rb_pass 50f61989, reader 23f7b5a0, launcher 372519f9), all equal to the files on disk now. AB06 clean_success false only for check linux_no_new_worker (after-census lists a zsh shell and a build_backlog_page --check from another session); launcher_errors and orphans empty, cleanup proven. I accept it as a census artifact.",
+  "pilot": "r1 and r2 failed (expected outputs missing) and bound different export code; r3 completed, exit 0, bound the same five code files as all 22 batches. r3 is the passing pilot of the same bound code.",
+  "readback": "pilot readback and c1-c4: completed, exit 0, readback runner 2c472668 in all and equal to the file now. c2 and c3 clean_success false only for the same linux_no_new_worker check (one foreign zsh); cleanup proven, errors empty. readback.json status passed with zero failures in c1-c4. Deviation from the task scope text: 4 readback jobs over 22 participants, not 22 jobs, and no streaming merge job; neither is an acceptance item.",
+  "memory": "export peaks 281-350 MiB RSS, readback 318-342 MiB, under the launcher 768 MiB address-space cap (observed 805306368). The launcher file and reviewed envelope are unchanged, so the 256 MiB admission estimate was not raised. The peak RSS is above 256 MiB; same reading as the RB02/RB04 verifier (interpreter plus libraries are about 150 MiB). Streaming is by row group (195 groups in AB06)."
+ },
+ "phase_recompute": {
+  "seed": 20261211,
+  "sample": "3 observations per mode (levelground, ramp, stair, treadmill) drawn by random choice of participant then observation, plus 2 recordings drawn from all exported recordings. Phase: AB21 levelground_ccw_normal_01_03 left/0007; AB09 levelground_ccw_slow_01_04 right/0006; AB15 levelground_cw_fast_01_06 left/0005; AB18 ramp_5_l_01_05 right/0007; AB19 ramp_1_r_01_05 right/0007; AB28 Ramp_3_L_01_05 right/0012; AB19 stair_3_r_01_03 right/0000; AB12 stair_3_l_01_01 right/0006; AB12 stair_4_r_02_03 right/0006; AB16 treadmill_07_01 left/0049; AB10 treadmill_05_01 left/0090; AB17 treadmill_02_01 left/0069. Continuous: AB25 Stair_1_R_01_04; AB27 levelground_ccw_normal_01_03. 15 distinct participants (AB15, AB17, AB18, AB19, AB21, AB28 among those not in earlier verifier samples).",
+  "angles_speeds_moments": "Linear interpolation of the pass table at linspace(source_start, source_end, 150) (the sample itself where on the 200 Hz clock, NaN where either neighbour is missing): maximum difference 0.0 in all 12 observations, both legs, 0 finite/missing mismatches.",
+  "forces": "From the 1 kHz plate source: owned plates by the ledger contact intervals [t[a], t[b-1]] (named Treadmill_L/R on treadmill), sums over owned plates, body weight from the ledger, lab-Z sign from the loaded run on the 200 Hz clock with the 45 degree gate, unloaded foot without a sign = 0, RB03 mask recomputed by me (stance and owned 200 Hz vertical under 20 N, phase time masked when either neighbour is). Maximum difference 1.1e-16 BW over vertical, anterior, lateral, ipsi and contra; 0 finite/missing mismatches. Note: my first run showed hundreds of mismatches because I had left out the unloaded-foot zero rule; I added it from the pass docstring and the second run agreed. That rule is therefore part of what 'agrees' means here.",
+  "power": "power = moment x speed, all 6 joint-leg columns in each of the 12 observations, max difference 0.0, missing exactly where either factor is missing.",
+  "grid_and_metadata": "150 rows, phase equals linspace(0,100,150) exactly, subject/recording/side/task/task_id/type/subject_metadata/held_signals constant in each observation; source start/end equal the observation record.",
+  "held_columns": "held_signals field equals the set of all-missing value columns in all 12 observations (non-empty in 4); columns that hold data are not listed.",
+  "continuous": "2 recordings: time axis equal to the pass clock, every non-force column bit equal to the pass table (max 0.0), forces equal to the pass forces with the RB03 mask set to missing (max 0.0), power = moment x speed (max 0.0), 0 finite/missing mismatches.",
+  "peak_rss_mib": 341.5,
+  "note": "Probe peak above the 300 MiB probe limit (pass table plus one 1 kHz plate file in pandas). It ran alone at nice 19, ionice idle, under prlimit --as 600 MiB, writes only under /tmp. Recorded here as an overrun of the probe limit."
+ },
+ "matlab_force_item_rb02": {
+  "method": "For each of the 1,299 cycles of the 102 MATLAB-fixed AB06 phase files, found the AB06 export observation of the same recording, leg and start/end time (1,288 matched; 11 cycles have no export observation: rule A excluded them or they are treadmill steps outside the authors kept set). Forces compared in BW after the sideways sign factor used in the earlier comparison (the MATLAB lateral is lab X; export is outward per leg).",
+  "result": "933,959 finite pairs; 918,207 (98.31 percent) within 1e-9 BW; 15,752 (1.69 percent) outside. Exhaustively classified: 15,455 are at samples where the MATLAB vertical force is at or below 1 N (the export sets an unloaded foot with no sign to 0 and its owned vertical to the owned-plate sum; MATLAB keeps plate noise, up to 0.094 BW negative or positive on the treadmill belts); 297 are at contact-edge tails where the MATLAB vertical is 0.02 to 0.11 BW but the export is 0 because ownership ends at the recorded contact interval (levelground 20 pairs per channel, ramp 79). No other difference exists: every sample that is loaded (above 1 N) and inside an owned contact interval agrees to 1e-9. Treadmill vertical agrees in all 277,500 pairs to 1.6e-12. The 5 cycles whose 150 times all fall on the 200 Hz grid agree to 1.9e-3 BW at worst, at the same unloaded samples.",
+  "reading": "The claim 'matches to 1e-9 off-grid' holds only inside owned, loaded contact. It does not hold where the export applies two stated rules: ownership only inside the recorded contact interval, and zero shear for an unloaded foot. Those are conventions, not data errors, but they replace measured plate readings (noise up to 0.1 BW) with 0. I did not tune anything. RB02 stays done (it was already done; this item was an extra check). The convention is listed for Jos\u00e9 as a note in the task, not a blocking decision.",
+  "files": [
+   "docs/quality/audits/gt21-rb05-verify-matlab-compare.json",
+   "docs/quality/audits/gt21-rb05-verify-matlab-classes.json"
+  ]
+ },
+ "counts": {
+  "steps": "107,367 steps (RB03 steps.jsonl, 22 participants) = 81,647 phase observations + 25,720 listed step exclusions; the export also lists 1 recording-level exclusion (AB27 Treadmill_06_01, fewer than 3 fit markers), whose 251 steps are in the 25,720 as recording_not_converted_in_pass. Step ids: observation ids and exclusion ids are disjoint and their union equals the 107,367 step ids exactly. Eligible RB03 step set equals the exported observation set (81,647, identical ids).",
+  "recordings": "3,147 inventory recordings = 3,146 exported + 1 excluded; the recording ids in the export equal the RB01 inventory set exactly. 3,146 continuous observations.",
+  "per_mode": "phase 14,252 / 19,953 / 10,059 / 37,383 and continuous 680 / 1,394 / 916 / 156 (levelground, ramp, stair, treadmill); phase counts equal RB03 eligible per mode; exclusions per mode 1,952 / 12,960 / 7,034 / 3,775 (3,523 + 251 + 1 on treadmill) = RB03 excluded plus not converted.",
+  "exclusion_reasons": {
+   "authors_rule_discard": 19870,
+   "authors_rule_case_not_found (left leg)": 2076,
+   "more_than_2_speeds (treadmill)": 3523,
+   "recording_not_converted_in_pass": 251,
+   "recording excluded, fewer than 3 fit markers": 1
+  },
+  "stale_acceptance_numbers": "The task text 'recordings 2,301 and 846' predates rule A and the rebuild; the live totals above are the ones checked."
+ },
+ "flags": {
+  "incomplete_stance_force": "A flag on the observation (observations.jsonl flags list), not an exclusion: every flagged step is among the 81,647 exported observations and in no exclusion record. Counts levelground 10,766, ramp 12,533, stair 3,961, treadmill 22. The 22 treadmill steps are all left-leg steps.",
+  "caveat": "The flag counts masked stance samples using the RB03 stance. For left-leg treadmill steps that stance is wrong (see rb03_stance), so the left treadmill flag and mask under-report."
+ },
+ "missing_force_samples_475592": {
+  "unit": "475,592 = 2 x 237,796: anterior and lateral are each missing in 237,796 unmasked (observation, leg, phase-time) samples. Vertical is never missing without the mask (0), and 0 masked samples are finite (0).",
+  "all_plates_missing": 0,
+  "not_masked_vertical_missing": 0,
+  "sorted": {
+   "heading_gate_45_degrees (loaded run whose mean pelvis heading is more than 45 degrees from the lab Z axis)": 123800,
+   "heading_not_finite_in_loaded_run": 1839,
+   "vertical_finite_at_phase_time_but_no_loaded_run_at_either_200Hz_neighbour (sign undefined)": 112157,
+   "sign_defined_but_missing (unexpected)": 0
+  },
+  "by_mode": {
+   "levelground": {
+    "total": 123535,
+    "gate": 123496,
+    "between_samples": 39
+   },
+   "ramp": {
+    "total": 1956,
+    "gate": 114,
+    "heading_nan": 1839,
+    "between_samples": 3
+   },
+   "stair": {
+    "total": 200,
+    "gate": 190,
+    "between_samples": 10
+   },
+   "treadmill": {
+    "total": 112105,
+    "gate": 0,
+    "between_samples": 112105
+   }
+  },
+  "reading": "No sample is missing because plates are missing. Overground: almost all are the heading gate (turning steps). Treadmill: the sign comes from 200 Hz loaded runs, but the vertical force comes from the 1 kHz plate; small blips of 1 N and more (median 0.019 BW, 95th percentile 0.053, maximum 0.24 BW) occur between two unloaded 200 Hz samples, so vertical is finite and the shear is left missing. That is honest (not invented) but it is a two-clock side effect, not a physical heading problem.",
+  "files": [
+   "docs/quality/audits/gt21-rb05-verify-missing.json"
+  ]
+ },
+ "rb03_stance": {
+  "finding": "A real problem, not a different definition. On treadmill the RB03 stance is about 0.10 of the cycle for the left leg and 0.60 for the right leg in all 22 participants (median over steps; AB06 left 0.11, right 0.61). On AB06 treadmill_01_01 the left belt stays loaded above 20 N for a median of 139 of 204 samples per left step, while stance_samples is 23; the right leg agrees (126 stance, 127 loaded). So left-leg toe-off events (source events or their pairing with heel strikes) come about 0.4 s too early against the left plate. Overground left steps look fine (levelground stance fraction about 0.57).",
+  "cause": "not determined (source left toe-off timing versus the pass pairing).",
+  "downstream": "The force mask (stance and under 20 N) and incomplete_stance_force use this stance, so left-leg treadmill masks and flags are too small. Phase and continuous force values themselves, angles, moments, power and counts do not use stance and are unaffected. New task GT21-RB06 opened to find the cause and decide the reexport."
+ },
+ "contract_and_tests": {
+  "contract": "Repo contract checker run on AB06 (584,700 rows, 3,898 observations, 195 row groups) and AB17 (515,550 rows, 3,437 observations, 172 groups), streamed by row group, no partial observations: 0 issues, schema passed and publishable in every chunk, observation ids unique across each file. Peak 192 MiB.",
+  "pytest": "tests/test_gt21_rb_export.py: 19 passed.",
+  "backlog_check": "build_backlog_page.py --check: valid, HTML current (run again after my edit)."
+ },
+ "acceptance_status": [
+  "1 Every observation 150 samples on linspace(0,100,150), constant metadata, observations x 150 = rows: met (AB06 3,898 x 150 = 584,700; contract run; readback totals 81,647 x 150 = 12,247,050 phase rows).",
+  "2 Observations plus listed exclusions = source steps; every recording has a disposition: met (the 2,301 and 846 figures are stale).",
+  "3 Second code path re-derives seeded recordings: met by the worker readback (88 recordings) and by my own 12 + 2.",
+  "4 Streaming by row group, admission estimate not raised: met as stated above; peak RSS 281-350 MiB under the launcher cap."
+ ],
+ "open_for_other_tasks": [
+  "GT21-RB06 (new): left-leg treadmill stance.",
+  "Convention note for Jos\u00e9, not a decision yet: ownership only inside the recorded contact interval and zero shear for an unloaded foot replace measured plate values up to about 0.1 BW with 0 at contact edges and on unloaded treadmill belts. Reversible by re-export.",
+  "The held phase export still carries 22 left-leg treadmill steps flagged by a wrong stance."
+ ],
+ "left_running": "nothing; probes ran under prlimit, all exited. Scratch in /tmp/vrb05.",
+ "evidence_paths": [
+  "docs/quality/audits/gt21-rb05-verify-derive.py",
+  "docs/quality/audits/gt21-rb05-verify-results.json",
+  "docs/quality/audits/gt21-rb05-verify-matlab-compare.py",
+  "docs/quality/audits/gt21-rb05-verify-matlab-compare.json",
+  "docs/quality/audits/gt21-rb05-verify-matlab-classes.json",
+  "docs/quality/audits/gt21-rb05-verify-missing.py",
+  "docs/quality/audits/gt21-rb05-verify-missing.json",
+  "docs/quality/audits/gt21-rb05-verify-contract.py"
+ ]
+}

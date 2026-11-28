@@ -17,6 +17,17 @@ time_structural_abs_limits:
   cop: 5.0
   emg_mvc: 1000.0
   emg_peak: 1000.0
+sign_rule_conversions:
+- date: '2026-10-31'
+  task: CORE-07
+  rule: B (docs/reference/index.html#signs-and-frames; decision D-UM21-C03-1)
+  change: run pelvis_sagittal_angle_rad at phases 0, 25, 50 and 75 mirrored exactly
+    (negated, min and max swapped); no other value changed
+  reason: the band was centred near +0.3 rad, which reads as anterior tilt positive
+    under every documented zero; running tilts the pelvis forward, which is negative
+    under rule B
+  zero: the zero of this band is undocumented; the flip is exact for sign but does
+    not establish the zero
 tasks:
   level_walking:
     phases:
@@ -1189,8 +1200,8 @@ tasks:
           min: -0.115
           max: 0.102
         pelvis_sagittal_angle_rad:
-          min: -0.05
-          max: 0.67
+          min: -0.67
+          max: 0.05
         pelvis_frontal_angle_rad:
           min: -0.291
           max: 0.335
@@ -1470,8 +1481,8 @@ tasks:
           min: -0.135
           max: 1.413
         pelvis_sagittal_angle_rad:
-          min: -0.05
-          max: 0.629
+          min: -0.629
+          max: 0.05
         pelvis_frontal_angle_rad:
           min: -0.288
           max: 0.368
@@ -1678,8 +1689,8 @@ tasks:
           min: -0.241
           max: 0.497
         pelvis_sagittal_angle_rad:
-          min: -0.05
-          max: 0.675
+          min: -0.675
+          max: 0.05
         pelvis_frontal_angle_rad:
           min: -0.298
           max: 0.335
@@ -1886,8 +1897,8 @@ tasks:
           min: -0.151
           max: 0.711
         pelvis_sagittal_angle_rad:
-          min: -0.05
-          max: 0.634
+          min: -0.634
+          max: 0.05
         pelvis_frontal_angle_rad:
           min: -0.288
           max: 0.368

@@ -34,7 +34,7 @@ if src_dir.exists() and str(src_dir) not in sys.path:
     sys.path.insert(0, str(src_dir))
 
 from contributor_tools.common.config_manager import ValidationConfigManager as ConfigManager
-from locohub import LocomotionData
+from contributor_tools.common.dataset_table import DatasetTable
 from contributor_tools.common.near_miss_analysis import (
     compute_clean_statistics,
     identify_marginal_failures,
@@ -44,7 +44,7 @@ from contributor_tools.common.near_miss_analysis import (
 
 
 def analyze_failures(
-    locomotion_data: LocomotionData,
+    locomotion_data: DatasetTable,
     config_manager: ConfigManager,
     task_filter: str = None,
     feature_filter: str = None,
@@ -349,7 +349,7 @@ def suggest_new_bounds(results: Dict[str, Any]):
 
 
 def plot_failures(
-    locomotion_data: LocomotionData,
+    locomotion_data: DatasetTable,
     config_manager: ConfigManager,
     task: str,
     feature: str,
@@ -472,7 +472,7 @@ def plot_failures(
 
 
 def plot_all_failing_features(
-    locomotion_data: LocomotionData,
+    locomotion_data: DatasetTable,
     config_manager: ConfigManager,
     results: Dict[str, Any],
     output_dir: Optional[str] = None,
@@ -550,7 +550,7 @@ def main():
             return 1
 
     print(f"Loading dataset: {dataset_path.name}")
-    locomotion_data = LocomotionData(str(dataset_path))
+    locomotion_data = DatasetTable(str(dataset_path))
 
     print(f"Loading ranges: {ranges_path.name}")
     config_manager = ConfigManager(ranges_path)

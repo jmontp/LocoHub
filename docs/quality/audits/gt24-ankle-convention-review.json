@@ -1,0 +1,87 @@
+{
+  "dataset": "GT24",
+  "status": "source_documented_negation_proposed_pending_bounded_pilot",
+  "scientific_approval": false,
+  "review_date": "2026-10-21",
+  "scope": "Bounded source text, original paper supplement and adapter inspection; no numerical processing or frozen source edits.",
+  "decision": "The released README explicitly defines plantarflexion-positive biological DOFs and lists the exact ankle fields. No contradictory authoritative definition was found. Propose negation to canonical dorsiflexion with source aliases and a bounded native-versus-parsed pilot; do not withhold all ankle fields based on unregistered diagnostic inference.",
+  "primary_evidence": [
+    {
+      "url": "https://doi.org/10.35090/gatech/75759",
+      "local_path": "/mnt/s/locomotion_data/GaTech_2024_TaskAgnostic/readme.txt",
+      "sha256": "e896c6b424c45f50f261ade2e40c5f5832065fbcd745c593b7cd72fdeb84026f",
+      "lines": [
+        90,
+        91
+      ],
+      "quote": "Hip flexion, knee extension, and ankle plantarflexion is positive.",
+      "claim": "The original dataset README explicitly declares positive plantarflexion for biological joint DOFs."
+    },
+    {
+      "url": "https://media.springernature.com/original/springer-static/esm/art%3A10.1038%2Fs41586-024-08157-7/MediaObjects/41586_2024_8157_MOESM1_ESM.pdf",
+      "local_path": "converted_datasets/reconversion_v2/swarm_backlog_20261021/gt24_source_followup/supplement.pdf",
+      "sha256": "e48753d9a79103e4f34c45636f94cbb235baaf16bf9a42eb99a7c8b3c59f1b4e",
+      "bytes": 1031583,
+      "printed_page": 3,
+      "pdf_page_one_based": 4,
+      "section": "Data Processing & Biomechanical Modeling",
+      "claim": "The authors identify gait2354 as the subject-specific base model. Their procedure scales the biological model, adds actuator masses on femur and shank and remaining exoskeleton mass on torso, then adjusts markers. The exact released ankle axes and any export sign transformations are not specified here."
+    },
+    {
+      "url": "https://media.springernature.com/original/springer-static/esm/art%3A10.1038%2Fs41586-024-08157-7/MediaObjects/41586_2024_8157_MOESM1_ESM.pdf",
+      "printed_page": 8,
+      "pdf_page_one_based": 9,
+      "figure": "Supplementary Figure 2C",
+      "claim": "The ankle plots label angle in degrees but do not label positive dorsiflexion or plantarflexion. Plot appearance is not used to approve either anatomical sign."
+    },
+    {
+      "url": "https://www.nature.com/articles/s41586-024-08157-7#code-availability",
+      "section": "Code availability",
+      "author_code_doi": "https://doi.org/10.24433/CO.7641031.v2",
+      "claim": "The paper describes the linked Python package as deploying and testing its trained models. This is not evidence that original biomechanics processing code or subject models are included. The code DOI returned HTTP 403 during this review; code contents were not inspected."
+    },
+    {
+      "url": "https://opensimconfluence.atlassian.net/wiki/spaces/OpenSim/pages/53086215/Gait%2B2392%2Band%2B2354%2BModels",
+      "claim": "OpenSim documents the generic Gait2354 family and its distributed files. A generic model is not a verified copy of the GT24 subject-specific model or export pipeline."
+    }
+  ],
+  "current_adapter": {
+    "path": "contributor_tools/conversion_scripts/GaTech_2024_TaskAgnostic/convert_gtech_2024_phase_to_parquet.py",
+    "sha256": "48baf7d239ad7a658f27ff76670d41c8a88827104b4377f09469bda3696ce821",
+    "angle_lines": [
+      753,
+      756
+    ],
+    "moment_lines": [
+      858,
+      885
+    ],
+    "export_lines": [
+      1018,
+      1059
+    ],
+    "finding": "Source ankle angles are resampled after degree-to-radian conversion without sign reversal; total and biological moments also retain source signs while exported names assert dorsiflexion."
+  },
+  "prior_evidence": {
+    "path": "docs/quality/audits/gt24-ankle-convention.json",
+    "sha256": "ecbfddfd21aae03ebff04c12477b92c3f7b41151f2108fe6f1bb254a28e23019",
+    "interpretation": "Earlier gyro and heel/toe probes are diagnostic only. They do not independently establish anatomical orientation and are not rerun here."
+  },
+  "isolated_correction_proposal": {
+    "superseded": true,
+    "reason": "Earlier blanket source-only recommendation gave too much weight to gyro and task-name inference. See gt24-ankle-evidence-ranking.json for corrected proposal.",
+    "replacement_tool": "contributor_tools/prepare_gt24_ankle_fix.py"
+  },
+  "acceptance_requirements": [
+    "Follow bounded pilot specification in docs/quality/audits/gt24-ankle-evidence-ranking.json.",
+    "Preserve source aliases, signs, missingness and exact observation identity.",
+    "Do not equate source-documented convention with independent full biomechanical approval."
+  ],
+  "limitations": [
+    "No original GT24 subject model or export sign code found in the inspected evidence.",
+    "The earlier archive inventories report no model or processing-code entries; those inventories are reused rather than rescanned.",
+    "No author was contacted.",
+    "No existing frozen converter, queue, candidate, fixture or output was modified."
+  ],
+  "exact_unresolved_point": "Native-versus-parsed field correspondence and numerical implementation still need bounded pilot checks. Independent posture validation is not established, but exact historical model recovery is not mandatory to apply the uncontradicted released README definition."
+}

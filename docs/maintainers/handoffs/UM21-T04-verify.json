@@ -1,0 +1,310 @@
+{
+  "task_id": "UM21-T04",
+  "round": "pre-launch-1",
+  "reviewer": "independent pre-launch reviewer (claude agent)",
+  "reviewed_at_utc": "2026-11-02",
+  "scientific_approval": false,
+  "verdict": {
+    "stage_a": "NOT approved as written. One blocker (B1). Approve after B1 is fixed, specs regenerated as v2, and the checks below are repeated.",
+    "stage_b": "Sample is adequate. Approve only after stage a passes and is read back; no launch before then.",
+    "full_mode": "Not reviewed (not enabled). Conditions for the proxy are listed under check_5."
+  },
+  "blockers": [
+    {
+      "id": "B1",
+      "finding": "The job cannot read the T03 phase files under the spec's 768 MiB address-space limit. pyarrow with its default memory pool fails (ArrowMemoryError / bad_alloc) inside read_t03_observations, after the output root has been created. Reproduced read-only with ulimit -v 786432 on one record (AB04/i0 phase.parquet, nice 19, ionice idle): default pool fails; ARROW_DEFAULT_MEMORY_POOL=system with pq.read_table still peaks at 773 MB virtual (limit 786 MB, too close); the guarded launcher sets ARROW_NUM_THREADS=1 but not the pool.",
+      "tested_fix": "Set ARROW_DEFAULT_MEMORY_POOL=system (os.environ.setdefault at the top of the runner, before any pyarrow import) and read the two columns with ParquetFile(buffer_size=0).iter_batches(batch_size=4096, columns=[...], use_threads=False). Measured after numpy, h5py and the runner import: VmPeak 347 MB, RSS 101 MiB, 165 observation ids for AB04/i0. The write path (write_observation_table plus reload_check, 250 observations x 20 channels) peaked at 651 MB virtual under the same limit, so it fits but with less headroom; the real run adds the hook and h5py data on top.",
+      "consequence_if_launched": "Fails closed (non-zero exit, no data harmed) but leaves a non-empty new output root and burns a spec version. Not a safety issue, a waste.",
+      "required": "Fix, rerun tests, regenerate both specs as v2 (the runner hash is bound, so v1 specs become invalid), dry run again. Add a test or a recorded probe that runs read_t03_observations and write_observation_table under RLIMIT_AS 768 MiB."
+    }
+  ],
+  "check_1_bound_build_unchanged": {
+    "result": "pass",
+    "evidence": [
+      "git diff HEAD on contributor_tools/common, contributor_tools/adapters and contributor_tools/run_core11_um21_pilot.py is empty.",
+      "sha256 of the five hook files, adapter, pilot runner, census, C03 record, Streaming.mat and the seven T03 receipts equals the spec bindings in both specs; all 10 files in the v4 pilot record bindings equal the spec values.",
+      "The runner imports the adapter and the pilot module by file (pilot._write_group, check_group, explain_cross_group, in_scope_recordings, layout_2_candidates). Both files are in the spec bindings, so the guarded launcher hashes them before and after the run: that code is hash-checked. The runner itself is bound too."
+    ],
+    "nits": [
+      "Unbound third-party code in the path: pyarrow, h5py, numpy. Same as the v4 pilot for the last two.",
+      "In pilot mode ModeProxy is pure delegation but is installed on the adapter (um21.sa = ModeProxy(sa, None)). It is dead weight in the launch path; consider installing it only in full mode."
+    ]
+  },
+  "check_2_signed_values_from_hook": {
+    "result": "pass, with two small gaps",
+    "evidence": [
+      "Rows come from per_leg arrays = hook published + derived segments + velocities (leg_arrays), selected by unit_index with np.stack; no arithmetic. write casts to float64 (already float64). reload_check compares every column bytewise with the selected arrays. Test checks hip_angle rows against the hook output tobytes for both legs.",
+      "Held channels: only publication == publish enters res.published; segments and velocities come from the hook's derive functions on published channels. Test asserts held channels are absent from the table.",
+      "Segments and velocities derived after the hook (F2) by the unchanged adapter; pilot.check_group is applied per group."
+    ],
+    "gaps": [
+      "The per-observation rows record hook_unit_id and unit_index; the multipliers and publication verdicts are in observation_map.json under evidence[leg].multipliers (per leg, not per row). Acceptable under the one-multiplier-per-channel-per-leg rule; adding a leg reference or the multipliers to each row would make the log self-contained.",
+      "select_observation_arrays drops a channel from the whole recording table when it is held on either leg that has mapped observations. Conservative and logged (channels_not_written_for_all_legs), but it can discard valid signed columns for the other leg and makes the column set vary by recording. Decide before the full run whether to write per-leg tables or NaN-fill held channels; the release must have one stable schema."
+    ]
+  },
+  "check_3_mapping_rule": {
+    "result": "pass",
+    "reasoning": "Exact id equality is correct and the strictest available. The id embeds dataset, subject, condition, leg and the 1-based source frames a:b, so ids cannot collide across recordings or legs; the runner also refuses an id from another recording, a reference_side that disagrees with the id leg, a duplicate id, and an unparseable id (whole record fails closed). Hook unit ids are generated by the adapter with the same string format; J0 matched 7,547 of 7,562 by this rule.",
+    "residual_risk": "Equality of id strings proves the same frame numbers, not that T03 sampled the same window the same way (inclusive 1-based a..b, 150-point linear resample). Nothing in the runner compares signed values with T03's own columns.",
+    "recommended_extra_check": "After stage a, a read-only readback of one record: compare T03 phase ipsilateral columns (hip, knee, ankle, thigh, shank angles) with the written signed columns per observation; correlation should be about +1 or -1 consistently per channel, and magnitudes should match within resampling differences. Do it as a reviewer check, not in the runner."
+  },
+  "check_4_t03_inputs": {
+    "result": "pass",
+    "evidence": [
+      "T03_JOBS lists batch0, batch1, v2-batch2..v2-batch6; the invalid batch2 receipt and the readback receipt are not listed; nothing is globbed. t03_records requires status completed, clean_success true and exactly 44 records, no record in two receipts.",
+      "For the 8 recordings used in the two stages, the phase.parquet sha256 equals the receipt value (checked), and none is under the invalid batch2 root. The runner hashes the file before reading and reads only observation_id and reference_side.",
+      "T03 is opened read-only (pq.read_table); output root is created with exist_ok=False and files with exclusive create."
+    ]
+  },
+  "check_5_proxy": {
+    "result": "does not weaken the gate as designed; conditions apply",
+    "reasoning": "ModeProxy only adds pilot_record_path to the kwargs of the unmodified run_sign_application in mode 'full'. check_pilot_record in the bound hook then runs unchanged: record under docs/quality/audits and byte-equal to HEAD, pilot task CORE-11-P-UM21 done in the backlog and citing the record path, record sha256 and receipt sha256, receipt committed and clean, receipt bindings equal the record bindings, bound build included. I confirmed the v4 record and receipt are committed and unmodified and that the CORE-11-P-UM21 backlog record (status done) cites the record path and sha256. The gate certifies the bound hook build, adapter and pilot runner only. It says nothing about the T04 runner, which is why stages a and b are needed.",
+    "recommendation": "Accept the proxy for full mode with these conditions: (1) the full spec binds the v4 record and the v4 receipt; (2) the runner fixes the record path to the v4 constant (or checks its sha256 against a constant) rather than trusting a free CLI argument; (3) add a test that uses the real bound hook through the proxy and shows PilotGateError for a missing, modified or uncommitted record (current test uses a fake base and only proves argument passing); (4) full-run summary logs the hook's pilot facts from each sign_application.json; (5) the full run is a separately reviewed spec after stages a and b pass independent review. Not used in the pilot; I would not install it there."
+  },
+  "check_6_pilot_sample": {
+    "result": "adequate",
+    "stage_a": "AB04/i0 is the logged pelvis-correction recording and pilot.check_group asserts the correction, the pelvis multiplier and the derived segments for it.",
+    "stage_b": "7 records: AB05/i5 (4 observations outside the hook stride rule), AB04/d10 (power layout 2), then seed 20261103 gives AB03/i0, AB03/i10, AB04/d5, AB10/i10, AB03/d5. All five slope conditions (i0, i5, i10, d5, d10) appear, two layouts, three subjects plus AB05/AB10. Reproducible via sample_b (tested).",
+    "conditions": [
+      "The summary should be compared against the J0 expectation for AB05/i5 (4 unmapped); the runner does not check this itself, so the reviewer must.",
+      "Record the J0 counts for the other seven as expected values before launching, so a mapping drift is visible."
+    ]
+  },
+  "check_7_ipsilateral_only_limit": {
+    "result": "real issue for release; not a pilot blocker",
+    "finding": "The T03 phase tables carry contralateral columns (hip, knee, thigh, shank, ankle angles and hip/knee velocities, 'contra') in addition to ipsilateral ones, plus a single pelvis column; T03 has no moment or power columns. The T04 worker signs ipsilateral channels only and does not write contralateral values. Releasing T03 columns beside the T04 table would mix signed ipsilateral and unsigned (source-convention) contralateral columns, and the 15 unmapped observations would remain entirely unsigned.",
+    "must_happen_before_R01": [
+      "Decide (Jos\u00e9: convention/scope) how contralateral columns are handled: sign them with the other leg's settled multipliers (needs an independent, tested application path or a hook change plus v5 re-pilot, since the bound API cannot apply a settled multiplier), or release them as held/NaN, or drop them. No release may contain a mix of signed and unsigned columns without an explicit, documented status per column.",
+      "Decide the fate of the 15 unmapped observations (exclude from release with accounting, or sign through a reviewed path). Every exclusion must be accounted for.",
+      "Map logical names to the canonical T03 column names and make the pelvis column's leg provenance explicit (pelvis multiplier is settled per leg; the T03 pelvis column is shared).",
+      "Join T04 signed values to T03 phase rows by observation_id and sample, with a check that joined shapes match (150 samples per observation)."
+    ]
+  },
+  "check_8_specs_and_memory": {
+    "result": "specs pass; memory estimate not credible as stated",
+    "evidence": [
+      "Bindings equal the current files (see check_1). Limits: address_space_mib 768, timeout 3600, kill_after 30, poll 15, startup 3584 / runtime 2048 MiB (the envelope values). Output roots um21_t04_pilot_a_v1 and _b_v1 do not exist; receipt paths do not exist. Stage b recordings equal sample_b(census, 20261103).",
+      "Stage a and b differ only in job id, output root, receipt path and recordings."
+    ],
+    "memory": "The v4 pilot peaked at 160 MiB (163,372 KiB) on 7 recordings without pyarrow. pyarrow alone costs about 100-150 MiB RSS (150-161 MiB measured for import plus a one-column read), so 'under 170 / under 200 MiB' is not plausible. My estimate is 200-270 MiB RSS and up to about 700 MiB virtual, against the in-job cap of 300 MiB (checked only at recording boundaries) and the 768 MiB limit. State the new estimate in the spec notes and in the handoff, and treat the first stage-a receipt peak as the real number before stage b.",
+    "wsl_safety": "Nothing here raises host risk beyond the v4 pilot if B1 is fixed: one worker, nice 19, bounded reads, 2 GiB available-memory check. Stage a is one recording."
+  },
+  "check_9_tests": {
+    "result": "pass with gaps",
+    "run": "OPENBLAS/OMP/MKL=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_um21_t04_signs.py -> 9 passed",
+    "assessment": "Fixtures are synthetic and labelled; expected values are by construction (frame counts, which ids equal unit ids, bitwise row equality, held channels absent). Only real files read are the seven T03 receipts.",
+    "gaps": [
+      "No test exercises the pyarrow paths under the 768 MiB address-space limit (B1 slipped through).",
+      "ModeProxy is tested only against a fake base (see check_5).",
+      "No test that the pilot stage sample constants equal the J0 counts."
+    ]
+  },
+  "needs_jose": [],
+  "jose_note": "Nothing needed for the pilot. The contralateral and unmapped-observation handling (check_7) is a scientific and scope decision that must be raised before R01 or the full run; it blocks only that later work.",
+  "next_actions": [
+    "Author: fix B1, regenerate specs as v2, rerun tests, repeat the dry run and a bounded under-limit probe of the T03 read and table write paths.",
+    "Reviewer (second round, short): confirm the runner diff is confined to the read path and environment, and that new spec bindings match.",
+    "Then launch stage a only, read back the receipt, run the T03-vs-signed alignment check (check_3), then stage b."
+  ],
+  "probes_run": [
+    "Read-only, one record (AB04/i0), nice 19 / ionice idle, writes only under the scratchpad; peak RSS 101-161 MiB, below 300 MiB. No launcher job, no commits, no backlog edits."
+  ],
+  "round_2": {
+    "round": "pre-launch-2",
+    "verdict": "Stage a APPROVED. Stage b remains conditional on stage a passing and its readback.",
+    "b1": "resolved",
+    "evidence": [
+      "Runner is untracked, so no git diff exists; reviewed the changed regions: ARROW_DEFAULT_MEMORY_POOL=system set (setdefault) before any pyarrow import (pyarrow is imported only inside functions); read via iter_batches(buffer_size=0, use_threads=False); write and reload in row groups of 20 observations with bytewise reload comparison; rows carry leg_channel_multipliers; ModeProxy is no longer installed (class remains defined, unused). Bound files: git status shows no change under contributor_tools/common, adapters or run_core11_um21_pilot.py.",
+      "New test runs a child process that imports the runner, asserts the system pool, THEN sets RLIMIT_AS to 768 MiB, then does the first pyarrow import, read, 20-channel write and reload; it asserts return code 0 and RSS < 300 MiB. Limit precedes any pyarrow allocation; existing numpy/h5py mappings count against it, which matches the launcher. Assertions are meaningful (a failure to allocate crashes the child). Synthetic and labelled. Minor: the test does not assert VmPeak headroom.",
+      "Pytest with AGENTS.md prefix: 12 passed.",
+      "Real read of AB04/i0 phase (sha256 checked against the T03 receipt) under RLIMIT_AS 768 MiB, nice 19 / ionice idle, writes nothing: 165 observations, 93 MiB RSS, VmPeak 333 MB. Under the 300 MiB rule.",
+      "v2 specs: all 18 bindings match current file hashes (a and b identical bindings); address_space 768, timeout 3600, kill 30, poll 15, startup/runtime memory unchanged; output roots and receipt paths do not exist; v1 specs absent; recordings: a = AB04/i0, b = AB05/i5,AB04/d10,AB03/i0,AB03/i10,AB04/d5,AB10/i10,AB03/d5 (7 records) unchanged."
+    ],
+    "remaining_conditions": [
+      "Not yet probed: the hook plus Streaming.mat read plus write together under the limit; stage a is that test, and fails closed. Treat the stage a receipt RSS/VmPeak as the real number before stage b.",
+      "After stage a, run the T03-vs-signed alignment readback (round 1 check_3) before stage b.",
+      "Round 1 check_5 and check_7 conditions still stand for full mode / R01."
+    ],
+    "needs_jose": []
+  },
+  "round_post_a": {
+    "round": "post-a",
+    "verdict": "Stage a clean. Stage b APPROVED (as specified in the v2 spec, seven records), no unresolved findings.",
+    "receipt_integrity": "pass: one launch, status completed, clean_success true, exit 0, no orphans, no launcher/finalisation errors; verify-cleanup re-run: proven true; all 14 output hashes equal the receipt; bindings_before and bindings_after all match and equal the v2 spec bindings; receipt spec equals the spec file apart from launcher-added defaults (thread_env, absolute paths) and spec_sha256 equals the file hash; peak RSS 211 MiB (under 300); no bound file changed.",
+    "alignment_readback": {
+      "method": "AB04/i0 only, 165 observations x 150 samples, joined on observation_id, T03 ipsilateral columns (read 11 columns, bounded) vs observations_signed.parquet; 177 MiB RSS, nice 19 / ionice idle, nothing written.",
+      "results": {
+        "pelvis_tilt": "max abs diff 2.8e-17 vs T03 pelvis_sagittal_angle_rad; logged net multiplier +1 (source x -1 from the audited sign x -1 from the logged UM21-P01-AB04-i0 correction); sign opposite gives diff up to 0.26 so the check discriminates",
+        "hip_angle": "1.1e-16 vs hip_flexion_angle_ipsi_rad, multiplier +1",
+        "knee_angle": "2.2e-16, +1",
+        "thigh_angle": "1.1e-16, +1",
+        "shank_angle": "4.4e-16, +1",
+        "ankle_angle": "5.6e-17 vs source_ankle_sagittal_angle_ipsi_rad, multiplier +1 (T03 ankle_dorsiflexion_angle_ipsi_rad is entirely NaN, so it cannot be compared)"
+      },
+      "interpretation": "Differences are float rounding only, so the T03 observations and the signed rows are the same 150-sample windows, and the hook's rule-B values equal the T03 values with the logged multiplier +1 for every channel T03 carries. All multipliers for these channels are +1 on both legs, so this readback checks identity and the net pelvis, not a sign flip; the sign flips (ankle_power -1) have no T03 counterpart.",
+      "not_compared": "foot_angle, all velocities, moments and powers: T03 has no ipsilateral counterpart (T03 hip/knee velocity columns correspond to no signed velocity). Contralateral columns are not signed (R01 condition from round 1 stands)."
+    },
+    "held_channels": "pass: hip_power and knee_power are absent from observations_signed.parquet (ankle_power, published with multiplier -1, is present as logged). channels_not_written_for_all_legs is empty; hook_units_without_observation right 32, left 31 (adapter strides T03 excluded).",
+    "observation": "Signed table carries moments and ankle power that T03 phase does not; R01 must decide whether they enter the release schema.",
+    "remaining_conditions": [
+      "Stage b: check each record's mapped/unmapped counts against J0 (AB05/i5 expected 4 unmapped) and that peak RSS stays under 300 MiB (stage a 211 MiB).",
+      "Round 1 check_5 (proxy, full mode) and check_7 (contralateral, 15 unmapped, schema) still stand."
+    ],
+    "needs_jose": []
+  },
+  "round_post_b": {
+    "round": "post-b",
+    "verdict": "Pilot passes (stages a and b). A T04 full-mode review can start.",
+    "run_integrity": "pass: one launch, completed, clean_success, exit 0, no orphans or errors; verify-cleanup re-run proven true; all 86 output hashes match; bindings before/after match and equal the v2 spec; spec sha256 matches; summary automated_outcome passed, no record findings, no group failures, 0 unexplained cross-group items. Totals 1,187 observations, 1,182 mapped, 5 unmapped (AB05/i5 4, AB03/i10 1, as J0). Receipt peak RSS 239 MiB, summary 233 MiB (under 300).",
+    "alignment_readback": {
+      "records": [
+        "AB10/i10",
+        "AB03/d5"
+      ],
+      "selection": "random.Random(20261104).sample of the seven stage-b records (seed recorded here; chosen by the reviewer before looking at results)",
+      "method": "one record per process, T03 ipsilateral columns vs signed table joined on observation_id, 168-172 MiB RSS, nice 19 / ionice idle, nothing written",
+      "results": "hip_angle, knee_angle, ankle_angle (vs T03 source_ankle_sagittal_angle) equal T03 to 1e-16 (multiplier +1). Same 160 / 173 observations in both. Pelvis: signed = -1 x T03 pelvis exactly (max |s+x| = 0) in both records, matching the logged multiplier -1 (T03 carries the source-sign pelvis).",
+      "important_finding": "thigh_angle and shank_angle differ from T03 by exactly -2 x (T03 pelvis) (max residual 4e-16, AB03/d5). T03 thigh and shank were built with the source-sign pelvis; the T04 values are derived after the hook from the published pelvis (F2). So T03 thigh and shank columns (and presumably foot and contralateral segments) are not rule-B and must not be released; T04 values replace them. For AB04/i0 the two agree only because its net pelvis multiplier is +1."
+    },
+    "power_physics": {
+      "record": "AB03/i0 (hook outputs, published values)",
+      "method": "for each unit, published power vs published moment x d(published angle)/dt (np.gradient, spacing duration/149); correlation and least-squares slope; unit counts 108-109",
+      "results": "ankle power published at -1: corr +0.997 (right) and +1.000 (left) median, min >= 0.97, slope 0.87-0.98. Left hip power published at -1: corr +0.988 median, min 0.93, slope 0.88. Held channels (source convention): right hip -0.977, right knee -0.999, left knee -0.999 median correlation, i.e. source power is -(moment x joint speed) in this layout, so -1 would be the physically consistent sign for them too. Published signs satisfy the recorded convention (D-UM21-C03-1: moments internal with the angle's sign, power = moment x joint speed). Slopes below 1 reflect finite-difference and resampling differences, not a sign issue.",
+      "single_leg_hip_power": "-1 on the left leg is physically consistent. The held right hip has the same physical relationship (corr -0.98 in source convention, detector suggests -1) but only one detector family agreed (plate_timing), so the hook holds it by rule. The current runner already drops hip_power from the whole AB03/i0 table (channels_not_written_for_all_legs = ['hip_power']), so no mixed column was written."
+    },
+    "r01_rule_recommendation": "Publish a channel for a recording only if the hook published it for BOTH legs with the same multiplier; if held on either leg, hold it for the whole recording (all-or-nothing per recording and channel), and log which leg decided. Rationale: the release unit is the recording and its column; one-leg publication would give inconsistent coverage between legs and let a half-evidenced channel appear in the release; storage layout and sign are properties of the recording, so a leg-level split is not scientifically meaningful. Do not extend the left multiplier to the right leg by arithmetic: that is a scientific judgment and needs the hook or a reviewed path (it could recover data for AB03/i0, ankle_power in some records). Keep the per-leg hook logs as evidence. Different multipliers on the two legs for the same channel and recording should hold both and be flagged. This matches what the runner does today.",
+    "pelvis_tilt": "pass: multiplier -1 relative to source on both legs in all seven stage-b records (audit sign UM21-pelvis_tilt = -1 from UM21-C03, verdict suggest, detector sign -1, basis audit); AB04/i0 net +1 from its logged correction. Convention D-UM21-C03-1 = C (counterclockwise positive, pelvis anterior tilt negative) with source clinical sign (+ anterior) gives -1; signed output equals -T03 pelvis exactly. Consistent.",
+    "remaining_conditions_for_full_mode": [
+      "Separate full-mode review with the proxy conditions from round 1 check_5 (bind the v4 record and receipt, constant record path, test against the real hook).",
+      "Apply the R01 one-leg-held rule in the runner or the release step explicitly and test it (currently an implementation side effect of selecting the channel intersection).",
+      "R01: T03 thigh, shank, foot and contralateral columns are not rule-B; ipsilateral signed table replaces them, contralateral and the 15 unmapped observations still need Jos\u00e9's decision (round 1 check_7)."
+    ],
+    "needs_jose": [
+      "R01 scope (not blocking full-mode review): contralateral columns, 15 unmapped observations, and whether a half-evidenced channel may be published for one leg."
+    ]
+  },
+  "round_fullmode_pre": {
+    "round": "fullmode-pre",
+    "reviewed_commit": "6f73409",
+    "verdict": "Approve v3 pilot a, then v3 pilot b. Full batches only after both pass review and the conditions below.",
+    "gate": "pass: record path is a runner constant, its sha256 (c459e7a7...) and the receipt sha256 (3b6ff3f4...) equal the files; both committed and unmodified; path never from the command line; ModeProxy only in full mode and only forwards the path to the unmodified check_pilot_record; I called check_pilot_record directly on the current backlog and bound build and it ACCEPTS (record and receipt facts returned); tests exercise the real hook refusing a missing record, a missing file and a copy outside audits. Summary fails a run if any group lacks hook pilot facts. No bound file changed (git clean; spec bindings equal current hashes).",
+    "one_leg_rule": "pass: settle_recording publishes a hook channel only if both legs published with the same multiplier; derived segments and velocities require both legs and kept inputs. I applied it to the logs of all 8 v2 pilot records (stage a and b): it reproduces exactly the v2 written columns, adds none and drops none, no flags. Because it requires both legs to publish, it can only publish a subset of what the old intersection published. Residual: segment loop iterates right-leg segments only; a segment derived only on the left is silently not kept (safe direction).",
+    "repilot": "pass: v3 pilot specs a and b bind the runner hash 967debea... which equals the current file and the runner bound in all ten full specs; they differ from v2 only in that hash (plus job id and roots); recordings identical to v2 (AB04/i0; the same 7). Limits unchanged (768 MiB, 3600 s, 30 s kill, 15 s poll, 3584/2048 MiB); output roots and receipts do not exist.",
+    "full_specs": "pass: ten per-subject specs; recordings equal stage_recordings('full', subject) and together are exactly the 44 T03 receipt records, no duplicates and none of the six excluded; subject counts 2,5,5,5,5,5,5,4,4,4. Inputs come from the seven valid receipts (T03_JOBS); the invalid um21_tread_t03_batch2_20261102 root appears in no record path (v2_batch2 is the valid one). Each binds the v4 record and receipt, 20 bindings, same limits, new output roots (um21_t04_full_ABxx_v1), mode full, stage full.",
+    "tests": "18 passed with the AGENTS.md prefix.",
+    "conditions_before_full_batches": [
+      "v3 pilot a then b pass independent post-run review (integrity, alignment on 2 seeded records, columns identical to v2 for the same recordings, no new holds other than rule-flag cases).",
+      "Do not edit backlog.json CORE-11-P-UM21 record, the v4 record or receipt, or commit changes to them between review and launch: the gate reads the working-tree backlog and HEAD blobs per group and would refuse (fail closed).",
+      "Launch one subject at a time, each through the launcher with a dry run, checking the previous receipt and verify-cleanup first; confirm peak RSS under 300 MiB (stage b: 239 MiB on 7 records; five-record subjects should be lower).",
+      "After the batches: a combined readback (44 records, mapped plus unmapped equals 7,562 with 15 unmapped listed, held-by-rule channels per record, rule flags) by an independent agent.",
+      "R01 items from round 1 and post-b still open (contralateral columns, 15 unmapped, T03 thigh/shank/foot not rule-B)."
+    ],
+    "needs_jose": []
+  },
+  "round_post_v3": {
+    "round": "post-v3",
+    "verdict": "v3 pilots a and b pass. Approve the AB01 full batch (2 records) as the first full launch, then stop for a gate-facts check.",
+    "receipt_integrity": "pass for both: completed, clean_success, exit 0, no orphans or errors; verify-cleanup re-run proven true for both receipts; all 14 (a) and 86 (b) output hashes match; bindings before/after match and equal the v3 specs; spec sha256 matches; runner hash 967debea... equals the current file and the summary's code_sha256; summaries passed with no rule flags, findings, group failures or unexplained cross-group items; totals a 165/165 mapped, b 1,187 with 1,182 mapped and 5 unmapped as before; peak RSS 211 and 238 MiB. Bound files git-clean.",
+    "identity_to_v2": "pass: for all 8 recordings the v3 observations_signed.parquet has the same column names and row count as v2, every float column is bit-identical (compared as raw 64-bit patterns, so NaNs included), ids equal, and the observation map statuses and unit indices are identical. I agree that identity stands in for a repeated alignment check: the v2 alignment, power and pelvis checks apply unchanged to byte-identical data.",
+    "gate_adequacy": "AB01 first is adequate with conditions. It exercises the real gate on four groups (two records, both legs) and the new rule in full mode, with the smallest exposure. It does not exercise the AB04/i0 correction expectation or hold-heavy records; stage a/b already did in pilot mode and the AB04 batch will in full mode, so review AB04 as its own checkpoint. Facts to check after AB01 before launching AB02-AB10: (1) t04_summary.json pilot_gate.groups_without_hook_pilot_facts is empty and every group's pilot_facts is non-empty with record = core11-p-um21-pilot-record-v4.json, sha256 c459e7a7..., receipt sha256 3b6ff3f4..., pilot_task CORE-11-P-UM21; (2) each sign_application.json mode is full; (3) the receipt and verify-cleanup are clean; (4) AB01 counts equal J0 and columns follow the rule; (5) peak RSS under 300 MiB; (6) bindings include the record and receipt and match; (7) nothing in HEAD blobs or the CORE-11-P-UM21 backlog record changed since the gate check. If the gate refuses on the first group the run fails closed with a consumed output root; then fix and re-spec as v2 rather than reusing the root.",
+    "needs_jose": []
+  },
+  "round_full_readback": {
+    "round": "full-readback",
+    "reviewed_commit": "9147c0e",
+    "reviewed_at_utc": "2026-11-02",
+    "scientific_approval": false,
+    "verdict": "PASS on all five items. T04 moved to done. Scientific approval of the data is not conferred.",
+    "item_1_integrity": "pass: all ten receipts completed, clean_success, exit 0, one launch, no orphans or errors, retry never automatic; verify-cleanup re-run for all ten, proven true; every output hash re-computed from disk matches; bindings before/after match, 20 files each, include the v4 record (c459e7a7...) and receipt (3b6ff3f4...) and equal the files on disk now; inputs are the seven T03 receipts only, um21_tread_t03_batch2_20261102 absent from specs and logs. Peak RSS 224-233 MiB (launcher), wall 4.4-9.8 s.",
+    "item_2_gate": "pass: every t04_summary has mode full, pilot_gate record/receipt sha256 equal v4 values and groups_without_hook_pilot_facts empty; all 88 group sign_application.json (44 records x 2 legs) name the v4 record sha, the v4 receipt sha and CORE-11-P-UM21, with mode full; no rule flags in any summary.",
+    "item_3_totals": "pass: summaries 7,562 = 7,547 mapped + 15 unmapped. Separately counted observation ids in all 44 T03 phase.parquet files (id column only, one file at a time): 7,562, each with exactly 150 rows, id sets equal the observation maps, 7,547 mapped + 15 unmapped. The 15 unmapped ids equal the handoff list; frame counts 46,269,47,31,29,24,27,27,27,26,28,257,34,42,43, every one outside 50-250.",
+    "item_4_readback": "pass: independent script (does not import the runner), seed 20261102 chose AB09/d5, AB02/i0, AB06/i10, AB10/d5 from the 43 other records; plus AB04/i0 and, extra, AB06/i0 (hip power published). For every published signed column (pelvis, hip, knee, ankle angle; hip, knee, ankle moment; published ankle/hip power) the T03 source component 1 column (angles deg to rad) times the logged per-leg multiplier equals the published value on the same 150 samples, max abs error 7e-13 to 1.4e-12 (rounding), same slot for power (component 1). Multipliers seen: pelvis -1 (+1 for AB04/i0, both legs, the logged net after the P01 correction, published = stored), hip/knee/ankle angle and moments +1, power -1. Derived thigh = pelvis + hip, shank = thigh - knee, foot = shank + ankle exactly equal (max diff 0.0); segment and pelvis velocities correlate >= 0.993 with np.gradient over samples (the runner uses per-stride spacing, so scale not compared). Held power columns absent and equal the maps. Published power vs published moment x gradient of published angle: ankle +0.993 to +0.997 (AB02/i0, AB04/i0, AB06/i10, AB06/i0), hip +0.990 (AB06/i0). AB04/i0 observations_signed.parquet is byte-identical (sha256 c06fb7c2...) to the v3 pilot a output. Probes: peak RSS 170-182 MiB, VmPeak 619-631 MiB, nice 19 / ionice idle, nothing written under converted_datasets.",
+    "finding_for_q01_not_a_blocker": "Published moment and power columns are NaN at a few samples where the T03 source column is finite: the hook reads exact (0,0,0) source triples as zero fill (adapter, UM21-C03) while the T03 phase columns interpolated through them (T03 values dip toward zero at those samples, seen in hip moment). NaN fractions 0 to 1.1 percent of samples (AB04/i0 0.45 percent, AB06/i0 1.07 percent); identical NaN mask across hip, knee, ankle moment and power; no angle has NaN. Not hidden: all other samples match to 1e-12. Q01 must treat these as missing samples, not zeros; T03 moment columns have the zero-fill dip and must not ship.",
+    "item_5_one_leg_rule": "pass: all 44 observation_map/summary JSONs: no channel with decision publish has a leg that held or differed in multiplier, no held channel is a written column, no mapped observation carries a non-publish channel that is written; held lists match the handoff exactly (ankle+hip+knee power, 22 records; hip+knee power, 20; knee power, 2; no angle or moment held).",
+    "caveats": [
+      "Readback covered 6 of 44 records value by value; the other 38 are covered by receipt, hash, gate, totals and map checks only.",
+      "Velocity scale not independently checked (shape and correlation only).",
+      "D-UM21-Q01-1 is drafted in the Q01 handoff but is not yet in backlog.json decisions; it must be copied from a verified handoff before Jos\u00e9 can answer it."
+    ],
+    "needs_jose": []
+  },
+  "round_v2_pre": {
+    "round": "v2-pre",
+    "verdict": "Approve pilot v4 stage a (AB04/i0), then stage b after stage a review. Full v2 batches only after both pass. Q01 coarse-limit draft: sound for blatant errors; textbook values confirmed against AAOS ranges via a secondary table; minor edits listed.",
+    "code_vs_decisions": {
+      "no_bound_file_changed": "pass: git shows only run_um21_t04_signs.py and its test modified; contributor_tools/common, adapters and run_core11_um21_pilot.py have no diff; hook arrays kept where the hook published (origin 'hook' uses res.published).",
+      "copy_rule_D_T04_1_C": "pass: copy only when exactly one leg published and the other held; refused (hold both, flag copy_disagreement) when the held leg's verdict is conflict or its detector sign differs from the published leg's sign relative to corrected source; both-published-with-different-multipliers is held and flagged. Copied array = apply_multiplier(source, m) with m exactly +1 or -1 (np.negative or copy), source recovered from the held leg's untransformed hook output. I replayed the rule on the 44 v1 full-run hook logs: only 4 copies occur (hip_power AB03/i0, AB05/i0, AB09/i0 and ankle_power AB04/i10), no flags, and each copied multiplier matches the stored power layout independently (layout 1 gives -1, AB05/i0 is a layout-2 recording and gets +1). Residual: a leg held because the hook's guard refused an apply whose sign agrees would be copied; that is within 'legs do not disagree'.",
+      "physics_rule_D_T04_3_B": "pass: pooled Pearson r on the 150-sample grid over all strides of a leg, between source power and published moment x numpy.gradient(published angle), spacing stride duration/149; NaN (zero-fill) missing in all three; fewer than 300 finite samples or constant series gives no r and a hold; publish only if both legs |r| >= 0.9 with the same sign (opposite signs held and flagged physics_legs_disagree); sign = sign(r), so published power correlates positively with moment x speed. Needs the joint's moment and angle hook-published on both legs with one multiplier, else hold (conservative). For hook-published or copied power, a leg with |r| >= 0.9 contradicting the multiplier holds both and flags physics_contradicts_sign. r logged per leg and in the summary. Observation: the 0.9 threshold only gates the physics path; a published power with 0.5 < |r| < 0.9 is kept (no evidence against).",
+      "rows_and_unmapped": "pass: unmapped rows now state exclusion from the release with the reason (D-UM21-T04-2 = A); mapped rows carry multiplier and origin per leg and channel."
+    },
+    "tests": "pass: 25 passed with the AGENTS.md prefix. New tests are synthetic with known answers by construction (r = +0.99, -0.99, 0.6 via a noise-scaled product so r equals the target; zero-fill NaN as missing; too few samples; copy exactly -source; three disagreement variants; layout-1 synthetic recording where every published power has multiplier -1). They check the decision logic and exact array values; they do not run the real hook on real data, which is what pilot v4 is for.",
+    "specs": "pass: runner hash 96ca2932... bound in all 12 specs and equals the current file; all bindings (18 for pilots, 20 for full) match current files; pilot v4 a and b differ from v3 only by the runner hash and job/roots (same recordings); full v2 specs: 44 records, exactly the T03 receipt set, subject lists equal stage_recordings, v4 record and receipt bound; limits unchanged (768 MiB, 3600 s, 30 s, 15 s, 3584/2048); all output roots and receipts are new; the v1 outputs are untouched: 748 output hashes of the ten v1 full receipts and the v2/v3 pilot receipts still match. Dry-run refusals reported (memory reserve, foreign worker) are host load, not spec errors; I did not run the launcher.",
+    "conditions_for_pilot_v4": [
+      "Independent post-run review of stage a: integrity and verify-cleanup; every non-power column bit-identical to the v3 stage-a output; power: hip and knee power now physics-set; expect |r| >= 0.9 on both legs and multiplier -1 for AB04/i0 (layout 1); a result that contradicts the stored power layout (layout 1 -1, layout 2 +1) is a red flag even if |r| passes; ankle_power unchanged (hook, -1).",
+      "Stage b: identity of non-power columns to v3; every copy and physics-set channel checked against the layout rule; AB03/i0 hip_power now published (left hook, right copied, expect -1); AB05/i5 unmapped 4 and AB03/i10 unmapped 1 with the new release wording; peak RSS under 300 MiB (compute_physics adds arrays; v3 stage b was 238 MiB).",
+      "Full v2: still one subject at a time; v2 outputs go to new roots, v1 stays as the superseded (hold-based) run; the gate conditions of round fullmode-pre stand."
+    ],
+    "q01_coarse_limits": {
+      "verdict": "Adequate as a blatant-error screen; approve with the edits below. Not a plausibility range.",
+      "textbook_values": "Checked via web search: a 2020 supplementary table of AAOS normal ranges lists hip extension 20 and flexion 120, knee flexion 135, ankle plantarflexion 50 and dorsiflexion 20 degrees (https://cdn-links.lww.com/permalink/prsgo/b/prsgo_8_6_2020_04_17_hendriks_gox-d-20-00155r2_sdc1.pdf; also https://pmc.ncbi.nlm.nih.gov/articles/PMC9936331/table/TAB2). Another secondary chart gave hip flexion 125 and knee 130, so sources differ by about 5 degrees, irrelevant against a 30 degree margin. I did not reach Norkin and White or the AAOS book themselves: cite AAOS as read through that table, or have Jos\u00e9 check the book. Widened bounds follow arithmetically: hip -50 to +150 (-20..120 widened), knee -30 to +165 (0..135), ankle -80 to +50 (-50..20 in rule-B dorsiflexion-positive); consistent.",
+      "walking_check": "Normal walking on a 10 degree slope stays far inside: hip about -15 to +50, knee 0 to about 70, ankle about -20 to +20 degrees (typical gait ranges, not looked up in this session). Margins to the bounds are 35 degrees or more. The limits cannot fail ordinary strides and will only trip a gross scale, unit, wrap or sign-and-offset error.",
+      "L2_30deg_per_sample": "Reasonable: a stride is 150 samples over 0.5-2.5 s, i.e. 3-17 ms per sample; 30 degrees per sample means about 1,800-9,000 degrees/s, versus real gait joint speeds of a few hundred degrees/s (a few degrees per sample). Catches 180/360 degree wraps and branch jumps, misses anything gradual. Edge: at the longest strides the threshold is higher in deg/s, still far above physiology.",
+      "edits": [
+        "Label an ankle L1 pass 'not blatantly impossible, zero offset unreviewed', as drafted.",
+        "Move L3 to the structural layer (it cannot fail by construction under the 50-250 frame rule), as the draft already suggests.",
+        "State the source honestly as 'AAOS normal ranges as tabulated in a secondary source'.",
+        "Apply L1 and L2 only to channels with origin recorded in the T04 map (hook, copied, physics), after the v2 T04 outputs exist.",
+        "Keep the unchecked list (pelvis, segments, moments, powers, velocities); with D-UM21-Q01-1 = B no per-task ranges."
+      ]
+    },
+    "needs_jose": []
+  },
+  "v2": {
+    "round": "v2-full-readback",
+    "reviewer": "independent verifier agent (did not write the work)",
+    "reviewed_at_utc": "2026-11-06",
+    "scientific_approval": false,
+    "verdict": "PASS on all six items. T04 v2 moved to done. Scientific approval of the data is not conferred.",
+    "item_1_receipts": "pass: AB01..AB10 v2 receipts all status completed, exit 0, clean_success, cleanup_proof proven, every check true, no launcher/finalisation errors; bindings before and after all match; run runner sha256 96ca2932...b3299 equals the bound hash in every receipt and the file on disk; peak RSS 224-233 MiB. Pilot v4 a and b receipts also completed, clean, proven. Per-batch summaries t03_observations sum 7,562 = mapped 7,547 + unmapped 15. Outputs enumerated from the ten receipts' v2 roots; the INVALID_DO_NOT_USE root was not touched.",
+    "item_2_independent_recompute": {
+      "seed": 20261106,
+      "sample_of_8_from_the_other_41": [
+        "AB02/d5",
+        "AB02/i10",
+        "AB03/d5",
+        "AB05/d10",
+        "AB01/i0",
+        "AB06/d5",
+        "AB07/d5",
+        "AB05/i10"
+      ],
+      "plus": [
+        "AB04/i0",
+        "AB03/i0",
+        "AB05/i0"
+      ],
+      "method": "own script, one recording at a time: published moment x finite-difference of published angle over phase (np.gradient) per stride, Pearson r with the published power column, by leg and joint. Ran on all 44 recordings (not only the sample).",
+      "power_result": "all 248 published power leg-joint series have r > 0 (min 0.783, AB05/i0 right hip); sample and AB04/i0, AB03/i0 all >= 0.94 except AB05/i0 hip 0.82/0.78. No series disagrees with moment x speed.",
+      "nonpower_result": "all non-power columns bit-identical (NaN-aware) to the v1 full outputs in all 44 recordings; observation ids and sample/side columns identical. Where v1 also carried a power column (hook-signed ankle), v2 equals v1 exactly.",
+      "ids": "output observation ids equal the mapped ids of observation_map.json in every recording"
+    },
+    "item_3_copied_and_held": {
+      "copied": "4 channels, each right leg copied from a left leg that is hook-settled with the identical multiplier: AB03/i0 hip_power -1, AB04/i10 ankle_power -1, AB05/i0 hip_power +1, AB09/i0 hip_power -1. Published right-leg power also correlates positively with moment x speed (AB05/i0 right hip 0.78, the lowest).",
+      "held": "8 channels, all absent from the published parquet (no column) exactly as the handoff lists: AB03/i10 ankle, hip, knee power; AB04/d10, AB04/d5, AB05/d10, AB05/d5, AB06/d5 hip_power. Reasons are in t04_summary and UM21-Q01 t04_v2_power_summary.",
+      "origin_counts_checked_in_maps": "power multipliers across recordings: hook 52, physics 192, copied 4 (leg-channel entries), consistent with 24/96/4/8 recording-channel counts; each (leg,channel) has one multiplier and origin per recording."
+    },
+    "item_4_unmapped": "pass: 15 unmapped strides listed in observation_map with reasons (13 below the 50-frame hook minimum, 2 above the 250-frame maximum: AB04/i10 269, AB07/d5 257); none appear in any output parquet.",
+    "item_5_tests": "tests/test_um21_t04_signs.py: 25 passed (handoff text said 12).",
+    "item_6_backlog_check": "build_backlog_page.py --check: valid, HTML current.",
+    "anomalies": [
+      "Wording only: the held reason for AB06/d5 hip_power reads 'left: |r| = 0.998 below 0.9, right: |r| = 0.867 below 0.9'. The left value 0.998 is not below 0.9; the message seems to print the pair, and the hold is due to the right leg (and no settled partner to copy). Not a data error.",
+      "The runner's 'r' uses source power (sign shown negative for flipped channels); my r uses published values (positive). Different frames, same conclusion.",
+      "Handoff test count was stale (12 vs 25)."
+    ],
+    "probes": "one-recording read-only probe, nice 19 / ionice idle, peak RSS 155 MiB (153 MiB in-process); nothing written under converted_datasets or source folders; memory gate checked before (Linux avail >10 GB, Windows >7 GB free).",
+    "next_actions": [
+      "Unblock UM21-Q01 (apply limits only to these v2 outputs).",
+      "R01 open items: contralateral columns, stable schema, naming; T03 thigh/shank must not ship."
+    ]
+  }
+}

@@ -1,0 +1,940 @@
+{
+  "updated_at_utc": "2026-10-21 06:53 UTC",
+  "snapshot_notice": "Manually refreshed evidence snapshot, not a live monitor. No dataset has final scientific approval.",
+  "organization": {
+    "coordinator": "Execution, integration, memory guards and evidence reconciliation",
+    "parallel_agents": 3,
+    "numerical_workers": 1,
+    "rule": "Never edit files frozen into running or queued jobs; develop isolated changes and schedule a new immutable run.",
+    "correction_pilot_queue": "converted_datasets/reconversion_v2/correction_pilot_serial_queue_20261021",
+    "terrain_adoption_queue": "converted_datasets/reconversion_v2/gt21_terrain_adoption_serial_queue_20261021",
+    "mblue_planar_queue": "converted_datasets/reconversion_v2/mblue_planar_serial_queue_20261021",
+    "fukuchi_pilot_queue": "converted_datasets/reconversion_v2/fukuchi_ensemble_serial_queue_20261021",
+    "um21_planar_queues": [
+      "converted_datasets/reconversion_v2/um21_running_planar_serial_queue_20261021",
+      "converted_datasets/reconversion_v2/um21_tread_stair_planar_serial_queue_20261021"
+    ],
+    "mblue_fileinfo_queue": "converted_datasets/reconversion_v2/mblue_fileinfo_serial_queue_20261021",
+    "mblue_pose_queue": "converted_datasets/reconversion_v2/mblue_modelpose_serial_queue_20261021",
+    "um21_boundary_scope_queue": "converted_datasets/reconversion_v2/um21_boundary_scope_serial_queue_20261021",
+    "gt24_ankle_adoption_queue": "converted_datasets/reconversion_v2/gt24_phase_ankle_adoption_serial_queue_20261021",
+    "queue_state_notice": "19 historical queues stopped; 39 job definitions retained for reviewed replacement. Queue paths below identify preserved plans, not live workers.",
+    "queue_recovery_evidence": "docs/quality/audits/reconstruction-queue-recovery.json"
+  },
+  "datasets": [
+    {
+      "dataset": "MBLUE",
+      "state": "Full planar-label correction completed",
+      "remaining": "335 blocks and 15,061 observations preserved. Independent native station checks are prepared; actual pose comparison, full 3D reconstruction and scientific review remain open."
+    },
+    {
+      "dataset": "GT21",
+      "state": "51 / 2,301 recordings",
+      "remaining": "1,111 cycles rebuilt. Strict levelground, treadmill and ramp pilots are scheduled behind the guarded queue. Stair still needs its baseline and pilot. Full bilateral and terrain adoption remain pending."
+    },
+    {
+      "dataset": "UMich 2021",
+      "state": "Partial outputs; full restoration jobs queued",
+      "remaining": "Running preservation, 479 boundary cycles, 50 treadmill recordings, 403 stair recordings and nine Wtr subjects are scheduled. Source readback and anatomical review remain incomplete."
+    },
+    {
+      "dataset": "GT24",
+      "state": "Four corrected pilot audits queued; full runner reviewed",
+      "remaining": "All 2,421 Parsed and 1,358 native records remain in scope. Full reconstruction requires actual pilot results and 2,447 membership checks; 869 source-only recordings need lossless preservation. Moment denominators and interaction units remain unresolved."
+    },
+    {
+      "dataset": "GT23",
+      "state": "AB01 correction and AB03 native pilot queued",
+      "remaining": "All 488 recordings and 787 parsing files remain in scope. Source preservation and twelve-signal kinematics checks are implemented. AB01/AB03 actual pilots, full rebuild, event validity and anatomical directions remain unverified."
+    },
+    {
+      "dataset": "GT25",
+      "state": "Four-family correction and source-preservation pilots queued",
+      "remaining": "All 676 records remain in scope. The full coordinator requires actual v5 and source-companion pilots. Three of 69 publisher event-file candidates have been retrieved, but event values and clocks remain unchecked; 123 records have no exact event-file match."
+    },
+    {
+      "dataset": "Gait120",
+      "state": "Full baseline and derivative correction queued",
+      "remaining": "Both jobs cover all 6,882 recordings. The correction must independently verify all 19 derivatives against source angles and timing. Anatomical segment interpretation remains unresolved."
+    },
+    {
+      "dataset": "StrokePiG",
+      "state": "151-source native preservation job queued",
+      "remaining": "Native source preservation is scheduled. Canonical mapping, clinical metadata and phase reconstruction remain open."
+    },
+    {
+      "dataset": "UM24K",
+      "state": "Ensemble and fatigue-summary restorations queued",
+      "remaining": "All 120 participant-condition ensembles and 2,260 documented fatigue-summary values require independent MAT source readback. These averages are not individual gait cycles."
+    }
+  ],
+  "historical_scope": {
+    "active_ids": [
+      "ga26",
+      "gt24",
+      "gt25d",
+      "gt21",
+      "gt23",
+      "mb24",
+      "sp50",
+      "um21"
+    ],
+    "active_missing_from_plans": [],
+    "additional_historical_pages": [
+      "ca23",
+      "fa16",
+      "fr12",
+      "ha13",
+      "ha23",
+      "mo15",
+      "ta21",
+      "ta22",
+      "ti19",
+      "um24k",
+      "vz22",
+      "wa23"
+    ],
+    "historical_disposition": "Not active rows in docs/datasets/index.html; retained pages/metadata contain historical counts/range results and some refer to AddBiomechanics. Inventory actual sources/artifacts and clearly archive or include in explicit reconstruction scope; do not silently call them verified.",
+    "evidence_paths": [
+      "docs/datasets/index.html",
+      "docs/datasets/_metadata",
+      "docs/datasets/ca23/index.html"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "GT21-01",
+      "priority": "P0",
+      "dataset": "gt21",
+      "title": "Complete guarded local reconstruction and full source checks",
+      "evidence_paths": [
+        "converted_datasets/reconversion_v2/gt21_memory_wait_20261021/status.json",
+        "converted_datasets/reconversion_v2/gt21_force_serial_queue_20261021/plan.json",
+        "converted_datasets/reconversion_v2/gt21_events_serial_queue_20261021/plan.json"
+      ],
+      "external_blocker": null,
+      "group": "dataset",
+      "acceptance": [
+        "All 2,301 inventory recordings have explicit converted/excluded/failed disposition; no silent skips",
+        "Independent joint, force/COP, phase/terrain checks cover every exported observation",
+        "Unresolved records remain visible and prevent complete claim"
+      ],
+      "prerequisites": [
+        "safe Windows memory headroom",
+        "single-worker scheduler"
+      ],
+      "lane": "serial conversion",
+      "owner": "Dataset reviewer; coordinator schedules conversion",
+      "status": "Open; see prerequisites",
+      "progress_note": "Strict three-mode pilot watcher is scheduled after the GT24 source-companion pilot. The original full rebuild remains memory-gated; stair requires a separate baseline and strict pilot."
+    },
+    {
+      "id": "GT21-02",
+      "priority": "P0",
+      "dataset": "gt21",
+      "title": "Validate and adopt bilateral cycle recovery",
+      "evidence_paths": [
+        "docs/quality/audits/gt21-event-eligibility.json",
+        "converted_datasets/reconversion_v2/gt21_bilateral_serial_queue_20261021/plan.json",
+        "docs/quality/audits/queue-recovery-expanded-49-summary.json"
+      ],
+      "external_blocker": null,
+      "group": "dataset",
+      "acceptance": [
+        "Native levelground/treadmill pilots retain every old observation identically",
+        "Added cycles pass independent force/COP and timing checks",
+        "Full source-pair ledger accounts for both reference legs and documents overlapping observations",
+        "Require complete eligible opposite-leg cycle recovery, not merely a nonempty added set",
+        "Independently verify force/COP on newly recovered cycles",
+        "Compose bilateral and strict-terrain fixes into one validated adapter so neither replaces the other"
+      ],
+      "prerequisites": [
+        "native pilot slot",
+        "preserved frozen-code handoff"
+      ],
+      "lane": "parallel source/code review now; native pilot and regeneration serial",
+      "owner": "GT21 review agent",
+      "status": "Three strict native pilots scheduled; full adoption pending",
+      "progress_note": "Levelground, treadmill and ramp pilots share the existing serial queue. Strict preservation, complete source-event coverage, metadata and all-cycle force/COP checks remain required. Stair baseline and pilot are separate outstanding work."
+    },
+    {
+      "id": "GT21-03",
+      "priority": "P0",
+      "dataset": "gt21",
+      "title": "Validate and adopt removal of invented terrain labels/height",
+      "evidence_paths": [
+        "docs/quality/audits/gt21-terrain-fix.json",
+        "converted_datasets/reconversion_v2/gt21_terrain_serial_queue_20261021/plan.json"
+      ],
+      "external_blocker": null,
+      "group": "dataset",
+      "acceptance": [
+        "10 native input fixture cases and ramp/stair preservation pilots pass",
+        "No assumed ascent or default height remains in adopted adapter",
+        "Full rebuilt terrain observations match source labels, task metadata and geometry or are explicitly unresolved",
+        "Reject nonnumeric, nonfinite or nonmonotonic condition clocks",
+        "Check minimum label support per contiguous region",
+        "Exercise negative cases through conversion dispatch, not only the helper"
+      ],
+      "prerequisites": [
+        "native pilot slot",
+        "preserved frozen-code handoff"
+      ],
+      "lane": "parallel isolated code review now; native checks serial",
+      "owner": "GT21 review agent",
+      "status": "Combined proposal prepared; native checks pending",
+      "progress_note": "Condition-clock validation added to isolated proposal. Per-region label policy and native conversion dispatch fixtures remain unresolved."
+    },
+    {
+      "id": "GT21-04",
+      "priority": "P1",
+      "dataset": "gt21",
+      "title": "Resolve source frames and local participant coverage",
+      "evidence_paths": [
+        "docs/quality/audits/gt21-completed-force-readback.json",
+        "docs/quality/audits/gt21-all-source-phases.json",
+        "docs/quality/audits/gt21-participant-source-coverage.json",
+        "docs/quality/audits/gt21-ab17-recovery.json",
+        "docs/quality/audits/queue-recovery-expanded-49-summary.json"
+      ],
+      "external_blocker": "May require missing participant source files or source frame documentation; do not infer from waveforms.",
+      "group": "dataset",
+      "acceptance": [
+        "Document force/COP coordinate system and reference point supported by source processing",
+        "Distinguish missing anatomical projection from verified lab-axis values",
+        "Reconcile 16 local participants with original cohort; identify unavailable sources explicitly",
+        "Account for all six missing publisher participants with verified source acquisition/conversion or a concrete unresolved disposition; the 2,301-record local rebuild alone does not establish full 22-participant coverage."
+      ],
+      "prerequisites": [],
+      "lane": "parallel bounded source/document review",
+      "owner": "Dataset reviewer; coordinator schedules conversion",
+      "status": "AB17 extraction and source checks queued; six-participant gap remains",
+      "progress_note": "AB17 recovery now has a guarded job covering all 133 recordings and four schema examples. Extraction has not run. Publisher-version mass and static-pose angle corrections remain prerequisites for canonical conversion; five other missing participants are not recovered. The active 16-participant inventory is missing AB12, AB15, AB17, AB19, AB23 and AB28 from the publisher’s 22-participant cohort."
+    },
+    {
+      "id": "UM21-01",
+      "priority": "P0",
+      "dataset": "um21",
+      "title": "Finish queued source component and observation recovery",
+      "evidence_paths": [
+        "converted_datasets/reconversion_v2/metadata_serial_queue_20261021/plan.json",
+        "converted_datasets/reconversion_v2/um21_stair_serial_queue_20261021/plan.json",
+        "converted_datasets/reconversion_v2/um21_wtr_serial_queue_20261021/plan.json",
+        "converted_datasets/reconversion_v2/um21_boundary_serial_queue_20261021/plan.json"
+      ],
+      "external_blocker": null,
+      "group": "dataset",
+      "acceptance": [
+        "50 tread recordings get 84 components and exact independent readback",
+        "403 stair recordings account for 2,700 annotated observations and 16 empty annotations",
+        "All 9 Wtr subjects and all 479 curated boundary cycles preserved with honest labels",
+        "All outputs have source identity, hashes, exclusion accounting and readback reports"
+      ],
+      "prerequisites": [
+        "single-worker scheduler"
+      ],
+      "lane": "serial conversion",
+      "owner": "Dataset reviewer; coordinator schedules conversion",
+      "status": "Open; see prerequisites"
+    },
+    {
+      "id": "UM21-02",
+      "priority": "P0",
+      "dataset": "um21",
+      "title": "Establish canonical ankle/kinetic/segment conventions",
+      "evidence_paths": [
+        "docs/quality/audits/um21-ankle-source-review.json",
+        "converted_datasets/reconversion_v2/um21_running_full_20261020/source_comparison.json",
+        "docs/quality/audits/um21-author-planar-recipe-followup.json",
+        "docs/quality/audits/um21-pelvis-correspondence-pilot-review.json"
+      ],
+      "external_blocker": "Original model axes/processing conventions may be needed; observed curves alone cannot establish anatomical direction.",
+      "group": "dataset",
+      "acceptance": [
+        "Each canonical angle/kinetic/segment mapping has source model/unit/frame evidence",
+        "Source ankle anomalies preserved without empirical offsets",
+        "Unknown mappings remain explicitly source channels and cannot count as verified canonical data"
+      ],
+      "prerequisites": [],
+      "lane": "parallel bounded source/document review",
+      "owner": "Dataset reviewer; coordinator schedules conversion",
+      "status": "Author planar recipe conflict documented; source correspondence pilot prepared",
+      "progress_note": "The author example uses hip minus pelvis, while the existing producer estimate uses pelvis plus hip. A four-stride, two-sided comparison is prepared but has not run; normalized-to-streaming field equivalence and full anatomical interpretation remain unverified."
+    },
+    {
+      "id": "UM21-03",
+      "priority": "P1",
+      "dataset": "um21",
+      "title": "Reconstruct remaining forceplate/marker and transfer data",
+      "evidence_paths": [
+        "converted_datasets/reconversion_v2/um21_normalized_transfers_20261020/conversion_manifest.json",
+        "converted_datasets/reconversion_v2/um21_running_full_20261020/source_comparison.json",
+        "converted_datasets/reconversion_v2/um21_stair_annotation_review_v2_20261021/source_comparison.json"
+      ],
+      "external_blocker": null,
+      "group": "dataset",
+      "acceptance": [
+        "Inventory signals omitted by current passes",
+        "Preserve real forceplate/marker clocks and source frames; compare against source",
+        "Resolve normalized transfer anatomical reference and streaming correspondence before bilateral pairing or derivatives",
+        "Provide explicit ledger for unavailable or unresolvable measurements"
+      ],
+      "prerequisites": [
+        "source channel inventory",
+        "UM21-02 for canonical mapping"
+      ],
+      "lane": "parallel coverage/code review; serial bounded extraction",
+      "owner": "Dataset reviewer; coordinator schedules conversion",
+      "status": "Open; see prerequisites"
+    },
+    {
+      "id": "UM21-04",
+      "priority": "P1",
+      "dataset": "um21",
+      "title": "Resolve Wtr gait labels and speed semantics",
+      "evidence_paths": [
+        "converted_datasets/reconversion_v2/um21_wtr_coverage_20261021/source_coverage.json",
+        "contributor_tools/reconvert_umich_wtr.py"
+      ],
+      "external_blocker": "Exact gait-switch annotations may not exist in provided source; report that explicitly.",
+      "group": "dataset",
+      "acceptance": [
+        "Do not equate protocol intervals with measured walking/running switch",
+        "Verify velocity profile clock and measured-versus-commanded meaning",
+        "Retain unknown task labels and crossing-window flags where evidence is unavailable"
+      ],
+      "prerequisites": [
+        "Wtr source preservation"
+      ],
+      "lane": "parallel bounded source/document review",
+      "owner": "Dataset reviewer; coordinator schedules conversion",
+      "status": "Open; see prerequisites"
+    },
+    {
+      "id": "GT24-01",
+      "priority": "P0",
+      "dataset": "gt24",
+      "title": "Apply documented ankle convention and verify source correspondence",
+      "evidence_paths": [
+        "docs/quality/audits/gt24-ankle-convention.json",
+        "docs/quality/audits/gt24-ankle-convention-review.json",
+        "docs/quality/audits/gt24-ankle-evidence-ranking.json",
+        "docs/quality/audits/gt24-native-parsed-ankle-pilot.json",
+        "docs/quality/audits/gt24-ankle-converter-pilot.json",
+        "converted_datasets/reconversion_v2/gt24_phase_ankle_adoption_serial_queue_20261021/plan.json"
+      ],
+      "external_blocker": null,
+      "group": "dataset",
+      "acceptance": [
+        "Use the released README anatomical coordinate definition, confirm exact field scope and stop if contradictory authoritative evidence is found",
+        "Reconcile README plantarflexion-positive claim with unchanged dorsiflexion-named export",
+        "Apply evidence-backed mapping and independent numerical fixture; regenerate affected channels if mapping changes"
+      ],
+      "prerequisites": [],
+      "lane": "parallel source/document review",
+      "owner": "Dataset reviewer; coordinator schedules conversion",
+      "status": "Ankle checks retained; full adoption stopped for mass correction",
+      "progress_note": "The 40-observation phase and 8,002-row continuous checks retain their limited source/preservation evidence. Mass validation reused a faulty phase/day lookup; affected normalized outputs require independent source-mass review under GT24-04."
+    },
+    {
+      "id": "GT24-02",
+      "priority": "P0",
+      "dataset": "gt24",
+      "title": "Complete unique-interval rebuild and failed-torque output audit",
+      "evidence_paths": [
+        "converted_datasets/reconversion_v2/metadata_serial_queue_20261021/plan.json",
+        "converted_datasets/reconversion_v2/gt24_torque_serial_queue_20261021/plan.json"
+      ],
+      "external_blocker": null,
+      "group": "dataset",
+      "acceptance": [
+        "Both corrected phases rebuilt with unique source intervals",
+        "Documented failed torque sides remain NaN in every available output; available opposite-side angles/torques retained",
+        "Every missing affected recording is explained as coverage gap, not passing"
+      ],
+      "prerequisites": [
+        "single-worker scheduler"
+      ],
+      "lane": "serial conversion",
+      "owner": "Dataset reviewer; coordinator schedules conversion",
+      "status": "Open; see prerequisites"
+    },
+    {
+      "id": "GT24-03",
+      "priority": "P1",
+      "dataset": "gt24",
+      "title": "Resolve omitted activities and validate segmentation coverage",
+      "evidence_paths": [
+        "converted_datasets/reconversion_v2/gt24_task_coverage_review_20261020/source_coverage.json",
+        "converted_datasets/reconversion_v2/gt24_duplicate_interval_review_20261020/source_comparison.json"
+      ],
+      "external_blocker": null,
+      "group": "dataset",
+      "acceptance": [
+        "796 unmapped and 73 explicitly excluded recordings each have evidence-backed disposition",
+        "Recover supported activities without inventing gait cycles for noncyclic tasks",
+        "Independently validate source interval selection and duplicate removal for each exported task family"
+      ],
+      "prerequisites": [
+        "GT24 task coverage inventory"
+      ],
+      "lane": "parallel mapping/source-code review; serial bounded pilots",
+      "owner": "Dataset reviewer; coordinator schedules conversion",
+      "status": "Open; see prerequisites"
+    },
+    {
+      "id": "MBLUE-01",
+      "dataset": "MBLUE",
+      "priority": "P0",
+      "title": "Finish running pelvis rebuild and planned source/preservation audits; finish stair reference correction",
+      "evidence_paths": [
+        "converted_datasets/reconversion_v2/mblue_priority_handoff_20261021/run_detour.py",
+        "docs/quality/audits/mblue-stair-reference.json",
+        "converted_datasets/reconversion_v2/mblue_pelvis_corrected_full_20261021/conversion_summary.json",
+        "converted_datasets/reconversion_v2/mblue_final_acceptance_20261021/plan.json",
+        "docs/quality/audits/mblue-pelvis-full-readback.json",
+        "docs/quality/audits/mblue-pelvis-full-preservation.json",
+        "docs/quality/audits/mblue-complete-scope.json"
+      ],
+      "group": "dataset",
+      "acceptance": [
+        "All335 blocks accounted for; corrected right pelvis uses left source clock with missing overlap preserved",
+        "Every unrelated column exactly preserved; no synthetic timing",
+        "Each of764 stair windows exports exactly its recovered reference view, retaining both legs; dropped views have explicit lineage",
+        "Final source readback bound to final corrected hashes"
+      ],
+      "prerequisites": [],
+      "lane": "serial-heavy",
+      "owner": "Coordinator",
+      "status": "Complete for pelvis timing, preservation and stair-reference selection; no scientific approval",
+      "progress_note": "All 335 blocks source checked; all unrelated values preserved. Persisted stair outputs were compared exactly to selected baseline views. Final hash-bound scope accounts for 15,061 observations and 764 omitted nonreference views."
+    },
+    {
+      "id": "MBLUE-02",
+      "dataset": "MBLUE",
+      "priority": "P1",
+      "title": "Review source anatomical segment and force/COP definitions",
+      "evidence_paths": [
+        "contributor_tools/reconvert_mblue_normalized.py",
+        "docs/quality/audits/mblue-complete-source-readback.json",
+        "docs/quality/audits/mblue-source-model-review.json",
+        "contributor_tools/preserve_mblue_planar_estimates.py",
+        "tests/test_mblue_planar_preservation.py",
+        "converted_datasets/reconversion_v2/mblue_planar_serial_queue_20261021/plan.json"
+      ],
+      "group": "dataset",
+      "acceptance": [
+        "Document original source parser axes, units, sign and reference frame for every published derived channel",
+        "Independent known-source examples validate transformations; unresolved canonical channels remain explicitly unassessed",
+        "Do not edit frozen live converter; prepare isolated patch proposal"
+      ],
+      "prerequisites": [],
+      "lane": "parallel-safe",
+      "owner": "Dataset reviewer; coordinator schedules conversion",
+      "status": "Full planar-label preservation completed; physical orientation review open",
+      "progress_note": "Distinct early full run preserves all planar estimates and unrelated values, with unsupported canonical orientations explicitly missing. Target: 335 blocks / 15,061 observations. Native FileInfo decoder is implemented and tested, awaiting 3 GiB host startup headroom."
+    },
+    {
+      "id": "GT23-01",
+      "dataset": "GT23",
+      "priority": "P1",
+      "title": "Rebuild all GT23 recordings and account for every parsing file",
+      "evidence_paths": [
+        "docs/quality/audits/gt23-full-source-scope.json",
+        "contributor_tools/preserve_gt23_full_source_channels.py",
+        "contributor_tools/audit_gt23_raw_kinematics.py"
+      ],
+      "group": "dataset",
+      "acceptance": [
+        "Preserve all ten publisher CSV channels for all 488 recordings, including 85 without parsing entries.",
+        "Account for all 787 parsing files with source-backed event counts, outputs or explicit unresolved dispositions; 787 is not a gait-cycle count.",
+        "Independently check time and phase outputs against source values, timestamps, physical sides and participant masses.",
+        "Resolve anatomical and event-validation gaps; preserved aliases and missing canonical values are not scientific completion.",
+        "Keep oversized inputs visible and use bounded processing without bypassing admission limits."
+      ],
+      "prerequisites": [
+        "primary queue predecessors"
+      ],
+      "lane": "serial-heavy",
+      "owner": "Dataset reviewer; coordinator schedules conversion",
+      "status": "Full runner and independent source checks tested; actual pilots pending"
+    },
+    {
+      "id": "GT23-02",
+      "dataset": "GT23",
+      "priority": "P1",
+      "title": "Establish source frame and event semantics for 19 activities",
+      "evidence_paths": [
+        "contributor_tools/conversion_scripts/Gtech_2023",
+        "docs/quality/audits/gtech23-source-probe.json",
+        "docs/quality/audits/gt23-joint-sign-and-segment-evidence.json",
+        "docs/quality/audits/gt23-known-pose-preparation.json",
+        "docs/quality/audits/queue-recovery-expanded-49-summary.json"
+      ],
+      "group": "dataset",
+      "acceptance": [
+        "Per-task event/transfer/continuous distinction supported by source parser",
+        "Force, COP and joint conventions traced to original models or source documentation",
+        "Independent verification plan includes contact missingness and non-gait activities"
+      ],
+      "prerequisites": [],
+      "lane": "parallel-safe",
+      "owner": "Dataset reviewer; coordinator schedules conversion",
+      "status": "Native model-pose diagnostic queued; raw-export anatomy and event semantics open",
+      "progress_note": "Thirteen AB01 model poses are queued to test landmark directions. This diagnostic cannot approve raw CSV coordinate ancestry, moment conventions, segment Euler angles or other participant models. All event semantics remain subject to source review. Publisher plotting conventions support only a candidate sagittal sign recipe; supplied velocities also have conflicting publisher descriptions of the differentiation method."
+    },
+    {
+      "id": "GT25-01",
+      "dataset": "GT25",
+      "priority": "P1",
+      "title": "Close task and large-file coverage gaps without raising admission cap",
+      "evidence_paths": [
+        "contributor_tools/run_gt25_batch.py",
+        "converted_datasets/reconversion_v2/gt25_full_20261021/inventory.json",
+        "docs/quality/audits/gt25-bounded-reader-proposal.json",
+        "docs/quality/audits/queue-recovery-expanded-49-summary.json"
+      ],
+      "group": "dataset",
+      "acceptance": [
+        "Classify every216 excluded recording by scientifically defensible observation type",
+        "Design chunked/projected reader for47 mapped oversized recordings with bounded-memory fixture proof",
+        "New isolated adapter and immutable output plan before touching frozen batch code",
+        "Review 24 excluded shuffle recordings against source README treadmill-walking definition",
+        "Match admission estimates to actual selected input files; keep the 64MiB cap",
+        "Provide bounded reading for remaining oversized sit-to-stand sources"
+      ],
+      "prerequisites": [],
+      "lane": "parallel-safe",
+      "owner": "GT25 coverage agent",
+      "status": "V5 four-family correction and three source-companion pilots queued",
+      "progress_note": "The prior v4 low-force heuristic is not approval evidence. V5 requires actual independent source readback before full 676-record production; all 192 source-only recordings remain explicitly in scope."
+    },
+    {
+      "id": "GT25-02",
+      "dataset": "GT25",
+      "priority": "P1",
+      "title": "Run complete admitted batch and independent source audit",
+      "evidence_paths": [
+        "contributor_tools/run_gt25_full_restoration_v5.py",
+        "docs/quality/audits/queue-recovery-expanded-49-summary.json"
+      ],
+      "group": "dataset",
+      "acceptance": [
+        "All676 inventory rows reconciled converted/excluded/deferred; none disappears",
+        "Every output hash, source clock, mass, reference side and selected joint value independently checked",
+        "Coverage gaps reported even if batch reaches complete_with_unresolved_coverage"
+      ],
+      "prerequisites": [
+        "GT25 queued predecessors"
+      ],
+      "lane": "serial-heavy",
+      "owner": "Dataset reviewer; coordinator schedules conversion",
+      "status": "Full-scope coordinator tested; actual pilot results and rebuild pending",
+      "progress_note": "The coordinator accounts for 450 regular, 34 streaming and 192 source-only recordings. It requires actual pilot results and independent source checks; no full run has started."
+    },
+    {
+      "id": "GAIT120-01",
+      "dataset": "Gait120",
+      "priority": "P1",
+      "title": "Audit original OpenSim load, torque and anatomical-frame conventions",
+      "evidence_paths": [
+        "docs/quality/audits/remaining.json",
+        "contributor_tools/conversion_scripts/Gait120",
+        "docs/quality/audits/gait120-source-conventions.json"
+      ],
+      "group": "dataset",
+      "acceptance": [
+        "Known source model axes and external-load application documented",
+        "Independent check distinguishes source ID anomalies from converter error",
+        "120 subject masses traced to spreadsheet; alternate uniform75kg artifact explicitly legacy/quarantined"
+      ],
+      "prerequisites": [],
+      "lane": "parallel-safe",
+      "owner": "Dataset reviewer; coordinator schedules conversion",
+      "status": "Source conventions partly established; model and frames open",
+      "progress_note": "Original paper Figure 4 supports right-leg hip/ankle preservation and knee negation. Paper documents N/Nm/m units and missing force data for S001\u2013S010. Exact model, left-side conventions, plate assignments and segment orientations remain unresolved."
+    },
+    {
+      "id": "GAIT120-02",
+      "dataset": "Gait120",
+      "priority": "P1",
+      "title": "Complete full reconstruction and source-based output checks",
+      "evidence_paths": [
+        "converted_datasets/reconversion_v2/metadata_serial_queue_20261021/plan.json",
+        "docs/quality/audits/gait120-extended-source-review.json",
+        "docs/quality/audits/queue-recovery-expanded-49-summary.json"
+      ],
+      "group": "dataset",
+      "acceptance": [
+        "Every6882 source recording accounted for",
+        "All7 tasks verified with correct transfer/cycle types, true clocks and reference IDs",
+        "Unknown raw-coordinate channels remain labeled raw; no fabricated canonical force/COP",
+        "All 19 derivative outputs independently checked against original source angles and actual duration, with missing values reported as unassessed; planar segment estimates kept separate from verified anatomical orientations"
+      ],
+      "prerequisites": [
+        "primary queue predecessors",
+        "GAIT120-01 for anatomical approval"
+      ],
+      "lane": "serial-heavy",
+      "owner": "Dataset reviewer; coordinator schedules conversion",
+      "status": "Full baseline and derivative correction queued; actual readback pending",
+      "progress_note": "Separate guarded jobs cover all 6,882 baseline recordings and all 19 corrected derivatives. Neither job has completed; anatomical segment estimates remain unverified."
+    },
+    {
+      "id": "SP50-01",
+      "dataset": "StrokePiG",
+      "priority": "P1",
+      "title": "Specify native Plug-in Gait to canonical units, axes and event conversion",
+      "evidence_paths": [
+        "docs/quality/audits/strokepig-source-coverage.json",
+        "contributor_tools/reconvert_strokepig_native.py"
+      ],
+      "group": "dataset",
+      "acceptance": [
+        "Determine normalized channel units from processing provenance rather than C3D group labels",
+        "Resolve or explicitly retain TVC22 83vs72kg discrepancy and16 recordings missing processing mass",
+        "Clinical side unknown for50 subjects stays unknown; no inferred affected-side labeling",
+        "Explicit policy for TVC47/BWA (0) lacking events; native companion retained"
+      ],
+      "prerequisites": [],
+      "lane": "parallel-safe",
+      "owner": "Dataset reviewer; coordinator schedules conversion",
+      "status": "Open; see prerequisites"
+    },
+    {
+      "id": "SP50-02",
+      "dataset": "StrokePiG",
+      "priority": "P1",
+      "title": "Complete native companion preservation and then canonical conversion",
+      "evidence_paths": [
+        "converted_datasets/reconversion_v2/strokepig_native_full_20261021/batch_plan.json",
+        "docs/quality/audits/queue-recovery-expanded-49-summary.json"
+      ],
+      "group": "dataset",
+      "acceptance": [
+        "All151 native outputs source-hash/readback verified including residuals/events/clocks",
+        "Canonical cycles only from supported source events, 150 inclusive samples and bilateral identity preserved",
+        "No claim that continuous raw preservation alone completes phase reconstruction"
+      ],
+      "prerequisites": [
+        "GT25 serial queue",
+        "SP50-01 for canonical conversion"
+      ],
+      "lane": "serial-heavy",
+      "owner": "Dataset reviewer; coordinator schedules conversion",
+      "status": "151-record native preservation job queued",
+      "progress_note": "The replacement watcher is scheduled after Fukuchi first-pair work. Full native readback and later canonical conversion remain required."
+    },
+    {
+      "id": "SCOPE-01",
+      "dataset": "historical catalog",
+      "priority": "P1",
+      "title": "Account for twelve historical dataset pages outside active catalog",
+      "evidence_paths": [
+        "docs/datasets/_metadata",
+        "docs/datasets/index.html",
+        "docs/datasets/ca23/index.html",
+        "docs/quality/audits/queue-recovery-expanded-49-summary.json"
+      ],
+      "group": "dataset",
+      "acceptance": [
+        "For each historical slug record source availability, artifact availability, ownership and explicit archive/rebuild disposition",
+        "No historical range pass rate treated as source verification",
+        "AddBiomechanics reconstruction scope decided from evidence; do not assume eight active queues cover twenty retained study pages"
+      ],
+      "prerequisites": [],
+      "lane": "parallel-safe",
+      "owner": "Scope and CI agent",
+      "status": "UM24K restoration queued; other historical source identities under review",
+      "progress_note": "UM24K S1 and S2 restorations are queued with source hashes and independent readback. Tan study-level evidence improved, but exact recording membership remains unresolved. Falisse task guessing is removed; historical outputs still require reconstruction."
+    },
+    {
+      "id": "RELEASE-01",
+      "dataset": "all datasets",
+      "priority": "P0",
+      "title": "Prevent legacy artifacts and previews being confused with corrected releases",
+      "evidence_paths": [
+        "converted_datasets/README.md",
+        "docs/datasets/index.html",
+        "docs/datasets/aggregate_previews/manifest.json"
+      ],
+      "group": "dataset",
+      "acceptance": [
+        "Remove unsupported ready-for-analysis/cleaned-tested claims from converted_datasets/README.md",
+        "Dataset counts/download/preview lineage clearly identifies old versus reconstructed outputs",
+        "Corrected immutable release only promoted after complete per-dataset coverage and scientific assessment; no automatic upload"
+      ],
+      "prerequisites": [],
+      "lane": "parallel-safe",
+      "owner": "Dataset reviewer; coordinator schedules conversion",
+      "status": "Open; see prerequisites"
+    },
+    {
+      "id": "EXEC-01",
+      "priority": "P0",
+      "title": "Complete and inspect current MBLUE detour",
+      "status": "Complete; four accepted summaries inspected and native controller resumed",
+      "acceptance": [
+        "All four preserved jobs have accepted terminal summaries and matching frozen hashes",
+        "Inspect reconstructed source readback and exact preservation findings",
+        "Confirm controller PID402226 resumes after detour termination"
+      ],
+      "group": "coordination",
+      "prerequisites": [],
+      "lane": "coordination",
+      "owner": "single execution coordinator",
+      "evidence_paths": [
+        "docs/quality/audits/mblue-complete-scope.json",
+        "converted_datasets/reconversion_v2/mblue_priority_handoff_20261021/status.json"
+      ]
+    },
+    {
+      "id": "EXEC-02",
+      "priority": "P0",
+      "title": "Keep one bounded reconstruction worker progressing",
+      "status": "Active; native conversion waits for Windows headroom, bounded detours run sequentially",
+      "acceptance": [
+        "Each serial job finishes or yields explicit accounted-for source failures",
+        "Monitor Windows as well as WSL memory and disk headroom",
+        "Do not classify a live waiting process as failed or restart from stale PID fields"
+      ],
+      "group": "coordination",
+      "prerequisites": [
+        "EXEC-01"
+      ],
+      "lane": "coordination",
+      "owner": "single execution coordinator"
+    },
+    {
+      "id": "SCI-01",
+      "priority": "P0",
+      "title": "Resolve remaining source conventions and coverage by dataset",
+      "status": "ready for read-only agents",
+      "acceptance": [
+        "Every interpretation has source model/metadata evidence or remains explicitly unavailable",
+        "All input recordings and excluded observations accounted for",
+        "No invented anatomical axes, masses, timing or laterality"
+      ],
+      "group": "coordination",
+      "prerequisites": [],
+      "lane": "coordination",
+      "owner": "dataset owners"
+    },
+    {
+      "id": "FIX-01",
+      "priority": "P0",
+      "title": "Promote pending pilot fixes into full reconstructions",
+      "status": "depends on pilot evidence",
+      "acceptance": [
+        "GT21 bilateral and strict-terrain native pilots verified",
+        "Plan full correction with preserved lineage and fresh frozen bindings",
+        "Do not mistake existing old-policy full rebuild for final corrected output"
+      ],
+      "group": "coordination",
+      "prerequisites": [
+        "SCI-01"
+      ],
+      "lane": "coordination",
+      "owner": "dataset owners plus execution coordinator"
+    },
+    {
+      "id": "QA-01",
+      "priority": "P0",
+      "title": "Verify every final dataset against original source",
+      "status": "Partial evidence available; stopped jobs need reviewed replacement",
+      "acceptance": [
+        "Final output hashes tie to exact source and converter versions",
+        "All changed signals/identity/clock/units checked over relevant full scope",
+        "Known-missing measurements remain missing; failure and exclusion ledgers reconciled"
+      ],
+      "group": "coordination",
+      "prerequisites": [
+        "EXEC-02",
+        "FIX-01"
+      ],
+      "lane": "coordination",
+      "owner": "independent reviewer"
+    },
+    {
+      "id": "RELEASE-02",
+      "priority": "P1",
+      "title": "Reconcile per-dataset readiness and create immutable local review bundles",
+      "status": "blocked on scientific gates",
+      "acceptance": [
+        "One assessment drives filtering, release facts and visible quality labels",
+        "Full and filtered variants retain shared source lineage",
+        "Catalog previews and documentation reflect final output and limitations",
+        "Publish only through user-requested release workflow"
+      ],
+      "group": "coordination",
+      "prerequisites": [
+        "QA-01"
+      ],
+      "lane": "coordination",
+      "owner": "release/documentation owner"
+    },
+    {
+      "id": "ORG-01",
+      "priority": "P1",
+      "title": "Maintain one owner/dependency/evidence backlog",
+      "status": "Initial backlog created; ongoing upkeep",
+      "acceptance": [
+        "Every item has owner, readiness, prerequisites, evidence links and measurable done condition",
+        "Separate code-fixed, pilot-verified, fully-rebuilt, scientifically-reviewed and released states",
+        "Close items from evidence rather than test count or queue completion alone"
+      ],
+      "group": "coordination",
+      "prerequisites": [],
+      "lane": "coordination",
+      "owner": "coordinator"
+    },
+    {
+      "id": "CI-01",
+      "priority": "P0",
+      "group": "coordination",
+      "title": "Restore PR checks: install native C3D reader in CI",
+      "owner": "Scope and CI agent",
+      "status": "Verified on PR",
+      "lane": "Small workflow edit",
+      "prerequisites": [],
+      "acceptance": [
+        "CI installs ezc3d before test collection",
+        "Synthetic-data-contract check passes without skipping native companion tests"
+      ],
+      "evidence_paths": [
+        "https://github.com/jmontp/LocoHub/actions/runs/39541100953/job/119028785811"
+      ],
+      "progress_note": "Remote synthetic-data-contract and documentation build checks passed on ac1af50; deployment skipped for the PR."
+    },
+    {
+      "id": "NEW-01",
+      "priority": "P1",
+      "group": "new_datasets",
+      "title": "Review and add new datasets one at a time",
+      "owner": "Dataset discovery agent",
+      "status": "Fukuchi first-pair job queued; full 508-pair conversion pending review",
+      "lane": "Paper and source review, then serial guarded pilot",
+      "prerequisites": [],
+      "acceptance": [
+        "Check primary paper, source version, license and existing dataset inventory",
+        "Reconcile participant counts and actual recording semantics",
+        "Validate one bounded conversion against source before expanding",
+        "Document unsupported signals and publish no converted-data claim before output exists",
+        "Complete or record a concrete blocker for this candidate before starting another"
+      ],
+      "evidence_paths": [
+        "docs/datasets/fu18/index.html",
+        "docs/datasets/fu18/source_review.json",
+        "contributor_tools/conversion_scripts/Fukuchi_2018_Walking/candidate.json",
+        "docs/quality/audits/queue-recovery-expanded-49-summary.json"
+      ],
+      "progress_note": "The earlier small pilot passed its checks. The new full-plan first pair must finish and be reviewed before explicit continuation. Published source coverage is visible for all 51 participants, including 53 absent conditions."
+    },
+    {
+      "id": "GT24-04",
+      "priority": "P0",
+      "dataset": "gt24",
+      "title": "Correct phase/day mass selection and independently validate normalization",
+      "evidence_paths": [
+        "docs/quality/index.html",
+        "converted_datasets/reconversion_v2/gt24_equivalence_after_gt23_20261021/status.json",
+        "converted_datasets/reconversion_v2/gt24_phase_ankle_adoption_serial_queue_20261021/queue_status.json",
+        "docs/quality/audits/queue-recovery-expanded-49-summary.json"
+      ],
+      "external_blocker": null,
+      "group": "dataset",
+      "acceptance": [
+        "Select mass from explicit collection phase, participant, day and actuator condition; never infer collection phase from overlapping participant IDs.",
+        "Bind README and per-recording Statics/model metadata independently of converter and phase Parquet outputs. Missing or ambiguous mass stays unassessed.",
+        "Distinguish participant body mass from model mass including the exoskeleton and identify each channel actually normalized by the converter.",
+        "Integrate mass correction with ankle, timing, missingness and frame corrections; run new source-readback pilots before full adoption. Preserve superseded receipts and stopped queue evidence."
+      ],
+      "prerequisites": [],
+      "lane": "source review and isolated correction; serial numerical validation",
+      "owner": "GT24 reviewer; coordinator schedules conversion",
+      "status": "Known/unknown-mass pilots and four raw-source audits queued",
+      "progress_note": "The full reconstruction runner now checks current native member hashes and all producer/preservation/raw receipts. It cannot prepare a full run without four actual nonpartial pilot results. Source moment denominators and interaction units remain unresolved."
+    },
+    {
+      "id": "GT25-03",
+      "priority": "P0",
+      "dataset": "GT25",
+      "title": "Correct source ankle convention and remove shared audit assumptions",
+      "evidence_paths": [
+        "contributor_tools/audit_gt25_streaming_transfer.py",
+        "converted_datasets/reconversion_v2/gt25_serial_queue_20261021/queue_status.json"
+      ],
+      "group": "dataset",
+      "acceptance": [
+        "Bind the source README and verify plantarflexion-positive biological ankle columns independently of converter mappings.",
+        "Correct angles, derivatives and moments with explicit source-coordinate preservation; independently review assistance and power semantics.",
+        "Rebuild and compare against raw sources using independently specified signs, identity, events and mass.",
+        "Reschedule full GT25 scope and unrelated downstream jobs, including StrokePiG, without treating stopped predecessors as successful."
+      ],
+      "prerequisites": [],
+      "lane": "source correction; serial reconstruction",
+      "owner": "GT25 reviewer and coordinator",
+      "status": "V5 correction pilots queued; actual source comparison and full rebuild pending",
+      "progress_note": "Converter and audit kept ankle_angle positive under dorsiflexion names, contradicting the pinned source README."
+    },
+    {
+      "id": "EXEC-03",
+      "priority": "P0",
+      "dataset": "all",
+      "title": "Restore all retained jobs after correcting GT25 and GT24",
+      "status": "19 stopped queues; 39 job definitions preserved",
+      "owner": "coordinator",
+      "lane": "serial conversion",
+      "group": "coordination",
+      "prerequisites": [
+        "corrected converter pilots and independent source checks",
+        "safe host memory headroom"
+      ],
+      "evidence_paths": [
+        "docs/quality/audits/reconstruction-queue-recovery.json",
+        "converted_datasets/reconversion_v2/swarm_backlog_20261021/gt25_stop_dependency_closure_replacement.json"
+      ],
+      "acceptance": [
+        "Every retained job has an explicit replacement or independently verified superseding result",
+        "No stopped prerequisite is treated as successful",
+        "Unrelated work including StrokePiG is restored",
+        "One scientific worker at a time; original resource guards retained"
+      ]
+    },
+    {
+      "id": "GT25-04",
+      "dataset": "GT25",
+      "priority": "P1",
+      "title": "Validate publisher events for source-only recordings",
+      "status": "Three-file event/clock inspection queued; actual values remain unchecked",
+      "group": "dataset",
+      "owner": "GT25 source reviewer; coordinator owns numerical execution",
+      "lane": "source review; serial numerical validation",
+      "prerequisites": [
+        "Safe host memory and exclusive numerical slot"
+      ],
+      "evidence_paths": [
+        "docs/quality/audits/gt25-author-event-source-review.json",
+        "docs/quality/audits/gt25-author-event-acquisition.json",
+        "docs/quality/audits/queue-recovery-expanded-49-summary.json"
+      ],
+      "acceptance": [
+        "Validate the first three original parsing files against source clocks, preserving physical side and optional event types.",
+        "Reconcile all 69 exact publisher event-file candidates; filenames alone do not prove usable or gait-cycle events.",
+        "Retain all 123 recordings without exact event-file matches and establish defensible continuous observations without invented cycles.",
+        "Keep moment denominators, interaction units and anatomical directions explicit until independently resolved."
+      ]
+    }
+  ],
+  "recent_source_review": {
+    "checked_at_utc": "2026-10-21T07:17:38.138333+00:00",
+    "scope": [
+      "GT23-01",
+      "GT23-02",
+      "GT25-02",
+      "GT25-03",
+      "GT25-04"
+    ],
+    "notice": "Targeted source-review update; the other dataset rows retain their earlier snapshot."
+  }
+}

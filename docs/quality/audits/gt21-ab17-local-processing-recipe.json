@@ -1,0 +1,57 @@
+{
+  "status": "local_release_scripts_located_exact_recipe_provenance_pending",
+  "scientific_approval": false,
+  "correction_to_prior_search": "The earlier search inspected scripts/ and generic author IK code. The local bundle is in scripts (1)/. These concrete scripts improve recipe evidence; the earlier search did not establish that processing code was absent.",
+  "bindings": {
+    "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/scripts (1)/RUN_OSIM.m": "85757146c32101f6db63fb3560b6fca0a6c205480f50be89935467cd1873bbe1",
+    "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/scripts (1)/STRIDES.m": "0acd69d517e721c14de5d0995536fafc08e689c2862ea6644c22559135be3522",
+    "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/scripts (1)/init.m": "a2ecca0f5e4cbd399be50ee83275603f73990580f39bbab1478a2d6785a4b152",
+    "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/scripts (1)/lib/FPNormalizeByWeight.m": "c20e4d77ca30af422a42d596fb9ddadf5847540f8364429c057efb661c693441",
+    "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/scripts (1)/lib/yLabelSelector.m": "74eebc652d35b7d45dada2b81fab67714c9f04ab061f154bda731b70862d019b",
+    "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/scripts (1)/PLOTS.m": "6505160d140529f7d436242e4108c4d4e12900f5b8a6689b2311a454bf3b872d"
+  },
+  "static_recipe": {
+    "script": "RUN_OSIM.m",
+    "lines": "13-23,63-69",
+    "operation": "Select the first subject static IK candidate. If absent, calculate static IK from the first static marker file and subject IK setup. Copy trial IK and replace columns 2 onward with trial IK minus the columnwise mean of static IK. The header column is unchanged.",
+    "source_assignment": "ik_offset{:,2:end}=ik{:,2:end}-mean(ik0{:,2:end});",
+    "limitations": [
+      "First-file selection depends on file-manager ordering and available static calibrations. The intended AB17 session calibration remains unknown.",
+      "The subtraction has no explicit omitnan or angle wrapping.",
+      "The recovered v1 AB17 archive has no static trials, so the formula alone cannot supply missing offsets.",
+      "This local bundle has not yet been independently matched to a publisher archive."
+    ]
+  },
+  "mass_recipe": {
+    "scripts": [
+      "init.m",
+      "STRIDES.m",
+      "lib/FPNormalizeByWeight.m"
+    ],
+    "lines": {
+      "init.m": "27",
+      "STRIDES.m": "11-13,62-64",
+      "lib/FPNormalizeByWeight.m": "1-7"
+    },
+    "active_code": "Loads ../SubjectInfo.mat, selects Weight by exact Subject equality as subjectMass, and divides id and jp by subjectMass. This is actual field-to-mass normalization code, not inference from plausible values.",
+    "comment_only": "STRIDES.m line 63 shows force normalization using subjectMass*9.81, but the line is commented and is not evidence of execution. The helper documents a force normalization denominator in newtons.",
+    "remaining": "Publisher-version equivalence of this local bundle and explicit kilogram evidence remain necessary before approving the recovered AB17 canonical mass.",
+    "plot_label_evidence": {
+      "file": "lib/yLabelSelector.m",
+      "lines": "37-40",
+      "claim": "Plot labels explicitly call moment Nm/kg and power W/kg. PLOTS.m lines 41,58,83 calls this helper. Together with active STRIDES division, this supports the local bundle intending Weight as a mass in kilograms; it does not prove original table units or publisher version.",
+      "caution": "Force label N/kg at line 30 does not establish active force normalization: the STRIDES force normalization line is commented. Do not use plotting labels as blanket correctness proof."
+    }
+  },
+  "publisher_matching_attempt": {
+    "version": "fcgm3chfff.1",
+    "scripts_zip_bytes": 8239973,
+    "publisher_sha256": "f1ac74ec87c1466e5493ecaa25dac1176e517e8253f428e3eccba49f8cc7fdcc",
+    "request": "Bounded 65,557-byte ZIP tail request for the central directory",
+    "result": "HTTP 403 before the body; no archive downloaded. Local file hashes alone do not establish publisher version."
+  },
+  "next_gate": "Retain the guarded original SubjectInfo metadata pilot. Independently match local STRIDES/init files to publisher member bytes or obtain explicit column units. Static-relative angles require the actual AB17 static calibration, file ordering and column alignment; otherwise preserve raw angles as source aliases only.",
+  "files_executed": false,
+  "scientific_arrays_read": false,
+  "queued_inputs_modified": false
+}

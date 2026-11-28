@@ -1,0 +1,186 @@
+{
+  "task_id": "UM21-P02",
+  "verifier": "independent second agent",
+  "verdict": "done",
+  "rounds": {
+    "round_1": {
+      "checked_at_utc": "2026-10-31",
+      "repository_head": "8070504 (working tree)",
+      "verdict": "back_to_worker",
+      "verdict_reason": "The correction, its activation gate, undo and derive_segment_angles are correct, but the AB04/i0 account omits the pelvis and segment angular velocities. These are standardized features that the UM21 producers compute from the stored (reversed) pelvis. The hook does not govern them, so an adapter that follows the handoff rule would publish them wrong for AB04/i0.",
+      "research_data_read": false,
+      "hashes_sha256_prefix": {
+        "sign_application.py": "7626a5f705b4",
+        "audited_signs.json": "a94756e27b93"
+      },
+      "checks": [
+        {
+          "claim": "Flip placement: the detector sees the corrected array",
+          "result": "pass",
+          "evidence": "Synthetic seed-41 leg: per-channel verdicts and votes for rec4 (reversed and corrected) equal those for rec1 (normal) for all six channels (scratch verify_p02.py check 1). The code negates the stored array into det_src before detect_leg."
+        },
+        {
+          "claim": "Net multiplier on the stored tilt is +1 (correction -1 x dataset -1)",
+          "result": "pass",
+          "evidence": "rec4 multiplier +1 and rec1 multiplier -1, so both publish the rule-B truth bit for bit. Independent reasoning: corrected clinical tilt = -stored, and rule B = -clinical, so +stored. Matches UM21-P01 (flipped residual 0.13-0.15 deg)."
+        },
+        {
+          "claim": "Undo is exact through the written log",
+          "result": "pass",
+          "evidence": "write_json_exclusive then undo with expected_log_sha256 restores stored arrays bit for bit. A wrong digest raises UndoError, and a log with the multiplier tampered to -1 raises UndoError."
+        },
+        {
+          "claim": "The correction cannot hit the wrong recording or a lookalike id",
+          "result": "pass",
+          "evidence": "Real table with an activated backlog copy. AB04/i00, AB40/i0, AB04/d0, AB04/i1 and AB14/i0 run without a correction, so their reversed tilt is held by the detector rule. ab04/i0, 'AB04/i0\\n', ' AB04/i0' and 'AB04\\i0' raise on the id pattern. Recording membership is exact list membership."
+        },
+        {
+          "claim": "Inactive unless UM21-P01/P02 are done and cite the id and the decision answer is exactly C",
+          "result": "pass",
+          "evidence": "Decision answers 'c', 'C ', 'B', None and 'defer' each hold the tilt, returned as stored. The committed backlog (UM21-P02 status 'ready') holds, with the reason naming UM21-P02. Both backlog records cite UM21-P01-AB04-i0-pelvis as a whole token."
+        },
+        {
+          "claim": "A correction listed for a normally stored recording does not publish a flipped tilt",
+          "result": "pass",
+          "evidence": "Normal storage under an active correction: the detector suggests the opposite sign, the tilt is held and returned uncorrected (applied false), and derive_segment_angles derives nothing."
+        },
+        {
+          "claim": "derive_segment_angles follows rule B (docs/reference#signs-and-frames)",
+          "result": "pass",
+          "evidence": "Independent 2-D geometry, 1000 random poses: with CCW segment angles (thigh/shank zero vertical with the distal end down, foot zero forward horizontal), hip flexion, knee flexion and ankle dorsiflexion measured in their named directions satisfy thigh = pelvis + hip, shank = thigh - knee and foot = shank + ankle exactly. A top-of-pelvis-forward tilt measures negative. foot = shank + ankle matches the reference table row (up to zero offsets)."
+        },
+        {
+          "claim": "Passed-in segment angles for AB04/i0 are held, never flipped",
+          "result": "pass (correct choice)",
+          "evidence": "The MATLAB producers build thigh, shank and foot from the stored pelvis (time converter after choose_pelvis_signal; phase converter 'enforces hip = thigh - pelvis' block). Flipping them would not fix them, because the error is additive: 2 x tilt. Holding them and recomputing from published channels is right. derive_segment_angles ignores every SEGMENT_CHANNELS input."
+        },
+        {
+          "claim": "Tests and backlog check",
+          "result": "pass",
+          "evidence": "374 passed, 1 warning (the six-file set from the handoff). build_backlog_page.py --check: valid, HTML current (99 tasks). Scratch run peak RSS 162 MiB, nice 19, ionice idle, single-threaded."
+        }
+      ],
+      "findings": [
+        {
+          "id": "F1",
+          "severity": "blocking for done",
+          "finding": "The AB04/i0 account omits pelvis and segment angular velocities.",
+          "detail": [
+            "feature_constants.SEGMENT_VELOCITY_FEATURES includes pelvis_sagittal/frontal/transverse_velocity_rad_s and thigh/shank/foot_sagittal_velocity_*_rad_s.",
+            "convert_umich_time_to_parquet.m computes pelvis_sag_vel and right/left thigh/shank/foot velocities as gradients of the stored pelvis and of the segments built from it. convert_umich_phase_to_parquet.m computes thigh/shank/foot velocities from segments built on the stored pelvis.",
+            "For AB04/i0 the effects are: pelvis sagittal velocity is sign-flipped; pelvis frontal velocity is sign-flipped; pelvis transverse velocity crosses the +/-180 deg wrap (heading about +/-179.77 deg), so its gradient can spike; and segment velocities carry 2 x d(tilt)/dt.",
+            "The hook has no velocity channels and no not_released or derived entry naming them. The handoff adapter rule mentions only segment angles."
+          ],
+          "requested_fix": [
+            "Extend the AB04/i0 exception and the handoff adapter rule.",
+            "Pelvis sagittal velocity and thigh/shank/foot velocities must be recomputed after the hook from the published and derived angles, with the dataset's documented derivative method, or else not released for AB04/i0.",
+            "Pelvis frontal and transverse velocities must be listed as not released, alongside obliquity and rotation.",
+            "Add a test that the table names them.",
+            "No hook logic change is needed unless the worker chooses to validate velocity names."
+          ]
+        },
+        {
+          "id": "F2",
+          "severity": "condition (not this task)",
+          "finding": "The UM21 MATLAB producers are a blocker for any UM21 full run unless the adapter computes segment angles and their velocities after the hook.",
+          "detail": [
+            "The fail-safe holds AB04/i0 segment-angle inputs, so no wrong angle can publish. No equivalent fail-safe exists for velocities.",
+            "For all recordings, segment angles and velocities follow the pre-rule-B recipe.",
+            "No CORE-11-P-UM21 task exists in the backlog yet. Its acceptance criteria must require derive_segment_angles plus post-hook velocity derivation, or a producer fix."
+          ]
+        },
+        {
+          "id": "F3",
+          "severity": "note",
+          "finding": "UM21-P02 is 'ready' in the backlog, not 'review'.",
+          "detail": [
+            "Coordinator-owned. The correction activates the moment the task is marked done, so done should follow only after F1 is fixed."
+          ]
+        }
+      ],
+      "not_checked": [
+        "No research data read. All checks use synthetic arrays and the committed table and backlog (an activated copy for the on-state).",
+        "Frontal/transverse moment components of AB04/i0 (carried over from UM21-P01).",
+        "Accelerations: only joint accelerations are standardized, and those are unaffected by the pelvis."
+      ],
+      "next_action": "Worker: fix F1 (table exception plus adapter rule plus test), then return to review. Coordinator: when a CORE-11-P-UM21 task is created, record F2 in its acceptance criteria."
+    },
+    "round_2": {
+      "checked_at_utc": "2026-10-31",
+      "verdict": "done",
+      "research_data_read": false,
+      "hashes_sha256_prefix": {
+        "sign_application.py": "aa3232d74ccf",
+        "audited_signs.json": "3403390d2696"
+      },
+      "backlog_state": "UM21-P02 status review; its record cites UM21-P01-AB04-i0-pelvis, including the velocity wording (entry_linked: cited by UM21-P01, UM21-P02)",
+      "checks": [
+        {
+          "claim": "Velocity coverage is complete against the UM21 standardized features",
+          "result": "pass",
+          "evidence": [
+            "feature_constants.SEGMENT_VELOCITY_FEATURES lists pelvis sagittal/frontal/transverse and thigh/shank/foot sagittal ipsi/contra.",
+            "Pelvis sagittal and thigh/shank/foot velocities appear in derived_velocities, with the column mapping in velocity_rule. Ipsi and contra come from the per-leg hook runs.",
+            "Pelvis frontal and transverse velocities are in not_released.",
+            "Trunk velocities: UM21 producers emit no trunk or thorax. Joint velocities (hip, knee, ankle) are unaffected by the pelvis reversal.",
+            "The producers compute pelvis_sag_vel but do not write a pelvis velocity column; covered anyway.",
+            "The hook refuses an incomplete derived_velocities (malformed-correction tests: missing foot velocity; None)."
+          ]
+        },
+        {
+          "claim": "derive_angular_velocities equals MATLAB gradient as used by the UM21 converters",
+          "result": "pass (against MATLAB's documented algorithm; MATLAB itself not run)",
+          "evidence": [
+            "Independent hand-written MATLAB gradient was used: interior (F(i+1)-F(i-1))/(2h), one-sided first and last samples.",
+            "Five units with different per-unit stride durations (h = duration/149), with NaN at the first, middle, last and three consecutive samples: max relative difference 0 versus gradient(F, h) and 2.2e-16 versus the converters' gradient(F)*effective_Hz. NaN patterns are identical: a NaN sample's own velocity stays finite and its neighbours become NaN, as in MATLAB.",
+            "Time series with scalar dt: difference 0.",
+            "A spacing vector of the wrong length raises.",
+            "Spacing is uniform within each unit in both converters (time: dt = 1/sampling_rate_hz on a resampled grid; phase: 150 points per stride), so MATLAB's nonuniform-coordinate formula never applies."
+          ]
+        },
+        {
+          "claim": "Holding every *_velocity channel cannot break anything that should publish",
+          "result": "pass",
+          "evidence": [
+            "The detector consumes no velocity channels; velocity appears only in the power description text.",
+            "Adding hip and knee velocity inputs to a normal recording leaves every other channel's publication, multiplier and votes unchanged.",
+            "No audited-sign entry names a velocity.",
+            "The only other caller (core11_gt21_publication_effect.py) passes no velocities.",
+            "Velocity-like names without the _velocity suffix (pelvis_sagittal_velocity_rad_s, thigh_sagittal_velocity_ipsi_rad_s, pelvis_tilt_vel, *_omega, *_rate, upper case) still hold, through abstain with no audit, on both the corrected and a normal recording. They are safe, but the hold reason is generic."
+          ]
+        },
+        {
+          "claim": "AB04/i0 velocity inputs are held whether or not the correction is active",
+          "result": "pass",
+          "evidence": "Inactive (decision open): pelvis_tilt, pelvis_tilt_velocity and pelvis_obliquity_velocity are all held. Active: pelvis_tilt_velocity has verdict not_run and is held with the recompute reason; pelvis_obliquity is held as not released."
+        },
+        {
+          "claim": "The F1 tests mean what they claim",
+          "result": "pass",
+          "evidence": [
+            "test_velocity_inputs_are_held_not_flipped_or_detected asserts hold, multiplier 1, bit-equal output and absence from the detector report for the stored-pelvis velocities, and holding on a normal recording.",
+            "test_velocities_are_recomputed_from_the_corrected_angles compares against an independent central-difference helper on the known rule-B chain, checks bit-equality with a normally stored recording, and has a contrast showing the converter recipe is off by exactly -2 x d(tilt)/dt.",
+            "The known-value test covers ramp slopes including the ends, a quadratic's interior and one-sided ends, per-unit stride spacing and invalid spacings.",
+            "The committed-table test checks derived_velocities, not_released and velocity_rule.",
+            "NaN behaviour is not in the committed tests; my scratch check covers it."
+          ]
+        },
+        {
+          "claim": "F2 is recorded as a CORE-11-P-UM21 condition",
+          "result": "pass",
+          "evidence": "The handoff's derived_channels.rule and remaining items name CORE-11-P-UM21: segment angles via derive_segment_angles and velocities via derive_angular_velocities after the hook. The CORE-11-P-UM21 task itself does not exist yet, so the coordinator must copy the condition into it on creation."
+        },
+        {
+          "claim": "Tests and backlog check",
+          "result": "pass",
+          "evidence": "379 passed, 1 warning (six-file set). build_backlog_page.py --check: valid, HTML current (99 tasks). Scratch verify_p02_r2.py peak RSS 162 MiB, nice 19, ionice idle, single-threaded."
+        }
+      ],
+      "notes": [
+        "VELOCITY_METHOD describes the UM21 converters' derivative. Any other dataset that uses derive_angular_velocities must record its own derivative method in provenance (docs/reference requires it).",
+        "Not checked: AB04/i0 frontal/transverse joint angles and moments (relative angles, expected unaffected; carried from UM21-P01). Equivalence was not run against MATLAB itself."
+      ],
+      "next_action": "Coordinator: mark UM21-P02 done, which activates the AB04/i0 correction in the committed table. Copy the F2 condition into CORE-11-P-UM21 when that task is created."
+    }
+  }
+}

@@ -26,7 +26,7 @@ repo_root = current_dir.parent.parent
 sys.path.insert(0, str(repo_root))
 
 # Import feature definitions from user library
-from locohub.feature_constants import get_sagittal_features, get_task_classification
+from contributor_tools.common.feature_constants import get_sagittal_features, get_task_classification
 
 # Removed: validate_task_completeness (no longer needed in unified system)
 
@@ -366,7 +366,8 @@ def create_task_combined_plot(
     comparison_mode: bool = False,
     show_interactive: bool = False,
     show_local_passing: bool = False,
-    use_column_names: bool = False
+    use_column_names: bool = False,
+    assessed_passing=None,
 ) -> str:
     """
     Create a combined validation plot with all features for a single task.
@@ -388,6 +389,7 @@ def create_task_combined_plot(
     Returns:
         Path to the generated plot (or empty string if shown interactively)
     """
+    assessed_passing = set(assessed_passing or [])
     # Get all sagittal features and filter to only those with data
     all_sagittal_features = get_sagittal_features()
     feature_labels = {f[0]: f[1] for f in all_sagittal_features}
@@ -634,7 +636,7 @@ def create_task_combined_plot(
                 
                 # Separate globally passing from locally passing
                 global_passing_indices = [stride_idx for stride_idx in range(data_3d.shape[0]) 
-                                        if stride_idx not in global_failed_strides]
+                                        if stride_idx in assessed_passing and stride_idx not in global_failed_strides]
                 local_passing_indices = [stride_idx for stride_idx in range(data_3d.shape[0])
                                        if stride_idx not in variable_failed_strides and stride_idx in global_failed_strides]
                 
@@ -655,7 +657,7 @@ def create_task_combined_plot(
             else:
                 # Original logic - all non-globally-failed strides in green
                 passing_indices = [stride_idx for stride_idx in range(data_3d.shape[0]) 
-                                 if stride_idx not in global_failed_strides]
+                                 if stride_idx in assessed_passing and stride_idx not in global_failed_strides]
                 
                 if passing_indices:
                     # Extract all passing stride data at once - shape: (n_passing, 150)
@@ -828,7 +830,7 @@ def create_subject_failure_histogram(
     Create a histogram showing the distribution of failed strides per subject.
     
     Args:
-        locomotion_data: LocomotionData object with the dataset
+        locomotion_data: DatasetTable object with the dataset
         task_name: Name of the task being analyzed
         failing_features: Dict mapping stride indices to lists of failed variable names
         output_dir: Directory to save the plot

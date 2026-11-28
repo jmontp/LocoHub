@@ -1,0 +1,54 @@
+{
+  "task_id": "UM21-T05",
+  "verifier": "independent agent (did not write the work; worker code not imported except none; own probes on the package, one read of Streaming.mat for force)",
+  "verified_at_utc": "2026-11-26",
+  "scientific_approval": false,
+  "verdict": "PASS. UM21-T05 package um21_r01_package_v5 (phase + time) verified; done. Local only, no scientific approval.",
+  "layout": "Same kind as GT21 v1: manifest schema locohub.release_package/1 with identical top-level keys, files as {bytes, sha256}, manifest.sha256, limitations.json (same 5 top-level keys), exclusions.csv (same 17 columns), assessment.jsonl, dataset_index.json, phase_preview.json, test_summary.json, README.md, evidence/. v4 package untouched (its files and manifest are unchanged; only v5 was read).",
+  "hashes_counts": "All 16 manifest files streamed through sha256: bytes and sha256 match; manifest.sha256 equals manifest.json; binding hashes equal file hashes; no unlisted files. Counts from parquet metadata and streaming id reads: full 7,589 observations (7,545 phase / 44 time), filtered 7,566 (7,523 / 43); phase rows 1,131,750 / 1,128,450; time rows 772,821 / 755,206; no observation split into two runs. exclusions.csv 40 rows = 15 upstream_stride_rule + 2 release_membership (sudden jump) + 23 filtered_variant_only (L5 21, L1 1, L2 1); no duplicate ids; the 17 upstream ids are absent from both phase tables and both time tables; all 23 failed ids are in full and absent from filtered; full minus filtered = exactly those 23.",
+  "phase_vs_v4": "full_phase and filtered_phase: same schema, same 95 row groups, every column except lineage_id and assessment_id equal to v4 (NaN-aware exact equality, all 1,131,750 / 1,128,450 rows). lineage_id and assessment_id differ, as expected.",
+  "r4_recompute": {
+    "seed": 20261208,
+    "recordings": [
+      "AB08/d10",
+      "AB03/i10",
+      "AB10/i5"
+    ],
+    "strides_each": 20,
+    "method": "time samples linearly interpolated at 150 points between source_start_time_s and source_end_time_s, compared with the phase column where both finite",
+    "max_abs_diff": {
+      "angles_all_13_columns": "1.95e-13 rad (pelvis 2.6e-14)",
+      "moments": "1.3e-12 Nm/kg",
+      "velocity": "0.065 pelvis, 0.16 thigh, 0.31 shank, 0.65 foot rad/s (different clocks, expected; gated by NRMS in the readback)",
+      "power": "0.32 W/kg",
+      "cop": "AB08/d10 14.8 mm (26 of 1,921 points where one table is missing at a loaded edge; interpolation across fast CoP motion at low load), AB10/i5 1.0 mm, AB03/i10 held in both tables"
+    },
+    "finite_mismatch_points": "0 for angles, velocities, moments, power in all 9,000 point-series per column; CoP 26 and 4 points at loading edges"
+  },
+  "force": {
+    "units_and_frame": "BW; all 38 non-held recordings have two-leg vertical sum mean median 0.994 BW (10th to 90th percentile 0.949 to 1.000); lowest AB03/d10 0.912, AB10/d10 0.923, AB03/d5 0.931 (consistent with the documented 3 to 9 percent AB03/AB10 plate shortfall), vertical positive up (peaks 1.1 to 1.6 BW, no negative or inverted vertical).",
+    "below_20N": "smallest positive vertical per recording is 0.020 to 0.039 BW = 20 N / (mass x g); frames below 20 N are exactly 0 in all three components in the independent sample.",
+    "held": "AB01/i10, AB02/i10, AB03/i10, AB04/d10, AB10/d5, AB04/i5: both legs, all three force columns all missing (0 finite of ~17,000 frames each); no other recording has a missing leg.",
+    "independent_recompute": "AB06/d5 (seed 20261209, a non-held recording), 100 seeded frames per leg read from Streaming.mat (h5py, one recording, peak RSS 135 MiB, no launcher, nothing written): body mass 73.3 kg read from ParticipantDetails; 64 (right) and 68 (left) loaded frames; |table force| x mass x g equals |raw plate force| to 2.3e-13 N; table vertical equals -Fz within 3 percent of |F| (belt tilt); vertical positive in every loaded frame; 36 and 32 sub-20 N frames all exactly 0. Limit: anterior and lateral axis and sign rest on the S02 registration (checked by norm only, not re-derived); the worker's R5b used that registration directly."
+  },
+  "tolerance_choices": {
+    "T05-H": "Reasonable and conservative; not a hidden defect. AB04/i10 right CoP: frame-to-frame noise sigma 3.0 mm anterior, 1.3 mm lateral versus 0.06 to 0.11 mm on AB04/i0, AB04/d5, AB06/i10, AB07/i10 (about 30 to 50 times noisier). Phase minus time over 6,917 points: mean signed -0.10 mm anterior, -0.02 lateral, -0.20 vertical; 49 to 50 percent of differences positive; per-stride mean sd 0.4 to 1.1 mm. That is white noise with no offset (a registration error would give a nonzero mean of the same sign), so it is a noisy plate recording, not a registration problem. Phase and time pick different 1 kHz samples, so the noise does not cancel. The relaxed rule cannot hide an offset larger than about 0.1 mm here. Suggestion for docs: state the noisy plate signal for this leg in limitations (limitations.json does not currently name AB04/i10).",
+    "T05-I": "Reasonable. Counting not gating finiteness differences matches the documented design (phase holds a whole stride for a gap, time holds only the gap frames); my sample found 0 finite mismatches for angles and moments.",
+    "T05-J": "Reasonable. Pooled limb velocity gate 99.9 percent; pelvis velocity differences in my sample are at most 0.07 rad/s and power at most 0.32 W/kg, both derived on different clocks; reporting without gating is honest because the values are disclosed in README and limitations.",
+    "T05-K": "Matches GT21 precedent: GT21 time table has task continuous_recording with task_id levelground_recording; UM21 has continuous_recording / treadmill_recording, reference_side none, task_info lists keys not constant across strides. Phase tasks stay in the phase table."
+  },
+  "time_failure": "Confirmed by own scan of all 13 angle columns of all 44 recordings at 30 degrees between adjacent samples: the only hits are AB05/d10 foot_sagittal_angle_left_rad and ankle_dorsiflexion_angle_left_rad at frames 17283 and 17284 (4 samples, 44.8 to 48.0 degrees). No phase stride window of AB05/d10 covers these frames (so phase L2 had 0 failures). The observation is in exclusions.csv (L2, in_full true, in_filtered false), absent from filtered_time, present in full_time.",
+  "receipts_tests": "Pilot and full launcher receipts clean (status completed, exit 0, clean_success true, no launcher or finalisation errors, no orphans, bindings before equal after): time pilot v3 and 9 time batches (peak 176 to 203 MiB), assessment pilot v2 and full v2 (216 / 220 MiB), package pilot a4 and full a4 (158 / 214 MiB), readback pilot a7 and full a7 (208 / 246 MiB). Each full job bound the same .py code as its pilot (all 9 time batches identical to the time pilot; assessment, package and readback pairs identical); current code files match the bound hashes. Tests: tests/test_um21_t05_time.py and tests/test_release_package.py 27 passed. Own probes ran with prlimit --as 600 to 900 MiB, nice 19, ionice idle, one thread; peak RSS 81 to 218 MiB each (largest: phase v5 vs v4 stream compare 218 MiB; the h5py force probe 135 MiB); nothing written under converted_datasets.",
+  "notes_not_blocking": [
+    "UM21 time force is 0 BW below 20 N on the plate, whereas GT21 time force is missing when stance is unloaded (GT21 task_info force_note). T05-G documents why; the data reference should state the difference.",
+    "limitations.json does not name AB04/i10 right CoP noise; suggested docs addition.",
+    "Docs still say UM21 has no time table (reference, DATA_CONTRACT.md, dataset page): docs task, outside this verification.",
+    "CoP differences up to 15 mm occur at loading edges where one table is missing; they are interpolation across fast low-load CoP motion, not offsets."
+  ],
+  "not_checked": [
+    "Anterior and lateral force axis/sign re-derivation from the plate (relies on S02 v7 registration, same as worker)",
+    "Velocity NRMS gate re-run over all 7,545 strides (used the readback figure and a 60-stride sample)",
+    "Scientific approval (never conferred)"
+  ],
+  "next_action": "None for this task. Remaining outside it: docs updates naming package v5; no publishing."
+}

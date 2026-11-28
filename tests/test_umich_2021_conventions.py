@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from contributor_tools.common.validation.validator import Validator
-from locohub.feature_constants import CANONICAL_COLUMN_GROUPS, TIME_CANONICAL_COLUMNS
+from contributor_tools.common.feature_constants import CANONICAL_COLUMN_GROUPS, TIME_CANONICAL_COLUMNS
 
 
 TIME_CONVERTER = ROOT / "contributor_tools/conversion_scripts/Umich_2021/convert_umich_time_to_parquet.m"

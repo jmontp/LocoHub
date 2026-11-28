@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Browse locomotion datasets, preview signals, and download files for Python or MATLAB.">
+  <meta name="color-scheme" content="light dark">
+  <title>Compare phase plots · LocoHub</title>
+  <link rel="stylesheet" href="../../stylesheets/site.css">
+  <script src="../../javascripts/extra.js" defer></script>
+  <link rel="stylesheet" href="../../stylesheets/visual-styles.css">
+  <link rel="stylesheet" href="../../stylesheets/data-preview.css">
+  <link rel="stylesheet" href="../../stylesheets/aggregate-preview.css">
+  <link rel="stylesheet" href="../../stylesheets/phase-explorer.css">
+  <link rel="stylesheet" href="../../stylesheets/fixes.css">
+  <script src="../../javascripts/visual-styles.js" defer></script>
+  <script src="../../javascripts/phase-chart.js" defer></script>
+  <script src="../../javascripts/phase-comparison.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="wordmark" href="../../index.html" aria-label="LocoHub home">LocoHub</a>
+      <nav class="primary-nav" aria-label="Main navigation"><a href="../../index.html" aria-current="page">Data</a>
+<a href="../../tutorials/index.html">Tutorials</a>
+<a href="../../reference/index.html">File format</a>
+<a href="../../quality/index.html">Testing &amp; data quality</a></nav>
+      <form class="header-search" role="search" aria-label="Site search" action="../../search/index.html"><label class="visually-hidden" for="header-query">Search documentation</label><input id="header-query" type="search" name="q" placeholder="Search docs" required><button type="submit">Search</button></form>
+      <a class="repository-link" href="https://github.com/jmontp/LocoHub">GitHub</a>
+    </div>
+  </header>
+  <div class="page-layout wide-page">
+    <main id="main" class="page-content" tabindex="-1">
+      <div class="page-kicker"><a href="../../index.html">LocoHub</a><span aria-hidden="true">/</span>Compare phase plots</div>
+      
+<h1 id="compare-dataset-coverage">Compare phase plots</h1>
+<p>Compare datasets on the same axes. Start with joint angles, add signals, or separate the curves into aligned panels.</p>
+<p class="ovf-jump"><a href="#original-vs-fixed">Original vs fixed</a>: each verified problem in a source dataset, shown as published and as LocoHub reads or will release it. This section works without JavaScript.</p>
+<p class="dataset-note">Each curve gives subjects equal weight. Shading shows ±1 sample standard deviation between subject averages, not a confidence interval. Speeds and conditions are pooled within each task. These local summaries may differ from the downloads and are not quality scores.</p>
+<div aria-busy="true" data-source="../comparison_data.json" data-aggregate-source="../aggregate_previews/manifest.json" id="comparison-app">
+<div class="phase-comparison-controls" hidden id="comparison-controls">
+<div class="comparison-toolbar">
+<label for="comparison-task">Task <select id="comparison-task"></select></label>
+<fieldset class="comparison-view"><legend>View</legend><label><input type="radio" name="comparison-view" value="overlay" checked> Overlay</label><label><input type="radio" name="comparison-view" value="panels"> Aligned panels</label></fieldset>
+<label class="comparison-band-toggle"><input type="checkbox" id="comparison-sd"> Show ±1 SD</label>
+<button type="button" id="comparison-retry" hidden>Retry missing summaries</button>
+</div>
+<fieldset class="comparison-datasets"><legend>Datasets <span class="control-hint">— toggle curves across every signal</span></legend><div id="comparison-options"></div><button type="button" id="comparison-all">Show all</button><button type="button" id="comparison-none">Hide all</button></fieldset>
+<details class="comparison-signal-picker"><summary>Signals <span id="comparison-signal-count"></span></summary>
+<label for="comparison-signal-search">Find a signal <input type="search" id="comparison-signal-search" placeholder="e.g. knee, moment, force"></label>
+<div class="signal-presets"><button type="button" data-preset="angles">Joint angles</button><button type="button" data-preset="moments">Joint moments</button><button type="button" data-preset="forces">Ground reaction forces</button></div>
+<fieldset><legend>Choose up to six signals</legend><div id="comparison-signals"></div></fieldset></details>
+<div id="comparison-selected-signals" aria-label="Selected signals"></div>
+<p class="comparison-scale-note">Same vertical scale for every dataset within a signal. Ranges stay fixed when you toggle datasets or SD. Different signals keep their own units and scales.</p>
+</div>
+<p aria-live="polite" id="comparison-status" role="status">Loading phase summaries…</p>
+<div class="comparison-workspace" id="comparison-results"></div>
+</div>
+<noscript><p>This comparison requires JavaScript. The <a href="../">dataset catalog</a> contains the same dataset documentation and download links without JavaScript.</p></noscript>
+<p class="dataset-note">Only matching signal columns and units are compared. Missing summaries do not mean the study did not record a task. Open a study’s phase plots to explore individual subjects; its earlier validation figures remain in the study notes.</p>
+<!-- original-vs-fixed:start (generated by contributor_tools/build_fixes_page.py; edit the builder) -->
+<section class="ovf" id="original-vs-fixed" aria-labelledby="original-vs-fixed-title">
+<h2 id="original-vs-fixed-title">Original vs fixed</h2>
+<p>8 problems found in source datasets or in LocoHub’s unreleased conversion code, each reproduced by a second, independent reviewer. <em>Before</em> shows the data as published (the original); <em>After</em> shows them as LocoHub reads or will release them. A finding with a single figure shows the published values and the check in one panel. Only clear errors are fixed (flipped signs, 180° offsets, wrong labels). Where the authors divided by the wrong body mass, LocoHub keeps the published values and documents the mismatch.</p>
+<p class="catalog-note"><strong>Most fixes are not in downloadable files yet.</strong> Each finding says where it stands. The curves above summarize the current local files, not these fixes.</p>
+<nav class="ovf-index" aria-label="Original vs fixed findings"><ol><li><a href="#ovf-gt23-task-label">GT23 running label</a></li><li><a href="#ovf-gt23-moment-units">GT23 moment units</a></li><li><a href="#ovf-gt23-normalizing-mass">GT23 mass used for per-kg moments</a></li><li><a href="#ovf-um21-ankle-branch">UM21 ankle 180° stretch</a></li><li><a href="#ovf-um21-reversed-pelvis">UM21 reversed pelvis</a></li><li><a href="#ovf-um21-thigh-recipe">UM21 thigh and shank</a></li><li><a href="#ovf-um21-belt-clock">UM21 task timing</a></li><li><a href="#ovf-um21-ab01-copy">UM21 AB01 duplicate</a></li></ol></nav>
+<article class="ovf-item" id="ovf-gt23-task-label" data-task="GT23-C01">
+<h3>Georgia Tech 2023: running and skipping files are labelled as level walking</h3>
+<p class="fix-status"><span class="fix-label" data-status="documented">Relabel planned · values unchanged · not yet released</span></p>
+<div class="fix-figures fix-figures-single"><figure class="fix-figure"><figcaption class="fix-side fix-as">As labelled by LocoHub, per group</figcaption><img src="../../quality/fixes/gt23-task-label.svg" width="450" height="290" loading="lazy" alt="Bars count the 77 “normal walk” files by the authors’ group: 44 walking, 22 running and 11 skipping. All are labelled level walking; the running and skipping bars are wrong."><figcaption>Files are the authors’ parsing files (one per condition and recording). Group names are in brackets; skipping is in the authors’ calisthenics group.</figcaption></figure></div>
+<p class="fix-evidence">All 77 “normal walk” files from 12 recordings shown. <a href="../../quality/fixes.html#gt23-task-label">What’s wrong, what it means, what LocoHub does and the evidence</a>.</p>
+</article>
+<article class="ovf-item" id="ovf-gt23-moment-units" data-task="GT23-C02">
+<h3>Georgia Tech 2023: the README says joint moments are in N·m, but they are per kg</h3>
+<p class="fix-status"><span class="fix-label" data-status="documented">Documented · corrected files not yet released</span></p>
+<div class="fix-figures"><figure class="fix-figure"><figcaption class="fix-side fix-before">Before: read as the README says</figcaption><img src="../../quality/fixes/gt23-units-before.svg" width="450" height="310" loading="lazy" alt="Read as N·m, the published ankle moment is a nearly flat line far smaller than the force-plate moment."></figure><figure class="fix-figure"><figcaption class="fix-side fix-after">After: read as LocoHub does</figcaption><img src="../../quality/fixes/gt23-units-after.svg" width="450" height="310" loading="lazy" alt="Read as N·m/kg, the published ankle moment overlaps the force-plate moment divided by body mass."></figure></div>
+<p class="fix-evidence">AB01, incline_walk_2, left leg, one stance; chosen at random (seed 20261031) from the 4 sampled legs of participants whose own body mass was used, so the units question is shown alone. <a href="../../quality/fixes.html#gt23-moment-units">What’s wrong, what it means, what LocoHub does and the evidence</a>.</p>
+</article>
+<article class="ovf-item" id="ovf-gt23-normalizing-mass" data-task="GT23-C03">
+<h3>Georgia Tech 2023: per-kg moments were divided by another participant’s body mass</h3>
+<p class="fix-status"><span class="fix-label" data-status="decided">Correction decided · not yet run or released</span></p>
+<div class="fix-figures fix-figures-single"><figure class="fix-figure"><figcaption class="fix-side fix-as">As published, per participant</figcaption><img src="../../quality/fixes/gt23-mass.svg" width="450" height="440" loading="lazy" alt="For each of 12 participants, how far the mass used for their moments is from their own body mass, in percent. 9 markers sit away from zero, from -29 to +25 percent; labels name the participant whose listed mass was used."><figcaption>Level walking. Squares: the mass was worked out exactly by recomputing the moments in N·m and matching the published values; triangles: estimated from force-plate moments, which is less precise. Two participants (AB02, AB11) cannot be told apart from their own mass at this precision. A label names another participant when the exact mass equals their listed mass within 0.05 kg.</figcaption></figure></div>
+<p class="fix-evidence">All 12 participants shown. <a href="../../quality/fixes.html#gt23-normalizing-mass">What’s wrong, what it means, what LocoHub does and the evidence</a>.</p>
+</article>
+<article class="ovf-item" id="ovf-um21-ankle-branch" data-task="UM21-C03">
+<h3>UMich 2021: part of one right-ankle recording is off by 180°</h3>
+<p class="fix-status"><span class="fix-label" data-status="decided">Correction decided · not yet released</span></p>
+<div class="fix-figures"><figure class="fix-figure"><figcaption class="fix-side fix-before">Before: as published</figcaption><img src="../../quality/fixes/um21-ankle-before.svg" width="450" height="310" loading="lazy" alt="Strides inside the stretch sit near minus 160 degrees, far below the strides outside it."></figure><figure class="fix-figure"><figcaption class="fix-side fix-after">After: converted</figcaption><img src="../../quality/fixes/um21-ankle-after.svg" width="450" height="310" loading="lazy" alt="Converted strides fall on the strides outside the stretch. The vertical scale differs from the Before figure."><figcaption>Vertical scale differs from the Before figure.</figcaption></figure></div>
+<p class="fix-evidence">All strides of the right ankle in this recording; 29 of 31 inside strides kept. <a href="../../quality/fixes.html#um21-ankle-branch">What’s wrong, what it means, what LocoHub does and the evidence</a>.</p>
+</article>
+<article class="ovf-item" id="ovf-um21-reversed-pelvis" data-task="UM21-P01">
+<h3>UMich 2021: one recording’s pelvis was computed facing backwards</h3>
+<p class="fix-status"><span class="fix-label" data-status="decided">Correction decided · corrected files not yet released</span></p>
+<div class="fix-figures"><figure class="fix-figure"><figcaption class="fix-side fix-before">Before: as published</figcaption><img src="../../quality/fixes/um21-pelvis-before.svg" width="450" height="310" loading="lazy" alt="Published pelvis tilt is the mirror image of tilt computed from the pelvis markers."></figure><figure class="fix-figure"><figcaption class="fix-side fix-after">After: sign flipped</figcaption><img src="../../quality/fixes/um21-pelvis-after.svg" width="450" height="310" loading="lazy" alt="Published pelvis tilt times minus one overlaps the marker tilt."><figcaption>Shown with the source sign (forward tilt positive); LocoHub files store pelvis tilt with the opposite sign by convention.</figcaption></figure></div>
+<p class="fix-evidence">Right side, frames 3512–3675: the stride the audit drew at random (seed 20261101); side drawn at random (seed 20261031). <a href="../../quality/fixes.html#um21-reversed-pelvis">What’s wrong, what it means, what LocoHub does and the evidence</a>.</p>
+</article>
+<article class="ovf-item" id="ovf-um21-thigh-recipe" data-task="UM21-C01">
+<h3>UMich 2021: LocoHub’s unreleased rebuild gets thigh and shank angles wrong</h3>
+<p class="fix-status"><span class="fix-label" data-status="decided">Formula decided · not yet released</span></p>
+<div class="fix-figures"><figure class="fix-figure"><figcaption class="fix-side fix-before">Before: LocoHub’s unreleased rebuild</figcaption><img src="../../quality/fixes/um21-thigh-before.svg" width="450" height="310" loading="lazy" alt="Pelvis plus hip runs far above the thigh angle from markers for the whole stride."></figure><figure class="fix-figure"><figcaption class="fix-side fix-after">After: the authors’ formula</figcaption><img src="../../quality/fixes/um21-thigh-after.svg" width="450" height="310" loading="lazy" alt="Hip minus pelvis follows the thigh angle from markers within a few degrees."><figcaption>The marker thigh uses the greater trochanter (the bump at the top of the thigh bone), not the hip centre, so a few degrees of offset is expected.</figcaption></figure></div>
+<p class="fix-evidence">AB08 i5 right leg, frames 12709–12829: the stride the audit drew at random (seed 20261028). Pelvis tilt in this stride: median 19°. <a href="../../quality/fixes.html#um21-thigh-recipe">What’s wrong, what it means, what LocoHub does and the evidence</a>.</p>
+</article>
+<article class="ovf-item" id="ovf-um21-belt-clock" data-task="UM21-T02">
+<h3>UMich 2021: treadmill task timing is shifted in some recordings</h3>
+<p class="fix-status"><span class="fix-label" data-status="decided">Correction decided · not yet released</span></p>
+<div class="fix-figures fix-figures-single"><figure class="fix-figure"><figcaption class="fix-side fix-before">Before and after, per recording</figcaption><img src="../../quality/fixes/um21-clock.svg" width="450" height="360" loading="lazy" alt="How far the task timing is off for each of 50 treadmill recordings. Most sit inside a narrow accepted band around zero; four sit 1.7 to 7 seconds away and two cannot be checked. Those six are left out of the release."><figcaption>Shift that best lines up the belt-speed record with belt speed measured from heel and toe markers. Crosses at the bottom have no belt-speed record; their position is not a value.</figcaption></figure></div>
+<p class="fix-evidence">All 50 treadmill recordings shown. <a href="../../quality/fixes.html#um21-belt-clock">What’s wrong, what it means, what LocoHub does and the evidence</a>.</p>
+</article>
+<article class="ovf-item" id="ovf-um21-ab01-copy" data-task="UM21-T02">
+<h3>UMich 2021: the AB01 5° incline recording is a copy of the 10° one</h3>
+<p class="fix-status"><span class="fix-label" data-status="decided">Recording left out of the release · not yet released</span></p>
+<div class="fix-figures fix-figures-single"><figure class="fix-figure"><figcaption class="fix-side fix-before">Before and after, per recording</figcaption><img src="../../quality/fixes/um21-slope.svg" width="450" height="360" loading="lazy" alt="Measured minus labelled walking slope for 50 treadmill recordings. All lie in the narrow band around zero except AB01 at 5° incline, labelled 5 degrees but measured about 5 degrees steeper, as steep as AB01 at 10°."><figcaption>Recordings are spread sideways by participant so they do not overlap; the spread is not data. The force plates read low in AB03 and AB10 (a separate shortfall documented in the slope audit), so the figure uses the foot-path slope.</figcaption></figure></div>
+<p class="fix-evidence">All 50 treadmill recordings shown. <a href="../../quality/fixes.html#um21-ab01-copy">What’s wrong, what it means, what LocoHub does and the evidence</a>.</p>
+</article>
+<p class="audit-limitation fix-footnote">Status as of 2 November 2026. The figures are the same files as on the <a href="../../quality/fixes.html">broken vs fixed data</a> page, drawn only from numbers saved in its linked audit records.</p>
+</section>
+<!-- original-vs-fixed:end -->
+
+    </main>
+    
+  </div>
+  <footer class="site-footer"><p>LocoHub</p><nav aria-label="Additional links"><a href="../../contributing/index.html">Contribute data</a><a href="../../maintainers/index.html">Maintainers</a><a href="../../reference/index.html#release-evidence">Download notes</a><a href="https://github.com/jmontp/LocoHub/issues">Report an issue</a></nav></footer>
+</body>
+</html>

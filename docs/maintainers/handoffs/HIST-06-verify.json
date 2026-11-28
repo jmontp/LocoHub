@@ -1,0 +1,502 @@
+{
+ "task_id": "HIST-06",
+ "verifier": "independent second agent",
+ "verdict": "pilot_verified",
+ "verdict_note": "Round 4 (post-launch). The v1r5 pilot passes every check against the outputs and the source. One run, clean receipt, cleanup proven, outputs and bindings match. Counts match. Every detector suggestion is +1, with no applies, conflicts or opposite votes, and nothing is published under a sagittal LocoHub name. A seeded frame-by-frame value check passes 52/52 (40/40 for sit-to-stand). The 35 deg Tan running offset is a source kinematic artefact confined to s3 nike_SR_24 (13 segments: pelvis turned, compensated at the hips and lumbar), not a frame artefact or an adapter bug. No blocker for adding the FA16/TA21/TA22 entries; see the per-channel evidence basis. Moving HIST-06 to done and editing the table are the coordinator's steps; backlog.json not edited.",
+ "rounds": {
+  "round_1": {
+   "phase": "pre-launch review of adapter, runner, mapping record, tests, plan-only spec (v1r2, then v1r3) and drafted decisions",
+   "checked_at_utc": "2026-11-02",
+   "verdict": "back_to_worker",
+   "launched": false,
+   "research_data_read": true,
+   "research_data_reads": "read-only probes under the AGENTS.md exception: one trial (one source_recording_id) or one .osim at a time, bounded columns, nice 19 / ionice idle, prlimit address space 768 MiB (the pilot's limit), outputs to stdout and the session scratchpad only, nothing written under converted_datasets or the source folders",
+   "probes": [
+    {
+     "script": "scratchpad fk_check.py",
+     "reads": "ta22/07 dynamics_model.osim (ElementTree)",
+     "peak_rss_mib": 30.4
+    },
+    {
+     "script": "scratchpad plaus_probe.py (seed 20261102)",
+     "reads": "fa16/subject_5 trial 0 (Gait_6); ta21/s8 trial 15 (mini_SI_28); also imported the adapter under the 768 MiB limit",
+     "peak_rss_mib": 132.6,
+     "vm_peak_mib": 565.2
+    },
+    {
+     "script": "scratchpad gait_probe.py (seed 20261103)",
+     "reads": "ta22/05 trial 9 (fpa); ta21/s8 trial 15",
+     "peak_rss_mib": 130.7
+    },
+    {
+     "script": "scratchpad strides_probe.py",
+     "reads": "pilot participants fa16/subject_0, ta22/07, ta21/s3, one trial at a time, 5 columns, the adapter's own stride_pairs",
+     "peak_rss_mib": 138.6
+    },
+    {
+     "script": "scratchpad flags_probe.py and stance_flags.py",
+     "reads": "ta21/s8 trial 15; ta22/05 trial 9 (flag and vertical-force columns)",
+     "peak_rss_mib": 129.5
+    },
+    {
+     "script": "scratchpad pelvis_probe.py",
+     "reads": "ta22/05 trial 9; ta21/s8 trial 15 (dof00-02, right vertical force)",
+     "peak_rss_mib": 136.9
+    },
+    {
+     "script": "scratchpad grf_probe.py / grf_probe_raw.py",
+     "reads": "ta22/05 trial 9; ta21/s8 trial 15 (pelvis and calcn force columns)",
+     "peak_rss_mib": 137.3
+    }
+   ],
+   "seed_note": "Plausibility draws: random.Random(20261102) over participants with at least one written locomotion protocol trial (32 of 33). This eligibility rule was added after the first draw, fa16/subject_4, turned out to have only a sit-to-stand trial; the seed was not changed. random.Random(20261103) drew the Tan walking participant and trial.",
+   "reviewed_sha256": {
+    "contributor_tools/adapters/addbiomechanics_sign_adapter.py": "f7f0fe5b9dba6c3cc2f5bb5dbed2bd3a693828d7d9d9ac97fec2d15cd3e684ec",
+    "contributor_tools/adapters/addbiomechanics_sign_adapter.py (pre-mass-change, reviewed first)": "7b679ba99bc57f6d469a852a6a281078d4c5a64a9bd2f3e001e17731e7c326b3",
+    "contributor_tools/run_hist06_addb_pilot.py": "6a5e2dd2836f51a6665e2729f52a6dff4cede7c50cd28c12cfbe315c62f4650a",
+    "tests/test_addbiomechanics_sign_adapter.py": "4f4433544ba0458760e780b6925342c8fcaf58b90b38d2a35cac64510b1600c3",
+    "docs/quality/audits/hist06-addb-pilot-spec-v1r3.json": "3002fb74314d444be31ed34638f343bb146ffde8ca760616b296f5aaf97264e4",
+    "docs/quality/audits/hist06-addb-pilot-spec-v1r2.json": "88951fdbc7a7e3aef6eb455d64781fe580d341a3ef96eed9e852e68369a66d55",
+    "contributor_tools/common/audited_signs.json": "356a19cc84af688691ddd28848922a5679e131343499d02446487f8ab7967f36"
+   },
+   "checks": [
+    {
+     "item": 1,
+     "claim": "23 DOF columns = 25 model coordinates minus knee_angle_r_beta and knee_angle_l_beta",
+     "result": "pass",
+     "evidence": [
+      "Independent ElementTree parse of ta22/07 dynamics_model.osim: 25 coordinates in the adapter's H25 order. Two CoordinateCouplerConstraints (patellofemoral_knee_angle_<s>_con) are enforced, with knee_angle_<s>_beta = 1 x knee_angle_<s> + 0.",
+      "Under the alternative (first 23 coordinates), dof10 would be knee_angle_r_beta and equal dof09. On the seeded trials, max |dof10 - dof09| = 1.26 rad (fa16/subject_5 Gait_6) and 1.76 rad (ta21/s8 mini_SI_28), so that hypothesis is refuted.",
+      "The adapter's check_model refuses any model whose coordinates, couplers, ground_pelvis transform or gravity differ, so H23 is re-checked per participant."
+     ]
+    },
+    {
+     "item": 2,
+     "claim": "Hip flexion, knee flexion and ankle dorsiflexion are positive in the source (+1), and so is their generalized force",
+     "result": "pass",
+     "evidence": [
+      "Independent rotation-only FK. Offset frames use body-fixed XYZ; joints compose body-fixed. Walker-knee splines are included. A +0.2 rad step gives these world rotation vectors: pelvis_tilt (0,0,+0.2); hip_flexion_r/l (0,0,+0.2), counterclockwise about +z (right), i.e. thigh forward; knee_angle_r/l z = -0.202, clockwise, i.e. shank back = flexion; ankle_angle_r/l z = +0.196, toes up = dorsiflexion. The knee range is 0 to 2.0944 rad. This is the Rajagopal walker knee (flexion +), not gait2392 (flexion -), so +1 is right here.",
+      "Seeded data (raw-force events, review only), median per stride. Tan walking ta22/05 fpa: knee peak 1.11-1.15 rad at 68-70 % of the stride, after toe-off (58-61 %) in 100 % of strides. Ankle minimum -0.41 to -0.49 rad within 15 % of toe-off in 100 % of strides. Stance ankle moment minimum -1.34 to -1.38 N*m/kg (plantarflexor, negative under rule B) in 100 %. Hip moment -0.19 to -0.27 (extensor) early and +0.37 to +0.43 (flexor) late in stance.",
+      "Tan running ta21/s8 mini_SI_28: knee peak 1.41-1.43 rad at 68-69 % (toe-off 35 %). Ankle minimum at 39-40 %. Stance ankle moment minimum -3.03 N*m/kg. Hip moment -0.80 to -0.92 early and +0.26 to +0.50 late.",
+      "tau is the generalized force conjugate to each coordinate (nimblephysics FramePass.tau), so it is positive in the coordinate's named direction; the data above agree."
+     ]
+    },
+    {
+     "item": 3,
+     "claim": "pelvis_tilt is ground-relative (obliquity when facing -z); pitch = asin(up component of the pelvis anterior axis) from the full body-fixed Rz(tilt) Rx(list) Ry(rotation); rule-B sign",
+     "result": "pass (rotation order supported by data; OpenSim documentation not re-fetched)",
+     "evidence": [
+      "ground_pelvis in the .osim: rotation1 pelvis_tilt about (0,0,1), rotation2 pelvis_list about (1,0,0), rotation3 pelvis_rotation about (0,1,0); all linear 1 0; both offset frames unrotated. The .osim itself does not state the composition order.",
+      "Data test of the order, using the dominant harmonic per stride (1 = stride frequency, typical of obliquity; 2 = step frequency, typical of pitch). ta21/s8, facing yaw 86 deg: dof00 (tilt) is at stride frequency in 13 of 13 strides, so it behaves as obliquity. Derived roll is at stride frequency in 100 % of strides under body-fixed composition, against 23 % under space-fixed. ta22/05, facing +x: dof01 (list) is at stride frequency in 100 %. Body-fixed is supported; space-fixed is not.",
+      "Adapter pelvis_anterior_axis checked by hand: Rz(t) Rx(l) Ry(r) e_x = (ct cr - st sl sr, st cr + ct sl sr, -cl sr), which matches the code.",
+      "Sign: the anterior axis rising (front up) gives positive pitch. By rule B, counterclockwise about +z is front up, i.e. posterior tilt positive and anterior tilt negative. FK pelvis_tilt +0.2 about +z gives +0.2 pitch at zero yaw. Seeded medians: running -0.10 rad (anterior), walking +0.12 rad. Zero offsets are not assessed (already listed as not checked in the mapping record)."
+     ]
+    },
+    {
+     "item": 4,
+     "claim": "Walking direction from stance CoP (treadmill) or COM travel (overground), within 45 deg of facing; z' = x' x y' is the person's right",
+     "result": "pass",
+     "evidence": [
+      "Cross product: (0,0,-1) x (0,1,0) = (1,0,0), so facing -z puts the right side at world +x. (1,0,0) x (0,1,0) = (0,0,1). The adapter's frame_basis and the corrected test agree.",
+      "Data laterality, independent of the CoP axis (x' taken from the pelvis facing). The mean stance CoP projected on z' is larger for the right foot than for the left: fa16/subject_5 0.261 vs 0.126 m; ta21/s8 0.292 vs 0.255 m. Right is to the right.",
+      "ta21/s8: within-stance CoP principal axis 3.7 deg from facing. Note: on a treadmill the lab-frame CoP moves backward within stance (mean -0.38 m along the forward axis). The CoP supplies only the axis; the sense comes from facing. The code does exactly this. 'CoP progression' in the handoff summary means the axis only.",
+      "Overground fa16/subject_5 Gait_6: facing yaw 2 deg (world +x), consistent with the mapping record."
+     ]
+    },
+    {
+     "item": "5a",
+     "claim": "GRF is the force on the foot in the world frame, mapped to the rule-B frame",
+     "result": "pass",
+     "evidence": [
+      "Vertical force is positive in stance (ground on person, +y up; model gravity 0 -9.80665 0).",
+      "Recorded force, review only, ta22/05 fpa, 18 stances per leg: anterior force is -67 to -72 N in the first 30 % of stance (braking) and +79 to +80 N in the last 30 % (propulsion). Outward lateral force is -48 to -51 N for both legs (medial), negative in 100 % of stances, as expected. Running ta21/s8 anterior is likewise -67/-74 then +100/+91 N. Running outward lateral force is small and positive for both legs (+5 to +7 N, narrow base). This is not a laterality signal, because CoP placement confirms laterality; it is left not checked."
+     ]
+    },
+    {
+     "item": "5b",
+     "claim": "Frames flagged missing GRF are left empty, not zeroed and not dropped",
+     "result": "pass (implementation); see finding F1",
+     "evidence": [
+      "grf_world sets force and CoP to NaN where missing_grf_reason != notMissingGRF. trial_rows writes every frame for both reference legs, carries the flag per row, and the pilot checks two rows per frame. test_flagged_frames_have_no_standard_force covers this."
+     ]
+    },
+    {
+     "item": "5c",
+     "claim": "Anterior/lateral empty, vertical kept, for sit-to-stand and non-protocol trials pending D-GT23-C01-1",
+     "result": "pass (reasonable and conservative)",
+     "evidence": [
+      "Without locomotion, forward is undefined, and choosing facing would pre-empt the open cross-dataset decision. Vertical force and vertical CoP do not depend on that choice. The source x/z values remain in the HIST-05 files, so the choice is reversible. test_non_protocol_trial_rows_carry_no_task asserts anterior empty and vertical present."
+     ]
+    },
+    {
+     "item": 6,
+     "claim": "MAP-TAN-TASK implemented and tested",
+     "result": "pass",
+     "evidence": [
+      "protocol_match/task_label: non-protocol names get task None and in_task_table false, with task_id = source name. ta21 protocol names get 'run'. ta22 and fa16 get labels only from D-HIST-06-2.",
+      "Tests: test_hip_calibration_never_gets_a_task (answers None/A/B/C/defer), test_non_protocol_trial_rows_carry_no_task, and test_protocol_pattern (case, whitespace and speed variants are refused).",
+      "The pilot check_trial asserts it on real rows. ta21/s7 conversion.json has exactly one non-protocol trial: trial 0 'hip_calibration', written, 2000 frames. The runner selects it by conversion-record name."
+     ]
+    },
+    {
+     "item": 7,
+     "claim": "Tests use labelled synthetic fixtures with independently known expectations",
+     "result": "pass, with one coverage gap",
+     "evidence": [
+      "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_addbiomechanics_sign_adapter.py gave 59 passed, 1 skipped before the mass change and 64 passed, 1 skipped after it. The skip is the expected 'committed table already lists TA22'.",
+      "The module docstring labels everything SYNTHETIC. Expectations come from the detector's synthetic leg and hand-computed rotations (e.g. Ry(90 deg) e_z = (1,0,0); outward lateral +20 N on both legs; recorded 70 kg vs fitted 64 kg). They are not adapter output. The audited table and backlog are temporary copies.",
+      "Gap: the only synthetic flag pattern is an 11-frame burst. No test covers the real pattern (flags spanning stances and flight, frame-level rather than per-foot), and no test covers the 100-frame block fallback that every Tan running trial would take (F1)."
+     ]
+    },
+    {
+     "item": 8,
+     "claim": "Spec v1r3: bindings current, limits within the envelope, new output path, honest seed, RSS fits",
+     "result": "pass",
+     "evidence": [
+      "Every v1r3 binding equals the current sha256: the five bound-build files, the adapter f7f0fe5b..., the runner 6a5e2dd2..., the probe record, and all 12 participant files (conversion.json, frames.parquet and dynamics_model.osim of fa16/subject_0, ta21/s3, ta22/07 and ta21/s7, hashed here at nice 19 / ionice idle). v1r2 also matched for the old adapter, and is stale now.",
+      "Limits equal the guarded_launcher ENVELOPE_LIMITS: timeout 3600 (max 3600), startup 3584/2816 and runtime 2048/2048 MiB (minimum reserves), address space 768 (max 768). None is relaxed. The runner adds RSS_CAP 300 MiB per trial and a 2 GiB MemAvailable floor.",
+      "converted_datasets/reconversion_v2/hist06_addb_mapping_pilot_v1 and the receipt hist06-addb-launcher-receipt-v1.json do not exist. The runner uses mkdir(exist_ok=False) and exclusive creates.",
+      "Seed: random.Random(20261106) over the sorted folders reproduces fa16/subject_0, ta21/s3, ta22/07. The runner refuses any other --participants or --extra-trial. That the seed was fixed before the draw cannot be proven; it is unchanged since spec v1.",
+      "RSS estimate for ta21/s3 (273,092 frames, 143 trials, largest trial 2,000 frames). Trials are processed one at a time. Measured: imports plus adapter plus a one-trial read peak at 130-139 MiB, VmPeak 565 MiB under the 768 MiB limit. Per trial: 2 x 2,000 rows x about 115 float columns as Python lists, about 15 MiB transient. Accumulated: about 286 leg logs (UM21 logs are about 30 KB as JSON) plus 143 trial logs, about 10-15 MB as JSON, roughly 50-80 MiB as Python objects, plus a final JSON serialization. Estimated peak 200-250 MiB, under the 300 MiB cap. If it is exceeded, the job stops at a trial boundary without publishing anything. This is an estimate, not measured on the hook path."
+     ]
+    },
+    {
+     "item": 9,
+     "claim": "Drafted decisions follow the AGENTS.md schema",
+     "result": "pass",
+     "evidence": [
+      "D-HIST-06-1 is dropped under José's 2026-11-02 standing rule. The adapter now divides by the recorded entered_mass_kg (B3D header mass) and never by the fitted mass. The fitted mass is still available as metadata in subject_metadata (fa16/subject_9: mass_kg 78.4, dynamics_model_mass_kg 55.32). A missing or non-positive mass leaves the per-kg and body-weight columns empty. New tests: test_per_kg_and_body_weight_use_the_recorded_mass, test_the_divisor_follows_the_recorded_column (fitted set equal to the storing mass is still not used), test_missing_recorded_mass_leaves_per_kg_empty, and the constant-mass test.",
+      "D-HIST-06-2 has all fields: a plain-words question, three options each with a one-line consequence and reversibility, cost_of_waiting, recommended, confidence, why, a one-minute check, and decide_before_recommendation true. There are no hashes, paths or IDs in the question.",
+      "Neutral order by labelled segments (129, 843, 877) is stated. The counts reconcile with the mapping record: 105 baseline + 21 Gait + 3 StairUp = 129; + 3 x 238 modified = 843; + 34 STS = 877.",
+      "No leak: labels and consequences do not name a preferred option, and the standing_rule_note and why stay out of the sheet. Optional wording: option C's 'although each also contains the sit-down' reads slightly evaluative; 'each segment also contains the sit-down' would be neutral."
+     ]
+    }
+   ],
+   "findings": [
+    {
+     "id": "F1",
+     "severity": "blocking for this pilot's stated purpose (not a correctness or safety error: with the current table nothing can be published)",
+     "finding": "missing_grf_reason is a per-frame flag, not per-foot. The adapter blanks both feet's force on every flagged frame and then requires every frame of a stride to be finite (stride_pairs, heel_strikes). On real data this removes stance force that was recorded. ta21/s8 mini_SI_28: footContactDetectedButNoForce covers flight frames and 335 single-stance frames above 50 N; missingBlip covers whole stances. ta22/05 fpa: 75 % of frames flagged, including stances of 700 N or more. The adapter's own stride_pairs finds 0 strides in 143 of 143 ta21/s3 trials and in all 5 fa16/subject_0 trials (61 of 2,587 frames clean). ta22/07 is fine: 1,058 strides in 41 of 48 trials. So in the pilot, every TA21 and FA16 trial falls back to 100-frame blocks with no detector task, and no plate-timing tests run.",
+     "consequence": "The pilot's expected outcome ('records detector verdicts per channel, the data evidence the proposed entries need') and the proposed entries' evidence_basis ('HIST-06 pilot plate-timing evidence', 'pilot push-off evidence') can be met only for TA22. FA16 and TA21 would rest on the model definition alone.",
+     "options_for_worker": [
+      "Agent-level fix: take stride events (unit boundaries only) from the recorded vertical force regardless of the frame flag, keep the standardized GRF empty on flagged frames, and pass the evidence GRF NaN-masked (the detector handles NaN). Add a synthetic fixture with flight-phase and whole-stance flags, then re-plan as v1r4.",
+      "Or re-scope explicitly: state in the pilot plan and the proposed entries that FA16 and TA21 sign evidence is the model definition (FK) only, and launch v1r3 as a frame/task/row/undo test."
+     ],
+     "for_coordinator": "José's 2026-11-02 rule says to keep recorded values unless they are blatant errors. Blanking recorded plate force on frames flagged for the other foot or for a blip may conflict with that rule. It also excludes data: 98 % of fa16/subject_0 frames, 54 % of ta21/s3 and 15 % of ta22/07. Please decide whether this is an agent-level 'unavailable measurement' choice or a José-level exclusion before the full run. The source values and the flag stay in the HIST-05 files, so it is reversible."
+    },
+    {
+     "id": "F2",
+     "severity": "housekeeping",
+     "finding": "HIST-06.json pilot_plan and next_action still cite spec v1r2 (88951fdb...). v1r2 was still on disk at review time; the coordinator says it will be deleted. Update the handoff to v1r3, or to its successor, before launch."
+    }
+   ],
+   "not_checked": [
+    "OpenSim's documented CustomJoint composition order: not re-fetched. Body-fixed order is supported by the data test in item 3.",
+    "Tan running lateral GRF sign: small outward mean on both legs. Laterality is confirmed by CoP placement instead.",
+    "Moments on flagged frames (AddBiomechanics torques without measured GRF) and model zero offsets (Tan walking pelvis +0.12 rad median): unchanged from the mapping record's not_checked list.",
+    "Peak RSS on the actual hook path for ta21/s3: estimated, not measured."
+   ],
+   "next_action": "Worker: resolve F1, using one of the two options, and F2. If the code changes, re-plan, dry-run, and return for a short re-review of the diff. Coordinator: rule on the for_coordinator question in F1 before any full run."
+  },
+  "round_2": {
+   "phase": "pre-launch re-review: F1 diff (adapter decf23a3...), new tests, spec v1r4, stride recount, F2",
+   "checked_at_utc": "2026-11-02",
+   "verdict": "back_to_worker",
+   "launched": false,
+   "research_data_read": true,
+   "research_data_reads": "read-only probes under the AGENTS.md exception: one trial at a time, bounded columns, nice 19 / ionice idle, prlimit address space 768 MiB, stdout only",
+   "probes": [
+    {
+     "script": "scratchpad recount_s3.py",
+     "reads": "ta21/s3, 143 trials one at a time (vertical force, right CoP, timestep, names)",
+     "peak_rss_mib": 132.6
+    },
+    {
+     "script": "scratchpad recount_other.py",
+     "reads": "fa16/subject_0 (5 trials) and ta22/07 (48 trials), one at a time (calcn force and CoP, timestep, name)",
+     "peak_rss_mib": 120.9
+    }
+   ],
+   "reviewed_sha256": {
+    "contributor_tools/adapters/addbiomechanics_sign_adapter.py": "decf23a339a2e503ce0f15085a50bee5fe835945a5869d247306c5a8cd6ef125",
+    "contributor_tools/adapters/addbiomechanics_sign_adapter.py (diff base, scratchpad adapter_before_f1.py)": "f7f0fe5b9dba6c3cc2f5bb5dbed2bd3a693828d7d9d9ac97fec2d15cd3e684ec",
+    "contributor_tools/run_hist06_addb_pilot.py": "6a5e2dd2836f51a6665e2729f52a6dff4cede7c50cd28c12cfbe315c62f4650a",
+    "tests/test_addbiomechanics_sign_adapter.py": "9166ea21f671e709c7748909ef8471ddf4e6785cd34348aa6ae2d4badba12167",
+    "docs/quality/audits/hist06-addb-pilot-spec-v1r4.json": "ec8cd9ebc0a26e6bc79fda18f813f5144d2018959eebfec81961c778b2e0a89b"
+   },
+   "checks": [
+    {
+     "item": 1,
+     "claim": "The adapter diff does exactly the F1 ruling and nothing else",
+     "result": "pass for the flag change, with F3",
+     "evidence": [
+      "diff of adapter_before_f1.py (sha256 f7f0fe5b..., the round-1 reviewed version) against decf23a3... has three hunks: the module docstring paragraph on GRF/CoP; grf_world, which drops both masks; and the trial log, where grf_frames_not_clean becomes grf_frames_flagged_kept and grf_source_nan_frames is added. Nothing else changed: hook call, frame, walking direction, rows and mass code are identical.",
+      "Removed line 1, f = where(clean, f, nan): this is the F1 ruling. Force is now kept on flagged frames, source NaN stays NaN, and zero stays zero.",
+      "Removed line 2, c = where(clean & (fy > 0), c, nan): this mask has two parts. The flag part is the ruling. The 'vertical force not positive' part predates F1 and has nothing to do with the flag. Removing it is F3.",
+      "Strides: leg_inputs passes the recorded vertical force to the unchanged stride_pairs, so a flagged frame no longer breaks a stride. walking_direction still uses recorded force > 50 N with finite CoP, so it is unaffected by F3.",
+      "Stale wording: module docstring item 4 still says strides use 'all frames with measured GRF' (housekeeping)."
+     ]
+    },
+    {
+     "item": 2,
+     "claim": "New tests are independent: real marking pattern, 11-frame burst, source NaN, block fallback",
+     "result": "pass",
+     "evidence": [
+      "Command: OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_addbiomechanics_sign_adapter.py. Result: 67 passed, 1 skipped (the expected 'committed table already lists TA22').",
+      "Expected stride counts are derived from the fixture layout, not from adapter output. Burst case: 22 right / 23 left, because the first right contact lacks 5 unloaded frames before it. Real pattern: 21 / 23, losing only the stride holding the source NaN. The real-pattern fixture flags more than half the frames, marks a whole 700 N or more stance missingBlip, and includes an exact recorded zero (kept) and a source NaN (empty). Block fallback: force below 50 N everywhere gives (24 x 150) // 100 blocks and task None.",
+      "Gap tied to F3: the synthetic CoP is finite on every frame, including unloaded ones. Unlike the source, it never places a (0,0,0) placeholder on unloaded frames, so the test that asserts recorded CoP kept on every frame cannot reveal F3."
+     ]
+    },
+    {
+     "item": 3,
+     "claim": "Spec v1r4: bindings match, limits unchanged, output new, v1r3 deleted unlaunched",
+     "result": "pass",
+     "evidence": [
+      "Every binding equals the current sha256: bound build, adapter decf23a3..., runner 6a5e2dd2..., probe record, and all 12 participant files. The four frames.parquet files were re-hashed at nice 19 / ionice idle.",
+      "The command, sample, seed, output root, receipt path and every limit are identical to v1r3. The limits equal the envelope (timeout 3600, reserves 3584/2816 and 2048/2048, address space 768).",
+      "docs/quality/audits lists only the v1r4 spec. No hist06 output folder exists under converted_datasets/reconversion_v2, and no hist06 launcher receipt exists, so v1r2 and v1r3 were not launched."
+     ]
+    },
+    {
+     "item": 4,
+     "claim": "Stride recount on ta21/s3: 3,255 strides in 140 of 143 trials; the three no-stride trials",
+     "result": "pass (reproduced with an independent re-implementation of the stated rule)",
+     "evidence": [
+      "Own rule on recorded vertical force, flags ignored: heel strike = first frame >= 50 N after 5 finite frames < 50 N; stride = consecutive strikes 0.4-2.5 s apart, all frames finite. Result: 3,255 strides in 140 of 143 trials. s3 has no source-NaN force frames.",
+      "No-stride trials: trial 14 mini_SI_24_segment_16 (142 frames), trial 98 nike_SI_28_segment_16 (656 frames), trial 112 nike_SR_24_segment_14 (108 frames). In each, the right foot is at or above 50 N on all but 2 frames and the left foot is at 0 N throughout: no heel strike on either foot. They are short end segments with continuous single-foot loading, not running strides. The 100-frame block fallback with no task is correct for them.",
+      "Also confirmed: fa16/subject_0 Gait_7 has exactly one contact at or above 50 N per foot (179 frames), so it has 0 strides, consistent with the coordinator's FA16 scope ruling. The STS trials have no locomotion kind. ta22/07 has 1,803 strides in 48 of 48 trials."
+     ]
+    },
+    {
+     "item": 5,
+     "claim": "F2 fixed in HIST-06.json",
+     "result": "pass",
+     "evidence": [
+      "pilot_plan.spec, next_action and remaining cite v1r4 (ec8cd9eb..., adapter decf23a3...). Remaining v1r2/v1r3 mentions are history only: test_runs and changed_files ('never launched and deleted'). expected_outcome now states the FA16 scope (model definition only)."
+     ]
+    },
+    {
+     "item": "RSS",
+     "claim": "Peak RSS still fits with strides now found",
+     "result": "pass (estimate)",
+     "evidence": [
+      "s3 now gives about 23 stride units per trial-leg (150 samples x 7 channels plus evidence), about 0.2 MiB transient per leg. The accumulated logs add unit ids and stride frame lists, a few MB. The round-1 estimate of 200-250 MiB against the 300 MiB in-job cap stands. It is not measured on the hook path."
+     ]
+    }
+   ],
+   "findings": [
+    {
+     "id": "F3",
+     "severity": "blocking until the coordinator confirms (scientific: zero-filled unavailable values)",
+     "finding": "The diff also removed 'CoP empty where that foot's vertical force is not positive'. That rule is not flag-based: the CoP of an unloaded foot is undefined. In the source it is stored as an exact (0,0,0) placeholder, not NaN. ta21/s3 right foot: 172,234 of 172,608 unloaded frames have CoP exactly (0,0,0), and none is NaN. ta22/07 both feet: 58,734 of 67,220. fa16/subject_0: 242 of 243. Loaded frames (above 50 N): 0 such frames in fa16/subject_0 and ta22/07. With decf23a3..., cop_anterior/vertical/lateral_*_m will read 0 m (the world origin) on every swing and flight frame. Users would read that as a measured position. AGENTS.md and docs/reference: 'Unavailable signals stay missing. Zero-filled missing features can create false evidence that a signal was measured.' The detector's resampled CoP evidence also mixes these zeros into stride edges.",
+     "why_not_covered_by_the_ruling": "The ruling 'recorded zeros stay zero' fits force: a zero force on an unloaded foot is a measurement. A (0,0,0) CoP on the same frame is not a recorded position. The ruling as written ('empty only where the source is NaN') covers it literally, but it was made about the flag.",
+     "fix_proposed": "One line in grf_world: c = where((f[:, 1] > 0)[:, None], c, nan), using the recorded force with no flag involved. Restore 'empty where that foot's recorded vertical force is not positive' in the docstring and in the mapping record row for calcn_*_cop. Give the synthetic fixture a (0,0,0) CoP on unloaded frames, with expectations: NaN where unloaded, recorded CoP where loaded (including flagged frames). Then re-plan as v1r5 and dry-run.",
+     "for_coordinator": "Confirm this narrowing of the F1 ruling (CoP undefined at zero load), or explicitly accept zero CoP on unloaded frames with a documented note. Reversible either way: the source values stay in the HIST-05 files."
+    },
+    {
+     "id": "F4",
+     "severity": "housekeeping",
+     "finding": "Adapter module docstring item 4 still says strides use 'all frames with measured GRF'. It should say recorded vertical force, flags ignored."
+    }
+   ],
+   "resolved": {
+    "F1": "resolved as ruled (flag carried, recorded force kept, strides from recorded force; FA16 blocks-only scope accepted by the coordinator)",
+    "F2": "resolved"
+   },
+   "next_action": "Worker: apply the F3 fix (or record the coordinator's acceptance) and F4, re-plan v1r5, dry-run, and return for a short diff re-review. Then the pilot may launch."
+  },
+  "round_3": {
+   "phase": "pre-launch re-review: F3/F4 diff (adapter a076ebbe...), tests c642fcce..., spec v1r5 2488d64a...",
+   "checked_at_utc": "2026-11-02",
+   "verdict": "pre_launch_approved_with_condition",
+   "condition": "launch v1r5 only after its guarded_launcher dry run returns preflight_passed (two earlier attempts were refused by foreign_worker_linux; not re-run by the verifier, by instruction)",
+   "launched": false,
+   "research_data_read": false,
+   "reviewed_sha256": {
+    "contributor_tools/adapters/addbiomechanics_sign_adapter.py": "a076ebbe5476e4dd757e23de9043e358d3325f7ee5d6f428544db0b7a2560f35",
+    "contributor_tools/adapters/addbiomechanics_sign_adapter.py (diff base, scratchpad adapter_before_f3.py)": "decf23a339a2e503ce0f15085a50bee5fe835945a5869d247306c5a8cd6ef125",
+    "tests/test_addbiomechanics_sign_adapter.py": "c642fccec24b0f67d613d2b8edacb00918fe7dcfae04539d91a14735c716dba1",
+    "docs/quality/audits/hist06-addb-pilot-spec-v1r5.json": "2488d64a5eeaf88f20638fc23f49089282e48aae6ed104bc97fa44d8a5224f2a",
+    "contributor_tools/run_hist06_addb_pilot.py": "6a5e2dd2836f51a6665e2729f52a6dff4cede7c50cd28c12cfbe315c62f4650a"
+   },
+   "checks": [
+    {
+     "item": 1,
+     "claim": "CoP is empty where that foot's recorded vertical force is not positive, regardless of the flag; force unchanged",
+     "result": "pass",
+     "evidence": [
+      "The diff against decf23a3... (the scratchpad copy hashes to it) has one code line: in grf_world, after the force and CoP stacks, c = np.where((f[:, 1] > 0)[:, None], c, np.nan). No flag is involved, and NaN force also gives NaN CoP. The force array is not touched.",
+      "The other changed lines are docstrings: module item 4, the module GRF paragraph, and the grf_world docstring. Nothing else in the file changed.",
+      "Downstream: walking_direction already used force > 50 N with finite CoP, so it is unaffected. The rows project the NaN CoP to NaN anterior/lateral/vertical. The detector receives NaN CoP on unloaded samples, as in the round-1 version.",
+      "Mapping record row calcn_*_cop now reads: recorded CoP where the foot's recorded vertical force is positive; empty where it is not, independent of the flag; empty where the source is NaN."
+     ]
+    },
+    {
+     "item": 2,
+     "claim": "F4 docstring fixed",
+     "result": "pass",
+     "evidence": [
+      "Module docstring item 4 now reads: 'heel strike to heel strike of that foot from its recorded vertical force, every frame finite whatever its flag, 0.4-2.5 s'."
+     ]
+    },
+    {
+     "item": 3,
+     "claim": "Fixture has exact (0,0,0) unloaded CoP and the tests would catch F3",
+     "result": "pass",
+     "evidence": [
+      "synthetic_table: c = np.where(f[:, 1:2] > 0, c, 0.0), the source's placeholder. test_unloaded_cop_placeholder_is_empty_and_independent_of_the_flag asserts that the fixture triple is exactly zero on unloaded frames before mapping. It flags every frame in the second half and expects CoP NaN on unloaded frames, finite on loaded ones (clean and flagged alike), and force identical including exact zeros. The real-pattern test adds a zero-force CoP placeholder and checks that a flagged loaded stance keeps its CoP.",
+      "Mutation test (review only). A scratchpad pytest plugin executed each older adapter source at the committed path. decf23a3... (pre-F3): 4 failed, 64 passed. The failures are test_force_and_cop_in_the_rule_b_frame [+x] and [-z], the placeholder test, and the real-pattern test. f7f0fe5b... (pre-F1, flag blanking): 6 failed, including the burst stride count (20 instead of 22). Control (current adapter through the same plugin): 68 passed, 1 skipped.",
+      "Command, committed files: OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_addbiomechanics_sign_adapter.py. Result: 68 passed, 1 skipped (expected: committed table already lists TA22)."
+     ]
+    },
+    {
+     "item": 4,
+     "claim": "v1r5 bindings match; only change from v1r4 is the adapter (and test) hash; v1r4 deleted",
+     "result": "pass",
+     "evidence": [
+      "The binding keys are identical to v1r4. The only changed value is the adapter: decf23a3... becomes a076ebbe.... The tests file is not a spec binding in any version, so its hash appears in the handoff, not in the spec.",
+      "Every non-parquet binding equals the current sha256. The four frames.parquet values equal those re-hashed in round 2.",
+      "Command, output root, receipt path, sample, seed and every limit are unchanged (timeout 3600, reserves 3584/2816 and 2048/2048, address space 768).",
+      "docs/quality/audits lists only the v1r5 spec. There is no hist06 output folder and no hist06 launcher receipt, so v1r4 and earlier were never launched.",
+      "The HIST-06 handoff pilot_plan cites v1r5 (adapter a076ebbe...). Its next_action asks for the plain dry run before launch."
+     ]
+    }
+   ],
+   "resolved": {
+    "F3": "resolved as proposed",
+    "F4": "resolved"
+   },
+   "open_items_carried": [
+    "Dry run of v1r5 not yet passed (foreign_worker_linux refusals); it is the launch condition.",
+    "Unchanged not-checked items from round 1: OpenSim's documented rotation order (data-supported only), Tan running lateral GRF sign, moments on flagged frames, model zero offsets, peak RSS on the hook path (estimate 200-250 MiB against the 300 MiB cap)."
+   ],
+   "next_action": "Coordinator: repeat the plain v1r5 dry run when no foreign worker is present; on preflight_passed, launch the HIST-06 pilot alone, then the UM21 re-pilot. Post-launch verification follows, with a separate round."
+  },
+  "round_4": {
+   "phase": "post-launch verification of the v1r5 pilot",
+   "checked_at_utc": "2026-11-02",
+   "verdict": "pilot_verified",
+   "launched_by_verifier": false,
+   "research_data_read": true,
+   "research_data_reads": "read-only under the AGENTS.md exception: one trial (row groups) and named columns at a time from the pilot outputs and the source frames.parquet; nice 19 / ionice idle; prlimit address space 768 MiB; nothing written outside the session scratchpad",
+   "probes": [
+    {
+     "script": "inline output census (trial_logs, parquet metadata)",
+     "peak_rss_mib": 76.9
+    },
+    {
+     "script": "inline verdict tally (sign_applications.json, one participant at a time)",
+     "peak_rss_mib": 36.4
+    },
+    {
+     "script": "scratchpad spot_check.py (seed 20261104)",
+     "peak_rss_mib": 165.0
+    },
+    {
+     "script": "scratchpad tan_offset.py and tan_offset_count.py",
+     "peak_rss_mib": 155.3
+    }
+   ],
+   "reviewed_sha256": {
+    "docs/quality/audits/hist06-addb-launcher-receipt-v1.json": "6aca25dcc83fe7be398a03df717fb83416fd7e8102f11f93aab1d59bb10a2756 (as recorded in the handoff)",
+    "docs/quality/audits/hist06-addb-launcher-receipt-v1.log": "2717f2616f4d76d8e43bf7dc6feb59d67da2359fefbad9e421e289a87abe7b7e (re-hashed: matches)",
+    "converted_datasets/reconversion_v2/hist06_addb_mapping_pilot_v1/pilot_summary.json": "699c25ab13f09c8db34d5e64941a37caab12f4dd9b5573178a39b5d7fad032c7"
+   },
+   "checks": [
+    {
+     "item": 1,
+     "claim": "Run integrity: one ledger entry, clean receipt, cleanup proven, output hashes, bound build = v1r5",
+     "result": "pass",
+     "evidence": [
+      "Receipt: status completed, exit_code 0, clean_success true. All checks are true: cleanup_proven, bindings_unchanged, envelope_unchanged, linux/windows_no_new_worker, no_orphans_at_leader_exit, outputs_hashed, expected_outputs_present. launcher_errors, finalisation_errors, stop_actions and orphans are empty; runtime breach is null. Wall time 50.0 s. Peak RSS 226,124 KiB in the largest process; the job reported 220.8 MiB against the 300 MiB cap. Observed address-space limit 805306368.",
+      "Receipt spec equals the v1r5 file (bindings and command). bindings_before and bindings_after: 20 of 20 match. The expected values equal the v1r5 bindings. The summary's bound_build and code_sha256 equal v1r5 (adapter a076ebbe..., runner 6a5e2dd2...).",
+      "Launch ledger: one entry dated 2026-11-02, 1869040-100123830.json at 18:10:44Z, equal to the receipt's launch time. The previous entry is from 2026-10-31.",
+      "Ran guarded_launcher verify-cleanup on the receipt: proven, same_boot_proc_scan, no pgid members, no fallback receipts.",
+      "All 14 outputs re-hashed and equal the receipt. There are no unlisted or missing files under the output root, and the log sha256 matches."
+     ]
+    },
+    {
+     "item": 2,
+     "claim": "Counts per participant match the handoff; hip_calibration null task, no task table, vertical only",
+     "result": "pass",
+     "evidence": [
+      "From parquet metadata and trial_logs (leg units):",
+      "fa16/subject_0: 5174 rows = 2 x 2587; 10 block legs, 48 block units.",
+      "ta21/s3: 546184 rows = 2 x 273092; 280 stride legs with 3255 units, 6 block legs with 16 units.",
+      "ta22/07: 186302 rows = 2 x 93151; 96 stride legs with 1803 units.",
+      "ta21/s7 hip_calibration: 4000 rows; 2 block legs with 40 units.",
+      "All of these equal the handoff pilot_run.",
+      "hip_calibration rows: task None, task_id 'hip_calibration', in_task_table false, task_rule 'MAP-TAN-TASK...'. grf_vertical is finite on 100 % of frames and cop_vertical on 49.9 % (empty where unloaded). Every anterior and lateral force and CoP column is empty."
+     ]
+    },
+    {
+     "item": 3,
+     "claim": "Detector: every suggestion +1, no applies, no conflicts; the 13 non-block Tan running abstentions; nothing published",
+     "result": "pass",
+     "evidence": [
+      "Over all 394 legs x 7 channels (2758): 1280 'suggest' with detector_sign +1, and 1478 'abstain'. There are no applies, no conflicts, and no non-documentation vote with a sign other than +1. Every channel is publication 'hold' (no verified audit sign).",
+      "Suggestions are 801 in ta21/s3 (hip angle, ankle angle and ankle moment, 267 each) and 479 in ta22/07 (hip angle 96, hip moment 96, knee angle 95, ankle angle 96, ankle moment 96). Each has low confidence from one family.",
+      "The 13 non-block abstentions in ta21/s3 are stride legs with 1-4 stride units. The only test that runs, ankle_pushoff_plantarflexion, reports 'only N units cast a vote (< 5)'. Legs: trial27 r1/l2, trial41 r4/l4, trial63 r3/l3, trial71 r2/l3, trial134 r1/l1, trial135 r4, trial142 r2/l1. Suggesting legs have 5-to-median-12 units. The 13 legs are short segments, below the detector's vote minimum, and are not a sign signal.",
+      "Nothing published: in all four mapped files, the 38 pelvis/hip/knee/ankle sagittal, segment and velocity columns hold 0 finite values, scanned row group by row group. The sagittal _Nm_kg columns are therefore also empty. Hip adduction and rotation (source sign, frontal/transverse rule not adopted) and GRF/CoP are written, as specified."
+     ]
+    },
+    {
+     "item": 4,
+     "claim": "Frame-by-frame value spot check against the source",
+     "result": "pass (segment identity not checkable: no published inputs)",
+     "evidence": [
+      "Seed 20261104 (random.Random over each participant's mapped trial indices) drew fa16/subject_0 trial 1 (STS_1, 633 frames), ta21/s3 trial 82 (nike_SI_24, 2000 frames) and ta22/07 trial 23 (step_width, 2000 frames). Added as a fixed, not random, case: fa16/subject_0 trial 0 (Gait_7), the only Falisse locomotion trial. Both reference sides and the ipsi/contra roles were checked per frame.",
+      "Passed 52/52 in each locomotion trial and 40/40 in STS_1:",
+      "- source frame order;",
+      "- missing_grf_reason carried exactly;",
+      "- grf_vertical = recorded Fy on every frame, including flagged ones (flagged loaded right-foot frames kept: 533 in STS_1, 279 in nike_SI_24, 998 in step_width);",
+      "- cop_vertical = recorded Cy where that foot's Fy > 0, else empty;",
+      "- _BW = N / (recorded entered_mass_kg x 9.80665) (64.8, 57.4, 74.4 kg), and normalization_mass_kg = recorded mass;",
+      "- grf_anterior = F.x', grf_lateral = (+1 right, -1 left) x F.z', and the CoP equivalents where loaded, to 1e-6 N and 1e-9 m;",
+      "- hip adduction and rotation angle and moment equal the source exactly;",
+      "- all held columns empty;",
+      "- STS_1: anterior and lateral empty (no forward locomotion).",
+      "x' was recovered by least squares from the mapped anterior force. It is unit length and equals my independent re-implementation (CoP principal axis oriented by body-fixed ZXY facing; COM velocity overground) to 0.0000 deg in all three locomotion trials. It also equals the logged direction within the log's 4-decimal rounding. Facing offsets: 3.5, 1.6 and 0.6 deg.",
+      "Lateral sign: z' = x' x y. Mean loaded CoP on z' is right foot > left foot in all three: 0.375 vs 0.264 m, 0.649 vs 0.429 m, -0.120 vs -0.285 m. So +z' is the person's right and lateral is outward per leg.",
+      "Joint angles and moments: held, so empty in the output. Their source sign and units (rad, N*m generalized force, +1) were verified in round 1 (FK and seeded gait plausibility). Per-kg moments are empty because the moments are held; recorded-mass division is verified on _BW and in the round-2/3 synthetic tests.",
+      "The thigh = pelvis + hip, shank = thigh - knee and foot = shank + ankle identities cannot be checked on this output, because no proximal input is published. Coverage remains the synthetic test test_segments_and_velocities_from_published_channels and the pilot's hash-link check (no finding)."
+     ]
+    },
+    {
+     "item": 5,
+     "claim": "Tan running 35 deg offset between walking direction and pelvis facing: diagnosis",
+     "result": "diagnosed: source kinematic artefact (pelvis segment turned in one recording), not a treadmill/global-frame artefact and not an adapter bug",
+     "evidence": [
+      "The treadmill axis is stable. The within-stance CoP axis yaw spans 87.9-94.0 deg (SD 0.95) over 140 s3 trials, 85.1-93.7 (SD 0.97) in s1 and 88.6-91.7 (SD 0.71) in s8. The global frame and belt direction do not move.",
+      "The offset is in one condition only. In s3 every trial with |offset| > 10 deg is one of the 13 nike_SR_24 segments (trials 99-111), median -29.1 deg, maximum -34.7 deg. Every other s3 condition has a median of -3.9 to -0.2 deg. s1 and s8 stay within 5 deg in every trial.",
+      "The rest of the body compensates. Across s3 trials, the offset correlates -0.98 with hip_rotation_r - hip_rotation_l (slope -1.6 deg per deg; in nike_SR_24, hip rotation is r +21 to +23 deg and l -22 to -25 deg). It correlates +0.94 with lumbar rotation, which reaches -95 to +91 deg in those segments against -7 to +1 deg elsewhere. The legs and CoP stay aligned with the belt while the fitted pelvis is turned about 30 deg and the lumbar joint absorbs up to 90 deg. That is a kinematic fit failure of that recording, not a turned model (other conditions of the same model are aligned) and not a frame issue.",
+      "Effect on the mapping: the walking direction comes from the CoP axis, so the GRF/CoP frame is unaffected. Pelvis pitch is heading-independent but comes from a mis-fitted pelvis. Hip flexion/adduction/rotation in those 13 segments are measured against a turned pelvis: sign unaffected, magnitudes suspect. Published now: hip adduction and rotation (source sign) for those segments carry the artefact."
+     ]
+    }
+   ],
+   "sign_entry_readiness": {
+    "verdict": "no blocker: the pilot contradicts no proposed +1 entry",
+    "per_channel_evidence": {
+     "TA22": "hip_angle, hip_moment, knee_angle, ankle_angle, ankle_moment: model definition plus detector suggest +1 (one family, low confidence each). pelvis_tilt and knee_moment: model definition only (detector abstains everywhere).",
+     "TA21": "hip_angle, ankle_angle, ankle_moment: model definition plus detector suggest +1 (267 of 286 legs). pelvis_tilt, knee_angle, hip_moment, knee_moment: model definition only (the tests are walking-only, or there is no lever arm).",
+     "FA16": "all seven channels: model definition only (blocks, no task), as scoped by the coordinator.",
+     "independent_support_from_this_review": "round-1 FK of the .osim and seeded gait plausibility (knee peak in swing, plantarflexion at push-off, negative stance ankle moment, hip extensor-then-flexor moment) in TA21 and TA22. The pelvis order was supported by the stride-harmonic test."
+    },
+    "note": "The proposed evidence_basis strings in HIST-06.json ('pilot plate-timing evidence', 'pilot push-off evidence', 'knee hinge evidence in the pilot') should be reworded per channel as above. For example, no pilot knee-hinge or hip-moment-timing evidence exists for TA21, and no pilot evidence at all exists for FA16."
+   },
+   "findings": [
+    {
+     "id": "F5",
+     "severity": "not blocking (source data quality; for the coordinator)",
+     "finding": "ta21/s3 nike_SR_24, 13 segments (trials 99-111): pelvis fitted about 30 deg off the belt axis, with lumbar rotation up to +/-95 deg and hip rotation +/-23 deg. These are artefacts of the source kinematic fit. Under the keep-recorded-values rule the values stay. Whether to flag or exclude these segments, a data exclusion, is the coordinator's or José's call. Other Tan running participants have not been surveyed for this; s1 and s8 are clean."
+    }
+   ],
+   "not_checked": [
+    "The segment identities on real data: nothing is published in the pilot.",
+    "The F5 artefact in the five Tan running participants not surveyed (s4, s5, s6, s7, s9).",
+    "Carried from round 1: OpenSim's documented rotation order (data-supported only), moments on flagged frames, model zero offsets."
+   ],
+   "next_action": "Coordinator: the HIST-06 pilot is verified. Reword the proposed evidence_basis per channel, move HIST-06 to done, then add the FA16/TA21/TA22 entries citing HIST-06, re-pilot UM21 on the new bound build, and decide F5 (flag or exclude s3 nike_SR_24, survey the other Tan running participants)."
+  }
+ }
+}

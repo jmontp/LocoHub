@@ -1,0 +1,68 @@
+{
+ "task_id": "GT21-RB06",
+ "status": "review",
+ "scientific_approval": false,
+ "cause": "Source defect, not a code error. In all 157 treadmill recordings (22 participants) the gcLeft ToeOff column is identical to the gcRight ToeOff column (same Header, same values) while heel strikes differ. 0 of 2,990 non-treadmill recordings have this. The shared toe-offs fall at the right belt's load offset (median -0.010 to -0.025 s); the left belt unloads about 0.4 to 0.5 s later. Left stance therefore ran from the left heel strike to the right leg's next toe-off, about 0.10 of the cycle.",
+ "evidence": [
+  "docs/quality/audits/gt21-rb06-belt-evidence.json (one recording per participant: source toe-off fraction and belt-loaded fraction, both legs)",
+  "AB06 treadmill_01_01: left HS 15.63 s, shared TO 15.91 s, left belt loaded 15.625 to 16.625 s; right HS 14.795, TO 15.91, right belt loaded 14.795 to 15.87"
+ ],
+ "fix": "gt21_rb_segment.left_toe_off_copied_from_right(mode, gcLeft, gcRight): treadmill only, identical ToeOff arrays with at least one event. RB03 then treats left treadmill stance as unavailable: left force mask empty, step stance_samples and force_missing_stance_samples null with a stance_unavailable reason, no toe-off force check. The export gives no incomplete_stance_force flag for null stance. Nothing is rebuilt from belt load (that would be invented timing). Right leg and all other modes untouched. Export and export readback now read the *_20261126 RB03 roots.",
+ "test": "tests/test_gt21_rb_segment.py: 3 new synthetic tests (the end-to-end one fails without the runner change); 43 tests pass in the segment and export test files",
+ "code_sha256": {
+  "contributor_tools/gt21_rb_segment.py": "00eaecc85f8eb447610f7bf7cccaa28ea5a5a2f70334593c44e116149121cddf",
+  "contributor_tools/run_gt21_rb_segment.py": "fe16a5545547d105667e6c861342b28c15859fca0ecfa4dff89082b36197cc55",
+  "contributor_tools/gt21_rb_export.py": "309f8008936aebb03961d8c1c8e7e6e8aebb2057385cf98cda65364251131746",
+  "contributor_tools/run_gt21_rb_export.py": "c13341ca8d41989504319367a1b88b51d31e29b3d5e1a324124d98ba4780de65",
+  "contributor_tools/run_gt21_rb_export_readback.py": "3faeb161cfb8075bc873b72a25ee289318e733b3a5fcf3537c808759f76f903e"
+ },
+ "runs": {
+  "rb03": "22 batches converted_datasets/reconversion_v2/gt21_rb_segment_batch_<ID>_20261126 (all modes) + pilot gt21_rb06_segment_pilot_20261126; receipts docs/quality/audits/gt21-rb06-seg-*",
+  "rb05": "22 exports gt21_rb06_export_<ID>_r2 + pilot gt21_rb06_export_pilot_20261126; receipts gt21-rb06-export-*",
+  "readback": "c1,c2,c3,c5,c6 passed, zero failures. c4 failed (cannot allocate memory under the 768 MiB cap in a 5-participant chunk, no output written, receipt kept); rerun as c5 and c6 with the same code. A c5 launch was refused once for startup memory reserve (another session); its refused receipt was deleted and the job rerun."
+ },
+ "superseded_roots": [
+  "converted_datasets/reconversion_v2/gt21_rb_segment_batch_<ID>_20261125 (left-leg treadmill stance and mask only)",
+  "converted_datasets/reconversion_v2/gt21_rb05_export_<ID>_r1 (left-leg treadmill force mask and incomplete_stance_force flag only)"
+ ],
+ "before_after": {
+  "audit_files": [
+   "docs/quality/audits/gt21-rb06-seg-before-after.json",
+   "docs/quality/audits/gt21-rb06-export-before-after.json"
+  ],
+  "left_treadmill_steps": 20433,
+  "left_stance_fraction_median_before_range": "0.083 to 0.140 (per participant)",
+  "right_stance_fraction_median_range": "0.579 to 0.631",
+  "left_stance_after": "unavailable (null)",
+  "masked_stance_samples_in_steps_before_after": [
+   1677,
+   0
+  ],
+  "masked_samples_in_layers_before_after": [
+   8736,
+   0
+  ],
+  "incomplete_stance_force_left_treadmill_before_after": [
+   22,
+   0
+  ],
+  "incomplete_stance_force_all_before_after": [
+   27282,
+   27260
+  ],
+  "export_force_columns_changed": "left foot force only, treadmill only: 22 left-reference and 22 right-reference (contra) phase observations, 91 continuous recordings",
+  "unchanged": "84,793 observations and all exclusions equal; every non-treadmill row, every angle/speed/moment/power/pressure column and every right-leg force bit identical (streamed compare, 0 unexpected differences); 86,934 non-left-treadmill steps identical; 2,990 non-treadmill mask layers identical; treadmill right-leg mask layers identical"
+ },
+ "peak_rss_mib": {
+  "export_pilot": 352,
+  "readback": "326-336",
+  "seg_audit": 248,
+  "export_compare": 330,
+  "belt_probe": 165
+ },
+ "deviations": [
+  "Two launcher jobs (export AB07 and AB08) were sent in one tool message; they ran one after the other and both completed clean.",
+  "RB03 readback runner (run_gt21_rb_segment_readback.py) was not rerun or updated: its independent mask recompute uses table stance and would disagree for left treadmill by design."
+ ],
+ "next": "Independent verifier; then decide that the rb06 exports replace r1 as the current RB05 export."
+}

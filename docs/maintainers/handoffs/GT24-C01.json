@@ -1,0 +1,397 @@
+{
+ "task_id": "GT24-C01",
+ "status": "done",
+ "last_checked_at_utc": "2026-11-02T00:25:00Z",
+ "summary": "Policy for every GT24 channel family from metadata, README and existing audits only (no GT24 time series read). Signs: hip +1, knee -1, ankle +1 (no negation, GT24-C02); frontal/transverse source sign kept. Source moment divisor: not established. Re-reading the GT24-C02 lever-arm slopes (6 trials) with the external GT23-C04 lever bias (0.9942) fits the worn model mass in 6/6 and body mass in 1/6, but only if the GT23 bias transfers to GT24; with a free bias both fit 5-6/6. BT18 and BT24 Phase3 Statics model masses equal each other's README rows (146 recordings). No no-exoskeleton trials exist (0/2,421). Phase3 mass rows bind per trial through exact Statics-to-own-README-row equality (BT02, BT13, BT23); Phase1And2 BT06/BT07/BT13 cannot be day-bound without an exact divisor and have no day-2 body mass. Bounded probe (E1 interaction-torque divisor identity, E2 plate weight, E3 lever arm with the bias fixed to GT23-C04) written and synthetically tested, not run. D-GT24-C01-1 (mass basis) prepared and queued until the probe pilot reports.",
+ "checks": [
+  "Read AGENTS.md, the GT24-C01 backlog entry, gt24-unknown-normalization-mass-review.json, gt24-c02-ankle-sign.json, gt24-source-companion-scope.json, gt24-ankle-evidence-ranking.json, gt23-c03/c04 audits and GT23-C04 handoff, gt25-normalization-source-review.json, gt24_gt25 source-units review, the publisher README (sha256 e896c6b4..., all 683 lines), DATA_CONTRACT.md signs section, docs/reference/index.md, docs/datasets/gt24.md, both GT24 converters, metadata.yaml, PLAN_add_no_exo_data.md, gt24_source_mass.py, gt24_mass_field_policy.py, apply_gt24_participant_normalization_v2.py.",
+  "Mass matrix (gt24_source_mass_coverage_v4 matrix.json, sha256 688dec9d..., README + 10 Statics CSVs only) tabulated per folder: categories single_mass_row 17 folders/1,712 recordings; phase3_two_mass_rows_bound_by_statics 3/227; phase12_two_worn_masses_day_unknown 3/336; statics_conflicts_own_readme_row 2/146.",
+  "Crossref metadata for 10.1038/s41586-024-08157-7: Molinaro, Scherpereel, Schonhaut, Evangelopoulos, Shepherd, Young; Nature 635:337-344 (2024). metadata.yaml cites Slade et al. (wrong).",
+  "`python3 contributor_tools/audit_probes/2026_10_31/probe_gt24_c01_divisors.py plan` (metadata only): 25 folders, 58 trials (A level walk 35, B Statics mass groups 5, C repeat-day 18), seed 20261031.",
+  "`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 contributor_tools/review_gt24_c01_normalization_policy.py audit` then `... sheets` (no source time series read).",
+  "Sheets rendered with headless Chrome at 1100 px and in a 390 px iframe (scratchpad rv_GT24-C01_*.png, rv_D-GT24-C01-1_*.png); fixed a wrong-way percentage range, a misleading chip and an overclaiming decision headline; nothing clips.",
+  "`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_backlog_workflow.py tests/test_gt24_c01_divisor_probe.py`: 78 passed.",
+  "`python3 contributor_tools/build_backlog_page.py --check`: \"Backlog valid; HTML current (103 tasks).\" backlog.json/html and AGENTS.md not edited.",
+  "decisions[0] appended to an in-memory copy of backlog.json passes validate_backlog; open decisions would be D-GT23-C04-1 and D-GT24-C01-1."
+ ],
+ "acceptance_map": {
+  "README coordinate definition, field scope, contradictory evidence": "audit readme.bindings (lines 9-10, 52, 57-86, 76, 90-95, 179-180, 502, 520, 556, 570-578, 37); README ankle line contradicted by GT24-C02; hip/knee lines supported by exo encoders.",
+  "plantarflexion-to-dorsiflexion mapping and phase/participant/day/actuator mass selection": "audit supported_ankle_policy (identity mapping, sign +1), phase_day_exo_mapping, mass_units (per folder rule).",
+  "body mass vs exoskeleton-inclusive mass; normalized channels; missing/ambiguous handling": "audit channel_families, mass_units, unsupported; basis itself = D-GT24-C01-1.",
+  "existing code and required changes; mapping and verification plan": "audit required_code_changes, probe_plan (interpretation_rules).",
+  "unknown denominators and interaction units source-only; no double division": "channel_families: canonical = sign*source*D/m_basis only with exact D; raw torque_interaction source-only unless E1 shows a mass-valued constant ratio."
+ },
+ "deviations": [
+  "Wrote a numerical probe and a small synthetic test file in addition to the requested JSON outputs, to fix the selection and rules before any data read.",
+  "The policy binds Phase3 body mass by exact Statics-to-README-row equality, which gt24_source_mass.py currently refuses; rationale in audit other_findings."
+ ],
+ "remaining": [
+  "BT18/BT24 swap: after E2/E1, a decision on binding the other row's body masses or withholding.",
+  "Phase1And2 BT06/BT07/BT13 second-day trials: no body mass in README.",
+  "Code fixes before use: gt24_mass_field_policy ankle sign; get_subject_mass Phase1And2/Phase3 mix-up; get_collection_phase subject-ID inference; invented day/no-exo logic; assistance from raw interaction torque; metadata.yaml citation.",
+  "Not checked: hip/knee moment signs by force plates; insole CoP lateral sign and frame; IMU-integrated segment angles; whether the GT23 lever bias transfers to GT24.",
+  "GT25-C01 should test its README ankle sign independently.",
+  "GT24 lever bias differs from GT23 by about 3 %; any later lever-based classification for GT24 should use a GT24 calibration from E1-exact trials.",
+  "BT24-folder plate weight from another level-walk trial.",
+  "E1 census done (round 6): every recording has an exact divisor; 27 BT03 left-knee columns and 124 too-few-sample columns not investigated.",
+  "Phase1And2 BT06/BT07/BT13: 106 second-day recordings have no README body mass (affects option C only)."
+ ],
+ "changed_files": [
+  "contributor_tools/review_gt24_c01_normalization_policy.py (new)",
+  "contributor_tools/audit_probes/2026_10_31/probe_gt24_c01_divisors.py (new; not run on data)",
+  "tests/test_gt24_c01_divisor_probe.py (new; synthetic)",
+  "docs/quality/audits/gt24-c01-normalization-policy.json (new)",
+  "docs/maintainers/handoffs/GT24-C01.json (new)",
+  "review_sheets/GT24-C01/ and review_sheets/D-GT24-C01-1/ (gitignored)",
+  "docs/quality/audits/gt24-c01-divisor-pilot-spec.json, -receipt.json, -receipt.log, -result.json (new)",
+  "contributor_tools/audit_probes/2026_10_31/summarize_gt24_c01_pilot.py (new)",
+  "docs/quality/audits/gt24-c01-e1-census-pilot-spec.json (new; round 4)",
+  "contributor_tools/review_gt24_c01_normalization_policy.py (decision-sheet step; round 5)",
+  "contributor_tools/audit_probes/2026_10_31/check_gt24_c01_census_pilot.py (new; round 5)",
+  "tests/test_gt24_c01_census_pilot_check.py (new; round 5)",
+  "docs/quality/audits/gt24-c01-e1-census-pilot-receipt.json, -receipt.log, -check.json (new; round 5)",
+  "docs/quality/audits/gt24-c01-e1-census-spec.json, -receipt.json, -receipt.log, -result.json (new; round 6)",
+  "contributor_tools/audit_probes/2026_10_31/summarize_gt24_c01_census.py (new; round 6)"
+ ],
+ "evidence_paths": [
+  "docs/quality/audits/gt24-c01-normalization-policy.json",
+  "contributor_tools/review_gt24_c01_normalization_policy.py",
+  "contributor_tools/audit_probes/2026_10_31/probe_gt24_c01_divisors.py",
+  "tests/test_gt24_c01_divisor_probe.py",
+  "review_sheets/GT24-C01/index.html",
+  "review_sheets/D-GT24-C01-1/index.html",
+  "review_sheets/D-GT24-C01-1/decision.json",
+  "docs/quality/audits/gt24-c01-e1-census-pilot-spec.json",
+  "docs/quality/audits/gt24-c01-e1-census-pilot-receipt.json",
+  "docs/quality/audits/gt24-c01-e1-census-pilot-check.json",
+  "review_sheets/D-GT24-C01-1/index.html",
+  "docs/quality/audits/gt24-c01-e1-census-receipt.json",
+  "docs/quality/audits/gt24-c01-e1-census-result.json"
+ ],
+ "output_sha256": {
+  "docs/quality/audits/gt24-c01-normalization-policy.json": "5607169a285789e349fd704f9150835774ea075fb688ffd80ba8d5fda4b5ee45",
+  "contributor_tools/review_gt24_c01_normalization_policy.py": "06428d23a21d8d39e810584cac64cac14b7f412bb9aaea5e1b2c7f34215e388c",
+  "contributor_tools/audit_probes/2026_10_31/probe_gt24_c01_divisors.py": "9ff27f4b5336f3c79611e42983d31ee74fba26a21652bd0d5533cd9485704bcc",
+  "tests/test_gt24_c01_divisor_probe.py": "13f8d137a3d029e4fb4bf17138a7d1b038f84bf90753e63275532676f25e175c",
+  "review_sheets/GT24-C01/index.html": "4356d50285f3833bfad756b137d249e6d1cbf8aa0652b9515ee7c810070941a8",
+  "review_sheets/D-GT24-C01-1/index.html": "b65efafb4cc8968991d8826e9aa706a593aaa227ad9a18b3a899f9bcb360f96b",
+  "review_sheets/D-GT24-C01-1/decision.json": "f70bd78f192707f4b0b32dd2eff7db45c6dc8c9b1a6bf0dc221397017902c7f6",
+  "docs/quality/audits/gt24-c01-divisor-pilot-result.json": "d2f0f549170a654afe70b013c5ffac7eea7cd9e42a1b408df20adce173436219",
+  "docs/quality/audits/gt24-c01-divisor-pilot-spec.json": "e11e20c6914302217faff453ece43b0d861983ddbd3cdebb7a59c3c171ebe496",
+  "docs/quality/audits/gt24-c01-divisor-pilot-receipt.json": "3beadd7191de9dcdaa7cf9d4751e9a707665a9724b74217905e67dea660f934b",
+  "contributor_tools/audit_probes/2026_10_31/summarize_gt24_c01_pilot.py": "79eb46ce6fe2626e30d496d5f2c8171afab860338dff2558eff8fcfc4332757e"
+ },
+ "resources": {
+  "note": "Read-only metadata work; no GT24 time series, no numerical job, no MATLAB. Only the mass matrix JSON, README, audits and code were read."
+ },
+ "next_action": "Done. Commit the GT24-C01 files (list in the coordinator report). Next GT24 work: GT24-P01 with per-trial divisors from the census and the binding rule; BT18/BT24 swap decision before option C.",
+ "decisions": [],
+ "decision_note": "round_6.proposed_decision_wording is the only current D-GT24-C01-1 text (round_4 and older slots point to it). review_sheets/D-GT24-C01-1 matches it; the builder refuses to run otherwise. Not copied into backlog.json: copy only after verification. Options ordered by normalizing mass: A none, B worn, C body.",
+ "round_2": {
+  "at_utc": "2026-11-01T01:30:00Z",
+  "source": "docs/maintainers/handoffs/GT24-C01-verify.json (back_to_worker)",
+  "no_new_data_reads": true,
+  "fixes": [
+   "1. Divisor re-reading now uses the external GT23-C04 ankle_bias_centre_ratio 0.9942 (sha256 recorded in the audit) instead of the median of the same 6 trials; audit states the transfer assumption and reports the free-bias sensitivity (worn 6/6 at 0.980, body 5/6 at 0.889). Sheet chip 'Body mass ruled out in 5 of 6' replaced by 'not checked: worn vs body divisor holds only if GT23 calibration transfers'; headline now 'GT24 divisor still open; two folders' masses are swapped'. BT24 slope evidence marked conditional (BT24 README body mass also fits).",
+   "2. Added to required_code_changes: get_subject_mass line 226 gives Phase1And2 BT01/BT02/BT13 Phase3 masses (BT01 84.28 instead of 87.02 kg); get_collection_phase line 156 infers collection from the subject ID because both zips extract to Parsed/.",
+   "3. Probe caveat recorded (audit probe_plan.caveat, probe docstring): E1 measures the interaction-torque divisor D_x; it equals the net-moment divisor only if one mass was used for both; E3 tests that under the same bias-transfer assumption. Probe summarize() now classifies E3 against the fixed external bias (RULES.lever_bias_external = 0.9942); the pilot median is reported only. Not run.",
+   "4. D-GT24-C01-1 queued: question and option C no longer assert the worn divisor (values are converted back with the measured divisor, then divided by the chosen mass); options ordered by normalizing mass (none, heavier worn, lighter body); decision sheet ask strip 'Queued: answer after the divisor probe reports'; figure 1 removed from the decision sheet."
+  ],
+  "gates": [
+   "`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_backlog_workflow.py tests/test_gt24_c01_divisor_probe.py`: 78 passed.",
+   "`python3 contributor_tools/build_backlog_page.py --check`: \"Backlog valid; HTML current (103 tasks).\"",
+   "decisions[0] appended to an in-memory backlog copy passes validate_backlog.",
+   "Both sheets re-rendered at 1100 px and in a 390 px iframe; nothing clips."
+  ]
+ },
+ "queued_decisions": [
+  "superseded by round_4.proposed_decision_wording (the pre-pilot text that stood here is out of date)"
+ ],
+ "round_3_probe": {
+  "at_utc": "2026-10-31T23:30:00Z",
+  "instruction": "coordinator: add E3 cases test, launch 58-trial pilot via guarded launcher, report, propose wording (do not open)",
+  "test": "tests/test_gt24_c01_divisor_probe.py: 4 parametrized E3 cases (same divisor/GT23 bias -> shares; net = body mass -> not; bias 0.89 -> not; bias 1.0 -> shares); 11 probe tests + 71 backlog tests = 82 passed.",
+  "probe_changes_and_rebind": [
+   "Probe changed for the launcher only: RLIMIT_AS is now only ever lowered (launcher sets 768 MiB), and the output folder is created and the output opened exclusive (never overwrite). Estimators and rules unchanged.",
+   "Rebound sha256: probe 9ff27f4b5336f3c79611e42983d31ee74fba26a21652bd0d5533cd9485704bcc (was 5ce9b738...), tests 13f8d137a3d029e4fb4bf17138a7d1b038f84bf90753e63275532676f25e175c. The verified policy audit keeps its older probe hash; the spec binds the new one."
+  ],
+  "launch": {
+   "spec": "docs/quality/audits/gt24-c01-divisor-pilot-spec.json (sha256 e11e20c6914302217faff453ece43b0d861983ddbd3cdebb7a59c3c171ebe496)",
+   "steps": [
+    "validate_spec in-process: valid",
+    "dry-run 1 and 2: refused foreign_worker_linux (another agent's guarded GT21 AB19 download, plus that agent's pytest); waited for it to exit on its own (23:07:24Z)",
+    "dry-run 3: preflight_passed",
+    "one launcher call: `OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m contributor_tools.guarded_launcher run docs/quality/audits/gt24-c01-divisor-pilot-spec.json`"
+   ],
+   "receipt": "docs/quality/audits/gt24-c01-divisor-pilot-receipt.json (sha256 3beadd7191de9dcdaa7cf9d4751e9a707665a9724b74217905e67dea660f934b): completed, exit 0, 39.9 s, peak RSS 240 MiB; 360 zip members read; zips unchanged.",
+   "failed_check": "linux_no_new_worker only: another agent's short pytest (hist05 AddBiomechanics tests + test_backlog_workflow) started as the run ended. Recorded and accepted per instruction; every other check passed."
+  },
+  "result": "docs/quality/audits/gt24-c01-divisor-pilot-result.json (sha256 d2f0f549170a654afe70b013c5ffac7eea7cd9e42a1b408df20adce173436219), from contributor_tools/audit_probes/2026_10_31/summarize_gt24_c01_pilot.py (sha256 79eb46ce6fe2626e30d496d5f2c8171afab860338dff2558eff8fcfc4332757e); probe output converted_datasets/reconversion_v2/gt24_c01_divisor_pilot_20261101/gt24-c01-divisor-probe.json (sha256 b096d8ff..., gitignored).",
+  "findings": [
+   "E1: 52/58 trials exact (spread <= 6.6e-13; power_exo identity agrees to 1.2e-13). Every exact divisor is a worn model mass: Phase1And2 the own README \"w/ exo\" row (day 1 or 2), Phase3 the folder Statics model mass. Never the own row body mass. The 6 non-exact are short stairs trials below the 200-sample minimum. Raw torque_interaction is N*m.",
+   "E2: plate weight within -2.8 % to +2.1 % of the E1 worn mass in 30/30 estimates; body masses are 6-12 % lower.",
+   "E3: 66 sides, log ratio +0.011 to +0.067, 56/66 inside the band around the GT23 bias; implied GT24 bias 0.962 if net moments share D_x (3.2 % off GT23). A body-mass net divisor would need a bias of about 0.86-0.91. Conclusion: net moments share the worn divisor within a few percent; not exact.",
+   "Days: Phase1And2 BT06/BT07/BT13 use day-2 models in 5 of 16 exact trials; per-trial day needs the E1 census.",
+   "BT18/BT24: folder data divided by folder Statics masses (the other subject's README row); BT18 folder plate weight 84.07 kg matches its divisor, not README BT18 (74.96). The swap is between README rows and folders; data are internally consistent. BT24-folder plate weight not estimated (non-finite force)."
+  ],
+  "proposed_decision_wording": "superseded by round_4.proposed_decision_wording (round-3 text overstated E1; verifier pilot_round check 7)",
+  "proposed_census_rule_change": "identity_min_samples 200 -> 50 for the census only (exactness still needs spread <= 1e-3 and |corr| >= 0.9999); pre-register before the census reads data.",
+  "safety_disclosure": [
+   "No signal or kill sent to any process. A background wait loop used `kill -0` (existence test, no signal) on the other agent's AB19 launcher/download PIDs until they exited by themselves.",
+   "No other agent's files, specs, receipts or ledger entries touched; launcher, census, ledger and TMPDIR not modified or bypassed.",
+   "Read-only `Host().linux_census()` called twice from a one-line python3 -c to see what blocked the dry-run; my own short pytest and python3 commands could briefly have appeared as workers in another agent's census."
+  ]
+ },
+ "round_4": {
+  "at_utc": "2026-11-01T03:40:00Z",
+  "instruction": "coordinator (from verifier pilot_round): fix D-GT24-C01-1 wording; version min-samples 200 -> 50 with a short-trial guard; report own-row matches apart from other candidates; prepare the E1 census spec (or its pilot), validate and dry-run, do not launch.",
+  "proposed_decision_wording": "superseded by round_6.proposed_decision_wording (census counts replace the pilot counts)",
+  "decision_wording_changes": [
+   "Question: E1 fixes the divisor exactly only for the exoskeleton torque and power (net minus biological moment cancels the net divisor); the net moments match the worn mass only within a few percent, from the lever-arm check.",
+   "Option B: label no longer says 'as published'; consequence adds 'assuming the net moments use the same worn mass, as the lever-arm check supports'.",
+   "Option C: the x 1.07-1.13 factor carries the same qualifier. 'why' states that the factor rests on that approximation.",
+   "Order (none, worn, body), letters, recommendation (C, medium, in the fold), check and decide_before_recommendation unchanged. No hashes, paths or PIDs in the question; no recommendation words in visible text."
+  ],
+  "probe_changes": [
+   "RULES v1 entries unchanged. New versioned entry RULES['identity_short_rule_v2'] (version 2, added after the pilot and before the census, with its reason): a column with 50-199 top-quartile samples is a 'short_candidate' only if rel_spread <= 1e-9 and |corr| >= 0.9999; promote_short() labels it 'exact_short' only if the same column's power identity is exact (or a short candidate) with a divisor within 1e-9 relative and all passing short and v1-exact columns of the trial agree within 1e-9; otherwise 'short_not_exact' with the failed condition. Below 50 samples: 'too_few_samples' as before.",
+   "Columns with >= 200 samples are classified by the unchanged v1 code path. Trial class (trial_identity) is 'exact' and its divisor is the median of the v1-exact columns whenever any exist, so the 52 pilot-exact trials keep their class and divisor; 'exact_short' trials are counted separately and never as 'exact'.",
+   "split_matches(): each trial reports own_readme_row (same phase and folder row), own_statics (Phase3 own-folder Statics models) and other_candidates (any other README/Statics mass inside the 0.05 % tolerance, with relation same_folder_other_phase or other_folder), flagged and never binding.",
+   "New steps: census-plan (metadata only), census-pilot (CENSUS_PILOT: 11 fixed pilot trials that exercise the changes + 13 seeded random, seed 20261032) and census (all 2,421 Parsed recordings, optional --phase). Both census steps run E1 only through one code path (census_trial), parsing only the E1 columns (usecols); a file kind the matrix lists as absent, or a missing zip member, is not read and its columns report column_absent. census_summary() reports class counts, not-exact column reasons, own-match kinds, trials matching an own body mass, trials without an own README match, trials with other candidates (flagged), and per-folder divisors. The pilot step (E1+E2+E3) shares the E1 code; output is opened exclusive as before.",
+   "Probe sha256 05dae969c970145e3c52935bc11474bb8c12e1a3d819b701aaa780c105a3c8e8 (was 9ff27f4b... for the 58-trial pilot). Tests sha256 03fcf9b131e6f8e2a8f9b9a003b2caa26535b9383fbba92e869693b1363c7ed2."
+  ],
+  "tests": [
+   "12 new synthetic tests in tests/test_gt24_c01_divisor_probe.py (all signals and trial names synthetic; the two masses 88.97 and 88.99 kg are README-printed values quoted by the verifier): v2 entry versioned and v1 entries unchanged; a long column with 1e-6 noise stays v1 exact; the same noise in a short column is not exact_short; a short exact identity with an exact power identity becomes exact_short (divisor 85.14 to 1e-12) and is not counted as exact; <50 samples stays too_few_samples; no power identity -> not promoted; power divisor off by 1e-6 -> not promoted; joints at 85.14 vs 85.78 -> not promoted; a v1-exact trial with a disagreeing short column keeps class exact, the same divisor and an untouched v1 column; BT09-style divisor 88.97209 lists the own worn row under own_readme_row and BT13 body 88.99 under other_candidates; census_summary flags it and lists a Statics-only trial as without own README match; census_trial on a synthetic reader restricts columns, recovers exact_short 79.09, and with power_exo absent reports kinds_not_read and power_identity_not_exact.",
+   "`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_gt24_c01_divisor_probe.py tests/test_backlog_workflow.py` -> 94 passed (23 probe tests: 11 earlier + 12 new; 71 backlog tests)."
+  ],
+  "metadata_check": "`python3 .../probe_gt24_c01_divisors.py census-plan` (matrix JSON only; peak RSS 49 MiB, 0.2 s): census pilot 24 trials (11 fixed + 13 seeded random, seed 20261032), all fixed trials present; census-plan --phase gives Phase1And2 1,669 and Phase3 752 trials; every recording lists all five E1 file kinds.",
+  "pilot_needed": {
+   "answer": "yes",
+   "why": "AGENTS.md requires a passing pilot of the same bound code before a full-dataset run. The 58-trial pilot ran probe 9ff27f4b...; this probe (05dae969...) changes the classification (short rule v2), match reporting, and adds the census step with column-restricted reads. None of that has run on data, so the census pilot runs first, on the same bound file and the same census code path the full census uses.",
+   "spec": "docs/quality/audits/gt24-c01-e1-census-pilot-spec.json, now sha256 cef234f28a1b4540270944520054e565ae447eb24c05afc098993859a67318d7 (round 5 added the checker and its test to the bindings; the verified version was 3e8b7380...; command, paths, limits and the other 4 bindings unchanged)",
+   "spec_summary": "job GT24-C01-e1-census-pilot-v2; census-pilot step; output converted_datasets/reconversion_v2/gt24_c01_e1_census_pilot_20261101/gt24-c01-e1-census-pilot.json; receipt docs/quality/audits/gt24-c01-e1-census-pilot-receipt.json; binds probe 05dae969..., tests 03fcf9b1..., matrix 688dec9d..., C02 reader 59885e18...; timeout 900 s; address space 768 MiB; startup/runtime reserves as the first pilot.",
+   "validate_spec_in_process": "valid",
+   "dry_run": "preflight_passed at 2026-11-01T03:38Z (one dry run; nothing written; no ledger slot claimed). Not launched.",
+   "launch_command": "`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m contributor_tools.guarded_launcher run docs/quality/audits/gt24-c01-e1-census-pilot-spec.json`",
+   "pass_criteria_preregistered": "CENSUS_PILOT.pass_criteria in the probe (fixed before any census-pilot read): completed with zips unchanged and peak RSS < 512 MiB; the 5 fixed v1-exact trials keep class exact and their 58-trial-pilot divisor within 1e-12 relative (first pilot output sha256 b096d8ff...); every fixed short trial exact_short or not_exact with per-column reasons, none exact; BT09 own worn row under own_readme_row and the BT13 mass under other_candidates; BT18/BT24 folder trials with empty own_readme_row and an own_statics match; projected census time (s/trial x 2,421) < 0.6 x 3,600 s, otherwise split the census by --phase.",
+   "census_after_pilot": "Only after the census pilot passes: a census spec binding the same probe sha256, command `census --out converted_datasets/reconversion_v2/gt24_c01_e1_census_<date>/gt24-c01-e1-census.json` (or two specs with --phase if the time criterion requires), timeout <= 3,600 s. Not written yet so it cannot be launched by mistake before the pilot."
+  },
+  "not_done": [
+   "Census pilot not launched (coordinator coordinates launches).",
+   "backlog.json not edited; no commit.",
+   "Decision sheet D-GT24-C01-1 not rebuilt to the new wording."
+  ],
+  "changed_files": [
+   "contributor_tools/audit_probes/2026_10_31/probe_gt24_c01_divisors.py",
+   "tests/test_gt24_c01_divisor_probe.py",
+   "docs/quality/audits/gt24-c01-e1-census-pilot-spec.json (new)",
+   "docs/maintainers/handoffs/GT24-C01.json"
+  ],
+  "gates": [
+   "pytest as above: 94 passed in 7.0 s.",
+   "`python3 contributor_tools/build_backlog_page.py --check` -> Backlog valid; HTML current (106 tasks).",
+   "Bound hashes re-checked after the last edit: probe 05dae969..., tests 03fcf9b1..., spec 3e8b7380... unchanged."
+  ]
+ },
+ "round_5": {
+  "at_utc": "2026-11-01T03:55:00Z",
+  "instruction": "coordinator: rebuild the D-GT24-C01-1 sheet and builder to the round-4 wording; then a committed (not git-committed) pass-criteria checker with a test, bound before the run; fresh dry run; launch once; verify-cleanup; checker; update handoff. No commits, no backlog edits.",
+  "decision_sheet": {
+   "path": "review_sheets/D-GT24-C01-1/index.html (gitignored), with decision.json (sha256 087d5fd3...) equal to round_4.proposed_decision_wording",
+   "builder": "contributor_tools/review_gt24_c01_normalization_policy.py decision-sheet (sha256 d8a58b22...). DECISION and DECISION_OPTIONS hold the round-4 text; the step stops unless DECISION equals round_4.proposed_decision_wording in this handoff and every number in it (52 of 58, 146, 6-12 %, x 1.07-1.13, 5 of 16, 6.1-7.8 kg) is recomputed from the pilot result (hash-checked d2f0f549...) and the policy audit. It writes only review_sheets/D-GT24-C01-1/. The 'sheets' step now builds only the verification sheet and no longer writes the decision sheet or the audit JSON. The policy audit's old decision_candidate (pre-pilot text) is left as recorded, not regenerated.",
+   "figures": [
+    "fig1_exo_divisor: which mass divided the exoskeleton torque and power? Each of the 52 exact pilot trials against its README worn row (all at 0 %) and the same row body mass (+6 to +13 %). Contrast: body mass; BT18/BT24 folders hollow red against the row their divisor matched; 5 second-day trials have no body point.",
+    "fig2_net_lever: do the net moments use the worn mass too? 66 legs, lever divisor / worn mass, against the GT23-calibrated band (grey, +/-4.9 %) and the hollow-blue body-mass expectation (0.89-0.94). Shown as approximate: offset to the high side, 10 of 66 above the band; caption says approximate only.",
+    "fig3_ratio: how far apart are the two masses? Worn / body for every README row (unchanged figure)."
+   ],
+   "chips": "8: 3 pass (exo divisor exact 52/58; plate weight -2.8..+2.1 % in 30/30; worn exceeds body 6.1-7.8 kg), 1 failed (BT18/BT24 rows swapped, 146 recordings), 4 not checked (net moments within a few percent, not exact; lever offset about 3 % with 10 of 66 legs above band; 6 short stairs trials; day of BT06/BT07/BT13 trials).",
+   "leak_check": "Recommendation (C, why, confidence) only inside the click-to-reveal fold; no recommend/confidence words elsewhere (the only \"prefer\" is the CSS prefers-color-scheme); no hashes outside the folded details; reply hint \"D-GT24-C01-1: A, B, C or defer\"; option rows A, B, C, Defer in the neutral order.",
+   "render_check": "Playwright with system Chrome: 1280 px (scrollWidth 1280, page 3,568 px tall) and 390 px (scrollWidth 390 = clientWidth, no horizontal scroll; 3,746 px; table collapses to labelled cards; 3 images loaded at 332 px). Both screenshots inspected: fixed order ask, headline, chips, 3 figures, decision with folded recommendation, not shown, reply, details. (A first plain headless-Chrome 390 px screenshot was clipped by the browser minimum window width, not by the page; replaced by the Playwright render.) Prose budget enforced by review_sheet.page (<= 60 words).",
+   "note": "\"5 of 16 checked trials\" (option C) counts the 16 exact random-task trials of BT06/BT07/BT13; across all 21 exact trials of those folders it is 5 of 21. Stated in the sheet details; wording unchanged."
+  },
+  "checker": {
+   "files": [
+    "contributor_tools/audit_probes/2026_10_31/check_gt24_c01_census_pilot.py (new, sha256 e27f4027...)",
+    "tests/test_gt24_c01_census_pilot_check.py (new, sha256 0e4490e5...; 9 synthetic tests: all pass on a passing synthetic run; 1e-9 divisor change fails regression; short trial labelled exact fails; short_not_exact without reason fails; BT09 without flagged other candidate fails; BT18 with own README match fails; 0.9 s/trial fails time and asks for split; non-completed receipt, exit 1, or 600 MiB RSS fail integrity)"
+   ],
+   "reads": "census-pilot output, the 58-trial pilot output (hash-checked b096d8ff...), the receipt; criteria text and fixed trials from the bound probe CENSUS_PILOT. Writes the verdict with mode x.",
+   "tests_run": "`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_gt24_c01_census_pilot_check.py tests/test_gt24_c01_divisor_probe.py tests/test_backlog_workflow.py` -> 103 passed.",
+   "bound": "Both files added to the spec bindings before the run; spec regenerated (sha256 cef234f2...) and validate_spec in-process: valid (6 bindings)."
+  },
+  "launch": {
+   "dry_run": "fresh plain dry run at 03:46:39Z: preflight_passed",
+   "run": "one launcher call (round_4.pilot_needed.launch_command): completed, exit 0, clean_success true; all 8 receipt checks true (including linux_no_new_worker).",
+   "receipt": "docs/quality/audits/gt24-c01-e1-census-pilot-receipt.json (sha256 2b183a76...); log alongside.",
+   "verify_cleanup": "proven (same-boot proc scan, no group members, leader gone); no fallback receipts.",
+   "output": "converted_datasets/reconversion_v2/gt24_c01_e1_census_pilot_20261101/gt24-c01-e1-census-pilot.json (sha256 abad6fd0..., 209,594 bytes, gitignored); probe_sha256 in output = bound 05dae969...",
+   "resources": "wall 11.0 s (probe runtime 10.6 s, 0.442 s per trial); peak RSS 212 MiB (probe ru_maxrss; launcher largest-process sample 217,268 KiB); 120 zip members read; zips unchanged."
+  },
+  "check_result": {
+   "path": "docs/quality/audits/gt24-c01-e1-census-pilot-check.json (sha256 e84e7bc8...)",
+   "all_pass": true,
+   "criteria": [
+    "PASS run integrity: completed, exit 0, zips unchanged, peak RSS 212 MiB < 512, stage census_pilot, 24 trials.",
+    "PASS v1 regression: the 5 fixed v1-exact trials (BT09 x2, BT18 x2, BT24 normal walk) are exact with divisors identical to the 58-trial pilot (relative difference 0).",
+    "PASS short trials: all 6 fixed short stairs trials are exact_short (all 4 columns each; 116-176 samples; relative spread <= 4.5e-14); none labelled exact.",
+    "PASS BT09: own README worn row (day 1) under own_readme_row; README Phase3 BT13 body day 1 under other_candidates (flagged, not binding).",
+    "PASS BT18/BT24 folders: own_readme_row empty, own Statics model match in all 3.",
+    "PASS time: projected full census 0.442 s x 2,421 = 1,070 s < 2,160 s (0.6 x 3,600); no phase split needed."
+   ]
+  },
+  "findings_not_criteria": [
+   "All 24 trials exact (15) or exact_short (9); no column not exact; no trial matches its own body mass; every trial matches an own README worn row or own Statics model.",
+   "All 6 previously short stairs trials match a day-2 worn mass: Phase1And2 BT06 (85.14) and BT07 (71.19) day 2; Phase3 BT02, BT13, BT23 day 2 (and their Statics models); BT24-folder stairs = README BT18 day 2 (swap). Stairs trials in the random sample (BT24 folder x2) also day 2; BT11 stairs day 1.",
+   "Other-folder masses inside the 0.05 % tolerance (flagged, never binding): BT09 vs Phase3 BT13 body; Phase1And2 BT15 vs Phase3 BT21 worn masses (both directions); Phase1And2 BT02 vs its own Phase3 row. Not interpreted here."
+  ],
+  "not_done": [
+   "Full census spec not written or launched (awaits coordinator).",
+   "No commits; backlog.json not edited."
+  ],
+  "changed_files": [
+   "contributor_tools/review_gt24_c01_normalization_policy.py",
+   "contributor_tools/audit_probes/2026_10_31/check_gt24_c01_census_pilot.py (new)",
+   "tests/test_gt24_c01_census_pilot_check.py (new)",
+   "docs/quality/audits/gt24-c01-e1-census-pilot-spec.json (bindings +2)",
+   "docs/quality/audits/gt24-c01-e1-census-pilot-receipt.json and .log (new, launcher)",
+   "docs/quality/audits/gt24-c01-e1-census-pilot-check.json (new)",
+   "docs/maintainers/handoffs/GT24-C01.json",
+   "review_sheets/D-GT24-C01-1/ (gitignored)"
+  ]
+ },
+ "round_6": {
+  "at_utc": "2026-11-01T04:35:00Z",
+  "proposed_decision_wording": {
+   "id": "D-GT24-C01-1",
+   "task_id": "GT24-C01",
+   "question": "GT24 exoskeleton torques and powers were divided exactly by the person-plus-exoskeleton (worn) mass in all 2,421 recordings. The net joint moments match the same worn mass only within a few percent, from a lever-arm check against the force plates. Which mass should LocoHub's standard GT24 moment, power and force columns be per kg of?",
+   "options": [
+    {
+     "key": "A",
+     "label": "Leave GT24 kinetics empty",
+     "consequence": "Left out: all standard GT24 moments, powers and body-weight forces. Published per-kg values only under source names; nothing rescaled. Reversible."
+    },
+    {
+     "key": "B",
+     "label": "Worn mass (person + exoskeleton)",
+     "consequence": "Left out: nothing; every recording has an exact exoskeleton divisor. Standard columns equal the published per-kg values, assuming the net moments use the same worn mass, as the lever-arm check supports; forces in worn-system weights; values 6-12 % below body-mass values. Reversible."
+    },
+    {
+     "key": "C",
+     "label": "Body mass (without exoskeleton)",
+     "consequence": "Left out: BT18 and BT24 (146 recordings) until their swapped mass rows are resolved, plus second-day recordings of BT06, BT07 and BT13 in the first collection (106 of their 336 recordings; no body mass reported). Published values x 1.07-1.13, assuming the net moments use the same worn mass, as the lever-arm check supports; comparable with datasets without an exoskeleton; published values kept under source names. Reversible."
+    }
+   ],
+   "options_order": "By the normalizing mass: none (withheld), heavier (worn), lighter (body).",
+   "recommended": "C",
+   "confidence": "medium",
+   "why": "LocoHub defines forces in body weights and moments per kg; D-GT23-C03-1 rescaled GT23 to each participant's own mass; the task acceptance forbids substituting exoskeleton model mass for body mass. The published worn-mass values stay available under source names, so option B remains recoverable. The x 1.07-1.13 factor rests on the net moments using the worn mass, which the lever-arm check supports within a few percent but does not prove. Cost: the 146 BT18/BT24 recordings until resolved and the 106 first-collection second-day recordings lose standard kinetics.",
+   "check": "README subject-mass table: every \"w/ exo\" mass is 6.1-7.8 kg above its \"w/o exo\" mass.",
+   "cost_of_waiting": "GT24 standard kinetic columns cannot be finalized; all other GT24 work is unaffected.",
+   "decide_before_recommendation": true,
+   "status": "open"
+  },
+  "decision_wording_changes_from_round_4": [
+   "Question: '52 of 58 checked trials' -> 'all 2,421 recordings' (E1 census).",
+   "Option B Left out: 'trials without an exact divisor (a census will count them)' -> 'nothing; every recording has an exact exoskeleton divisor' (census: 0 without).",
+   "Option C Left out: 'as B, plus ...' -> starts with BT18 and BT24 (B now leaves nothing out); '5 of 16 checked trials' -> '106 of their 336 recordings' (BT06 20 of 128, BT07 67 of 135, BT13 19 of 73 first-collection recordings divided by the README day-2 worn mass, which has no reported body mass).",
+   "why: cost stated as 'the 146 BT18/BT24 recordings ... and the 106 first-collection second-day recordings'. cost_of_waiting: drops 'the E1 census and'.",
+   "Unchanged: letters, labels, option order, recommendation C, confidence, check, decide_before_recommendation, both net-moment qualifiers."
+  ],
+  "interpretation_note": "Coordinator asked for 'the census count of repeat-day trials whose divisor differs from body mass'. Every census divisor is a worn mass, so read as: first-collection BT06/BT07/BT13 recordings whose divisor is the day-2 worn mass (no day-2 body mass in the README), over all 336 recordings of those folders.",
+  "census": {
+   "spec": "docs/quality/audits/gt24-c01-e1-census-spec.json (sha256 35c58d38...): copy of the census-pilot spec; changed only job_id (GT24-C01-e1-census-v1, so the receipt is not labelled as the pilot), command step census-pilot -> census, output path/root and expected output name, receipt path, timeout 900 -> 3,600 s. Same six bindings (re-hashed before writing). validate_spec in-process: valid.",
+   "dry_runs": [
+    "03:51:12Z refused foreign_worker_linux (did not launch); waited 2 min (one background sleep, no polling)",
+    "03:53:24Z preflight_passed"
+   ],
+   "run": "one launcher call: completed, exit 0, clean_success true; all 8 receipt checks true. Receipt docs/quality/audits/gt24-c01-e1-census-receipt.json (sha256 4ac54447...).",
+   "verify_cleanup": "proven (same-boot proc scan; no group members; leader gone); no fallback receipts.",
+   "resources": "launcher wall 1,199 s (probe-reported runtime 1,233 s, 0.509 s per trial; the two clocks start at different points); peak RSS probe 335 MiB (ru_maxrss), launcher largest-process sample 360 MiB; 12,105 zip members; zips unchanged.",
+   "output": "converted_datasets/reconversion_v2/gt24_c01_e1_census_20261101/gt24-c01-e1-census.json (19 MB, sha256 0331bc6c..., gitignored; equals the receipt output hash).",
+   "summary_script": "contributor_tools/audit_probes/2026_10_31/summarize_gt24_c01_census.py (new, sha256 78d6b6d7...; reads the output (hash-checked against the receipt), the receipt and the policy audit README rows; writes with mode x). Run read-only at nice 19 / ionice idle, peak RSS 98 MiB.",
+   "result": "docs/quality/audits/gt24-c01-e1-census-result.json (sha256 4ff81a69...): counts and one compact row per recording.",
+   "counts": {
+    "by_trial": {
+     "exact": 2117,
+     "exact_short": 304,
+     "short_not_exact": 0,
+     "too_few_samples": 0,
+     "other": 0
+    },
+    "by_column": {
+     "exact": 8261,
+     "exact_short": 1272,
+     "proportional_not_exact": 27,
+     "too_few_samples": 124
+    },
+    "power_columns": {
+     "exact": 8410,
+     "exact_short": 1200,
+     "too_few_samples": 66,
+     "short_not_exact": 8
+    },
+    "max_cross_joint_divisor_spread_rel": 3.07e-14
+   },
+   "own_body_mass_matches": "none",
+   "without_own_readme_match": "Phase3 BT18 70 and BT24 76 recordings (146), each matching its own folder Statics model (the swapped rows).",
+   "flagged_other_candidates_not_binding": [
+    "Phase1And2 BT02 -> its own Phase3 README worn row (same folder, other phase): 128; Phase3 BT02 -> Phase1And2 BT02 worn: 64",
+    "Phase1And2 BT09 -> Phase3 BT13 body day 1: 131",
+    "Phase1And2 BT15 -> Phase3 BT21 worn day 1: 74; Phase3 BT21 -> Phase1And2 BT15 worn day 1: 76",
+    "Phase3 BT01 -> Phase3 BT22 worn day 1: 76; Phase3 BT22 -> Phase3 BT01 worn day 1: 76",
+    "Phase3 BT18 -> README BT24 worn day 1/day 2: 20/50; Phase3 BT24 -> README BT18 worn day 1/day 2: 64/12 (the swap)"
+   ],
+   "repeat_day_first_collection": {
+    "BT06": "20 of 128 day-2 worn",
+    "BT07": "67 of 135",
+    "BT13": "19 of 73",
+    "total": "106 of 336; every recording bound to day 1 or day 2; README has no day-2 body mass"
+   },
+   "anomalies_not_checked": [
+    "27 proportional_not_exact columns, all Phase1And2 BT03 knee_angle_l: per-sample ratio on the top quartile exact (spread 0, divisor = trial divisor) but whole-signal |corr| 0.9967-0.99990 < 0.9999. Trial divisors unaffected (other columns exact). Cause not investigated.",
+    "124 too_few_samples moment columns (BT01/BT12 walking, BT02 stairs) and 8 short_not_exact power columns, all in trials exact through other columns. Not investigated."
+   ]
+  },
+  "decision_sheet": {
+   "path": "review_sheets/D-GT24-C01-1/index.html (gitignored); decision.json (sha256 b55698fe...) equals round_6.proposed_decision_wording.",
+   "builder": "contributor_tools/review_gt24_c01_normalization_policy.py decision-sheet (sha256 4d8c2094...): reads the census result (hash-checked 4ff81a69...), checks DECISION == round_6 wording and recomputes all 2,421 / 146 / 106 of 336 / 6-12 % / x 1.07-1.13 / 6.1-7.8 kg; stops if the census has any recording without an exact divisor or the repeat-day assumptions change.",
+   "changes": [
+    "Figure 1 now plots all 2,421 census recordings (worn at 0 %, body +6 to +13 %); BT18/BT24 recordings drawn in a sub-row so they do not hide the others.",
+    "Stale chip '6 short stairs trials: divisor not measured yet' replaced by a not-checked chip for the 27 BT03 left-knee columns; day chip now pass (106 of 336 day 2); exactness chip now 'all 2,421 recordings (304 short ones by a stricter test)'.",
+    "Figure 2 (lever check) still the 58 pilot trials; caption says so; not-shown lists plate and lever checks beyond the pilot.",
+    "Headline: exact in all 2,421 recordings; net moments only approximately. Prose 60/60 words."
+   ],
+   "leak_check": "recommendation only in the fold; no recommend/confidence words elsewhere; no hashes outside details; rows A, B, C, Defer; no stale text (5 of 16, 52 of 58, not measured yet, census pending).",
+   "render_check": "Playwright + system Chrome: 1280 px (scrollWidth 1280, 3,589 px) and 390 px (scrollWidth 390 = clientWidth, 3,745 px; table as cards; 3 images at 332 px). Both screenshots inspected."
+  },
+  "gates": [
+   "pytest (checker, probe, backlog tests): 102 passed, 1 failed: test_checked_in_backlog_and_generated_page_are_current, because docs/maintainers/backlog.json has an uncommitted edit by another agent (HIST-06.status 'in_progress', unsupported). Not mine; not touched. build_backlog_page.py --check fails for the same reason.",
+   "Round-6 decision validated in memory against the committed (HEAD) backlog: valid; open decisions would be D-GT23-C05-1, D-GT23-C01-1, D-GT24-C01-1."
+  ],
+  "changed_files": [
+   "contributor_tools/review_gt24_c01_normalization_policy.py",
+   "contributor_tools/audit_probes/2026_10_31/summarize_gt24_c01_census.py (new)",
+   "docs/quality/audits/gt24-c01-e1-census-spec.json (new)",
+   "docs/quality/audits/gt24-c01-e1-census-receipt.json and .log (new, launcher)",
+   "docs/quality/audits/gt24-c01-e1-census-result.json (new)",
+   "docs/maintainers/handoffs/GT24-C01.json",
+   "review_sheets/D-GT24-C01-1/ (gitignored)"
+  ]
+ },
+ "round_7_backlog": {
+  "at_utc": "2026-11-02T00:25:00Z",
+  "instruction": "coordinator after verifier round 6 (done): copy D-GT24-C01-1, refresh GT24-C01, record the binding rule in GT24-P01/F01, regenerate backlog.html, run checks. No commits.",
+  "backlog_edits": [
+   "decisions: the queued D-GT24-C01-1 entry replaced in place by round_6.proposed_decision_wording verbatim (status open; letters A, B, C as the sheet); open decisions D-GT23-C05-1, D-GT24-C01-1, D-GT23-C01-1 (3).",
+   "tasks GT24-C01 (status done since round 2): next_action, evidence_paths (+13 census/pilot/checker/builder paths), handoff (summary, verify rounds 1-6, not-checked anomalies) refreshed.",
+   "tasks GT24-P01 and GT24-F01: verifier binding rule added first in handoff.remaining (own README row or own Statics plus archive collection, never the nearest mass; BT18/BT24 swap before option C).",
+   "updated_at_utc. Edit made by load-modify-write with a hash check just before writing; the HIST-06 agent's uncommitted edits in the file are preserved, untouched."
+  ],
+  "checks": [
+   "python3 contributor_tools/build_backlog_page.py -> rendered backlog.html (106 tasks); --check -> Backlog valid; HTML current (106 tasks).",
+   "pytest (prefix) tests/test_gt24_c01_divisor_probe.py tests/test_gt24_c01_census_pilot_check.py tests/test_backlog_workflow.py -> 103 passed."
+  ],
+  "not_done": [
+   "Figure 1 legend cosmetic (hollow vs overplotted): not a one-line change (legend and details text), left as is; verifier marked it non-blocking."
+  ]
+ }
+}

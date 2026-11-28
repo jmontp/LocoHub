@@ -11,16 +11,14 @@
 % 6. METHOD 2: Calculates velocities AFTER interpolation for exoskeleton control consistency
 
 clearvars
+addpath(fullfile(fileparts(mfilename('fullpath')), '..', 'matlab_common'));
 
 % CONFIGURATION: Enable/disable data fixes
 global ENABLE_DATA_FIXES;
 ENABLE_DATA_FIXES = true;  % Set to false to disable all data corrections
 % 
-% Data fixes controlled by this flag:
-% 1. Foot angle bias/sign corrections (including contralateral phase offset)
-% 2. Direct pelvis from motion capture vs derived calculation
-% 3. 90-degree offset correction for incline walking ankle angles  
-% 4. Sign flip for decline walking knee moments
+% Legacy pelvis/kinetic options below are not a scientific validity assessment.
+% Foot/ankle offsets and signs must never be selected from waveform shape.
 
 % Prefer per-subject files to keep the large nested MAT structure out of RAM.
 % Set UMICH_STREAMING_SUBJECT_DIR to a directory containing AB01.mat, etc.
@@ -98,8 +96,8 @@ for subject_idx = 1:length(subjects)
         height_idx = find(strcmp(details(:,1), 'Height'));
         
         % Extract values with defaults
-        age = 0; body_mass = 70; height_m = 1.75; % defaults
-        sex_code = NaN; sex_char = 'Other';
+        age = NaN; body_mass = NaN; height_m = NaN; % unknown measurements
+        sex_code = NaN; sex_char = 'unknown';
         if ~isempty(sex_idx)
             sex_code = details{sex_idx, 2};
             % Dataset uses 1=female, 2=male (see umich_2021_mat_structure.md)
@@ -108,19 +106,20 @@ for subject_idx = 1:length(subjects)
             elseif isequal(sex_code, 2)
                 sex_char = 'M';
             else
-                sex_char = 'Other';
+                sex_char = 'unknown';
             end
         end
         if ~isempty(age_idx), age = details{age_idx, 2}; end
         if ~isempty(mass_idx), body_mass = details{mass_idx, 2}; end
-        if ~isempty(height_idx), height_m = details{height_idx, 2} / 1000; end % convert mm to m
+        if ~isempty(height_idx), height_m = details{height_idx, 2} / 1000; end
+        if ~isscalar(body_mass) || ~isfinite(body_mass) || body_mass <= 0, body_mass = NaN; end % convert mm to m
         
         % Format subject metadata string
         subject_metadata = sprintf('age:%d,sex:%s,height_m:%.2f,weight_kg:%.1f', age, sex_char, height_m, body_mass);
     else
         % Default values if no ParticipantDetails
-        body_mass = 70; % kg (default for normalization)
-        subject_metadata = 'age:0,sex:Other,height_m:1.75,weight_kg:70.0';
+        body_mass = NaN; % kg (default for normalization)
+        subject_metadata = 'age:unknown,sex:unknown,height_m:unknown,weight_kg:unknown';
     end
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -154,6 +153,7 @@ for subject_idx = 1:length(subjects)
             
             incline_value = incline_map(incline_name);
             incline_data = tread_data.(incline_name);
+            incline_data.source_recording_id = sprintf('um21:Streaming/%s/Tread/%s', subject, incline_name);
             
             % Check if events exist
             if ~isfield(incline_data, 'events')
@@ -269,6 +269,7 @@ for subject_idx = 1:length(subjects)
             end
             
             trial_data = run_data.(speed_name);
+            trial_data.source_recording_id = sprintf('um21:Streaming/%s/Run/%s', subject, speed_name);
             speed_value = run_speed_map(speed_name);
             
             % Check if events exist
@@ -310,6 +311,7 @@ for subject_idx = 1:length(subjects)
         for wtr_idx = 1:length(wtr_fields)
             trial_name = wtr_fields{wtr_idx};
             trial_data = wtr_data.(trial_name);
+            trial_data.source_recording_id = sprintf('um21:Streaming/%s/Wtr/%s', subject, trial_name);
             
             % Check if events exist
             if ~isfield(trial_data, 'events')
@@ -345,7 +347,7 @@ for subject_idx = 1:length(subjects)
     end
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % Process Sit-to-Stand transition data (Sts) using Normalized.mat CutPoints
+    % Preserve unpaired Sit-to-Stand curves from Normalized.mat without inferred timing
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     if isfield(subject_data, 'Sts')
@@ -407,6 +409,7 @@ for subject_idx = 1:length(subjects)
         for stair_idx = 1:length(stair_fields)
             trial_name = stair_fields{stair_idx};
             trial_data = stair_data.(trial_name);
+            trial_data.source_recording_id = sprintf('um21:Streaming/%s/Stair/%s', subject, trial_name);
             
             % Check if events exist
             if ~isfield(trial_data, 'events')
@@ -863,12 +866,8 @@ function stride_table = process_strides_single_leg(trial_data, ...
                 l_ankle_rot = interpolate_signal(...
                     angles.LAnkleAngles(l_start_frame:l_end_frame, transverse_plane), NUM_POINTS) * deg2rad;
                 
-                % Task-specific correction for incline walking ankle angles
-                % DATA FIX: Apply 90-degree offset correction for incline walking ankle angles
-                if ENABLE_DATA_FIXES && strcmp(task_type, 'incline_walking')
-                    r_ankle_flex = apply_90_degree_correction(r_ankle_flex);
-                    l_ankle_flex = apply_90_degree_correction(l_ankle_flex);
-                end
+                % Preserve source ankle values. A large angle is a review
+                % finding, not evidence for a waveform-dependent 90-degree shift.
                 
                 % Assign based on which leg is ipsilateral
                 if strcmp(leg_side, 'right')
@@ -1051,28 +1050,22 @@ function stride_table = process_strides_single_leg(trial_data, ...
             stride_data.ankle_rotation_moment_contra_Nm_kg = nan_vector;
         end
         
-        % Calculate segment angles using FOOT-UP approach with corrected foot angles
+        % Calculate legacy joint-derived segment angles; anatomical frames remain unverified
         if isfield(angles, 'RFootProgressAngles') && isfield(angles, 'LFootProgressAngles') && ...
                 isfield(angles, 'RAnkleAngles') && isfield(angles, 'LAnkleAngles') && ...
                 isfield(angles, 'RKneeAngles') && isfield(angles, 'LKneeAngles')
-            % Get foot angles in time domain and apply corrections FIRST
+            % Retain the existing negated foot-progression convention without fitted offsets
             r_foot_raw = interpolate_signal(...
                 -angles.RFootProgressAngles(r_start_frame:r_end_frame, sagittal_plane), NUM_POINTS) * deg2rad;
             l_foot_raw = interpolate_signal(...
                 -angles.LFootProgressAngles(l_start_frame:l_end_frame, sagittal_plane), NUM_POINTS) * deg2rad;
             
-            % Apply foot angle corrections before using for segment calculations
-            % DATA FIX START: Fix foot angle bias/sign
-            if ENABLE_DATA_FIXES
-                offset_index =  strcmp(leg_side, 'left'); % Do we offset the leg to account for the 50% phase offset?
-                r_foot_corrected = apply_foot_angle_correction(r_foot_raw, offset_index);
-                l_foot_corrected = apply_foot_angle_correction(l_foot_raw, ~offset_index);
-            else
-                r_foot_corrected = r_foot_raw;
-                l_foot_corrected = l_foot_raw;
-            end
-            % DATA FIX END: Fix foot angle bias/sign
-            
+            % Keep the existing source-to-foot mapping explicit. Do not choose
+            % offsets or signs from presumed stance/swing waveform shapes.
+            % The absolute anatomical foot frame remains unverified.
+            r_foot_angle = r_foot_raw;
+            l_foot_angle = l_foot_raw;
+
             % Get ankle dorsiflexion angles
             r_ankle_angles_rad = angles.RAnkleAngles(r_start_frame:r_end_frame, sagittal_plane) * deg2rad;
             l_ankle_angles_rad = angles.LAnkleAngles(l_start_frame:l_end_frame, sagittal_plane) * deg2rad;
@@ -1081,9 +1074,9 @@ function stride_table = process_strides_single_leg(trial_data, ...
             r_ankle_interp = interpolate_signal(r_ankle_angles_rad, NUM_POINTS);
             l_ankle_interp = interpolate_signal(l_ankle_angles_rad, NUM_POINTS);
             
-            % Calculate shank angle = corrected_foot_angle + ankle_dorsiflexion
-            r_shank_angles_150pt = r_foot_corrected - r_ankle_interp;
-            l_shank_angles_150pt = l_foot_corrected - l_ankle_interp;
+            % Legacy shank construction from foot progression and relative ankle angle
+            r_shank_angles_150pt = r_foot_angle - r_ankle_interp;
+            l_shank_angles_150pt = l_foot_angle - l_ankle_interp;
             
             % Get knee angles for segment calculation (positive for segment chain)
             r_knee_for_segments = angles.RKneeAngles(r_start_frame:r_end_frame, sagittal_plane) * deg2rad;
@@ -1127,8 +1120,8 @@ function stride_table = process_strides_single_leg(trial_data, ...
             l_thigh_angles_150pt = stride_data.pelvis_sagittal_angle_rad + l_hip_interp;
             r_shank_angles_150pt = r_thigh_angles_150pt - r_knee_segment_interp;
             l_shank_angles_150pt = l_thigh_angles_150pt - l_knee_segment_interp;
-            r_foot_corrected = r_shank_angles_150pt + r_ankle_interp;
-            l_foot_corrected = l_shank_angles_150pt + l_ankle_interp;
+            r_foot_angle = r_shank_angles_150pt + r_ankle_interp;
+            l_foot_angle = l_shank_angles_150pt + l_ankle_interp;
 
             % Calculate velocities from interpolated angles using effective sampling rate
             effective_Hz = (NUM_POINTS - 1) / stride_duration_s;  % 149 intervals across 150 points
@@ -1136,13 +1129,13 @@ function stride_table = process_strides_single_leg(trial_data, ...
             r_shank_velocity = gradient(r_shank_angles_150pt) * effective_Hz;
             l_thigh_velocity = gradient(l_thigh_angles_150pt) * effective_Hz;
             l_shank_velocity = gradient(l_shank_angles_150pt) * effective_Hz;
-            r_foot_velocity = gradient(r_foot_corrected) * effective_Hz;
-            l_foot_velocity = gradient(l_foot_corrected) * effective_Hz;
+            r_foot_velocity = gradient(r_foot_angle) * effective_Hz;
+            l_foot_velocity = gradient(l_foot_angle) * effective_Hz;
             
             % Assign segment angles and velocities based on which leg is ipsilateral
             if strcmp(leg_side, 'right')
-                stride_data.foot_sagittal_angle_ipsi_rad = r_foot_corrected;
-                stride_data.foot_sagittal_angle_contra_rad = l_foot_corrected;
+                stride_data.foot_sagittal_angle_ipsi_rad = r_foot_angle;
+                stride_data.foot_sagittal_angle_contra_rad = l_foot_angle;
                 stride_data.foot_sagittal_velocity_ipsi_rad_s = r_foot_velocity;
                 stride_data.foot_sagittal_velocity_contra_rad_s = l_foot_velocity;
                 stride_data.thigh_sagittal_angle_ipsi_rad = r_thigh_angles_150pt;
@@ -1154,8 +1147,8 @@ function stride_table = process_strides_single_leg(trial_data, ...
                 stride_data.shank_sagittal_velocity_ipsi_rad_s = r_shank_velocity;
                 stride_data.shank_sagittal_velocity_contra_rad_s = l_shank_velocity;
             else
-                stride_data.foot_sagittal_angle_ipsi_rad = l_foot_corrected;
-                stride_data.foot_sagittal_angle_contra_rad = r_foot_corrected;
+                stride_data.foot_sagittal_angle_ipsi_rad = l_foot_angle;
+                stride_data.foot_sagittal_angle_contra_rad = r_foot_angle;
                 stride_data.foot_sagittal_velocity_ipsi_rad_s = l_foot_velocity;
                 stride_data.foot_sagittal_velocity_contra_rad_s = r_foot_velocity;
                 stride_data.thigh_sagittal_angle_ipsi_rad = l_thigh_angles_150pt;
@@ -1349,6 +1342,10 @@ function stride_table = process_strides_single_leg(trial_data, ...
         
         % Convert struct to table and append
         stride_table_temp = struct2table(stride_data);
+        stride_table_temp = locohub_add_provenance(stride_table_temp, trial_data.source_recording_id, ...
+            sprintf('frames:%d:%d', ipsi_start_frame, ipsi_end_frame), leg_side, ...
+            'individual_cycle', (ipsi_start_frame - 1) / Hz, (ipsi_end_frame - 1) / Hz);
+
         
         if isempty(all_stride_data)
             all_stride_data = stride_table_temp;
@@ -1380,7 +1377,7 @@ end
 % Helper function to interpolate signal to fixed number of points
 function interpolated = interpolate_signal(signal, num_points)
     if isempty(signal)
-        interpolated = zeros(num_points, 1);
+        interpolated = NaN(num_points, 1);
         return;
     end
     
@@ -1699,63 +1696,8 @@ function [corrected_signal, flipped] = ensure_grf_orientation(signal_BW, vertica
     end
 end
 
-% Helper function to apply foot angle corrections (matching phase script)
-function corrected_angle = apply_foot_angle_correction(foot_angle_rad, contra)
-    % Constants
-    midstance_idx_1 = 95;  % 70% of 150-point cycle
-    midstance_idx_2 = 100;  % 73% of 150-point cycle
-    deg2rad_factor = pi/180;
-
-    if contra
-        midstance_idx_1 = mod(midstance_idx_1 + 150/2, 150);
-        midstance_idx_2 = mod(midstance_idx_2 + 150/2, 150);
-    end
-    
-    % Step 1: Apply iterative 90-degree offset correction to first point
-    first_point = foot_angle_rad(1);
-    
-    % Keep applying ±90 degree offsets until within range [-50, 50] degrees
-    while first_point > deg2rad_factor * 50  % Greater than 50 degrees
-        foot_angle_rad = foot_angle_rad - pi/2;
-        first_point = first_point - pi/2;
-    end
-    
-    while first_point < -deg2rad_factor * 50  % Less than -50 degrees
-        foot_angle_rad = foot_angle_rad + pi/2;
-        first_point = first_point + pi/2;
-    end
-    
-    % Step 2: Check 70% midstance point for sign flip
-    midstance_angle_1 = foot_angle_rad(midstance_idx_1);
-    midstance_angle_2 = foot_angle_rad(midstance_idx_2);
-    if midstance_angle_1 > 0  && midstance_angle_2 > 0 % Should be negative (plantarflexion at 70% cycle)
-        foot_angle_rad = -foot_angle_rad;
-    end
-    
-    corrected_angle = foot_angle_rad;
-end
-
-% Helper function for 90-degree correction only (for ankle in incline)
-function corrected = apply_90_degree_correction(angle_rad)
-    % Apply iterative 90-degree offsets until within [-50, 50] degrees
-    deg2rad_factor = pi/180;
-    first_point = angle_rad(1);
-    
-    while first_point > deg2rad_factor * 50
-        angle_rad = angle_rad - pi/2;
-        first_point = first_point - pi/2;
-    end
-    
-    while first_point < -deg2rad_factor * 50
-        angle_rad = angle_rad + pi/2;
-        first_point = first_point + pi/2;
-    end
-    
-    corrected = angle_rad;
-end
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Helper function to process Sts cycles using CutPoints from Normalized.mat
+% Preserve normalized Sts curves without claiming streaming correspondence
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function stride_table = process_sts_cycles_with_normalized(sts_streaming, normalized_subject, subject_str, subject_metadata, body_mass)
@@ -1766,7 +1708,8 @@ function stride_table = process_sts_cycles_with_normalized(sts_streaming, normal
         return;
     end
 
-    [dur_sit_to_stand, dur_stand_to_sit] = collect_sts_durations(sts_streaming);
+    % Normalized curves have no established streaming trial/time pairing.
+    % Never attach durations by ordinal position in independent arrays.
 
     if isempty(normalized_subject) || ~isfield(normalized_subject, 'SitStand') || ...
             ~isfield(normalized_subject.SitStand, 'ss')
@@ -1781,7 +1724,7 @@ function stride_table = process_sts_cycles_with_normalized(sts_streaming, normal
         num_cycles = size(ss_data.sit2stand.jointAngles.HipAngles, 3);
         for cycle_idx = 1:num_cycles
             sit_cycle = sit_cycle + 1;
-            duration = get_sts_duration(dur_sit_to_stand, sit_cycle);
+            duration = NaN;  % No verified source-time match.
             trial_data_norm = build_normalized_trial_struct(ss_data.sit2stand, cycle_idx);
             trial_data_norm.cycle_duration_override = duration;
             trial_name = sprintf('sit2stand_cycle_%02d', cycle_idx);
@@ -1799,7 +1742,7 @@ function stride_table = process_sts_cycles_with_normalized(sts_streaming, normal
         num_cycles = size(ss_data.stand2sit.jointAngles.HipAngles, 3);
         for cycle_idx = 1:num_cycles
             stand_cycle = stand_cycle + 1;
-            duration = get_sts_duration(dur_stand_to_sit, stand_cycle);
+            duration = NaN;  % No verified source-time match.
             trial_data_norm = build_normalized_trial_struct(ss_data.stand2sit, cycle_idx);
             trial_data_norm.cycle_duration_override = duration;
             trial_name = sprintf('stand2sit_cycle_%02d', cycle_idx);
@@ -1813,56 +1756,11 @@ function stride_table = process_sts_cycles_with_normalized(sts_streaming, normal
     end
 end
 
-function [sit_to_stand_durations, stand_to_sit_durations] = collect_sts_durations(sts_streaming)
-
-    sit_to_stand_durations = [];
-    stand_to_sit_durations = [];
-
-    if isempty(sts_streaming)
-        return;
-    end
-
-    trial_names = fieldnames(sts_streaming);
-
-    for trial_idx = 1:length(trial_names)
-        trial_name = trial_names{trial_idx};
-        trial_data = sts_streaming.(trial_name);
-
-        segments = detect_sts_segments(trial_data, trial_name);
-
-        for seg_idx = 1:length(segments)
-            segment = segments(seg_idx);
-            duration = max((segment.end_idx - segment.start_idx) / 100, 0.01);
-
-            if strcmp(segment.task_type, 'sit_to_stand')
-                sit_to_stand_durations = [sit_to_stand_durations; duration]; %#ok<AGROW>
-            elseif strcmp(segment.task_type, 'stand_to_sit')
-                stand_to_sit_durations = [stand_to_sit_durations; duration]; %#ok<AGROW>
-            end
-        end
-    end
-end
-
-function duration = get_sts_duration(duration_array, index)
-    if isempty(duration_array)
-        duration = 1.5;
-        return;
-    end
-
-    if index <= length(duration_array)
-        duration = duration_array(index);
-    else
-        duration = duration_array(end);
-    end
-
-    if duration <= 0
-        duration = 1.5;
-    end
-end
-
 function trial_data = build_normalized_trial_struct(norm_struct, cycle_idx)
 
     trial_data = struct();
+    % L-prefixed fields below are internal slots for an unpaired source curve,
+    % not evidence that the source represents the left anatomical side.
     jointAngles = struct();
 
     if isfield(norm_struct, 'jointAngles')
@@ -1871,19 +1769,19 @@ function trial_data = build_normalized_trial_struct(norm_struct, cycle_idx)
         if isfield(jointAnglesStruct, 'HipAngles')
             hip_cycle = squeeze(jointAnglesStruct.HipAngles(:, :, cycle_idx));
             jointAngles.LHipAngles = hip_cycle;
-            jointAngles.RHipAngles = hip_cycle;
+            jointAngles.RHipAngles = NaN(size(hip_cycle)); % Opposite side not paired in source.
         end
 
         if isfield(jointAnglesStruct, 'KneeAngles')
             knee_cycle = squeeze(jointAnglesStruct.KneeAngles(:, :, cycle_idx));
             jointAngles.LKneeAngles = knee_cycle;
-            jointAngles.RKneeAngles = knee_cycle;
+            jointAngles.RKneeAngles = NaN(size(knee_cycle)); % Opposite side not paired in source.
         end
 
         if isfield(jointAnglesStruct, 'AnkleAngles')
             ankle_cycle = squeeze(jointAnglesStruct.AnkleAngles(:, :, cycle_idx));
             jointAngles.LAnkleAngles = ankle_cycle;
-            jointAngles.RAnkleAngles = ankle_cycle;
+            jointAngles.RAnkleAngles = NaN(size(ankle_cycle)); % Opposite side not paired in source.
         end
 
         if isfield(jointAnglesStruct, 'PelvisAngles')
@@ -1894,7 +1792,7 @@ function trial_data = build_normalized_trial_struct(norm_struct, cycle_idx)
         if isfield(jointAnglesStruct, 'FootProgressAngles')
             foot_cycle = squeeze(jointAnglesStruct.FootProgressAngles(:, :, cycle_idx));
             jointAngles.LFootProgressAngles = foot_cycle;
-            jointAngles.RFootProgressAngles = foot_cycle;
+            jointAngles.RFootProgressAngles = NaN(size(foot_cycle)); % Opposite side not paired in source.
         end
     end
 
@@ -1903,132 +1801,13 @@ function trial_data = build_normalized_trial_struct(norm_struct, cycle_idx)
     trial_data.trial_name = sprintf('normalized_cycle_%02d', cycle_idx);
 end
 
-function segments = detect_sts_segments(trial_data, trial_name)
-
-    segments = struct('start_idx', {}, 'end_idx', {}, 'task_type', {});
-
-    if ~isfield(trial_data, 'jointAngles')
-        fprintf('    Warning: No jointAngles data for %s\n', trial_name);
-        return;
-    end
-
-    angles = trial_data.jointAngles;
-    if isfield(angles, 'LHipAngles')
-        hip_left = angles.LHipAngles(:, 1);
-    else
-        hip_left = [];
-    end
-    if isfield(angles, 'RHipAngles')
-        hip_right = angles.RHipAngles(:, 1);
-    else
-        hip_right = [];
-    end
-
-    if isempty(hip_left) && isempty(hip_right)
-        fprintf('    Warning: Missing hip angles for %s\n', trial_name);
-        return;
-    end
-
-    if isempty(hip_left)
-        hip_mean = hip_right;
-    elseif isempty(hip_right)
-        hip_mean = hip_left;
-    else
-        hip_mean = (hip_left + hip_right) / 2;
-    end
-
-    hip_mean = double(hip_mean);
-
-    hip_smooth = smoothdata(hip_mean, 'movmean', 5);
-    hip_vel = [diff(hip_smooth); 0];
-
-    velocity_threshold = 0.8;
-    min_segment_samples = 25;
-    gap_tolerance = 8;
-    pad_samples = 6;
-
-    motion_idx = find(abs(hip_vel) > velocity_threshold);
-    if isempty(motion_idx)
-        return;
-    end
-
-    segments_idx = [];
-    seg_start = motion_idx(1);
-    seg_end = seg_start;
-
-    for k = 2:length(motion_idx)
-        current_idx = motion_idx(k);
-        if current_idx - seg_end > gap_tolerance
-            if seg_end - seg_start + 1 >= min_segment_samples
-                segments_idx = [segments_idx; seg_start, seg_end]; %#ok<AGROW>
-            end
-            seg_start = current_idx;
-        end
-        seg_end = current_idx;
-    end
-
-    if seg_end - seg_start + 1 >= min_segment_samples
-        segments_idx = [segments_idx; seg_start, seg_end]; %#ok<AGROW>
-    end
-
-    if isempty(segments_idx)
-        return;
-    end
-
-    merged_segments = [];
-    for idx = 1:size(segments_idx, 1)
-        start_idx = segments_idx(idx, 1);
-        end_idx = segments_idx(idx, 2);
-
-        if isempty(merged_segments)
-            merged_segments = [start_idx, end_idx];
-        else
-            last_start = merged_segments(end, 1);
-            last_end = merged_segments(end, 2);
-            if start_idx - last_end <= gap_tolerance
-                merged_segments(end, 2) = max(last_end, end_idx);
-            else
-                merged_segments = [merged_segments; start_idx, end_idx]; %#ok<AGROW>
-            end
-        end
-    end
-
-    num_samples = length(hip_smooth);
-    for idx = 1:size(merged_segments, 1)
-        start_idx = max(1, merged_segments(idx, 1) - pad_samples);
-        end_idx = min(num_samples, merged_segments(idx, 2) + pad_samples);
-
-        start_angle = hip_smooth(start_idx);
-        end_angle = hip_smooth(end_idx);
-
-        if start_angle > end_angle
-            task_type = 'sit_to_stand';
-        else
-            task_type = 'stand_to_sit';
-        end
-
-        segments(end + 1) = struct(...
-            'start_idx', start_idx, ...
-            'end_idx', end_idx, ...
-            'task_type', task_type); %#ok<AGROW>
-    end
-
-    if ~isempty(segments)
-        [~, order] = sort([segments.start_idx]);
-        segments = segments(order);
-    end
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Helper function to process a single sit-to-stand or stand-to-sit cycle
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+% Process an unpaired normalized transfer; no streaming event inference.
 function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, task_type, subject_str, subject_metadata, body_mass, trial_name, cycle_num)
     
     % Constants
     NUM_POINTS = 150;
     nan_vector = NaN(NUM_POINTS, 1);   % Define NaN vector for unmeasured kinetic variables
-    zero_vector = zeros(NUM_POINTS, 1); % Define zero vector for unused kinematic variables
+    missing_vector = NaN(NUM_POINTS, 1); % Unmeasured kinematics remain unavailable
     
     % Initialize output
     cycle_table = table;
@@ -2050,8 +1829,9 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
     step_id = cycle_num;  % Keep as numeric for consistency with walking data
     
     % Default metadata
-    chair_height = 0.45;  % Standard chair height in meters
-    task_info = sprintf('chair_height:%.2f,arm_support:false', chair_height);
+    task_info = jsonencode(struct('source_representation', 'unpaired_normalized_limb_curve', ...
+        'anatomical_reference_side', 'unknown', 'opposite_side', 'unavailable', ...
+        'timing_status', 'no_verified_streaming_match'));
     
     % Initialize stride data structure
     stride_data = struct();
@@ -2063,11 +1843,14 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
     stride_data.subject_metadata = repmat({subject_metadata}, NUM_POINTS, 1);
     
     % Time and phase information
-    cycle_duration_s = (end_idx - start_idx) / 100;  % Assuming 100 Hz sampling
+    cycle_duration_s = NaN;  % Normalized sample indices do not establish seconds.
     if isfield(trial_data, 'cycle_duration_override')
         cycle_duration_s = trial_data.cycle_duration_override;
     end
-    stride_data.time_s = linspace(0, cycle_duration_s, NUM_POINTS)';
+    stride_data.time_s = NaN(NUM_POINTS, 1);
+    if isfinite(cycle_duration_s) && cycle_duration_s > 0
+        stride_data.time_s = linspace(0, cycle_duration_s, NUM_POINTS)';
+    end
 
     % Every phase-indexed action spans the canonical 0-100% interval.
     phase_start = 0;
@@ -2078,7 +1861,7 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
     if cycle_duration_s > 0
         stride_data.phase_ipsi_dot = repmat(phase_range / cycle_duration_s, NUM_POINTS, 1);
     else
-        stride_data.phase_ipsi_dot = zeros(NUM_POINTS, 1);
+        stride_data.phase_ipsi_dot = NaN(NUM_POINTS, 1);
     end
     
     % Process joint angles
@@ -2095,8 +1878,8 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
             l_hip_add = interpolate_signal(deg2rad(angles.LHipAngles(start_idx:end_idx, 2)), NUM_POINTS);
             r_hip_add = interpolate_signal(deg2rad(angles.RHipAngles(start_idx:end_idx, 2)), NUM_POINTS);
         else
-            l_hip_add = zeros(NUM_POINTS, 1);
-            r_hip_add = zeros(NUM_POINTS, 1);
+            l_hip_add = NaN(NUM_POINTS, 1);
+            r_hip_add = NaN(NUM_POINTS, 1);
         end
         
         % Transverse plane (rotation) if available
@@ -2104,11 +1887,12 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
             l_hip_rot = interpolate_signal(deg2rad(angles.LHipAngles(start_idx:end_idx, 3)), NUM_POINTS);
             r_hip_rot = interpolate_signal(deg2rad(angles.RHipAngles(start_idx:end_idx, 3)), NUM_POINTS);
         else
-            l_hip_rot = zeros(NUM_POINTS, 1);
-            r_hip_rot = zeros(NUM_POINTS, 1);
+            l_hip_rot = NaN(NUM_POINTS, 1);
+            r_hip_rot = NaN(NUM_POINTS, 1);
         end
         
-        % For bilateral task, use left as ipsi, right as contra
+        % Ipsilateral slot holds the unpaired normalized source curve.
+        % Anatomical side is unknown; contralateral measurements remain missing.
         stride_data.hip_flexion_angle_ipsi_rad = l_hip_flex;
         stride_data.hip_flexion_angle_contra_rad = r_hip_flex;
         stride_data.hip_adduction_angle_ipsi_rad = l_hip_add;
@@ -2124,10 +1908,10 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
         r_knee_flex = interpolate_signal(deg2rad(angles.RKneeAngles(start_idx:end_idx, 1)), NUM_POINTS);
         
         % Frontal and transverse planes (set to zero - not typically meaningful for STS)
-        l_knee_add = zeros(NUM_POINTS, 1);
-        r_knee_add = zeros(NUM_POINTS, 1);
-        l_knee_rot = zeros(NUM_POINTS, 1);
-        r_knee_rot = zeros(NUM_POINTS, 1);
+        l_knee_add = NaN(NUM_POINTS, 1);
+        r_knee_add = NaN(NUM_POINTS, 1);
+        l_knee_rot = NaN(NUM_POINTS, 1);
+        r_knee_rot = NaN(NUM_POINTS, 1);
         
         stride_data.knee_flexion_angle_ipsi_rad = l_knee_flex;
         stride_data.knee_flexion_angle_contra_rad = r_knee_flex;
@@ -2144,10 +1928,10 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
         r_ankle_flex = interpolate_signal(deg2rad(angles.RAnkleAngles(start_idx:end_idx, 1)), NUM_POINTS);
         
         % Frontal and transverse planes (set to zero)
-        l_ankle_add = zeros(NUM_POINTS, 1);
-        r_ankle_add = zeros(NUM_POINTS, 1);
-        l_ankle_rot = zeros(NUM_POINTS, 1);
-        r_ankle_rot = zeros(NUM_POINTS, 1);
+        l_ankle_add = NaN(NUM_POINTS, 1);
+        r_ankle_add = NaN(NUM_POINTS, 1);
+        l_ankle_rot = NaN(NUM_POINTS, 1);
+        r_ankle_rot = NaN(NUM_POINTS, 1);
         
         stride_data.ankle_dorsiflexion_angle_ipsi_rad = l_ankle_flex;
         stride_data.ankle_dorsiflexion_angle_contra_rad = r_ankle_flex;
@@ -2164,12 +1948,12 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
         if size(angles.LPelvisAngles, 2) >= 2
             pelvis_front = interpolate_signal(deg2rad(angles.LPelvisAngles(start_idx:end_idx, 2)), NUM_POINTS);
         else
-            pelvis_front = zeros(NUM_POINTS, 1);
+            pelvis_front = NaN(NUM_POINTS, 1);
         end
         if size(angles.LPelvisAngles, 2) >= 3
             pelvis_trans = interpolate_signal(deg2rad(angles.LPelvisAngles(start_idx:end_idx, 3)), NUM_POINTS);
         else
-            pelvis_trans = zeros(NUM_POINTS, 1);
+            pelvis_trans = NaN(NUM_POINTS, 1);
         end
         
         stride_data.pelvis_sagittal_angle_rad = pelvis_sag;
@@ -2185,8 +1969,8 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
         stride_data.hip_flexion_velocity_ipsi_rad_s = gradient(stride_data.hip_flexion_angle_ipsi_rad) * effective_Hz;
         stride_data.hip_flexion_velocity_contra_rad_s = gradient(stride_data.hip_flexion_angle_contra_rad) * effective_Hz;
     else
-        stride_data.hip_flexion_velocity_ipsi_rad_s = zero_vector;
-        stride_data.hip_flexion_velocity_contra_rad_s = zero_vector;
+        stride_data.hip_flexion_velocity_ipsi_rad_s = missing_vector;
+        stride_data.hip_flexion_velocity_contra_rad_s = missing_vector;
     end
     
     % Knee velocities
@@ -2194,8 +1978,8 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
         stride_data.knee_flexion_velocity_ipsi_rad_s = gradient(stride_data.knee_flexion_angle_ipsi_rad) * effective_Hz;
         stride_data.knee_flexion_velocity_contra_rad_s = gradient(stride_data.knee_flexion_angle_contra_rad) * effective_Hz;
     else
-        stride_data.knee_flexion_velocity_ipsi_rad_s = zero_vector;
-        stride_data.knee_flexion_velocity_contra_rad_s = zero_vector;
+        stride_data.knee_flexion_velocity_ipsi_rad_s = missing_vector;
+        stride_data.knee_flexion_velocity_contra_rad_s = missing_vector;
     end
     
     % Ankle velocities
@@ -2203,18 +1987,18 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
         stride_data.ankle_dorsiflexion_velocity_ipsi_rad_s = gradient(stride_data.ankle_dorsiflexion_angle_ipsi_rad) * effective_Hz;
         stride_data.ankle_dorsiflexion_velocity_contra_rad_s = gradient(stride_data.ankle_dorsiflexion_angle_contra_rad) * effective_Hz;
     else
-        stride_data.ankle_dorsiflexion_velocity_ipsi_rad_s = zero_vector;
-        stride_data.ankle_dorsiflexion_velocity_contra_rad_s = zero_vector;
+        stride_data.ankle_dorsiflexion_velocity_ipsi_rad_s = missing_vector;
+        stride_data.ankle_dorsiflexion_velocity_contra_rad_s = missing_vector;
     end
     
     % Segment angles - derive from pelvis orientation and relative joint angles
     if isfield(stride_data, 'pelvis_sagittal_angle_rad')
         pelvis_sag = stride_data.pelvis_sagittal_angle_rad;
     else
-        pelvis_sag = zero_vector;
+        pelvis_sag = missing_vector;
         stride_data.pelvis_sagittal_angle_rad = pelvis_sag;
-        stride_data.pelvis_frontal_angle_rad = zero_vector;
-        stride_data.pelvis_transverse_angle_rad = zero_vector;
+        stride_data.pelvis_frontal_angle_rad = missing_vector;
+        stride_data.pelvis_transverse_angle_rad = missing_vector;
     end
 
     % Use simple kinematic chain (pelvis -> thigh -> shank -> foot)
@@ -2281,6 +2065,14 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
     
     % Convert struct to table
     cycle_table = struct2table(stride_data);
+    % This normalized source array has cycle identity but no proven recording
+    % time correspondence. Do not label normalized indices as source seconds.
+    source_task = 'sit2stand';
+    if strcmp(task_type, 'stand_to_sit'), source_task = 'stand2sit'; end
+    recording_id = sprintf('um21:Normalized/%s/SitStand/ss/%s', erase(subject_str, 'UM21_'), source_task);
+    cycle_table = locohub_add_provenance(cycle_table, recording_id, ...
+        sprintf('source_cycle:%d', cycle_num), 'unknown', 'transfer', NaN, NaN);
+
 end
 
 

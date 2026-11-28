@@ -1,0 +1,436 @@
+{
+  "schema": "locohub.guarded_launcher.receipt/2",
+  "job_id": "GT24-C01-divisor-pilot-v1",
+  "status": "completed",
+  "scientific_approval": false,
+  "envelope": {
+    "path": "docs/quality/audits/pm01-um21-tread-pilot-handoff.json",
+    "reviewed_sha256": "9f204cfd9ba6b2beb256e4d962778183ec2dd4895fd5009591680cb479a8dee9",
+    "limits": {
+      "timeout_seconds_max": 3600,
+      "kill_after_seconds_max": 30,
+      "poll_seconds_max": 15,
+      "startup_memory_mib_min": {
+        "linux": 3584,
+        "windows": 2816
+      },
+      "runtime_memory_mib_min": {
+        "linux": 2048,
+        "windows": 2048
+      },
+      "output_volume_free_mib_min": 5120,
+      "c_drive_free_mib_min": 1024,
+      "c_drive_path": "/mnt/c",
+      "address_space_mib_max": 768
+    },
+    "sha256": "9f204cfd9ba6b2beb256e4d962778183ec2dd4895fd5009591680cb479a8dee9"
+  },
+  "spec": {
+    "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+    "kill_after_seconds": 30,
+    "poll_seconds": 15,
+    "disk_admission": [],
+    "thread_env": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "ARROW_NUM_THREADS": "1",
+      "NUMEXPR_NUM_THREADS": "1"
+    },
+    "expected_output_names": [
+      "gt24-c01-divisor-probe.json"
+    ],
+    "address_space_mib": 768,
+    "job_id": "GT24-C01-divisor-pilot-v1",
+    "command": [
+      "python3",
+      "contributor_tools/audit_probes/2026_10_31/probe_gt24_c01_divisors.py",
+      "pilot",
+      "--out",
+      "converted_datasets/reconversion_v2/gt24_c01_divisor_pilot_20261101/gt24-c01-divisor-probe.json"
+    ],
+    "output_root": "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt24_c01_divisor_pilot_20261101",
+    "receipt_path": "/mnt/s/workspace/locomotion-data-standardization/docs/quality/audits/gt24-c01-divisor-pilot-receipt.json",
+    "bindings": {
+      "contributor_tools/audit_probes/2026_10_31/probe_gt24_c01_divisors.py": "9ff27f4b5336f3c79611e42983d31ee74fba26a21652bd0d5533cd9485704bcc",
+      "contributor_tools/review_gt24_c02_ankle_sign.py": "59885e18ef00b0d86afb6f2a2c6d34d5b3a80fd2563f61483675c32ba1ae130b",
+      "converted_datasets/reconversion_v2/gt24_source_mass_coverage_v4_20261021/matrix.json": "688dec9d45ecf103c43a57740c0fbc019ab3e67b47fd37834a726bdd6062b462",
+      "tests/test_gt24_c01_divisor_probe.py": "13f8d137a3d029e4fb4bf17138a7d1b038f84bf90753e63275532676f25e175c"
+    },
+    "timeout_seconds": 1800,
+    "startup_memory_mib": {
+      "linux": 3584,
+      "windows": 2816
+    },
+    "runtime_memory_mib": {
+      "linux": 2048,
+      "windows": 2048
+    }
+  },
+  "spec_sha256": "e11e20c6914302217faff453ece43b0d861983ddbd3cdebb7a59c3c171ebe496",
+  "launcher_sha256": "8df6f11529b0c5280a95259e73caeeb41c1a9db5b757f189bafde109c6321b7b",
+  "checked_at_utc": "2026-10-31T23:07:37+00:00",
+  "chaining": "none; no successor is started",
+  "bindings_before": {
+    "contributor_tools/audit_probes/2026_10_31/probe_gt24_c01_divisors.py": {
+      "expected": "9ff27f4b5336f3c79611e42983d31ee74fba26a21652bd0d5533cd9485704bcc",
+      "actual": "9ff27f4b5336f3c79611e42983d31ee74fba26a21652bd0d5533cd9485704bcc",
+      "bytes": 21677,
+      "matches": true
+    },
+    "contributor_tools/review_gt24_c02_ankle_sign.py": {
+      "expected": "59885e18ef00b0d86afb6f2a2c6d34d5b3a80fd2563f61483675c32ba1ae130b",
+      "actual": "59885e18ef00b0d86afb6f2a2c6d34d5b3a80fd2563f61483675c32ba1ae130b",
+      "bytes": 33972,
+      "matches": true
+    },
+    "converted_datasets/reconversion_v2/gt24_source_mass_coverage_v4_20261021/matrix.json": {
+      "expected": "688dec9d45ecf103c43a57740c0fbc019ab3e67b47fd37834a726bdd6062b462",
+      "actual": "688dec9d45ecf103c43a57740c0fbc019ab3e67b47fd37834a726bdd6062b462",
+      "bytes": 5993056,
+      "matches": true
+    },
+    "tests/test_gt24_c01_divisor_probe.py": {
+      "expected": "13f8d137a3d029e4fb4bf17138a7d1b038f84bf90753e63275532676f25e175c",
+      "actual": "13f8d137a3d029e4fb4bf17138a7d1b038f84bf90753e63275532676f25e175c",
+      "bytes": 4774,
+      "matches": true
+    }
+  },
+  "disk_admission": [
+    {
+      "path": "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt24_c01_divisor_pilot_20261101",
+      "min_free_mib": 5120,
+      "source": "envelope: output volume (S:)",
+      "free_mib": 149388.28125,
+      "passes": true
+    },
+    {
+      "path": "/mnt/c",
+      "min_free_mib": 1024,
+      "source": "envelope: C:",
+      "free_mib": 109169.2421875,
+      "passes": true
+    }
+  ],
+  "census_before": {
+    "linux": {
+      "checked_at_utc": "2026-10-31T23:07:37+00:00",
+      "boot_id": "1570e813-f7dd-44f7-b4bb-542164173260",
+      "process_count": 64,
+      "exempt": [
+        {
+          "pid": 2,
+          "start_ticks": 233,
+          "cwd": null,
+          "cmdline": "/init",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1474,
+          "start_ticks": 3111,
+          "cwd": null,
+          "cmdline": "/init",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1475,
+          "start_ticks": 3113,
+          "cwd": null,
+          "cmdline": "/init",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1977,
+          "start_ticks": 3964,
+          "cwd": "/mnt/c/Windows/System32",
+          "cmdline": "tmux",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1082279,
+          "start_ticks": 50017091,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "-zsh",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1092061,
+          "start_ticks": 50305298,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "claude",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1691124,
+          "start_ticks": 84980648,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1793133140567-6irr6x.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'OPENBLAS_NUM_",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1691125,
+          "start_ticks": 84980649,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "python3 -m contributor_tools.guarded_launcher run docs/quality/audits/gt24-c01-divisor-pilot-spec.json",
+          "why": "launcher itself (CLI)"
+        }
+      ],
+      "workers": []
+    },
+    "windows": {
+      "checked_at_utc": "2026-10-31T23:07:38+00:00",
+      "last_boot_utc": "2026-09-07T21:16:10.5000000Z",
+      "process_count": 325,
+      "free_physical_mib": 4929.03515625,
+      "workers": []
+    }
+  },
+  "startup_memory": {
+    "linux": {
+      "available_mib": 13175.69140625,
+      "reserve_mib": 3584,
+      "passes": true
+    },
+    "windows": {
+      "available_mib": 4929.03515625,
+      "reserve_mib": 2816,
+      "passes": true
+    }
+  },
+  "launch_ledger": {
+    "parent": {
+      "pid": 1691124,
+      "ppid": 1092061,
+      "start_ticks": 84980648,
+      "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1793133140567-6irr6x.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'OPENBLAS_NUM_",
+      "interactive_terminal": false
+    },
+    "claimed": true,
+    "entries": [
+      "/tmp/locohub_guarded_launcher_uid1000/1570e813-f7dd-44f7-b4bb-542164173260/1691124-84980648.json"
+    ],
+    "keys": [
+      {
+        "pid": 1691124,
+        "ppid": 1092061,
+        "start_ticks": 84980648,
+        "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1793133140567-6irr6x.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'OPENBLAS_NUM_",
+        "interactive_terminal": false
+      }
+    ]
+  },
+  "launched": true,
+  "process_identity": {
+    "leader_pid": 1691143,
+    "launched_at_utc": "2026-10-31T23:07:38+00:00",
+    "argv": [
+      "timeout",
+      "--signal=TERM",
+      "--kill-after=30s",
+      "1800",
+      "nice",
+      "-n",
+      "19",
+      "ionice",
+      "-c",
+      "3",
+      "python3",
+      "contributor_tools/audit_probes/2026_10_31/probe_gt24_c01_divisors.py",
+      "pilot",
+      "--out",
+      "converted_datasets/reconversion_v2/gt24_c01_divisor_pilot_20261101/gt24-c01-divisor-probe.json"
+    ],
+    "log_path": "/mnt/s/workspace/locomotion-data-standardization/docs/quality/audits/gt24-c01-divisor-pilot-receipt.log",
+    "parent_death_signal": "SIGTERM",
+    "parent_death_signal_set": true,
+    "pgid": 1691143,
+    "sid": 1691143,
+    "own_session_verified": true,
+    "boot_id": "1570e813-f7dd-44f7-b4bb-542164173260",
+    "leader_start_ticks": 84980737
+  },
+  "job_outcome": "completed",
+  "finished_at_utc": "2026-10-31T23:08:19+00:00",
+  "exit_code": 0,
+  "wall_time_seconds": 39.927,
+  "peak_rss_kib_largest_process": 245288,
+  "peak_group_rss_kib_sampled": 164564,
+  "runtime_guard": {
+    "poll_seconds": 15,
+    "reserve_mib": {
+      "linux": 2048,
+      "windows": 2048
+    },
+    "polls": 2,
+    "min_linux_available_mib": 12833.3,
+    "min_windows_free_mib": 4843.3,
+    "breach": null,
+    "observed_address_space_limits": [
+      "805306368"
+    ],
+    "observed_address_space_by_process": [
+      {
+        "pid": 1691143,
+        "start_ticks": 84980737,
+        "limit": "805306368",
+        "cmdline": "timeout --signal=TERM --kill-after=30s 1800 nice -n 19 ionice -c 3 python3 contributor_tools/audit_probes/2026_10_31/probe_gt24_c01_divisors.py pilot --out converted_datasets/reconversion_v2/gt24_c01_"
+      },
+      {
+        "pid": 1691144,
+        "start_ticks": 84980737,
+        "limit": "805306368",
+        "cmdline": "python3 contributor_tools/audit_probes/2026_10_31/probe_gt24_c01_divisors.py pilot --out converted_datasets/reconversion_v2/gt24_c01_divisor_pilot_20261101/gt24-c01-divisor-probe.json"
+      }
+    ]
+  },
+  "stop_actions": [],
+  "orphans_at_leader_exit": [],
+  "launcher_errors": [],
+  "finalisation_errors": [],
+  "clean_success": false,
+  "retry": "never automatic",
+  "cleanup_proof": {
+    "checked_at_utc": "2026-10-31T23:08:19+00:00",
+    "basis": "same_boot_proc_scan",
+    "proven": true,
+    "boot_id_now": "1570e813-f7dd-44f7-b4bb-542164173260",
+    "pgid_members": [],
+    "leader_pid_with_same_start_ticks_present": false,
+    "attempts": 1
+  },
+  "census_after": {
+    "linux": {
+      "checked_at_utc": "2026-10-31T23:08:19+00:00",
+      "boot_id": "1570e813-f7dd-44f7-b4bb-542164173260",
+      "process_count": 72,
+      "exempt": [
+        {
+          "pid": 2,
+          "start_ticks": 233,
+          "cwd": null,
+          "cmdline": "/init",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1474,
+          "start_ticks": 3111,
+          "cwd": null,
+          "cmdline": "/init",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1475,
+          "start_ticks": 3113,
+          "cwd": null,
+          "cmdline": "/init",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1977,
+          "start_ticks": 3964,
+          "cwd": "/mnt/c/Windows/System32",
+          "cmdline": "tmux",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1082279,
+          "start_ticks": 50017091,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "-zsh",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1092061,
+          "start_ticks": 50305298,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "claude",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1691124,
+          "start_ticks": 84980648,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1793133140567-6irr6x.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'OPENBLAS_NUM_",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1691125,
+          "start_ticks": 84980649,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "python3 -m contributor_tools.guarded_launcher run docs/quality/audits/gt24-c01-divisor-pilot-spec.json",
+          "why": "launcher itself (CLI)"
+        }
+      ],
+      "workers": [
+        {
+          "pid": 1691318,
+          "start_ticks": 84984475,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1793133140567-6irr6x.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'nice -n 19 py",
+          "ancestor": false
+        },
+        {
+          "pid": 1691320,
+          "start_ticks": 84984555,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "python3 -m pytest -q -p no:cacheprovider tests/test_hist05_addbiomechanics_member.py tests/test_addbiomechanics_member_acquisition.py tests/test_backlog_workflow.py",
+          "ancestor": false
+        }
+      ]
+    },
+    "windows": {
+      "checked_at_utc": "2026-10-31T23:08:20+00:00",
+      "last_boot_utc": "2026-09-07T21:16:10.5000000Z",
+      "process_count": 325,
+      "free_physical_mib": 4838.25,
+      "workers": []
+    }
+  },
+  "windows_new_workers": [],
+  "bindings_after": {
+    "contributor_tools/audit_probes/2026_10_31/probe_gt24_c01_divisors.py": {
+      "expected": "9ff27f4b5336f3c79611e42983d31ee74fba26a21652bd0d5533cd9485704bcc",
+      "actual": "9ff27f4b5336f3c79611e42983d31ee74fba26a21652bd0d5533cd9485704bcc",
+      "bytes": 21677,
+      "matches": true
+    },
+    "contributor_tools/review_gt24_c02_ankle_sign.py": {
+      "expected": "59885e18ef00b0d86afb6f2a2c6d34d5b3a80fd2563f61483675c32ba1ae130b",
+      "actual": "59885e18ef00b0d86afb6f2a2c6d34d5b3a80fd2563f61483675c32ba1ae130b",
+      "bytes": 33972,
+      "matches": true
+    },
+    "converted_datasets/reconversion_v2/gt24_source_mass_coverage_v4_20261021/matrix.json": {
+      "expected": "688dec9d45ecf103c43a57740c0fbc019ab3e67b47fd37834a726bdd6062b462",
+      "actual": "688dec9d45ecf103c43a57740c0fbc019ab3e67b47fd37834a726bdd6062b462",
+      "bytes": 5993056,
+      "matches": true
+    },
+    "tests/test_gt24_c01_divisor_probe.py": {
+      "expected": "13f8d137a3d029e4fb4bf17138a7d1b038f84bf90753e63275532676f25e175c",
+      "actual": "13f8d137a3d029e4fb4bf17138a7d1b038f84bf90753e63275532676f25e175c",
+      "bytes": 4774,
+      "matches": true
+    }
+  },
+  "outputs": [
+    {
+      "path": "gt24-c01-divisor-probe.json",
+      "bytes": 426729,
+      "sha256": "b096d8ff29480fabbecd975fba7b2cf00981a44cd286bd7970ff25ddd0b20f6d"
+    }
+  ],
+  "expected_outputs_missing": [],
+  "log_sha256": "d05cb7bc72ce8e7b70422f0a096a354ee6ddef07d19dcacc9ed6e943a0a3f8da",
+  "checks": {
+    "cleanup_proven": true,
+    "bindings_unchanged": true,
+    "envelope_unchanged": true,
+    "linux_no_new_worker": false,
+    "windows_no_new_worker": true,
+    "no_orphans_at_leader_exit": true,
+    "outputs_hashed": true,
+    "expected_outputs_present": true
+  }
+}

@@ -95,6 +95,8 @@ Exoskeleton interaction torques (from `exo.csv` torque_interaction):
 
 ## Sign Conventions
 
+> **Sign rule note (2026-10-31).** The signs listed below match the current rule; for the ankle see the GT24 erratum (`docs/datasets/gt24.md`). The current LocoHub rule is [Signs and frames](../../../docs/reference/index.html#signs-and-frames): joint angles and moments positive in their named direction (knee flexion +), segment angles counterclockwise (pelvis anterior tilt −). This describes the converter's sign mapping; it does not verify existing output files.
+
 Following LocoHub standards:
 - **Hip**: Flexion positive
 - **Knee**: Flexion positive (source data negated)

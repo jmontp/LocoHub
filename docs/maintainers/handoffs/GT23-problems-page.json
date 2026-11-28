@@ -1,0 +1,88 @@
+{
+ "task_id": "GT23-problems-page",
+ "status": "review",
+ "last_checked_at_utc": "2026-11-18T00:00:00Z",
+ "summary": "Plain-words known-problems page for Georgia Tech 2023 with 19 cards, each with status, scope (denominator stated), grid figure and knock-on verdicts. Nothing was reconverted; no fix is claimed as applied. No card has the status 'fixed in a checked pilot' because no verified receipt exists.",
+ "changed_files": [
+  "contributor_tools/build_gt23_problems_page.py",
+  "docs/quality/audits/gt23-problem-scope.json",
+  "docs/datasets/gt23/problems.html",
+  "docs/datasets/gt23/figures/ (25 SVG)",
+  "site/html/datasets/gt23/problems.html",
+  "site/html/datasets/gt23/figures/",
+  "tests/test_gt23_problems_page.py",
+  "review_sheets/gt23_problems_page/ (screenshots, gitignored)"
+ ],
+ "checks": [
+  "python3 -m pytest -q tests/test_gt23_problems_page.py: 6 passed (totals equal scope file, every verdict has evidence or says Not checked, every card has a figure, no jargon/paths/hashes/IDs, site copy equal)",
+  "Builder asserts: 787 event files, 488 recordings, 9 empty event files, 90 recordings without event windows, 85 without event file, 52/15/2 mass classes, 141 of 180 sign checks, all matching the committed audits",
+  "Rendered at 1280 and 390 (Chrome headless, lazy loading removed in a temporary copy, deleted); horizontal overflow check: none outside scrolling tables. Chrome headless reports a 500 px minimum viewport in DOM mode. Screenshots were saved but could not be inspected by the agent beyond sizes and overflow check; a human look is still advised"
+ ],
+ "probe": {
+  "kind": "read-only listing of Segmentation and RawData folders (file names and sizes only, no recording opened)",
+  "command": "flock /tmp/locohub-probe.lock nice -n 19 ionice -c 3 /usr/bin/time -v python3 contributor_tools/build_gt23_problems_page.py scope",
+  "peak_rss_kib_max_over_runs": 36352,
+  "peak_rss_kib_final_run": 22724,
+  "memory_before_each_run": "Linux available above 9.9 GB; Windows free 3.4-4.8 GB",
+  "figure_stage_peak_rss_kib": 85412,
+  "launcher_jobs": 0
+ },
+ "seed": 20261118,
+ "examples_drawn": {
+  "mass": "AB10 turn_and_step_1",
+  "forward": "twister",
+  "labels": "AB05",
+  "secondleg": "lift_weight",
+  "nowindows": "incline_walk",
+  "oneleg": "dynamic_walk"
+ },
+ "not_checked_needs_guarded_job": [
+  {
+   "what": "How many event windows each participant loses or merges",
+   "why": "Needs reading the event files one by one: not checked, needs a guarded job."
+  },
+  {
+   "what": "Whether left and right windows are identical in whole-body tasks",
+   "why": "Not checked, needs a guarded job."
+  },
+  {
+   "what": "Whether the backup segmentation ever ran",
+   "why": "Needs reading old converted files: not checked, needs a guarded job."
+  },
+  {
+   "what": "Whether the missing leg's columns are empty in one-leg files",
+   "why": "Needs reading channel files: not checked, needs a guarded job."
+  },
+  {
+   "what": "The mass used in the recordings that cannot be told",
+   "why": "434 recordings are not shown either way: not checked."
+  },
+  {
+   "what": "Joint signs outside walking and stairs, non-sagittal joints and knee and hip power",
+   "why": "Not checked; the pilot could not judge them."
+  },
+  {
+   "what": "Facing direction beyond level, incline and decline walking",
+   "why": "Not checked."
+  },
+  {
+   "what": "AB02's oversized transform table",
+   "why": "Not checked, needs a guarded job."
+  },
+  {
+   "what": "Everything in converted output",
+   "why": "No reviewed conversion exists yet; nothing has been run on real data."
+  }
+ ],
+ "candidate_decisions_for_jose_not_added_to_backlog": [
+  "Which frame the centre of pressure should be published in (foot frame versus ground frame)",
+  "Whether the 90 recordings with no event windows are exported as continuous recordings or left out",
+  "Whether pelvis, thigh and shank angles are derived from the body model"
+ ],
+ "notes": [
+  "Figures reuse four SVGs from docs/quality/fixes (copied as reuse-*.svg); the fixes page and builder were not edited.",
+  "AB03 body-weight mass issue (local table 82.18 kg vs publisher 113.5 kg) comes from gt23-publisher-units-and-mass-review.json and was not on the fixes page.",
+  "C04 verify verdict was back_to_worker; this page uses C05 (done) and C03 (done) for mass numbers."
+ ],
+ "next_action": "Second agent checks cards against the cited audits; José looks at the page and decides the three candidate decisions if wanted."
+}

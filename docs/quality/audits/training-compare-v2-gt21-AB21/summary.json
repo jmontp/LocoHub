@@ -1,0 +1,2348 @@
+{
+  "code_sha256": {
+    "contributor_tools/compare_training_vs_locohub.py": "91d7bddc2353b475f421591257440bb3fa5dbebe07e5e60922f8dc4b66cdf37c"
+  },
+  "counts": {
+    "alignment_rows_by_status": {
+      "matched": 512,
+      "no_candidate": 48
+    },
+    "unmatched_by_reason": {
+      "alignment impossible: too little overlapping moment": 48
+    }
+  },
+  "dataset": "gt21",
+  "emit_strides": true,
+  "error": null,
+  "locohub_inputs": {
+    "None": [
+      "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt21_r01_package_v2/full_time.parquet",
+      "converted_datasets/reconversion_v2/gt21_r01_package_v2"
+    ]
+  },
+  "mapping": {
+    "columns": [
+      {
+        "locohub_column": "ankle_dorsiflexion_angle_{R}_rad",
+        "locohub_offset_in_unit": 0.0,
+        "name": "ankle_angle",
+        "note": "",
+        "reporting_size": 2.0,
+        "scale_from_raw": 57.29577951308232,
+        "sign": 1.0,
+        "training_column": "ankle_dorsiflexion_angle_ipsi_rad",
+        "training_validity_flag": "",
+        "unit": "deg"
+      },
+      {
+        "locohub_column": "shank_sagittal_angle_{R}_rad",
+        "locohub_offset_in_unit": 0.0,
+        "name": "shank_angle",
+        "note": "training UM21 values include its own -2 x pelvis tilt correction; training GT21 values were built on the old pelvis tilt",
+        "reporting_size": 2.0,
+        "scale_from_raw": 57.29577951308232,
+        "sign": 1.0,
+        "training_column": "shank_sagittal_angle_ipsi_rad",
+        "training_validity_flag": "",
+        "unit": "deg"
+      },
+      {
+        "locohub_column": "foot_sagittal_angle_{R}_rad",
+        "locohub_offset_in_unit": 0.0,
+        "name": "foot_angle",
+        "note": "same note as shank_angle; angle zero differs (static pose vs gravity)",
+        "reporting_size": 2.0,
+        "scale_from_raw": 57.29577951308232,
+        "sign": 1.0,
+        "training_column": "foot_sagittal_angle_ipsi_rad",
+        "training_validity_flag": "",
+        "unit": "deg"
+      },
+      {
+        "locohub_column": "ankle_dorsiflexion_velocity_{R}_rad_s",
+        "locohub_offset_in_unit": 0.0,
+        "name": "ankle_velocity",
+        "note": "training value is its own backward difference of the sampled angle; LocoHub value is the source or stride slope; a method difference, not a data error",
+        "reporting_size": 20.0,
+        "scale_from_raw": 57.29577951308232,
+        "sign": 1.0,
+        "training_column": "dtheta_raw",
+        "training_validity_flag": "",
+        "unit": "deg/s"
+      },
+      {
+        "locohub_column": "ankle_dorsiflexion_moment_{R}_Nm_kg",
+        "locohub_offset_in_unit": 0.0,
+        "name": "ankle_moment",
+        "note": "",
+        "reporting_size": 0.05,
+        "scale_from_raw": 1.0,
+        "sign": 1.0,
+        "training_column": "ankle_dorsiflexion_moment_ipsi_Nm_kg",
+        "training_validity_flag": "",
+        "unit": "Nm/kg"
+      },
+      {
+        "locohub_column": "grf_vertical_{R}_BW",
+        "locohub_offset_in_unit": 0.0,
+        "name": "vertical_force",
+        "note": "training GT21 force is its own sidecar; LocoHub UM21 package has no force (reported as unavailable)",
+        "reporting_size": 0.05,
+        "scale_from_raw": 1.0,
+        "sign": 1.0,
+        "training_column": "grf_vertical_ipsi_BW",
+        "training_validity_flag": "fz_measured",
+        "unit": "BW"
+      },
+      {
+        "locohub_column": "cop_anterior_{R}_m",
+        "locohub_offset_in_unit": 0.1,
+        "name": "cop_anterior",
+        "note": "training: m from the ankle joint centre along the foot axis; LocoHub: origin 100 mm forward of the ankle joint centre; LocoHub + shift is compared, so bias also contains any difference between the two ankle-centre definitions",
+        "reporting_size": 0.02,
+        "scale_from_raw": 1.0,
+        "sign": 1.0,
+        "training_column": "cop_anterior_ipsi_m",
+        "training_validity_flag": "cop_ok",
+        "unit": "m"
+      }
+    ],
+    "locohub_unmapped": {
+      "left": [
+        "ankle_dorsiflexion_angle_right_rad",
+        "ankle_dorsiflexion_moment_right_Nm_kg",
+        "ankle_dorsiflexion_power_left_W_kg",
+        "ankle_dorsiflexion_power_right_W_kg",
+        "ankle_dorsiflexion_velocity_right_rad_s",
+        "assessment_id",
+        "cop_anterior_right_m",
+        "cop_lateral_left_m",
+        "cop_lateral_right_m",
+        "cop_vertical_left_m",
+        "cop_vertical_right_m",
+        "failed_limits",
+        "foot_sagittal_angle_right_rad",
+        "grf_anterior_left_BW",
+        "grf_anterior_right_BW",
+        "grf_lateral_left_BW",
+        "grf_lateral_right_BW",
+        "grf_vertical_right_BW",
+        "held_signals",
+        "hip_flexion_angle_left_rad",
+        "hip_flexion_angle_right_rad",
+        "hip_flexion_moment_left_Nm_kg",
+        "hip_flexion_moment_right_Nm_kg",
+        "hip_flexion_power_left_W_kg",
+        "hip_flexion_power_right_W_kg",
+        "hip_flexion_velocity_left_rad_s",
+        "hip_flexion_velocity_right_rad_s",
+        "knee_flexion_angle_left_rad",
+        "knee_flexion_angle_right_rad",
+        "knee_flexion_moment_left_Nm_kg",
+        "knee_flexion_moment_right_Nm_kg",
+        "knee_flexion_power_left_W_kg",
+        "knee_flexion_power_right_W_kg",
+        "knee_flexion_velocity_left_rad_s",
+        "knee_flexion_velocity_right_rad_s",
+        "limitations",
+        "lineage_id",
+        "observation_id",
+        "observation_type",
+        "pelvis_sagittal_angle_rad",
+        "quality_status",
+        "reference_side",
+        "shank_sagittal_angle_right_rad",
+        "source_end_time_s",
+        "source_export",
+        "source_recording_id",
+        "source_start_time_s",
+        "subject",
+        "subject_metadata",
+        "task",
+        "task_id",
+        "task_info",
+        "thigh_sagittal_angle_left_rad",
+        "thigh_sagittal_angle_right_rad",
+        "time_s"
+      ]
+    },
+    "reporting_sizes_note": "sizes decide which differences are counted in frac_exceed; they are reporting sizes, not quality limits",
+    "training_unmapped": [
+      {
+        "column": "recording_id",
+        "role": "key (subject | collection_id, joins marked +k)"
+      },
+      {
+        "column": "subject",
+        "role": "key"
+      },
+      {
+        "column": "dataset",
+        "role": "constant label"
+      },
+      {
+        "column": "task",
+        "role": "group label (reporting only)"
+      },
+      {
+        "column": "task_id",
+        "role": "label, not read"
+      },
+      {
+        "column": "task_info",
+        "role": "label text, not read"
+      },
+      {
+        "column": "step",
+        "role": "training step counter, not read"
+      },
+      {
+        "column": "time_s",
+        "role": "time key"
+      },
+      {
+        "column": "dt_s",
+        "role": "constant 0.005, not read"
+      },
+      {
+        "column": "dpsi_raw",
+        "role": "training backward difference of shank angle; LocoHub GT21 and UM21 have no shank speed column"
+      },
+      {
+        "column": "dphi_raw",
+        "role": "training backward difference of foot angle; LocoHub has no foot speed column"
+      },
+      {
+        "column": "dtheta_f15",
+        "role": "training 15 Hz low-pass of dtheta_raw (training-only derived signal)"
+      },
+      {
+        "column": "dpsi_f15",
+        "role": "training 15 Hz low-pass of dpsi_raw (training-only derived signal)"
+      },
+      {
+        "column": "swing",
+        "role": "training mask"
+      },
+      {
+        "column": "wc_weight",
+        "role": "training weight"
+      },
+      {
+        "column": "window_ok",
+        "role": "training mask"
+      },
+      {
+        "column": "loss_mask",
+        "role": "training mask"
+      }
+    ]
+  },
+  "mode": "time_table",
+  "package_files_checked": {
+    "filtered_phase.parquet": {
+      "bytes": 3889146268,
+      "manifest_sha256": "a92c7628414d71395b0c8820d9339579156248f6e26139dfb6decfc9ccd0fcc7"
+    },
+    "full_time.parquet": {
+      "bytes": 4252493120,
+      "manifest_sha256": "86d60496fc527e398eba92c987c1970ef295a980394afb22088dea58f8d1fc78"
+    }
+  },
+  "partition": "gate",
+  "peak_rss_mib": 292.0,
+  "per_subject": {
+    "AB21": {
+      "locohub_file": "converted_datasets/reconversion_v2/gt21_r01_package_v2/full_time.parquet",
+      "peak_rss_mib": 292.0,
+      "seconds": 15.4,
+      "strides_by_training_recording": {
+        "GT21_AB21|levelground_levelground_ccw_fast_01_01_stand-walk_seg01+1": {
+          "strides_sampled": 1,
+          "windows_of_leg": 8
+        },
+        "GT21_AB21|levelground_levelground_ccw_fast_01_01_walk_seg02+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|levelground_levelground_ccw_fast_01_02_stand-walk_seg01+1": {
+          "strides_sampled": 1,
+          "windows_of_leg": 8
+        },
+        "GT21_AB21|levelground_levelground_ccw_fast_01_02_walk-stand_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 8
+        },
+        "GT21_AB21|levelground_levelground_ccw_fast_01_02_walk_seg02": {
+          "strides_sampled": 2,
+          "windows_of_leg": 8
+        },
+        "GT21_AB21|levelground_levelground_ccw_fast_01_03_stand-walk_seg01+1": {
+          "strides_sampled": 1,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|levelground_levelground_ccw_fast_01_03_walk-stand_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|levelground_levelground_ccw_fast_01_03_walk_seg02": {
+          "strides_sampled": 2,
+          "windows_of_leg": 8
+        },
+        "GT21_AB21|levelground_levelground_ccw_fast_01_04_walk-stand_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|levelground_levelground_ccw_fast_01_04_walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 8
+        },
+        "GT21_AB21|levelground_levelground_ccw_fast_01_04_walk_seg02": {
+          "strides_sampled": 1,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|levelground_levelground_ccw_fast_01_05_stand-walk_seg01+1": {
+          "strides_sampled": 1,
+          "windows_of_leg": 8
+        },
+        "GT21_AB21|levelground_levelground_ccw_fast_01_05_walk-stand_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 8
+        },
+        "GT21_AB21|levelground_levelground_ccw_fast_01_05_walk_seg02": {
+          "strides_sampled": 2,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|levelground_levelground_ccw_fast_02_01_stand-walk_seg01+1": {
+          "strides_sampled": 1,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|levelground_levelground_ccw_fast_02_01_walk-stand_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|levelground_levelground_ccw_fast_02_01_walk_seg02": {
+          "strides_sampled": 2,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|levelground_levelground_ccw_normal_01_01_stand-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_ccw_normal_01_01_walk_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_ccw_normal_01_01_walk_seg02+1": {
+          "strides_sampled": 4,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_ccw_normal_01_02_stand-walk_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_ccw_normal_01_02_walk-stand_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_ccw_normal_01_02_walk_seg02": {
+          "strides_sampled": 3,
+          "windows_of_leg": 11
+        },
+        "GT21_AB21|levelground_levelground_ccw_normal_01_03_stand-walk_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 8
+        },
+        "GT21_AB21|levelground_levelground_ccw_normal_01_03_walk-stand_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 8
+        },
+        "GT21_AB21|levelground_levelground_ccw_normal_01_03_walk_seg02": {
+          "strides_sampled": 3,
+          "windows_of_leg": 8
+        },
+        "GT21_AB21|levelground_levelground_ccw_normal_01_04_stand-walk_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_ccw_normal_01_04_walk-stand_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_ccw_normal_01_04_walk_seg02": {
+          "strides_sampled": 3,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_ccw_normal_01_05_stand-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_ccw_normal_01_05_walk-stand_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_ccw_normal_01_05_walk_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_ccw_normal_01_05_walk_seg02": {
+          "strides_sampled": 3,
+          "windows_of_leg": 11
+        },
+        "GT21_AB21|levelground_levelground_ccw_slow_01_01_stand-walk_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_ccw_slow_01_01_walk-stand_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_ccw_slow_01_01_walk_seg02": {
+          "strides_sampled": 3,
+          "windows_of_leg": 11
+        },
+        "GT21_AB21|levelground_levelground_ccw_slow_01_02_stand-walk_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_ccw_slow_01_02_walk_seg02+1": {
+          "strides_sampled": 4,
+          "windows_of_leg": 11
+        },
+        "GT21_AB21|levelground_levelground_ccw_slow_01_03_walk-stand_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_ccw_slow_01_03_walk_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_ccw_slow_01_03_walk_seg02": {
+          "strides_sampled": 3,
+          "windows_of_leg": 11
+        },
+        "GT21_AB21|levelground_levelground_ccw_slow_01_04_walk-stand_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 11
+        },
+        "GT21_AB21|levelground_levelground_ccw_slow_01_04_walk_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 11
+        },
+        "GT21_AB21|levelground_levelground_ccw_slow_01_04_walk_seg02": {
+          "strides_sampled": 4,
+          "windows_of_leg": 12
+        },
+        "GT21_AB21|levelground_levelground_ccw_slow_01_05_stand-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_ccw_slow_01_05_walk_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_ccw_slow_01_05_walk_seg02": {
+          "strides_sampled": 4,
+          "windows_of_leg": 11
+        },
+        "GT21_AB21|levelground_levelground_ccw_slow_01_06_stand-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 11
+        },
+        "GT21_AB21|levelground_levelground_ccw_slow_01_06_walk-stand_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 11
+        },
+        "GT21_AB21|levelground_levelground_ccw_slow_01_06_walk_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 11
+        },
+        "GT21_AB21|levelground_levelground_ccw_slow_01_06_walk_seg02": {
+          "strides_sampled": 4,
+          "windows_of_leg": 12
+        },
+        "GT21_AB21|levelground_levelground_cw_fast_01_01_stand-walk_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 8
+        },
+        "GT21_AB21|levelground_levelground_cw_fast_01_01_walk-stand_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|levelground_levelground_cw_fast_01_01_walk_seg02": {
+          "strides_sampled": 1,
+          "windows_of_leg": 8
+        },
+        "GT21_AB21|levelground_levelground_cw_fast_01_02_stand-walk_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_cw_fast_01_02_walk-stand_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|levelground_levelground_cw_fast_01_02_walk_seg02": {
+          "strides_sampled": 1,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_cw_fast_01_03_stand-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|levelground_levelground_cw_fast_01_03_walk-stand_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 8
+        },
+        "GT21_AB21|levelground_levelground_cw_fast_01_03_walk_seg01": {
+          "strides_sampled": 2,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|levelground_levelground_cw_fast_01_03_walk_seg02": {
+          "strides_sampled": 1,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|levelground_levelground_cw_normal_01_01_stand-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_cw_normal_01_01_walk_seg01": {
+          "strides_sampled": 2,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_cw_normal_01_01_walk_seg02+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_cw_normal_01_02_stand-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_cw_normal_01_02_walk-stand_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_cw_normal_01_02_walk_seg01": {
+          "strides_sampled": 2,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_cw_normal_01_02_walk_seg02": {
+          "strides_sampled": 1,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_cw_normal_01_03_stand-walk_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_cw_normal_01_03_walk_seg02+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_cw_normal_01_04_stand-walk_seg01+1": {
+          "strides_sampled": 4,
+          "windows_of_leg": 11
+        },
+        "GT21_AB21|levelground_levelground_cw_normal_01_04_walk_seg02+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 11
+        },
+        "GT21_AB21|levelground_levelground_cw_normal_01_05_stand-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_cw_normal_01_05_walk-stand_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_cw_normal_01_05_walk_seg01": {
+          "strides_sampled": 2,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_cw_normal_01_05_walk_seg02": {
+          "strides_sampled": 2,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_cw_slow_01_01_stand-walk_seg01+1": {
+          "strides_sampled": 4,
+          "windows_of_leg": 11
+        },
+        "GT21_AB21|levelground_levelground_cw_slow_01_01_walk-stand_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 11
+        },
+        "GT21_AB21|levelground_levelground_cw_slow_01_01_walk_seg02": {
+          "strides_sampled": 2,
+          "windows_of_leg": 11
+        },
+        "GT21_AB21|levelground_levelground_cw_slow_01_02_stand-walk_seg01+1": {
+          "strides_sampled": 4,
+          "windows_of_leg": 12
+        },
+        "GT21_AB21|levelground_levelground_cw_slow_01_02_walk_seg02+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 12
+        },
+        "GT21_AB21|levelground_levelground_cw_slow_01_03_stand-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 12
+        },
+        "GT21_AB21|levelground_levelground_cw_slow_01_03_walk_seg01": {
+          "strides_sampled": 3,
+          "windows_of_leg": 12
+        },
+        "GT21_AB21|levelground_levelground_cw_slow_01_03_walk_seg02+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 12
+        },
+        "GT21_AB21|levelground_levelground_cw_slow_01_04_stand-walk_seg01+1": {
+          "strides_sampled": 4,
+          "windows_of_leg": 12
+        },
+        "GT21_AB21|levelground_levelground_cw_slow_01_04_walk_seg02+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 12
+        },
+        "GT21_AB21|levelground_levelground_cw_slow_01_05_stand-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_cw_slow_01_05_walk_seg01": {
+          "strides_sampled": 3,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|levelground_levelground_cw_slow_01_05_walk_seg02+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 10
+        },
+        "GT21_AB21|ramp_ramp_1_l_01_01_rampascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_1_l_01_01_rampdescent_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_1_l_01_01_walk-rampascent_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_1_l_01_01_walk-rampdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_1_l_01_02_rampdescent_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_1_l_01_02_walk-rampascent_seg01+2": {
+          "strides_sampled": 3,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_1_l_01_02_walk-rampdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_1_l_01_03_rampdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_1_l_01_03_rampdescent_seg01": {
+          "strides_sampled": 2,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_1_l_01_03_walk-rampascent_seg01+2": {
+          "strides_sampled": 3,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_1_l_01_03_walk-rampdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_1_l_01_04_rampascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_1_l_01_04_rampdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_1_l_01_04_rampdescent_seg01": {
+          "strides_sampled": 2,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_1_l_01_04_walk-rampascent_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_1_l_01_04_walk-rampdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_1_l_01_05_rampdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_1_l_01_05_walk-rampascent_seg01+2": {
+          "strides_sampled": 3,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_1_l_01_05_walk-rampdescent_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_1_r_01_01_rampdescent_seg01+1": {
+          "strides_sampled": 4,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_1_r_01_01_walk-rampascent_seg01+2": {
+          "strides_sampled": 4,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_1_r_01_01_walk-rampdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_1_r_01_02_rampascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_1_r_01_02_rampascent_seg01": {
+          "strides_sampled": 2,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_1_r_01_02_rampdescent-walk_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 8
+        },
+        "GT21_AB21|ramp_ramp_1_r_01_02_rampdescent_seg01": {
+          "strides_sampled": 3,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_1_r_01_02_walk-rampascent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_1_r_01_02_walk-rampdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_1_r_01_03_rampascent_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_1_r_01_03_rampdescent_seg01": {
+          "strides_sampled": 3,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_1_r_01_03_walk-rampascent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_1_r_01_03_walk-rampdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_1_r_01_04_rampascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 8
+        },
+        "GT21_AB21|ramp_ramp_1_r_01_04_rampascent_seg01": {
+          "strides_sampled": 2,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_1_r_01_04_rampdescent-walk_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 8
+        },
+        "GT21_AB21|ramp_ramp_1_r_01_04_rampdescent_seg01": {
+          "strides_sampled": 3,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_1_r_01_04_walk-rampascent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_1_r_01_04_walk-rampdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_1_r_01_05_rampascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_1_r_01_05_rampdescent_seg01+1": {
+          "strides_sampled": 4,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_1_r_01_05_walk-rampascent_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_1_r_01_05_walk-rampdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_2_l_01_01_rampdescent_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_2_l_01_01_walk-rampascent_seg01+2": {
+          "strides_sampled": 3,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_2_l_01_02_rampascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_2_l_01_02_rampdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_2_l_01_02_walk-rampascent_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_2_l_01_02_walk-rampdescent_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_2_l_01_03_rampascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_2_l_01_03_rampdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_2_l_01_03_walk-rampascent_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_2_l_01_03_walk-rampdescent_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_2_l_01_04_rampascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|ramp_ramp_2_l_01_04_rampdescent_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|ramp_ramp_2_l_01_04_walk-rampascent_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|ramp_ramp_2_l_01_04_walk-rampdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|ramp_ramp_2_l_01_05_rampascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_2_l_01_05_rampascent_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_2_l_01_05_rampdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_2_l_01_05_rampdescent_seg01": {
+          "strides_sampled": 2,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_2_l_01_05_walk-rampdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_2_r_01_01_rampascent_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_2_r_01_01_walk-rampascent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_2_r_01_01_walk-rampdescent_seg01+2": {
+          "strides_sampled": 5,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_2_r_01_02_walk-rampascent_seg01+2": {
+          "strides_sampled": 4,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_2_r_01_02_walk-rampdescent_seg01+1": {
+          "strides_sampled": 4,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_2_r_01_03_rampdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 8
+        },
+        "GT21_AB21|ramp_ramp_2_r_01_03_rampdescent_seg01": {
+          "strides_sampled": 3,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_2_r_01_03_walk-rampascent_seg01+2": {
+          "strides_sampled": 4,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_2_r_01_03_walk-rampdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_2_r_01_04_rampascent_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_2_r_01_04_walk-rampascent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_2_r_01_04_walk-rampdescent_seg01+2": {
+          "strides_sampled": 5,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_2_r_01_05_rampascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_2_r_01_05_rampdescent-walk_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_2_r_01_05_walk-rampascent_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_2_r_01_05_walk-rampdescent_seg01+1": {
+          "strides_sampled": 4,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_3_l_01_01_rampascent_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_3_l_01_01_rampdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_3_l_01_01_walk-rampascent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_3_l_01_01_walk-rampdescent_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_3_l_01_02_rampascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_3_l_01_02_rampdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_3_l_01_02_walk-rampascent_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_3_l_01_02_walk-rampdescent_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_3_l_01_03_rampdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_3_l_01_03_rampdescent_seg01": {
+          "strides_sampled": 2,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_3_l_01_03_walk-rampascent_seg01+2": {
+          "strides_sampled": 3,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_3_l_01_04_rampascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_3_l_01_04_rampascent_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_3_l_01_04_rampdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_3_l_01_04_walk-rampascent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_3_l_01_04_walk-rampdescent_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_3_l_01_05_rampascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_3_l_01_05_rampascent_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_3_l_01_05_rampdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_3_l_01_05_walk-rampdescent_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_3_l_02_01_rampascent_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_3_l_02_01_rampdescent_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_3_l_02_01_walk-rampdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_3_r_01_01_rampdescent_seg01": {
+          "strides_sampled": 3,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_3_r_01_01_walk-rampascent_seg01+2": {
+          "strides_sampled": 4,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_3_r_01_01_walk-rampdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_3_r_01_02_rampdescent_seg01": {
+          "strides_sampled": 3,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_3_r_01_02_walk-rampascent_seg01+2": {
+          "strides_sampled": 4,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_3_r_01_02_walk-rampdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_3_r_01_03_rampascent_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_3_r_01_03_rampdescent_seg01": {
+          "strides_sampled": 3,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_3_r_01_03_walk-rampascent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_3_r_01_03_walk-rampdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_3_r_01_04_rampascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_3_r_01_04_rampdescent-walk_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_3_r_01_04_walk-rampascent_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_3_r_01_04_walk-rampdescent_seg01+1": {
+          "strides_sampled": 4,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_3_r_01_05_rampascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_3_r_01_05_rampascent_seg01": {
+          "strides_sampled": 2,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_3_r_01_05_rampdescent_seg01": {
+          "strides_sampled": 3,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_3_r_01_05_walk-rampascent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_3_r_01_05_walk-rampdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_4_l_01_01_rampascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_4_l_01_01_rampascent_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_4_l_01_01_walk-rampdescent_seg01+2": {
+          "strides_sampled": 4,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_4_l_01_02_walk-rampascent_seg01+2": {
+          "strides_sampled": 3,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_4_l_01_02_walk-rampdescent_seg01+2": {
+          "strides_sampled": 4,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_4_l_01_03_rampascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_4_l_01_03_rampascent_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_4_l_01_03_rampdescent_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_4_l_01_03_walk-rampascent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_4_l_01_04_rampascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_4_l_01_04_rampdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_4_l_01_04_rampdescent_seg01": {
+          "strides_sampled": 2,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_4_l_01_04_walk-rampascent_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_4_l_01_04_walk-rampdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_4_l_01_05_walk-rampascent_seg01+2": {
+          "strides_sampled": 3,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_4_l_01_05_walk-rampdescent_seg01+2": {
+          "strides_sampled": 4,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_4_r_01_01_walk-rampascent_seg01+2": {
+          "strides_sampled": 4,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_4_r_01_01_walk-rampdescent_seg01+2": {
+          "strides_sampled": 5,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_4_r_01_02_rampdescent-walk_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 8
+        },
+        "GT21_AB21|ramp_ramp_4_r_01_02_walk-rampascent_seg01+2": {
+          "strides_sampled": 4,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_4_r_01_02_walk-rampdescent_seg01+1": {
+          "strides_sampled": 4,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_4_r_01_03_walk-rampascent_seg01+2": {
+          "strides_sampled": 4,
+          "windows_of_leg": 11
+        },
+        "GT21_AB21|ramp_ramp_4_r_01_03_walk-rampascent_seg02": {
+          "strides_sampled": 0,
+          "windows_of_leg": 11
+        },
+        "GT21_AB21|ramp_ramp_4_r_01_03_walk-rampdescent_seg01+2": {
+          "strides_sampled": 7,
+          "windows_of_leg": 11
+        },
+        "GT21_AB21|ramp_ramp_4_r_01_04_rampascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_4_r_01_04_rampdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 8
+        },
+        "GT21_AB21|ramp_ramp_4_r_01_04_rampdescent_seg01": {
+          "strides_sampled": 3,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_4_r_01_04_walk-rampascent_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_4_r_01_04_walk-rampdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_4_r_01_05_rampascent_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_4_r_01_05_rampdescent-walk_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 8
+        },
+        "GT21_AB21|ramp_ramp_4_r_01_05_walk-rampascent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_4_r_01_05_walk-rampdescent_seg01+1": {
+          "strides_sampled": 4,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_4_r_01_06_rampascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_4_r_01_06_rampascent_seg01": {
+          "strides_sampled": 2,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_4_r_01_06_walk-rampascent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_4_r_01_06_walk-rampdescent_seg01+2": {
+          "strides_sampled": 5,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_5_l_01_01_walk-rampascent_seg01+2": {
+          "strides_sampled": 3,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_5_l_01_01_walk-rampdescent_seg01+2": {
+          "strides_sampled": 4,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_5_l_01_02_rampdescent_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_5_l_01_02_walk-rampascent_seg01+2": {
+          "strides_sampled": 3,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_5_l_01_02_walk-rampdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_5_l_01_03_rampascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_5_l_01_03_rampascent_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_5_l_01_03_rampdescent_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_5_l_01_04_rampascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_5_l_01_04_rampascent_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_5_l_01_04_rampdescent_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_5_l_01_05_rampascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_5_l_01_05_rampdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_5_l_01_05_walk-rampascent_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_5_l_01_05_walk-rampdescent_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_5_l_02_01_rampdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|ramp_ramp_5_l_02_01_rampdescent_seg01": {
+          "strides_sampled": 2,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|ramp_ramp_5_l_02_01_walk-rampascent_seg01+2": {
+          "strides_sampled": 2,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|ramp_ramp_5_r_01_01_rampascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_5_r_01_01_rampdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_5_r_01_01_rampdescent_seg01": {
+          "strides_sampled": 3,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_5_r_01_01_walk-rampascent_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_5_r_01_01_walk-rampdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_5_r_01_02_rampdescent-walk_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 8
+        },
+        "GT21_AB21|ramp_ramp_5_r_01_02_rampdescent_seg01": {
+          "strides_sampled": 3,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_5_r_01_02_walk-rampascent_seg01+2": {
+          "strides_sampled": 4,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_5_r_01_02_walk-rampdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_5_r_01_03_rampdescent-walk_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 8
+        },
+        "GT21_AB21|ramp_ramp_5_r_01_03_rampdescent_seg01": {
+          "strides_sampled": 3,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_5_r_01_03_walk-rampascent_seg01+2": {
+          "strides_sampled": 4,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_5_r_01_03_walk-rampdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_5_r_01_04_rampascent_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 8
+        },
+        "GT21_AB21|ramp_ramp_5_r_01_04_rampdescent_seg01+1": {
+          "strides_sampled": 5,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_5_r_01_04_walk-rampascent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 8
+        },
+        "GT21_AB21|ramp_ramp_5_r_01_04_walk-rampdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 8
+        },
+        "GT21_AB21|ramp_ramp_5_r_01_05_rampdescent_seg01+1": {
+          "strides_sampled": 4,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_5_r_01_05_walk-rampascent_seg01+2": {
+          "strides_sampled": 4,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_5_r_01_05_walk-rampdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_6_l_01_01_rampdescent-walk_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_6_l_01_01_rampdescent_seg01": {
+          "strides_sampled": 2,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_6_l_01_01_walk-rampascent_seg01+2": {
+          "strides_sampled": 3,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_6_l_01_02_rampdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_6_l_01_02_rampdescent_seg01": {
+          "strides_sampled": 3,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_6_l_01_02_walk-rampascent_seg01+2": {
+          "strides_sampled": 3,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_6_l_01_02_walk-rampdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_6_l_01_03_rampascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_6_l_01_03_rampascent_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_6_l_01_03_rampdescent_seg01+1": {
+          "strides_sampled": 4,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_6_l_01_03_walk-rampdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_6_l_01_04_rampdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_6_l_01_04_rampdescent_seg01": {
+          "strides_sampled": 2,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_6_l_01_04_walk-rampascent_seg01+2": {
+          "strides_sampled": 3,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_6_l_01_05_rampascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_6_l_01_05_rampascent_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_6_l_01_05_walk-rampdescent_seg01+2": {
+          "strides_sampled": 4,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_6_l_01_06_rampdescent_seg01+1": {
+          "strides_sampled": 4,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_6_l_01_06_walk-rampascent_seg01+2": {
+          "strides_sampled": 3,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_6_l_01_07_walk-rampascent_seg01+2": {
+          "strides_sampled": 3,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_6_l_01_07_walk-rampdescent_seg01+2": {
+          "strides_sampled": 4,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_6_r_01_01_rampdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_6_r_01_01_rampdescent_seg01": {
+          "strides_sampled": 3,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|ramp_ramp_6_r_01_01_walk-rampascent_seg01+2": {
+          "strides_sampled": 4,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_6_r_01_01_walk-rampdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_6_r_01_02_rampascent_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_6_r_01_02_rampdescent-walk_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 8
+        },
+        "GT21_AB21|ramp_ramp_6_r_01_02_rampdescent_seg01": {
+          "strides_sampled": 3,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_6_r_01_02_walk-rampascent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_6_r_01_02_walk-rampdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_6_r_01_03_rampascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_6_r_01_03_rampdescent-walk_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 8
+        },
+        "GT21_AB21|ramp_ramp_6_r_01_03_rampdescent_seg01": {
+          "strides_sampled": 3,
+          "windows_of_leg": 8
+        },
+        "GT21_AB21|ramp_ramp_6_r_01_03_walk-rampascent_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_6_r_01_03_walk-rampdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_6_r_01_04_rampascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_6_r_01_04_rampascent_seg01": {
+          "strides_sampled": 2,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_6_r_01_04_rampdescent-walk_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 8
+        },
+        "GT21_AB21|ramp_ramp_6_r_01_04_walk-rampascent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_6_r_01_04_walk-rampdescent_seg01+1": {
+          "strides_sampled": 4,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_6_r_01_05_rampascent_seg01+1": {
+          "strides_sampled": 3,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_6_r_01_05_rampdescent-walk_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_6_r_01_05_rampdescent_seg01": {
+          "strides_sampled": 3,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_6_r_01_05_walk-rampascent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|ramp_ramp_6_r_01_05_walk-rampdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 9
+        },
+        "GT21_AB21|stair_stair_1_l_01_01_stairdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_1_l_01_01_stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_1_l_01_01_walk-stairascent_seg01+2": {
+          "strides_sampled": 2,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_1_l_01_01_walk-stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_1_l_01_02_stairascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_1_l_01_02_stairdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_1_l_01_02_walk-stairdescent_seg01+1": {
+          "strides_sampled": 1,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_1_l_01_03_stairascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_1_l_01_03_stairdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_1_l_01_03_stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_1_l_01_03_walk-stairascent_seg01+1": {
+          "strides_sampled": 1,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_1_l_01_03_walk-stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_1_l_01_04_stairascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_1_l_01_04_stairdescent_seg01+1": {
+          "strides_sampled": 1,
+          "windows_of_leg": 4
+        },
+        "GT21_AB21|stair_stair_1_l_01_04_walk-stairascent_seg01+1": {
+          "strides_sampled": 1,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_1_l_01_05_stairascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_1_l_01_05_stairdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 4
+        },
+        "GT21_AB21|stair_stair_1_l_01_05_walk-stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 4
+        },
+        "GT21_AB21|stair_stair_1_r_01_01_stairascent_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_1_r_01_01_stairdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 4
+        },
+        "GT21_AB21|stair_stair_1_r_01_01_stairdescent_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 4
+        },
+        "GT21_AB21|stair_stair_1_r_01_01_walk-stairascent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_1_r_01_01_walk-stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_1_r_01_02_stairdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 4
+        },
+        "GT21_AB21|stair_stair_1_r_01_02_stairdescent_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 4
+        },
+        "GT21_AB21|stair_stair_1_r_01_02_walk-stairascent_seg01+2": {
+          "strides_sampled": 2,
+          "windows_of_leg": 5
+        },
+        "GT21_AB21|stair_stair_1_r_01_02_walk-stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 5
+        },
+        "GT21_AB21|stair_stair_1_r_01_03_stairascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_1_r_01_03_stairascent_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_1_r_01_03_stairdescent_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 5
+        },
+        "GT21_AB21|stair_stair_1_r_01_03_walk-stairascent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_1_r_01_03_walk-stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_1_r_01_04_stairascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_1_r_01_04_stairdescent_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 5
+        },
+        "GT21_AB21|stair_stair_1_r_01_04_walk-stairascent_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_1_r_01_04_walk-stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_1_r_01_05_stairascent_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_1_r_01_05_stairdescent_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 5
+        },
+        "GT21_AB21|stair_stair_1_r_01_05_walk-stairascent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_1_r_01_05_walk-stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_2_l_01_01_stairascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_2_l_01_01_stairdescent_seg01+1": {
+          "strides_sampled": 1,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_2_l_01_01_walk-stairascent_seg01+1": {
+          "strides_sampled": 1,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_2_l_01_01_walk-stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_2_l_01_02_stairascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_2_l_01_02_walk-stairascent_seg01+1": {
+          "strides_sampled": 1,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_2_l_01_02_walk-stairdescent_seg01+2": {
+          "strides_sampled": 2,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_2_l_01_03_stairascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_2_l_01_03_stairdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_2_l_01_03_walk-stairdescent_seg01+1": {
+          "strides_sampled": 1,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_2_l_01_04_stairascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_2_l_01_04_stairdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_2_l_01_04_walk-stairascent_seg01+1": {
+          "strides_sampled": 1,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_2_l_01_04_walk-stairdescent_seg01+1": {
+          "strides_sampled": 1,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_2_l_01_05_stairdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 5
+        },
+        "GT21_AB21|stair_stair_2_l_01_05_walk-stairascent_seg01+2": {
+          "strides_sampled": 2,
+          "windows_of_leg": 5
+        },
+        "GT21_AB21|stair_stair_2_l_01_05_walk-stairdescent_seg01+1": {
+          "strides_sampled": 0,
+          "windows_of_leg": 5
+        },
+        "GT21_AB21|stair_stair_2_r_01_01_stairascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 5
+        },
+        "GT21_AB21|stair_stair_2_r_01_01_stairascent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 5
+        },
+        "GT21_AB21|stair_stair_2_r_01_01_stairdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 3
+        },
+        "GT21_AB21|stair_stair_2_r_01_01_stairdescent_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 3
+        },
+        "GT21_AB21|stair_stair_2_r_01_01_walk-stairascent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 5
+        },
+        "GT21_AB21|stair_stair_2_r_01_01_walk-stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 5
+        },
+        "GT21_AB21|stair_stair_2_r_01_02_stairascent_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_2_r_01_02_stairdescent_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 4
+        },
+        "GT21_AB21|stair_stair_2_r_01_02_walk-stairascent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_2_r_01_02_walk-stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_2_r_01_03_stairdescent_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 4
+        },
+        "GT21_AB21|stair_stair_2_r_01_03_walk-stairascent_seg01+2": {
+          "strides_sampled": 2,
+          "windows_of_leg": 5
+        },
+        "GT21_AB21|stair_stair_2_r_01_03_walk-stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 5
+        },
+        "GT21_AB21|stair_stair_2_r_01_04_stairascent_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_2_r_01_04_stairdescent_seg01": {
+          "strides_sampled": 2,
+          "windows_of_leg": 4
+        },
+        "GT21_AB21|stair_stair_2_r_01_04_walk-stairascent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_2_r_01_04_walk-stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_2_r_01_05_stairdescent_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 5
+        },
+        "GT21_AB21|stair_stair_2_r_01_05_walk-stairascent_seg01+2": {
+          "strides_sampled": 3,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_2_r_01_05_walk-stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_3_l_01_01_stairdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 5
+        },
+        "GT21_AB21|stair_stair_3_l_01_01_walk-stairascent_seg01+2": {
+          "strides_sampled": 2,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_3_l_01_01_walk-stairdescent_seg01+1": {
+          "strides_sampled": 1,
+          "windows_of_leg": 5
+        },
+        "GT21_AB21|stair_stair_3_l_01_02_stairascent_seg01+1": {
+          "strides_sampled": 1,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_3_l_01_02_walk-stairdescent_seg01+2": {
+          "strides_sampled": 2,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_3_l_01_03_stairascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_3_l_01_03_stairdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_3_l_01_03_stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_3_l_01_03_walk-stairascent_seg01+1": {
+          "strides_sampled": 1,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_3_l_01_03_walk-stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_3_l_02_01_stairascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_3_l_02_01_stairdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 4
+        },
+        "GT21_AB21|stair_stair_3_l_02_01_walk-stairascent_seg01+1": {
+          "strides_sampled": 1,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_3_l_02_01_walk-stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 4
+        },
+        "GT21_AB21|stair_stair_3_l_03_01_stairascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_3_l_03_01_walk-stairdescent_seg01+2": {
+          "strides_sampled": 2,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_3_l_03_02_walk-stairascent_seg01+2": {
+          "strides_sampled": 2,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_3_l_03_02_walk-stairdescent_seg01+2": {
+          "strides_sampled": 2,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_3_r_01_01_stairascent_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_3_r_01_01_stairdescent_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 5
+        },
+        "GT21_AB21|stair_stair_3_r_01_01_walk-stairascent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_3_r_01_01_walk-stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_3_r_01_02_stairascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_3_r_01_02_stairdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 4
+        },
+        "GT21_AB21|stair_stair_3_r_01_02_stairdescent_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 4
+        },
+        "GT21_AB21|stair_stair_3_r_01_02_walk-stairascent_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_3_r_01_02_walk-stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_3_r_01_03_stairdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 4
+        },
+        "GT21_AB21|stair_stair_3_r_01_03_stairdescent_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 4
+        },
+        "GT21_AB21|stair_stair_3_r_01_03_walk-stairascent_seg01+2": {
+          "strides_sampled": 3,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_3_r_01_03_walk-stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_3_r_01_04_stairascent_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_3_r_01_04_stairdescent_seg01": {
+          "strides_sampled": 2,
+          "windows_of_leg": 4
+        },
+        "GT21_AB21|stair_stair_3_r_01_04_walk-stairascent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_3_r_01_04_walk-stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_3_r_01_05_stairdescent_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 5
+        },
+        "GT21_AB21|stair_stair_3_r_01_05_walk-stairascent_seg01+2": {
+          "strides_sampled": 3,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_3_r_01_05_walk-stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_4_l_01_01_stairascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_4_l_01_01_stairdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 4
+        },
+        "GT21_AB21|stair_stair_4_l_01_01_stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 4
+        },
+        "GT21_AB21|stair_stair_4_l_01_01_walk-stairascent_seg01+1": {
+          "strides_sampled": 1,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_4_l_01_01_walk-stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_4_l_01_02_stairascent_seg01+1": {
+          "strides_sampled": 1,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_4_l_01_02_stairdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_4_l_01_02_walk-stairdescent_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 7
+        },
+        "GT21_AB21|stair_stair_4_l_01_03_stairascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_4_l_01_03_stairdescent_seg01+1": {
+          "strides_sampled": 1,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_4_l_01_03_walk-stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_4_l_01_04_stairascent_seg01+1": {
+          "strides_sampled": 1,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_4_l_01_04_stairdescent_seg01+1": {
+          "strides_sampled": 1,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_4_l_01_04_walk-stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_4_l_01_05_stairascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_4_l_01_05_stairdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_4_l_01_05_stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_4_l_01_05_walk-stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_4_r_01_01_stairascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_4_r_01_01_stairascent_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_4_r_01_01_stairdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 5
+        },
+        "GT21_AB21|stair_stair_4_r_01_01_stairdescent_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 5
+        },
+        "GT21_AB21|stair_stair_4_r_01_01_walk-stairascent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_4_r_01_01_walk-stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_4_r_01_02_stairdescent_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 4
+        },
+        "GT21_AB21|stair_stair_4_r_01_02_walk-stairascent_seg01+2": {
+          "strides_sampled": 3,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_4_r_01_02_walk-stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_4_r_01_03_stairascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_4_r_01_03_stairdescent_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 5
+        },
+        "GT21_AB21|stair_stair_4_r_01_03_walk-stairascent_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_4_r_01_03_walk-stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_4_r_01_04_stairascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 5
+        },
+        "GT21_AB21|stair_stair_4_r_01_04_stairdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 5
+        },
+        "GT21_AB21|stair_stair_4_r_01_04_stairdescent_seg01": {
+          "strides_sampled": 2,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_4_r_01_04_walk-stairascent_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 5
+        },
+        "GT21_AB21|stair_stair_4_r_01_04_walk-stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 5
+        },
+        "GT21_AB21|stair_stair_4_r_01_05_stairascent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_4_r_01_05_stairdescent-walk_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_4_r_01_05_stairdescent_seg01": {
+          "strides_sampled": 1,
+          "windows_of_leg": 5
+        },
+        "GT21_AB21|stair_stair_4_r_01_05_walk-stairascent_seg01+1": {
+          "strides_sampled": 2,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|stair_stair_4_r_01_05_walk-stairdescent_seg01": {
+          "strides_sampled": 0,
+          "windows_of_leg": 6
+        },
+        "GT21_AB21|treadmill_treadmill_01_01_speed_0.50_seg01": {
+          "strides_sampled": 18,
+          "windows_of_leg": 109
+        },
+        "GT21_AB21|treadmill_treadmill_01_01_speed_0.85_seg02": {
+          "strides_sampled": 25,
+          "windows_of_leg": 110
+        },
+        "GT21_AB21|treadmill_treadmill_01_01_speed_1.20_seg01": {
+          "strides_sampled": 31,
+          "windows_of_leg": 110
+        },
+        "GT21_AB21|treadmill_treadmill_01_01_speed_1.55_seg01": {
+          "strides_sampled": 36,
+          "windows_of_leg": 109
+        },
+        "GT21_AB21|treadmill_treadmill_02_01_speed_0.55_seg01": {
+          "strides_sampled": 21,
+          "windows_of_leg": 114
+        },
+        "GT21_AB21|treadmill_treadmill_02_01_speed_0.90_seg02": {
+          "strides_sampled": 26,
+          "windows_of_leg": 115
+        },
+        "GT21_AB21|treadmill_treadmill_02_01_speed_1.25_seg01": {
+          "strides_sampled": 32,
+          "windows_of_leg": 114
+        },
+        "GT21_AB21|treadmill_treadmill_02_01_speed_1.60_seg01": {
+          "strides_sampled": 36,
+          "windows_of_leg": 115
+        },
+        "GT21_AB21|treadmill_treadmill_03_01_speed_0.60_seg01": {
+          "strides_sampled": 21,
+          "windows_of_leg": 116
+        },
+        "GT21_AB21|treadmill_treadmill_03_01_speed_0.95_seg02": {
+          "strides_sampled": 27,
+          "windows_of_leg": 116
+        },
+        "GT21_AB21|treadmill_treadmill_03_01_speed_1.30_seg01": {
+          "strides_sampled": 32,
+          "windows_of_leg": 116
+        },
+        "GT21_AB21|treadmill_treadmill_03_01_speed_1.65_seg01": {
+          "strides_sampled": 37,
+          "windows_of_leg": 117
+        },
+        "GT21_AB21|treadmill_treadmill_04_01_speed_0.65_seg01": {
+          "strides_sampled": 23,
+          "windows_of_leg": 119
+        },
+        "GT21_AB21|treadmill_treadmill_04_01_speed_1.00_seg02": {
+          "strides_sampled": 27,
+          "windows_of_leg": 119
+        },
+        "GT21_AB21|treadmill_treadmill_04_01_speed_1.35_seg01": {
+          "strides_sampled": 32,
+          "windows_of_leg": 118
+        },
+        "GT21_AB21|treadmill_treadmill_04_01_speed_1.70_seg01": {
+          "strides_sampled": 37,
+          "windows_of_leg": 119
+        },
+        "GT21_AB21|treadmill_treadmill_05_01_speed_0.70_seg01": {
+          "strides_sampled": 24,
+          "windows_of_leg": 124
+        },
+        "GT21_AB21|treadmill_treadmill_05_01_speed_1.05_seg02": {
+          "strides_sampled": 29,
+          "windows_of_leg": 124
+        },
+        "GT21_AB21|treadmill_treadmill_05_01_speed_1.40_seg01": {
+          "strides_sampled": 34,
+          "windows_of_leg": 125
+        },
+        "GT21_AB21|treadmill_treadmill_05_01_speed_1.75_seg01": {
+          "strides_sampled": 38,
+          "windows_of_leg": 125
+        },
+        "GT21_AB21|treadmill_treadmill_06_01_speed_0.75_seg01": {
+          "strides_sampled": 25,
+          "windows_of_leg": 128
+        },
+        "GT21_AB21|treadmill_treadmill_06_01_speed_1.10_seg02": {
+          "strides_sampled": 30,
+          "windows_of_leg": 128
+        },
+        "GT21_AB21|treadmill_treadmill_06_01_speed_1.45_seg01": {
+          "strides_sampled": 35,
+          "windows_of_leg": 128
+        },
+        "GT21_AB21|treadmill_treadmill_06_01_speed_1.80_seg01": {
+          "strides_sampled": 39,
+          "windows_of_leg": 128
+        },
+        "GT21_AB21|treadmill_treadmill_07_01_speed_0.80_seg01": {
+          "strides_sampled": 26,
+          "windows_of_leg": 132
+        },
+        "GT21_AB21|treadmill_treadmill_07_01_speed_1.15_seg02": {
+          "strides_sampled": 31,
+          "windows_of_leg": 132
+        },
+        "GT21_AB21|treadmill_treadmill_07_01_speed_1.50_seg01": {
+          "strides_sampled": 36,
+          "windows_of_leg": 131
+        },
+        "GT21_AB21|treadmill_treadmill_07_01_speed_1.85_seg01": {
+          "strides_sampled": 40,
+          "windows_of_leg": 132
+        }
+      }
+    }
+  },
+  "schema": "locohub.training_compare/1",
+  "scientific_approval": false,
+  "seconds": 15.5,
+  "settings": {
+    "align_rms_tol_Nm_kg": 0.1,
+    "cop_origin_shift_m": 0.1,
+    "hist_bin_width_rule": "reporting size / 200, 10000 bins",
+    "min_overlap_fraction": 0.3,
+    "min_overlap_n": 100,
+    "um21_side": "right",
+    "wrap_analysis": true,
+    "wrap_rule": "A matched angle sample is called \"wrapped\" when the training value is more than 90 degrees away from the LocoHub value AND the difference (training minus LocoHub) is within 20 degrees of a multiple of 180 degrees. Multiples that are even (0, 360, 720 ...) are \"whole-turn wraps\"; odd multiples (180, 540 ...) are \"half-turn flips\". Corrected value = training value minus that multiple of 180 degrees. Both numbers (90 and 20) were fixed in advance, not tuned. Velocity: the ankle-angle wrap flags are widened by 2 samples on each side and velocity samples inside the widened flags are left out (neighbours are neighbours in the compared sample order; for UM21 this also reaches across stride joins)."
+  },
+  "status": "complete",
+  "subjects_run": [
+    "AB21"
+  ],
+  "training_file": "/mnt/s/workspace_docs/energy shaping ml/esml_research/LocoHub/es_prepared/gate/gtech_2021_time.parquet",
+  "training_file_bytes": 314158463,
+  "training_subjects": [
+    "AB06",
+    "AB07",
+    "AB08",
+    "AB09",
+    "AB10",
+    "AB11",
+    "AB13",
+    "AB14",
+    "AB16",
+    "AB18",
+    "AB20",
+    "AB21",
+    "AB24",
+    "AB25",
+    "AB30"
+  ],
+  "unavailable_in_locohub": {}
+}

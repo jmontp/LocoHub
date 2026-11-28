@@ -1,0 +1,118 @@
+{
+ "task_id": "GT23-C03",
+ "verifier_role": "independent second agent (own code; worker functions not imported or reused)",
+ "verdict": "done",
+ "last_checked_at_utc": "2026-10-31T07:30:00Z",
+ "round_2": {
+  "verdict": "done",
+  "last_checked_at_utc": "2026-10-31T07:30:00Z",
+  "summary": "Round 2, checked against the files with no new data reads. All four required fixes are in. The worker's deviation on AB03 is correct, and my round-1 list was wrong (see deviation_ruling). The decision is ready to copy. Done means the deliverables meet their acceptance criteria. It does not give scientific approval to GT23 kinetics.",
+  "fix_checks": [
+   {
+    "fix": 1,
+    "result": "pass",
+    "evidence": "decision.json and handoff decisions[0] are identical. The 'why' now reads 'An N·m re-run fixes the divisor in 8 level-walking trials; in 7 it is another participant's mass ...', which matches my counts (AB01 correct; AB05, AB06, AB08, AB10, AB12 exact; AB09, AB13 near-exact)."
+   },
+   {
+    "fix": 2,
+    "result": "pass",
+    "evidence": "The headline reads 'GT23 moments not divided by the subject's own mass in 9 of 12 subjects'. The failed chip reads 'Not own mass in 9 of 12 subjects; another subject's mass by re-run in 7, the previous subject's in 6'. The handoff verdict, summary and likely_cause use the same 9 / 7 / 6. Figure 1 now marks the force-plate-only dots as open and adds ticks for every mass that also fits (AB02, AB03, AB07, AB11). The caption is 'Squares exact; open dots not unique.' The x axis is labelled 'mass (kg, log scale)'."
+   },
+   {
+    "fix": 3,
+    "result": "pass",
+    "evidence": "The chip reads 'Force-plate estimate within 4.9 % of the exact divisor out of sample (3 of 3; bias set on 5 of 8)'. The details name the 5 calibration subjects (AB01, AB06, AB09, AB12, AB13) and give the worst out-of-sample value, 4.9 %. These agree with the audit's tolerance_v2 (n_subjects 5)."
+   },
+   {
+    "fix": 4,
+    "result": "pass",
+    "evidence": "tolerance.honesty_note now says the test subjects were the known C02 anomalies (not blind) and that the timestamps come from the final run only. motionfile_eh_caveats records provenance, the inconsistent IK/ID pair in AB01/AB05, the non-matching AB02/AB03/AB11 re-runs and the invalid right-side forces. Option B now says 'where an N·m re-run matches the published values by a constant'."
+   }
+  ],
+  "deviation_ruling": "The worker is right. The audit's lever divisors (AB03 82.55, AB07 76.55, AB02 82.13, AB11 67.3) are already divided by the 0.9942 bias. In round 1 I divided by it again. Within ±0.0488 log: AB03 82.55 fits 78.9 (|log| 0.045), 79.1 (0.043), 82.2 (0.004) and 84.1 (0.019), four candidates as the worker says. AB07 76.55 fits 78.9 (0.030) and 79.1 (0.033) only, as I said. The conclusion is unchanged: AB03 and AB07 are clearly not their own mass and do not identify a unique other subject. The sheet details now list the four AB03 candidates.",
+  "decision_checks": "decision.json is identical to handoff decisions[0]. Appended to a copy of backlog.json it passes validate_backlog (1 open decision). The letters and meanings are unchanged: A withhold, B rescale matched trials, C as published. The order is neutral (trials released: none, matched, all), stated in options_order and the footnote. decide_before_recommendation is true and the status is open. The recommendation appears only in the click-to-reveal fold; the ask strip, headline, chips and the reply hint 'A, B, C or defer' do not name it. The decision ID has been removed from the ask strip and title and is kept only in the reply line, as AGENTS.md's 'D-3: A' convention requires. The check (AB06 square on the 71.5 diamond) is still true.",
+  "sheet_recheck": "Re-rendered at 1100 px and in a 390 px iframe and inspected. The order is unchanged and the budgets are met: 8 chips (2 pass, 3 failed, 3 not checked), 3 figures, 3 not-shown items. fig1 is 765 px at 170 dpi = 4.50 in, the builder has no fontsize under 10, and nothing clips. No paths, hashes or task IDs appear before the folded details. The audit is unchanged (sha256 9dcc6b2d...). The handoff output_sha256 matches the current probe 66a83754..., index.html 4bf271b8... and decision.json d005d0b6...; only the sheet and figure code changed.",
+  "minor_not_blocking": [
+   "The folded details label AB09 and AB13 '(exact)'; the handoff calls them near-exact (residual 0.2-0.4 and 3.5-4.7 N·m).",
+   "Handoff verdict AB02 'own 82.2 or AB01 78.9 within tolerance' omits 79.1 and 84.1, which also fit. One summary sentence still glosses AB03/AB07 with a single previous-subject mass before the established-counts sentence corrects it."
+  ],
+  "decision_ready_to_copy": "Yes. Copy D-GT23-C03-1 exactly as in docs/maintainers/handoffs/GT23-C03.json decisions[0] (A withhold, B rescale matched trials, C as published; decide_before_recommendation true).",
+  "next_action": "The main session moves GT23-C03 to done and copies D-GT23-C03-1 into backlog.json as open. GT23 kinetics stay blocked on José's answer."
+ },
+ "round_1": {
+  "verdict": "back_to_worker",
+  "last_checked_at_utc": "2026-10-31T06:58:00Z",
+  "summary": "The core finding reproduces with my own code. Published GT23 moments were not divided by the participant's own mass in most subjects, and the divisor changes between trials of one subject. Exact checks: AB06 normal_walk_1 is the local N·m re-run divided by exactly 71.5 (AB05's README mass); the max residual is 0.0 N·m in all 6 columns, against 17-26 N·m for its own 79.1. AB08 is divided by exactly 62.3 (AB07's), AB05's level walk by 78.9 (AB01's), and AB01 by its own 78.9. The mass-free force-plate estimate agrees: AB06 72.6-73.8, AB08 63.2-63.7, AB05 incline_walk_2 115-120 kg. The re-run files are physical N·m, not published values times a mass, so they are not circular. Returned for wording only: the decision 'why' miscounts, the sheet headline and chip overstate 'another subject's mass' for two subjects that only the force plates estimate, the calibration claim is partly in-sample, and the blinding note omits that the test subjects were known C02 anomalies. The decision is structurally ready; copy it after fix 1. No scientific approval is implied.",
+  "checks": [
+   {
+    "id": 1,
+    "name": "Re-derivation with my own code",
+    "result": "pass",
+    "evidence": "Part A, local re-run (MotionFile_EH/inverse_dynamics.sto) vs published normal_walk_1 Joint_Moments.csv, matched on time stamps (all rows), slope through the origin and max |sto - m x published| for each of the 24 README and model masses: AB06: slope 71.5000 in all 6 columns (L and R hip, knee, ankle); best candidate README AB05 71.5 with max residual 0.0 N·m; model AB05 71.541 gives 0.09-0.14; own 79.1 gives 17-26 N·m. AB08: 62.3000 in 6 columns; README AB07 residual 0.0; model AB07 0.11-0.19; own 87.6 gives 73-120 N·m. AB05 normal_walk_1: 78.8999; README AB01 residual 0.008-0.034; own 71.5 gives 21-28 N·m. AB01: 78.9001; own README residual 0.02-0.10; AB06's 79.1 gives 0.28-0.76. AB11: no exact relation. Slopes 57.0-69.7 by column, corr 0.9937-0.99996, best residual 2.1-17 N·m. The re-run's IK differs from the published angles by up to 6.3 deg, so it is a different ID run and not a reference (agrees with the worker, who did not use it). Part B, mass-free lever arm (Virtual_Insoles, generic talus point, which equals every model's, 40-90 % stance), implied divisor of the published ankle column: AB01 normal_walk_1 83.9 (L); AB05 normal_walk_1 82.8; AB05 incline_walk_2 115.3 L / 120.4 R (own 71.5, AB03 113.5); AB06 73.8 / 72.6 (own 79.1); AB08 63.7 / 63.2 (own 87.6); AB11 68.0 / 69.6 (own 65.1, AB10 67.5); AB13 normal_walk_1 67.4 / 63.8; AB13 incline_walk_1 67.2 / 68.1. My estimator reads 1.4-6.4 % high against the exact divisors (6 legs, 4 subjects); it is a different method from the worker's, so its bias differs. After that correction, AB06, AB08 and AB05 incline are far from their own masses. AB11 cannot separate 65.1 from 67.5, as the worker says."
+   },
+   {
+    "id": 2,
+    "name": "Is the MotionFile_EH re-run a trustworthy, non-circular reference?",
+    "result": "pass (with provenance caveats)",
+    "evidence": "Provenance: none of the 7038 publisher RawData archive entries contain MotionFile. The files are dated 2024-08-06 to 08-08 (AB05's .sto 2024-10-15), and each ID .sto was written 3-11 min after the IK .mot beside it, subject by subject: a local batch run. The header is the plain OpenSim 'Inverse Dynamics Generalized Forces' with no model or version. AB07's folder is empty, and AB01's ID_results.mot is mislabeled (header IDResults, but it holds coordinates). Not circular: (a) the .sto has finite, physiological right-side moments (AB01 and AB05 right ankle p1 -265 / -278 N·m) where the published right columns are entirely NaN, plus pelvis, lumbar and mtp generalized forces that the published files lack, so it cannot be published values times a mass; (b) against the mass-free lever arm the .sto ankle has slope 0.940-0.986 (8 legs, 5 subjects, corr >= 0.999). If the .sto were 'published x wrong mass' over a correctly normalized publication, those slopes would be 0.71 (AB08), 0.90 (AB06) and 1.10 (AB05). So the .sto is physical N·m, and published = .sto / divisor shows the authors' divisor. Caveats: in AB01 and AB05 the IK file beside the .sto differs from the published angles by up to 0.15 deg, yet the .sto matches published to 0.1 N·m, so the folder's IK and ID are not a consistent pair. AB02, AB03 and AB11 re-runs do not match published by a constant. The right-side .sto moments use plate forces the README calls invalid (broken equipment) and must not be used. Conclusion: usable as an exact reference only where it matches published by a constant (corr 1.0), and validated by force plates, not by provenance."
+   },
+   {
+    "id": 3,
+    "name": "'Previous subject' pattern vs similar masses",
+    "result": "pass for the exact cases; overstated for lever-only subjects",
+    "evidence": "The exact divisors are the one-decimal README / publisher-table values, not model masses: AB06 71.5 gives 0.0 N·m but AB05's model 71.541 gives 0.09-0.14; AB08 62.3 gives 0.0 but 62.261 gives 0.11-0.19. A random divisor would fall within 0.005 kg of one of 12 table values about 0.2 % of the time, so each exact case is a table value, not a near coincidence. Among the exact or near-exact wrong cases (worker's AB09 87.57 and AB13 64.003 are near, with residuals 0.2-0.4 and 3.5-4.7 N·m), 6 of 7 equal the previous subject in README order: AB06, AB08, AB09, AB10, AB12, AB13. AB05's level walk equals AB01 instead. By chance that would be about (1/11)^6, so the pattern is real. Lever-only subjects are not unique under the worker's own ±4.88 % band after bias 0.9942: AB03 83.0 fits AB02 82.2 (|log| 0.010) and AB09 84.1 (0.013); AB07 77.0 fits AB06 79.1 (0.027) and AB01 78.9 (0.024). Both are clearly not their own mass (113.5, 62.3). So the established count is 'not own mass' in 9 subjects, 'another subject's exact table mass' in 7, and 'previous subject' in 6. AB05's non-level trials (about 113-120 kg) fit its previous subject AB03."
+   },
+   {
+    "id": 4,
+    "name": "Tolerance protocol",
+    "result": "acceptable with disclosure fixes",
+    "evidence": "The v1 rule (README-centred band) was replaced by v2 after the reference results showed the reference subjects themselves were mis-normalized; the handoff says so. The exact-divisor findings do not depend on any tolerance. Tolerance only affects the lever-only subjects (AB02, AB03, AB07, AB11) and the trial flags. Issues: (a) tolerance_fixed_at_utc 06:43:02 and tolerance_v2_fixed_at_utc 06:43:04 are both stamped inside the final run (finished 06:43:11). They show ordering within that run only, not that the test data were unseen during development. (b) The 'test' subjects AB03, AB05, AB08 and AB10 are exactly the C02 anomalies (AB03 and AB05 from the C02 verification, AB08 0.73x and AB10 1.33x from the C02 worker), so their direction was known before this task. They are not a blind test. (c) The chip 'force-plate estimate matches the exact divisor within 4.9 % in 8 of 8' includes the 5 calibration subjects (AB01/06/09/12/13; audit tolerance_v2 n_subjects 5). Out of sample it is 3 of 3 (AB05 2.1 %, AB08 1.3 %, AB10 4.9 %, the last at the band edge). The sheet details say 'calibrated on 8 trials', which contradicts the audit's 5."
+   },
+   {
+    "id": 5,
+    "name": "Decision D-GT23-C03-1",
+    "result": "pass with one content fix",
+    "evidence": "The sheet decision.json is identical to the handoff decision. Appending it to a copy of backlog.json passes validate_backlog (1 open decision; at most 3 allowed). Options A withhold / B rescale matched / C as published are ordered by a neutral attribute (trials released: none, matched, all), stated in the builder (line 790) and a footnote. The table has a 'Left out' column first and a defer row with its cost. The recommendation sits only in the click-to-reveal fold, and nothing else names it; the reply hint 'A, B, C or defer' is neutral. decide_before_recommendation is true. No hashes, paths or numbers that look like IDs appear in the question, check or cost. The check is true: I measured the AB06 divisor at exactly 71.5. Fix needed: 'why' says 'The wrong divisor is measured exactly in 8 trials'. Of the 8 re-run matches, AB01's divisor is its own (correct), and AB09/AB13 are near-exact, not exact."
+   },
+   {
+    "id": 6,
+    "name": "Sheet rules (rendered at 1100 px and in a 390 px iframe)",
+    "result": "pass with wording fixes",
+    "evidence": "Order: ask, headline, 8 chips (2 pass, 3 failed, 3 not checked), 3 figures titled as questions, decision table, fold, 3 not-shown items, reply, details. All 3 PNGs are 765 px at 170 dpi = 4.50 in, the builder has no fontsize under 10, and nothing clips at either width. The figure 2 comparison subject is drawn from a recorded seed (20261032). Problems: the headline and failed chip 'divided by another subject's mass in 9 of 12' overstate for AB03 and AB07 (see check 3). Figure 1 shows only the previous-subject candidate, so the lever-only black dots look unique when they are not. The x axis is non-linear (90-100-115) but not labelled. The ask strip and page title show the decision ID; the newer D-UM21 sheets use plain words, and the ID is needed only in the reply line (optional)."
+   },
+   {
+    "id": 7,
+    "name": "Tests and files",
+    "result": "pass",
+    "evidence": "tests/test_backlog_workflow.py: 71 passed. build_backlog_page.py --check: 'Backlog valid; HTML current (90 tasks).' The worker's output_sha256 values match the current probe (ccca1373...), audit (9dcc6b2d...), sheet index (ec12916d...) and decision.json (c1aef205...). Every RawData CSV I read (36 reads) matches the publisher CRC32 and size. The local MotionFile_EH files have no archive entry. All 46 files I read had unchanged mtimes."
+   }
+  ],
+  "required_fixes": [
+   "1. Decision 'why' (copied into backlog.json): replace 'The wrong divisor is measured exactly in 8 trials' with an accurate count, e.g., 'An N·m re-run fixes the divisor in 8 walking trials; in 7 it is another participant's mass, and it changes between trials of one subject'. Keep option letters and meanings unchanged.",
+   "2. Sheet headline and failed chip: replace 'divided by another subject's mass in 9 of 12' with what is established, e.g., 'not divided by their own mass in 9 of 12 subjects (another subject's exact mass in 7)'. Apply the same correction to the handoff summary/pattern: previous subject exact in 6 (AB06, AB08, AB09, AB10, AB12, AB13); AB03 (AB02 82.2 or AB09 84.1) and AB07 (AB06 79.1 or AB01 78.9) are consistent but not unique; AB05 level walk = AB01. Figure 1 caption or legend: say the force-plate-only dots are not unique.",
+   "3. Calibration disclosure: change the chip to say 5 of the 8 calibrated the bias (out-of-sample 3 of 3, worst 4.9 %), and correct the sheet details 'calibrated on 8 trials' to 5 subjects (the audit's tolerance_v2 n_subjects).",
+   "4. Handoff tolerance.honesty_note: add that the test subjects AB03, AB05, AB08 and AB10 were chosen as the known C02 anomalies, so the test is not blind, and that the tolerance timestamps come from the final run only."
+  ],
+  "optional": [
+   "Option B consequence: say 'where a re-run matches the published values by a constant'. Re-runs exist for 11 subjects, but AB02, AB03 and AB11 do not match. Also say that the re-run right-side moments use plate forces the README calls invalid.",
+   "Record the mechanism clue: the exact divisors are the one-decimal mass-table values (71.5, not the model's 71.541), consistent with a table lookup offset. The mechanism is still not established.",
+   "Label figure 1's x axis as log (or make it linear), and drop the decision ID from the ask strip and title (keep it in the reply line)."
+  ],
+  "decision_ready_to_copy": "Not yet. Structure, schema, neutral order, letters, check and blinding all pass. Copy D-GT23-C03-1 into backlog.json after required fix 1 corrects the 'why' text. Fixes 2-4 are sheet and handoff wording and do not change the decision fields.",
+  "next_action": "Worker applies fixes 1-4 (sheet step and handoff only; no new data reads). The verifier re-checks the text, re-renders, and then the main session copies D-GT23-C03-1 (A withhold, B rescale matched, C as published) into backlog.json."
+ },
+ "seed": "not applicable (targeted subjects: AB01, AB05, AB06, AB08, AB11 re-run; lever trials AB01/AB05/AB06/AB08/AB11/AB13 normal_walk_1, AB05 incline_walk_2, AB13 incline_walk_1)",
+ "peak_rss_mib": {
+  "probe": 210.1,
+  "probe_usr_bin_time_mib": 211.3,
+  "right_side_check": 130.3
+ },
+ "resources": "Read-only probe under the AGENTS.md exception: one subject/trial in memory at a time, nice 19, ionice idle, single-threaded BLAS, ulimit -v 1.5 GiB, wall 3.7 s; output to the session scratchpad only. Deviation: when I launched it, another agent's pytest run (nice 19, about 244 MiB) was running, so the probe did not run strictly alone. I did not wait. No MATLAB, conversion or write under converted_datasets/ or the source tree.",
+ "verifier_code": {
+  "path": "contributor_tools/audit_probes/2026_10_31/verify_gt23_c03_normalizing_mass.py",
+  "sha256": "dc92991429f2a11c26d2e71840b49a3cdd1d6df49ffc6b77d8dedc824a9fb0aa",
+  "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 contributor_tools/audit_probes/2026_10_31/verify_gt23_c03_normalizing_mass.py <out.json>",
+  "output_note": "Output JSON in the session scratchpad (gt23_c03_verify.json). The ID-model-mass-from-residual field it writes is not interpretable (the GRF set used by the re-run is unknown) and is not used."
+ },
+ "next_action": "The main session moves GT23-C03 to done and copies D-GT23-C03-1 into backlog.json as open. GT23 kinetics stay blocked on José's answer."
+}

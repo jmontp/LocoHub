@@ -1,0 +1,102 @@
+{
+  "task_id": "GT23-C06",
+  "verifier_role": "independent second agent; recomputed from source markers, Transforms_Euler and step-1 plate data with my own code (scripts in /tmp/gt23verify, not committed; no import of the worker's code); wrote nothing under converted_datasets/",
+  "verdict": "done",
+  "last_checked_at_utc": "2026-11-24T03:00:45Z",
+  "summary": "Re-verification after rework: PASS. The plate-height bug is fixed in batch3 and my independent recompute reproduces it to 5e-16 m; angles, speeds, force and held columns are identical to batch2; curb_up is held with a defensible, conservative rule. This approves the conversion arithmetic only, not any scientific range, and approves no dataset.",
+  "receipts": {
+    "batch2_all_12": "completed, exit 0, clean_success, all checks true, bindings equal the current sha256 of all five code files and the launcher",
+    "summary2": "same, bindings equal current code",
+    "final_code_pilots": "only one pilot matches the current code (pilot2 AB05 normal_walk_1, run just before batch AB01). The stairs pilot (pilot2 AB01 stairs) was run with a run_gt23_c06.py that was edited 18 s later (hash differs); stairs were therefore not piloted at the bound code. Process deviation, not a data fault, but it hid the bug below",
+    "peak_rss_worker_mib": "262 to 286 (batches), 309 (AB02)"
+  },
+  "sample": {
+    "seed": 20261127,
+    "random_draw_10": [
+      "AB01 side_shuffle_1",
+      "AB09 sit_to_stand_2",
+      "AB05 lift_weight_1",
+      "AB12 meander_1",
+      "AB05 stairs_1_7",
+      "AB08 tug_of_war_1",
+      "AB12 stairs_1_10",
+      "AB02 stairs_1_9",
+      "AB03 curb_up_1",
+      "AB05 squats_1"
+    ],
+    "added": [
+      "AB08 stairs_1_1 (second stairs, seed 20261128 choice)",
+      "AB03 weighted_walk_1 (LASI missing, seed 20261128 choice)",
+      "AB07 normal_walk_1 (LMANK missing)",
+      "AB05 normal_walk_1 (reference walking)"
+    ],
+    "note": "the random draw itself held three stairs and one curb recordings and only squats/lift/meander/shuffle etc. as other tasks"
+  },
+  "recompute_agreement": {
+    "method": "fwd = up x (RASI-LASI) per sample; segment angles in the (fwd, up) plane: pelvis and foot by atan2 from forward, thigh and shank by atan2 from down; thigh and shank from Transforms_Euler body y axis via scipy intrinsic YZX in file order; joint angles as differences; speeds by wrapped central difference at 200 Hz; foot-frame pressure point from the x01 plate columns and markers, origin ankle midpoint + 0.1 m along heel-to-toe, up = vertical minus heel-to-toe part, lateral outward",
+    "angles_max_abs_diff_rad": "9e-16 over all 13 recordings with data",
+    "speeds_max_abs_diff_rad_s": "1.3e-13",
+    "pressure_point_foot_frame_max_abs_diff_m": "4.6e-16 (with the same plate height 0 the worker used)",
+    "finite_pattern_mismatches": 0,
+    "independent_check_of_euler_shank": "shank from knee-to-ankle markers vs Euler shank: r 0.984 to 0.9998 where defined, constant offset -0.1 to -4.5 deg (ordinary landmark offset), so the Euler order and sign are right"
+  },
+  "held_columns": {
+    "result": "pass",
+    "detail": "Every held-column count by reason and task in the 488 ledgers equals the handoff table. 2529 held columns across all 488 recordings: all present in the parquet, none has a finite value. Spot cases: AB03 weighted_walk_1 (LASI missing) has no finite angle or speed; AB07 normal_walk_1 (LMANK missing) has the left pressure point missing and the right one present. Nothing was filled."
+  },
+  "pelvis_and_hip_offset": {
+    "result": "explained, no error found",
+    "detail": "Walking, hip(ours) - hip(publisher) equals minus (marker pelvis angle - model pelvis x-axis angle) to 0.1 deg: AB05 12.5 vs 12.5, AB03 9.0 vs 9.1, AB07 0.8 vs 0.8, AB12 3.7 vs 3.8 (L and R agree). Knee offset 0.00 and thigh/shank agree with the model, so the whole hip offset is the pelvis definition (PSIS-to-ASIS vs the model pelvis axis).",
+    "pelvis_marker_median_deg_whole_recording": {
+      "AB05 normal_walk": -22.1,
+      "AB03 normal_walk": -17.9,
+      "AB12 normal_walk": -9.5,
+      "AB07 normal_walk": -2.0,
+      "AB01 side_shuffle": -16.0,
+      "AB09 sit_to_stand": -7.5
+    },
+    "typical_comparison": "the model own PSIS/ASIS landmark angle (worker ledger) is -13 deg for AB05 and -9 for AB03/AB01, so the marker angle follows each participant model landmarks. -10 to -20 deg (anterior tilt) is within the usual range for this PSIS-ASIS definition; AB05 at -22 is at the high end and AB07 at -2 and AB12 at -9.5 are at the low end. Not checked: quiet standing (no static trial identified here).",
+    "limit": "This shows the offset is a definition difference and not an error. It does not say which participant true tilt is right."
+  },
+  "stairs_cop": {
+    "result": "cause found: bug, not the plate frame and not the heading fallback",
+    "detail": "The foot-frame pressure point is computed from COPX and COPZ with the height forced to 0. In stairs the source plate COPY_Vertical is 0.35 to 0.83 m (AB12 stairs_1_10: L 0.51, R 0.35; AB02 stairs_1_9: L 0.66, R 0.50; AB08 stairs_1_1: L 0.83, R 0.67) and the heel marker height during load follows it (0.06 to 0.1 m above it). So the vertical foot-frame coordinate is -0.4 to -0.9 m (median in my sample: -0.57 to -0.89) and the forward coordinate is distorted by the tilt of the foot. Re-running my own computation with COPY_Vertical gives a median vertical -0.065 to -0.096 m and outside-by-5-cm share 0 to 3% (AB12 stairs_1_10 0.00, AB05 stairs_1_7 0.00 to 0.01, AB08 stairs_1_1 0.01, AB02 stairs_1_9 0.02 to 0.03), against 25 to 100% as converted. Level walking has COPY = 0, which is why the pilots passed. Heading fallback is not involved: the pressure point does not use heading.",
+    "likely_also_affected": "Published ankle moment ratio 0.35 on stairs is expected to rise once the vertical offset is fixed (the moment arm used the wrong height); not recomputed.",
+    "curb_and_other_tasks": "AB03 curb_up_1 still has median vertical -0.247 m and 10 to 12% outside after using COPY_Vertical: its COPY is about 0.009 m while the heel marker rises to 0.22 to 0.43 m during load. Not explained (may be samples on the curb, not on the plate). The worker summary also lists curb_down 11%, curb_up 13%, cutting 18% median outside share. Not checked here.",
+    "fix": "use COPY_Vertical (and the force plate height) as the lab-y of the pressure point wherever it is finite; add a stairs plate-height test and a stairs pilot at the bound code; rerun the 124 stairs recordings and review the curb, cutting and step_ups results."
+  },
+  "checks_run": {
+    "pytest tests/test_gt23_c06.py": "18 passed",
+    "build_backlog_page.py --check": "Backlog valid; HTML current (120 tasks)",
+    "peak_rss_mib_my_probes": "241.4 (largest single recording, /usr/bin/time -v), held-column scan 158.5; nice 19, ionice idle, one process at a time",
+    "memory_before": "Linux available 8.3 GB (floor 3.5 GB); Windows check not needed (no MATLAB or native job)"
+  },
+  "not_checked": [
+    "quiet-standing pelvis tilt (no static recording identified)",
+    "the full 488 recordings by my own code (14 recorded samples only)",
+    "scientific approval of the PSIS-ASIS pelvis definition",
+    "curb, cutting and step_ups pressure-point plausibility",
+    "force-plate height assumptions for right-plate treadmill recordings"
+  ],
+  "next_action": "GT23-M01 (and GT23-Q01 with its held stairs-CoP criterion no longer binding on a bug: stairs CoP columns are now valid as converted; Q01 may keep the hold until its own review).",
+  "v1": {
+    "verdict": "ready",
+    "last_checked_at_utc": "2026-11-24T02:32:39Z",
+    "summary": "Angles, speeds and held columns are correct and reproduce to rounding. The stairs foot-frame pressure point is wrong because of a bug: the code puts the plate pressure point at height 0, but on the stairs the plate surface is 0.35 to 0.83 m above the lab floor and the source gives that height in the COPY_Vertical column. Using it, the stairs pressure point falls back inside the foot (outside-by-5-cm share 0 to 3% instead of 25 to 100%). The 124 stairs recordings (and probably the curb ones, see below) need a rerun, so the task goes back to ready."
+  },
+  "version": 2,
+  "v2_rework_check": {
+    "bound_code": "All 3 pilots3 (AB12 stairs_1_10, AB03 curb_up_1, AB05 normal_walk_1), the 12 batch3 jobs and summary3 completed clean (exit 0, all checks true); every one binds the same six code hashes, equal to the current files. Pilots ran 02:43 before batches (02:44-02:52) and the summary (02:53). Peak RSS 151-310 MiB. pytest tests/test_gt23_c06.py: 20 passed.",
+    "cop_recompute": "16 recordings (my earlier 14 with the 2 held ones included, plus AB10 stairs_1_3 and AB13 stairs_1_5), my own code with COPY_Vertical as lab height: angles max diff 8.9e-16 rad, speeds 1.3e-13 rad/s, foot-frame pressure point 4.6e-16 m; finite patterns identical, except AB03 curb_up_1 where all loaded pressure-point samples are held (as designed). AB03 weighted_walk_1 (LASI missing) still has no finite angle or speed. Outside-foot share on stairs now 0 to 3% (was 25 to 100%).",
+    "curb_up_hold": "Independent check over 196 recordings (curb_up/down, step_ups, cutting, tire_run, stairs, normal and incline walk; 440 leg-recordings with load): median heel height above plate is 0.033-0.146 m for every non-curb_up leg-recording and 0.200-0.229 m for all 24 curb_up legs; every curb_up leg is held and nothing else above 0.17 m is unheld; the only other held legs are the 2 LMANK ones. The cut at 0.17 lies in an empty 5.4 cm gap, so the rule is a gap in the data rather than a fitted pass rate, and it hides nothing: force, plate pressure point, angles stay, the reason is written per column. Limit: the number is empirical and the real cause (curb height undocumented) is unresolved, so it should be dropped when the curb height is documented, and not reused for other datasets.",
+    "outside_foot_share": "Consistent with the marker-margin explanation. In my sample the outside samples are all beyond the toe side (100%), median 5-8 cm past the toe marker, and concentrated at low load: AB05 normal_walk L 53% below 0.1 of peak load, 38% at 0.1-0.2, 10% at 0.2-0.5, 7% above 0.5; cutting L 69/67/26/4%; curb_down L 78/56/16/2%. Marker foot length is 0.19-0.21 m, so the toe-marker margin ends at the metatarsal heads. One unexplained outlier: AB07 normal_walk right foot is 30% outside overall and 72% at 0.2-0.5 of peak (marker foot length 0.193 m); AB07 foot offset is already the largest in the ledger (ankle offset -9 to -13 deg). Not a stairs/plate issue; left as a limitation for GT23-Q01.",
+    "unchanged_columns": "All 488 recordings, batch3 vs batch2: time, all segment and joint angles, all speeds, lab-axis force and heading columns are bit-identical (0 differing columns); no held column was lost (0); lab pressure point x and z identical. Changes are only anterior and vertical foot-frame pressure point in tasks with a nonzero plate height (stairs up to 0.83 m; ball_toss etc. about 1 cm), the new cop_lab_y columns (plate height) with their own held reasons, and the 24 curb_up legs held.",
+    "peak_rss_mib_my_probes": "250.6 (16-recording probe, one process at a time), 176.2 (heel-height scan), 150.4 (batch2/batch3 comparison); nice 19, ionice idle; Linux available 8.3 GB before probing",
+    "not_checked": [
+      "quiet-standing pelvis tilt",
+      "all 488 by my own code (16 recorded samples plus ledger-wide column and held checks)",
+      "whether the curb height can be recovered",
+      "AB07 right-foot outside share"
+    ]
+  }
+}

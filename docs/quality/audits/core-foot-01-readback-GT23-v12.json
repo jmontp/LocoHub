@@ -1,0 +1,419 @@
+{
+ "dataset": "GT23",
+ "old_package": "gt23_r01_review_v11",
+ "new_package": "gt23_r01_review_v12",
+ "tables": [
+  "phase",
+  "time"
+ ],
+ "offsets_sha256": "c4f5e05c282b510c0c7299a3ef5348e653a9f9343d6b0b09f7c7d7bd0e97c446",
+ "people_with_offset": 11,
+ "people_without_offset": [
+  "AB07"
+ ],
+ "checks": [
+  {
+   "id": "R1",
+   "check": "new package manifest and every file hash/size as recorded",
+   "pass": true,
+   "detail": {
+    "manifest_sha256_ok": true,
+    "files_with_wrong_hash_or_size": [],
+    "files_not_in_manifest": []
+   }
+  },
+  {
+   "id": "R9a",
+   "check": "observation set of the new package equals the old package (restricted to the new package's observations in a pilot)",
+   "pass": true,
+   "detail": {
+    "only_in_new": 0,
+    "only_in_old": 0
+   }
+  },
+  {
+   "id": "R9b",
+   "check": "every status change is listed once in evidence/foot_flat_membership_changes.csv and nothing else is listed",
+   "pass": true,
+   "detail": {
+    "status_changes": 47,
+    "newly_failed": 24,
+    "recovered": 23,
+    "listed": 47
+   }
+  },
+  {
+   "id": "R9c",
+   "check": "exclusions.csv: every non-assessment (upstream) row is identical to the old package",
+   "pass": true,
+   "detail": {
+    "old": 5156,
+    "new": 5156
+   }
+  },
+  {
+   "id": "R9d",
+   "check": "exclusions.csv assessment rows = old rows + newly failed - recovered, exactly",
+   "pass": true,
+   "detail": {
+    "old": 125,
+    "new": 126,
+    "expected": 126
+   }
+  },
+  {
+   "id": "R9e",
+   "check": "every failed observation of the new assessment is in exclusions.csv exactly once",
+   "pass": true,
+   "detail": null
+  },
+  {
+   "id": "R9f",
+   "check": "failed observations: new = old + newly failed - recovered; full observations unchanged; filtered = full - failed",
+   "pass": true,
+   "detail": {
+    "failed_old": 125,
+    "failed_new": 126
+   }
+  },
+  {
+   "id": "R2.phase",
+   "check": "phase: rows of the new full table equal the assessed rows and the old rows of the same observations",
+   "pass": true,
+   "detail": {
+    "rows": 2862750,
+    "assessed_rows": 2862750
+   }
+  },
+  {
+   "id": "R3.phase",
+   "check": "phase: every column except foot/ankle/CoP anterior+vertical is bit-identical to the old package",
+   "pass": true,
+   "detail": {
+    "columns_checked": 84,
+    "passes": 31,
+    "failures": {}
+   }
+  },
+  {
+   "id": "R4.phase",
+   "check": "phase: foot and ankle angle = old - person offset (<= 1e-12 rad), patterns identical, uncorrected people exact",
+   "pass": true,
+   "detail": {
+    "angle_max_dev_rad": 0.0,
+    "angle_rows_shifted": 2612100,
+    "angle_rows_uncorrected_exact": 1002312,
+    "angle_pattern_mismatch": 0,
+    "angle_uncorrected_not_exact": 0
+   }
+  },
+  {
+   "id": "R5.phase",
+   "check": "phase: ankle - (foot - shank) residual < 1e-9 deg after the change",
+   "pass": true,
+   "detail": {
+    "max_residual_deg_old": 4.134721085902572e-14,
+    "max_residual_deg_new": 5.088887490341627e-14
+   }
+  },
+  {
+   "id": "R6.phase",
+   "check": "phase: CoP anterior/vertical = rotated old point (<= 1e-12 m), patterns identical, uncorrected people exact",
+   "pass": true,
+   "detail": {
+    "cop_max_dev_m": 0.0,
+    "cop_samples_rotated": 2773385,
+    "cop_pattern_mismatch": 0,
+    "cop_uncorrected_not_exact": 0
+   }
+  },
+  {
+   "id": "R8.phase",
+   "check": "phase: L1/L5 failure counts recomputed from the new full table equal the new assessment",
+   "pass": true,
+   "detail": {
+    "recount": {
+     "observation_columns_with_failures_in_assessment": 87,
+     "recount": 87,
+     "mismatches": 0
+    },
+    "first_mismatches": []
+   }
+  },
+  {
+   "id": "R9g.phase",
+   "check": "phase: rows whose quality_status changed belong exactly to the status-changed observations",
+   "pass": true,
+   "detail": {
+    "changed_observations": 38,
+    "expected": 38
+   }
+  },
+  {
+   "id": "R7.phase",
+   "check": "phase: new filtered = new full without the failed observations, bit for bit, every column",
+   "pass": true,
+   "detail": {
+    "rows": 2848500,
+    "expected_rows": 2848500,
+    "columns_with_differences": {}
+   }
+  },
+  {
+   "id": "R2.time",
+   "check": "time: rows of the new full table equal the assessed rows and the old rows of the same observations",
+   "pass": true,
+   "detail": {
+    "rows": 6397787,
+    "assessed_rows": 6397787
+   }
+  },
+  {
+   "id": "R3.time",
+   "check": "time: every column except foot/ankle/CoP anterior+vertical is bit-identical to the old package",
+   "pass": true,
+   "detail": {
+    "columns_checked": 84,
+    "passes": 31,
+    "failures": {}
+   }
+  },
+  {
+   "id": "R4.time",
+   "check": "time: foot and ankle angle = old - person offset (<= 1e-12 rad), patterns identical, uncorrected people exact",
+   "pass": true,
+   "detail": {
+    "angle_max_dev_rad": 0.0,
+    "angle_rows_shifted": 5877948,
+    "angle_rows_uncorrected_exact": 2074158,
+    "angle_pattern_mismatch": 0,
+    "angle_uncorrected_not_exact": 0
+   }
+  },
+  {
+   "id": "R5.time",
+   "check": "time: ankle - (foot - shank) residual < 1e-9 deg after the change",
+   "pass": true,
+   "detail": {
+    "max_residual_deg_old": 0.0,
+    "max_residual_deg_new": 1.2722218725854067e-14
+   }
+  },
+  {
+   "id": "R6.time",
+   "check": "time: CoP anterior/vertical = rotated old point (<= 1e-12 m), patterns identical, uncorrected people exact",
+   "pass": true,
+   "detail": {
+    "cop_max_dev_m": 0.0,
+    "cop_samples_rotated": 6530740,
+    "cop_pattern_mismatch": 0,
+    "cop_uncorrected_not_exact": 0
+   }
+  },
+  {
+   "id": "R8.time",
+   "check": "time: L1/L5 failure counts recomputed from the new full table equal the new assessment",
+   "pass": true,
+   "detail": {
+    "recount": {
+     "observation_columns_with_failures_in_assessment": 36,
+     "recount": 36,
+     "mismatches": 0
+    },
+    "first_mismatches": []
+   }
+  },
+  {
+   "id": "R9g.time",
+   "check": "time: rows whose quality_status changed belong exactly to the status-changed observations",
+   "pass": true,
+   "detail": {
+    "changed_observations": 9,
+    "expected": 9
+   }
+  },
+  {
+   "id": "R7.time",
+   "check": "time: new filtered = new full without the failed observations, bit for bit, every column",
+   "pass": true,
+   "detail": {
+    "rows": 5696966,
+    "expected_rows": 5696966,
+    "columns_with_differences": {}
+   }
+  }
+ ],
+ "counts_old": {
+  "tables": [
+   "phase",
+   "time"
+  ],
+  "observations_full": 19573,
+  "observations_filtered": 19448,
+  "failed_observations": 125,
+  "full": {
+   "phase_rows": 2862750,
+   "time_rows": 6397787,
+   "phase_observations": 19085,
+   "time_observations": 488,
+   "observations_by_type": {
+    "continuous_recording": 488,
+    "transfer": 10254,
+    "individual_cycle": 8831
+   }
+  },
+  "filtered": {
+   "phase_rows": 2847900,
+   "time_rows": 5724307,
+   "phase_observations": 18986,
+   "time_observations": 462,
+   "observations_by_type": {
+    "continuous_recording": 462,
+    "transfer": 10242,
+    "individual_cycle": 8744
+   }
+  },
+  "exclusions_total": 5281,
+  "exclusions_by_stage": {
+   "upstream_not_released": 5156,
+   "filtered_variant_only": 125
+  },
+  "exclusions_by_kind": {
+   "export_exclusion": 1415,
+   "authors_window_not_exported": 3741,
+   "assessment_failed": 125
+  },
+  "exclusions_by_reason": {
+   "export_exclusion": {
+    "shorter_than_0.25_s": 593,
+    "span_boundary_next_to_missing_marker": 367,
+    "force_not_a_number_inside_stride": 44,
+    "last_contact_has_no_following_contact": 389,
+    "longer_than_5_s": 16,
+    "shorter_than_0.3_s": 6
+   },
+   "authors_window_not_exported": {
+    "nearest_record_excluded": 571,
+    "no_record_starts_within_tolerance": 3150,
+    "no_record_for_this_leg": 20
+   },
+   "assessment_failed": {
+    "L5": 106,
+    "S5_side_check": 8,
+    "L5+S5_side_check": 2,
+    "L1": 9
+   }
+  },
+  "assessment_failures_by_cause": {
+   "L5": 108,
+   "S5_side_check": 10,
+   "L1": 9
+  },
+  "assessment_failures_by_table": {
+   "time": 26,
+   "phase": 99
+  },
+  "observations_by_part_label": {
+   "GT23-E01": 18947,
+   "GT23-E02": 626
+  }
+ },
+ "counts_new": {
+  "tables": [
+   "phase",
+   "time"
+  ],
+  "observations_full": 19573,
+  "observations_filtered": 19447,
+  "failed_observations": 126,
+  "full": {
+   "phase_rows": 2862750,
+   "time_rows": 6397787,
+   "phase_observations": 19085,
+   "time_observations": 488,
+   "observations_by_type": {
+    "continuous_recording": 488,
+    "transfer": 10254,
+    "individual_cycle": 8831
+   }
+  },
+  "filtered": {
+   "phase_rows": 2848500,
+   "time_rows": 5696966,
+   "phase_observations": 18990,
+   "time_observations": 457,
+   "observations_by_type": {
+    "continuous_recording": 457,
+    "transfer": 10230,
+    "individual_cycle": 8760
+   }
+  },
+  "exclusions_total": 5282,
+  "exclusions_by_stage": {
+   "upstream_not_released": 5156,
+   "filtered_variant_only": 126
+  },
+  "exclusions_by_kind": {
+   "export_exclusion": 1415,
+   "authors_window_not_exported": 3741,
+   "assessment_failed": 126
+  },
+  "exclusions_by_reason": {
+   "export_exclusion": {
+    "shorter_than_0.25_s": 593,
+    "span_boundary_next_to_missing_marker": 367,
+    "force_not_a_number_inside_stride": 44,
+    "last_contact_has_no_following_contact": 389,
+    "longer_than_5_s": 16,
+    "shorter_than_0.3_s": 6
+   },
+   "authors_window_not_exported": {
+    "nearest_record_excluded": 571,
+    "no_record_starts_within_tolerance": 3150,
+    "no_record_for_this_leg": 20
+   },
+   "assessment_failed": {
+    "L5": 92,
+    "L1": 24,
+    "S5_side_check": 8,
+    "L5+S5_side_check": 2
+   }
+  },
+  "assessment_failures_by_cause": {
+   "L5": 94,
+   "L1": 24,
+   "S5_side_check": 10
+  },
+  "assessment_failures_by_table": {
+   "time": 31,
+   "phase": 95
+  },
+  "observations_by_part_label": {
+   "GT23-E01": 18947,
+   "GT23-E02": 626
+  }
+ },
+ "extra_columns_rows_different": {
+  "phase": {
+   "source_export": 0,
+   "quality_status": 5700,
+   "failed_limits": 5700,
+   "limitations": 2862750,
+   "lineage_id": 2862750,
+   "assessment_id": 2862750
+  },
+  "time": {
+   "source_export": 0,
+   "quality_status": 169459,
+   "failed_limits": 169459,
+   "limitations": 6397787,
+   "lineage_id": 6397787,
+   "assessment_id": 6397787
+  }
+ },
+ "all_pass": true,
+ "resources": {
+  "peak_rss_mib": 440.4,
+  "wall_seconds": 374.9
+ }
+}

@@ -1,0 +1,116 @@
+{
+  "task_id": "CORE-09",
+  "title": "Require review records on reviewed profiles and close builder residuals",
+  "status": "review",
+  "status_note": "Blocked from done until the verifier updates its own profile fixtures. Its three files write reviewed profiles with no review record, so 33 of their tests now fail on the new G2 rule alone. I was not to edit those files.",
+  "last_checked_at_utc": "2026-10-31T13:00:00Z",
+  "resource_class": "fixture",
+  "research_data_read": false,
+  "scientific_approval": false,
+  "authorizes_publication": false,
+  "changes": {
+    "G2_default": "New _check_profile_review in build_dataset_release.py, run before any read. A profile marked reviewed or approved needs a top-level review mapping with a nonempty string reviewer and an ISO8601 reviewed_at string with a timezone. An unquoted YAML timestamp is refused and the message asks for quotes; PyYAML would otherwise produce a datetime that is not JSON. scope is optional, but if given it must be a nonempty string. When scope is absent, a limitation is recorded: \"The profile's review does not state a scope, so what its ranges were checked against is unknown.\" Profiles with no status (legacy) are unaffected.",
+    "R1": "_publish_files_exclusively now unlinks every staged name before the final destination hash check, not after.",
+    "R2": "For reviewed or approved profiles, an applicability block whose keys are only task and/or task_id is refused ('Applicability must name more than the task ...'). This runs after the existing applicability-gap check and before the review-record check.",
+    "R3": "New _profile_review_line on the data card. Reviewed or approved: '- Profile review status, as declared by the profile: <status> (<reviewer> at <reviewed_at>; scope: <scope or not declared>). The builder did not verify this review.' Legacy: 'as declared by the profile: none (recorded as legacy_unspecified)'. No profile: 'not applicable; no profile was supplied'."
+  },
+  "committed_profiles": "No range profile in the validation ranges folder declares review_status, so G2 and R2 newly refuse none of them. All stay legacy_unspecified, with their existing limitation.",
+  "changed_files": [
+    "contributor_tools/build_dataset_release.py",
+    "contributor_tools/DATA_CONTRACT.md (only the profile review_status sentence and the release-section refusal sentence)",
+    "tests/test_release_builder_gaps.py (fixtures: synthetic population label in task_info, applicability {population: [synthetic]}, synthetic profile review record; new G2/R2/R3 tests)",
+    "tests/test_release_publish_drvfs.py (fixture only: same synthetic population, applicability and profile review record)",
+    "tests/test_dataset_release.py (fixtures only: population label and applicability; the reviewed-status test now prepends a synthetic review record)",
+    "tests/test_release_lineage_adversarial.py (fixture: population label, applicability, reviewed_at added to the profile review; the expected dict in test_declared_review_is_recorded_verbatim_without_added_approval gained the same reviewed_at key to match the fixture. Its intent, verbatim recording, is unchanged.)",
+    "tests/test_release_builder_gaps_verify.py (verifier file: only the R1 strict-xfail decorator line removed)",
+    "docs/maintainers/handoffs/CORE-06.json (D-CORE-06-1 withdrawn)",
+    "docs/maintainers/handoffs/CORE-09.json (this file)"
+  ],
+  "failing_then_passing": [
+    {
+      "change": "R1",
+      "before": "tests/test_release_builder_gaps_verify.py::test_staged_edit_after_its_hash_check_cannot_change_the_release: 2 XFAIL (strict), linux and drvfs",
+      "after": "XPASS(strict) after the fix; marker removed; 2 passed. Assertions unchanged."
+    },
+    {
+      "change": "G2, R2, R3",
+      "before": "Against the unchanged builder, 23 new tests in tests/test_release_builder_gaps.py failed: 18 review-record refusals, 1 scope-limitation test, 3 task-only applicability refusals, 1 card label. The file's other 16 tests passed with the new fixtures.",
+      "after": "all pass"
+    }
+  ],
+  "checks": [
+    {
+      "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_release_builder_gaps.py tests/test_release_publish_drvfs.py tests/test_release_lineage_adversarial.py tests/test_dataset_release.py tests/test_backlog_workflow.py -rxXs",
+      "result": "197 passed"
+    },
+    {
+      "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_release_builder_gaps_verify.py tests/test_release_publish_drvfs_verify.py tests/test_release_lineage_verify.py -rxXs",
+      "result": "33 failed, 50 passed. All 33 failures come from verifier fixtures that write reviewed profiles without a review record; 31 show the error 'A profile marked reviewed requires a profile review record ...'. Attribution run: a scratchpad pytest plugin supplied a synthetic review record to profiles that had none (no file edits), and all 83 verifier tests passed."
+    },
+    {
+      "command": "python3 contributor_tools/build_backlog_page.py --check",
+      "result": "Backlog valid; HTML current (90 tasks)."
+    },
+    {
+      "command": "ls -a /mnt/s/workspace | grep core0",
+      "result": "no temporary drvfs test directories left"
+    }
+  ],
+  "verifier_fixture_update_needed": {
+    "files": [
+      "tests/test_release_lineage_verify.py (_profile)",
+      "tests/test_release_publish_drvfs_verify.py (_inputs)",
+      "tests/test_release_builder_gaps_verify.py (_profile_text)"
+    ],
+    "minimal_edit": "Add a profile review record when status is reviewed or approved, e.g. review: {reviewer: synthetic-profile-reviewer, reviewed_at: '2026-01-02T00:00:00Z'}.",
+    "failing_tests": [
+      "tests/test_release_builder_gaps_verify.py::test_admitted_bytes_are_read_through_the_open_handle[linux]",
+      "tests/test_release_builder_gaps_verify.py::test_admitted_bytes_are_read_through_the_open_handle[drvfs]",
+      "tests/test_release_builder_gaps_verify.py::test_larger_replacement_is_rejected_without_an_eager_read[linux]",
+      "tests/test_release_builder_gaps_verify.py::test_larger_replacement_is_rejected_without_an_eager_read[drvfs]",
+      "tests/test_release_builder_gaps_verify.py::test_same_footer_replacement_is_read_within_admission_and_rejected[linux]",
+      "tests/test_release_builder_gaps_verify.py::test_same_footer_replacement_is_read_within_admission_and_rejected[drvfs]",
+      "tests/test_release_builder_gaps_verify.py::test_rename_over_during_the_read_is_caught_by_the_copy_check[linux]",
+      "tests/test_release_builder_gaps_verify.py::test_rename_over_during_the_read_is_caught_by_the_copy_check[drvfs]",
+      "tests/test_release_builder_gaps_verify.py::test_review_labels_do_not_claim_verification",
+      "tests/test_release_builder_gaps_verify.py::test_local_copy_limitation_follows_the_uri_scheme[https://example.invalid/raw.zip-True]",
+      "tests/test_release_builder_gaps_verify.py::test_local_copy_limitation_follows_the_uri_scheme[s3://bucket/raw.zip-True]",
+      "tests/test_release_builder_gaps_verify.py::test_local_copy_limitation_follows_the_uri_scheme[doi:10.0000/synthetic-True]",
+      "tests/test_release_builder_gaps_verify.py::test_local_copy_limitation_follows_the_uri_scheme[file:///raw.bin-False]",
+      "tests/test_release_builder_gaps_verify.py::test_local_copy_limitation_follows_the_uri_scheme[C:\\\\data\\\\raw.bin-False]",
+      "tests/test_release_builder_gaps_verify.py::test_local_copy_limitation_follows_the_uri_scheme[raw.bin-False]",
+      "tests/test_release_builder_gaps_verify.py::test_single_category_identity_now_releases_through_the_cli",
+      "tests/test_release_builder_gaps_verify.py::test_assessment_type_error_fails_closed_without_a_bundle",
+      "tests/test_release_builder_gaps_verify.py::test_filtered_rows_ignore_declared_category_order",
+      "tests/test_release_publish_drvfs_verify.py::test_linux_filesystem_never_uses_the_fallback",
+      "tests/test_release_publish_drvfs_verify.py::test_drvfs_build_uses_fallback_and_ends_unmarked_and_sealed",
+      "tests/test_release_publish_drvfs_verify.py::test_held_lock_blocks_the_build_and_is_left_for_its_owner[linux]",
+      "tests/test_release_publish_drvfs_verify.py::test_held_lock_blocks_the_build_and_is_left_for_its_owner[drvfs]",
+      "tests/test_release_lineage_verify.py::test_export_swapped_in_after_admission_is_not_released",
+      "tests/test_release_lineage_verify.py::test_export_changed_after_read_is_caught_by_copy_check",
+      "tests/test_release_lineage_verify.py::test_rows_partition_exactly_into_filtered_and_ledger",
+      "tests/test_release_lineage_verify.py::test_identities_with_separator_characters_do_not_merge",
+      "tests/test_release_lineage_verify.py::test_input_row_order_changes_identity_but_not_filtered_bytes",
+      "tests/test_release_lineage_verify.py::test_card_and_manifest_add_no_approval_language",
+      "tests/test_release_lineage_verify.py::test_remote_only_checksum_is_declared_and_limited",
+      "tests/test_release_lineage_verify.py::test_filtered_export_keeps_the_full_export_arrow_schema",
+      "tests/test_release_lineage_verify.py::test_filtered_export_keeps_source_nan_encoding",
+      "tests/test_release_lineage_verify.py::test_categorical_identities_release_like_plain_strings",
+      "tests/test_release_lineage_verify.py::test_remote_uri_verified_only_through_a_local_copy_is_labelled"
+    ]
+  },
+  "audit_note": "The CORE-02 audit's example_run_identities hashes describe the earlier adversarial fixture (task_info '{}'). Rebuilding that fixture now gives different input and output hashes. The audit records history and was not edited.",
+  "file_sha256": {
+    "contributor_tools/build_dataset_release.py": "175597d6fbd9b0ab212c51d3ea7254a93af95db6e63cb24271277180e2cbbda3",
+    "tests/test_release_builder_gaps.py": "09e95362e934f85702a3074a039daa5cee245003b057c49459843b6aa7d83a35",
+    "tests/test_release_publish_drvfs.py": "229d97dd545b5a153ddf863a423038f79933a266bd48396cb822a11db976a02f",
+    "tests/test_release_lineage_adversarial.py": "87af8e803a60f506922764091b0fb3ef0b823dc4e05ed80ec25788ef4c798a3f",
+    "tests/test_dataset_release.py": "55877db015ea7c164067502104b868a34c17986044fb3315eed113bd51a51ca1",
+    "tests/test_release_builder_gaps_verify.py": "f5bcab1fb219ac5e5f711bbc0d703f8206d0fd64761dcab306a4d646a3622835"
+  },
+  "remaining": [
+    "Verifier: add profile review records to its three fixture helpers (see verifier_fixture_update_needed), then rerun all release and verifier files.",
+    "The R2 rule treats only task and task_id as task-only keys. Whether other structural keys (e.g. observation_type) should also count as not naming a population is not decided here."
+  ],
+  "next_action": "Verifier updates its fixtures, reruns the check commands, and reviews _check_profile_review, the R2 key set, the R1 order and the card line."
+}

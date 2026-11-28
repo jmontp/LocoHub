@@ -1,0 +1,56 @@
+{
+  "task_id": "CORE-08",
+  "title": "Close remaining assessment identity gaps",
+  "status": "review",
+  "status_note": "Round 2 after verifier back_to_worker: F1 and F2 fixed; the optional blank-part rule and the #NA/1.#QNAN spellings were added. Empty parts were deliberately left accepted. The reviewed-profile applicability helper is still not wired into the release builder (CORE-06).",
+  "last_checked_at_utc": "2026-10-31T14:00:00Z",
+  "summary": "Placeholders: added -nan, <missing>, <undefined>, n/a, #n/a; matching is case-insensitive after NFKC (full-width) folding and zero-width removal; NA stays valid. Composite IDs are rejected when a part split on / \\ : | ; , is a NaN-family or MATLAB/CSV marker (nan, -nan, <na>, <missing>, <undefined>, n/a, #n/a). none/null/nat parts are kept because a path part such as 'none' can be a real condition label. The check runs on unique values only. Each affected observation gets its own invalid_identity issue naming it. A separate file-level placeholder_identity_in_file issue keeps every observation in that file ineligible, because a detached placeholder row may belong to any observation; this preserves the verifier's fail-closed test. A stringified missing task_id is invalid_metadata. profile_applicability_gaps(config) lists tasks of a reviewed/approved profile with no nonempty applicability block. G7: _nonempty_strings checks unique values as plain objects and groupby uses observed=True, so single- and multi-category identities are assessed like strings with no FutureWarning.",
+  "changed_files": [
+    "contributor_tools/common/data_contract.py (sha256 0b535c06a0d0c7339db61c1ff261ed00e327dc94b4ca60d1b7cc2ebc68dbce99)",
+    "contributor_tools/DATA_CONTRACT.md (sha256 71374270288f4b4b41e425198aca1e8861285a27ec33c5db96d96cb8c291c379): exact composite rule paragraph; #NA and 1.#QNAN added",
+    "tests/test_assessment_identity_gaps.py (sha256 cc674d9c5f99ffba17db5395a674048e7709539e1c8d4e96bc9d1fb9a8b64130; 110 tests)",
+    "docs/maintainers/handoffs/CORE-08.json (this file)"
+  ],
+  "checks": [
+    {
+      "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider -W error::FutureWarning tests/test_assessment_identity_gaps.py (round-2 fixtures added, before the round-2 code change)",
+      "result": "7 failed (F1 count; #NA, 1.#QNAN, blank parts), 100 passed. The 6 real-path shapes passed before and after."
+    },
+    {
+      "command": "same prefix and -W error::FutureWarning: tests/test_assessment_identity_gaps.py tests/test_quality_assessment_safeguards.py tests/test_quality_assessment_safeguards_verify.py tests/test_data_contract.py tests/test_dataset_release.py tests/test_release_lineage_adversarial.py tests/test_release_lineage_verify.py tests/test_release_builder_gaps.py tests/test_release_publish_drvfs.py tests/test_quality_page.py tests/test_backlog_workflow.py",
+      "result": "473 passed, 0 failed, no warnings. The verifier's 96 tests are unchanged (not edited by this worker). The two former G7 refusal tests now pass; the release-builder task updated them."
+    },
+    {
+      "command": "python3 docs/build.py --check",
+      "result": "Checked 40 HTML pages and 1667 referenced assets (exit 0)"
+    },
+    {
+      "command": "python3 contributor_tools/build_backlog_page.py --check",
+      "result": "Backlog valid; HTML current (90 tasks)."
+    }
+  ],
+  "not_checked": [
+    "No research data read. The effect of the wider placeholder and composite rules on existing converted exports is unknown until a bounded pilot re-assessment under the guarded launcher.",
+    "Composite parts joined by '_', '-', '.' or whitespace (e.g. AB01_NaN) are not split, so that nan_trial and NaT-7 stay valid. 'None'/'null' path parts are also not rejected.",
+    "Release sort order for categorical identities whose dictionary is not lexical (e.g. Parquet written by another tool) was not tested. The builder sorts the filtered export by the identity columns, which for categoricals follows category order. Only row order could differ, not content."
+  ],
+  "remaining": [
+    "CORE-06 owner: call profile_applicability_gaps(config) next to the existing review_status gate and refuse a reviewed/approved profile that returns tasks. The release-test fixtures that write 'review_status: reviewed' profiles without applicability then need an applicability block, plus matching metadata in their frames.",
+    "Optional: exclusions.parquet could carry time_lineage columns (from CORE-01)."
+  ],
+  "decisions": [],
+  "next_action": "Verifier: recheck F1/F2 against the round_2 entries and the commands above. CORE-06 owner: wire profile_applicability_gaps into the release gate.",
+  "evidence_paths": [
+    "tests/test_assessment_identity_gaps.py",
+    "contributor_tools/common/data_contract.py",
+    "contributor_tools/DATA_CONTRACT.md",
+    "docs/maintainers/handoffs/CORE-01-verify.json"
+  ],
+  "resources": "Synthetic tests only; one process, about 15 s total. No research data read.",
+  "round_2": {
+    "F1": "placeholder_identity_in_file now counts distinct affected identities (set of identity keys), not invalid_identity issues. Fixture test_file_level_count_is_distinct_observations_not_issues puts placeholders in subject and observation_id of one observation: 2 issues, message '1 observation(s)'. It failed before the fix and passes after.",
+    "F2": "DATA_CONTRACT.md now names the separators / \\ : | ; , and the rejected part markers (nan, -nan, <NA>, <missing>, <undefined>, N/A, #N/A, #NA, 1.#QNAN, and blank parts). It also says what is accepted on purpose: None/null/NaT parts, empty parts (URLs, drive letters, absolute paths, AB01//t1), and anything joined by _ - . or spaces. Each accepted case is pinned by a fixture.",
+    "optional_taken": "Blank (whitespace-only, after NFKC) composite parts are rejected, e.g. 'AB01/ /t1' and an ideographic space. #NA and 1.#QNAN are rejected as whole values and as parts. 6 fixtures failed before and pass after.",
+    "optional_declined": "Empty parts (AB01//t1) stay accepted. Rejecting them would reject https://..., C:\\data\\..., /data/... and \\\\server\\share identities, which test_real_path_shapes_with_empty_parts_still_pass pins."
+  }
+}

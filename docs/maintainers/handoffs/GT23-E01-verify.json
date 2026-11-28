@@ -1,0 +1,39 @@
+{
+  "task_id": "GT23-E01",
+  "verifier_role": "independent second agent; own code in /tmp/gt23verify (ph.py, contract.py), no import of the worker's export or audit code (the repo's data_contract.py was run as asked); read-only",
+  "verdict": "done",
+  "last_checked_at_utc": "2026-11-24T04:14:50Z",
+  "summary": "PASS. All 28 receipts of the final jobs are clean (the first pilot readback failed and is kept as evidence) and bind current code; my own resampling reproduces 14 observations to about 1e-12 relative; the repo contract passes on 3 full tables with 0 issues; counts equal the handoff. Four judgement flags for GT23-Q01/R01, none breaks the contract or invents data. Approves the export mechanics only.",
+  "receipts": "1 pilot, 12 batches, summary: clean (exit 0, all checks true), the same export hashes (gt23_export.py e66e75b6, run_gt23_e01.py 316ba41e), equal to the current files, ran 03:46-03:59 in order. 12 readbacks + readback summary + pilot readback r2: clean, bound to the same audit_gt23_e01.py 477f3610 (current file). The first pilot readback (audit 8d7b44c1) exited 1 and is kept as evidence. pytest tests/test_gt23_e01.py: 23 passed.",
+  "audit_tolerance_change": "Legitimate. The first pilot readback failed at 1.4e-12 near a zero crossing with a pure absolute tolerance. The added term is 1e-11 x the largest magnitude of the signal inside the span (plus rtol 1e-9, atol 1e-12), i.e. relative to signal range and at float level, not a pass-rate loosening. My own recompute (different code, time interpolation) differs by at most 9.9e-13 of the observation's signal range, so a 1e-11 tolerance hides nothing; the worker reports 2.0e-9 absolute on thousand-newton forces (2e-12 relative). Tamper tests (changed value, un-negated knee, zero-filled plate, dropped observation, invented speed) are in tests.",
+  "phase_recompute": {
+    "seed": 20261129,
+    "observations": "14: 5 cycles (AB01 normal_walk_1 run, AB11 normal_walk_1, AB08 normal_walk_1, AB05 obstacle_walk_1, AB02 dynamic_walk_1), 4 transfers (AB09 lunges_2, AB07 turn_and_step_1, AB05 jump_2, AB05 sit_to_stand_2), 3 continuous (AB09 walk_backward_1, AB01 meander_1, AB02 ball_toss_1), 1 stairs cycle (AB12 stairs_1_8, descent), 1 AB03 cycle (AB03 incline_walk_1)",
+    "method": "own linear interpolation in source time at 150 points from source_start_time_s to source_end_time_s, from the C06 batch3 and M01 batch files; own mapping table of exported names to source columns",
+    "results": "every phase observation has exactly 150 rows, phase 0 to 100 on the inclusive grid (exact endpoints); max difference 9.9e-13 of signal range over all 92 columns; finite/missing pattern identical in all 14 (0 mismatches), so missing stays missing; continuous recordings: time column bit-equal to source and values bit-equal (0 difference); knee moment = minus the published knee moment (my mapping with sign -1 matches, a wrong sign would differ by 2x signal), power unchanged (sign +1 matches); BW x README mass x 9.80665 equals the N columns to 4.5e-13 N (AB03 with 113.5 kg); held_signals lists as many columns as I find all-missing in every observation (32/32, 12/12, 18/18, 0 with a note)."
+  },
+  "contract": "Repo inspect_contract on full tables, streamed in 4096-row batches, identity, metadata, index and held columns plus one ipsi and one contra signal column (the checker looks at column names for those, not signal values): AB03 phase 224,100 rows, 1,494 observations, 0 issues; AB07 phase 250,650 rows, 1,671 observations, 0 issues; AB09 time table 543,597 rows, 40 observations, 0 issues; all schema_passed and publishable true. Both reference legs with the same observation_id are allowed by the contract (identity includes reference_side, DATA_CONTRACT.md) and there are 0 duplicate identities across all 19,573 observations.",
+  "task_families": {
+    "valid": "all 23 task names are in the registry (is_valid_task true)",
+    "skip": "agility_drill / skip, 134 cycles, from the authors' label; acceptable (registry example list includes drills); the registry marks agility_drill as a time family while these are phase cycles (not enforced).",
+    "unlabelled": "normal_walk 1,716, incline_walk 747, jump 119 spans with no authors' window are functional_task with *_unlabelled ids; does not invent a speed or family; conservative. Concern: the registry says use functional_task sparingly, and 2,463 cycles of ordinary walking sit under it; fine for now, R01/Q01 decide whether to promote them.",
+    "both_legs": "all 5,127 window spans appear for left and right with the same observation_id, none single; contra columns are the other leg over the same absolute span; contract allows it. Doubling is a scope question for R01, as the worker said.",
+    "stairs": "README lists odd passes up and even down (also the extra _11_up, _12_down); in the export 130 odd-pass observations are stair_ascent and 131 even-pass are stair_descent, no exception; 62 odd and 62 even continuous recordings.",
+    "flag_level_shuffle": "115 cycles of the authors' 'shuffle' label (task_id level_shuffle) are exported as level_walking. The standard has no shuffle family; shuffling is not steady walking, so a walking profile could be applied to it. Not a contract failure and the source task is kept in task_info.source_task, but Q01 should either keep it out of walking profiles or move it (functional_task / agility_drill).",
+    "flag_run": "The authors' 2.0 and 2.5 m/s normal-walk files (795 cycles) are labelled run as the authors label them; consistent with the plan, but unverified as running (no flight-phase check here)."
+  },
+  "counts": "Equal to the handoff: 8,831 cycles, 10,254 transfers (5,127 spans x 2 legs), 488 continuous recordings, 19,573 observations, 1,415 exclusions (shorter_than_0.25_s 593, last_contact_has_no_following_contact 389, span_boundary_next_to_missing_marker 367, force_not_a_number_inside_stride 44, longer_than_5_s 16, shorter_than_0.3_s 6), authors' windows 13,119 = 9,378 exported + 3,741 not exported (each with a reason field), 488 recordings once each, 0 duplicate identities.",
+  "checks_run": {
+    "pytest": "23 passed",
+    "build_backlog_page.py --check": "valid (see reply)"
+  },
+  "resource_notes": "My probes exceeded the 300 MiB limit and should have gone through the launcher: contract runs 291 MiB (AB03 phase), 301 MiB (AB07 phase) and 327 MiB (AB09 time); the resampling script 534 MiB (it held the C06 and M01 files of continuous recordings whole). Read-only, one process at a time, nothing written under converted_datasets, Linux available 8.8 GB before, nothing left running. The worker's own pilot probe also exceeded (319 MiB).",
+  "not_checked": [
+    "all 19,573 observations by my own code (14 sampled)",
+    "the 3,741 not-exported authors' windows' reasons beyond counts",
+    "time tables of AB01..AB13 other than AB09 through the contract",
+    "release admission size limits (R01)",
+    "scientific approval of any family label"
+  ],
+  "next_action": "GT23-F01 can close. GT23-Q01/R01 should decide: level_shuffle family, functional_task for 2,463 unlabelled cycles, one leg per span, and the held stairs/curb pressure-point rules already recorded."
+}

@@ -1,0 +1,160 @@
+{
+  "task_id": "CORE-08",
+  "verifier_role": "independent second agent; own scratchpad probes (not committed) plus my unchanged CORE-01 tests; no research data read; worker files, backlog and AGENTS.md not edited",
+  "verdict": "done",
+  "last_checked_at_utc": "2026-10-31T11:00:00Z",
+  "round_2": {
+    "verdict": "done",
+    "last_checked_at_utc": "2026-10-31T11:00:00Z",
+    "summary": "F1 and F2 are fixed. The new blank-part, #NA and 1.#QNAN rejections add no false positive in 32 realistic look-alikes. The categorical and row-order behavior is unchanged, and my 96 tests are unchanged and pass. The 11 failures now in tests/test_release_lineage_verify.py come from a concurrent CORE-06 change to build_dataset_release.py, not from CORE-08.",
+    "file_checks": [
+      {
+        "item": "F1 file-level count",
+        "result": "pass",
+        "evidence": "affected = len({identity key of each invalid_identity issue}). One observation with subject 'nan' and source_recording_id 'AB01/nan' gives '1 observation(s)'. Two bad observations (subject 'nan'; source_recording_id 'AB01/ /x') plus one good give '2 observation(s)', with each bad observation named. The worker's fixture count is 14 test functions, 94+ parametrized cases."
+      },
+      {
+        "item": "F2 contract text vs code",
+        "result": "pass",
+        "evidence": "DATA_CONTRACT.md matches the code. Whole-value tokens equal _PLACEHOLDER_IDENTITIES (adds #NA, 1.#QNAN). Separators are '/ \\ : | ; ,', equal to _SEPARATORS. Rejected parts equal _PLACEHOLDER_PARTS, and a blank (whitespace-only) part fails, matching 'part and not part.strip()'. None/null/NaT parts, empty parts and _ - . space joins are accepted, as the text states. Folding is NFKC, zero-width removal and case. One consequence the text implies but doesn't spell out: a part holding only zero-width characters (AB01/\\u200b/t1) folds to an empty part and is accepted."
+      },
+      {
+        "item": "no new false positives from blank-part rejection",
+        "result": "pass",
+        "evidence": "These are all still publishable: https://host/path/AB01, C:\\data\\AB01, /abs/path/AB01, \\\\server\\share\\x, s3://bucket/key, file:///tmp/a, AB01//t1, 'AB01/' and 'AB01/ ' (outer whitespace stripped first), 'AB01, ' , 'Trial 1, AB01', 'AB01, trial 2', 'AB01 / t1', 'Subject 01: walk', 'a: b; c | d', '12:30:00', an ISO timestamp with offset, 'name with  spaces', 'x , y', 'UMich 2021/AB01/Tread mill', gt21:AB01/levelground/ccw_normal_01_01, AB01/none/t1, AB01_NaN, NA, NA01, Nancy, nan_trial, AB01/#NAx, AB01/1.#QNANx, '1.5,2.5', 'a,b,c'. These are now rejected, as intended: 'AB01/ /t1', 'AB01/\\t/t1', 'AB01/\\u00a0/t1', 'a, ,b', 'a| |b', '#NA', '#na', '1.#QNAN', 'AB01/#NA/t1', 'AB01:1.#QNAN', full-width 'ＡＢ01/　/t1', 'AB01/\\u200b /t1'. Every round-1 probe gives the same result, except that '#NA', '1.#QNAN' and 'AB01/ /t1' are now rejected."
+      },
+      {
+        "item": "categoricals and release row order",
+        "result": "pass",
+        "evidence": "Re-run of the round-1 probes: single category publishable; an NA value is invalid; a present 'nan' value is named; all-categorical input gives 3/3 eligible; assessment order follows first appearance. Re-run of build_release on plain vs reverse-categorical synthetic input: identical [o3, o2, o1], 450 rows."
+      },
+      {
+        "item": "profile_applicability_gaps wiring",
+        "result": "pass (handoff text stale)",
+        "evidence": "contributor_tools/build_dataset_release.py lines 520-525 call profile_applicability_gaps(config) and raise ReleaseError for a reviewed/approved profile with gaps, so the function is wired. CORE-08.json 'remaining' still asks the CORE-06 owner to wire it; that entry is out of date and the coordinator can drop it."
+      }
+    ],
+    "regression_note": "The full suite gave 494 passed and 11 failed, all in tests/test_release_lineage_verify.py. Every failure is ReleaseError 'A profile marked reviewed requires a profile review record with reviewer and reviewed_at.' (build_dataset_release.py line 102). That file changed at 02:50, after CORE-08's last data_contract.py edit (02:47), and CORE-06.json was updated at 02:51. So this is the in-flight CORE-06 profile-review-record requirement, and the CORE-02 verifier fixtures still write reviewed profiles without a review record. It is not counted against CORE-08; it belongs to CORE-06 and its verifier. Without the release-builder files, the CORE-08 and assessment suites gave 360 passed with FutureWarning as an error.",
+    "test_runs": [
+      {
+        "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider -W error::FutureWarning tests/test_assessment_identity_gaps.py tests/test_quality_assessment_safeguards_verify.py tests/test_quality_assessment_safeguards.py tests/test_data_contract.py tests/test_quality_page.py tests/test_backlog_workflow.py tests/test_data_documentation.py",
+        "result": "360 passed"
+      },
+      {
+        "command": "same prefix, adding tests/test_dataset_release.py tests/test_release_lineage_adversarial.py tests/test_release_lineage_verify.py tests/test_release_builder_gaps.py tests/test_release_publish_drvfs.py",
+        "result": "494 passed, 11 failed (all test_release_lineage_verify.py, CORE-06 review-record requirement; see regression_note)"
+      },
+      {
+        "command": "pytest -q tests/test_quality_assessment_safeguards_verify.py",
+        "result": "96 passed; file unchanged (sha256 45e82991..., mtime 02:29)"
+      },
+      {
+        "command": "scratchpad core08/probe.py, probe2.py, release_probe.py",
+        "result": "as in file_checks"
+      },
+      {
+        "command": "python3 docs/build.py --check",
+        "result": "exit 0; 40 HTML pages, 1667 assets"
+      },
+      {
+        "command": "python3 contributor_tools/build_backlog_page.py --check",
+        "result": "Backlog valid; HTML current (90 tasks)"
+      }
+    ],
+    "artifact_hashes": {
+      "contributor_tools/common/data_contract.py": "0b535c06a0d0c733...",
+      "contributor_tools/DATA_CONTRACT.md": "71374270288f4b4b...",
+      "tests/test_assessment_identity_gaps.py": "cc674d9c5f99ffba..."
+    },
+    "questions_for_jose": []
+  },
+  "round_1_verdict": "back_to_worker",
+  "summary": "The new rejections work, the look-alikes pass, the categorical fix is correct, and assessment and release row order do not depend on category order. All suites and gates pass (465 passed, no FutureWarning). Two small accuracy defects remain. First, the file-level issue counts invalid_identity issues, not observations, so one observation with placeholders in two columns is reported as '2 observation(s)'. Second, DATA_CONTRACT.md says no composite ID with 'such a part' is valid, but the code deliberately accepts None/null/NaT parts and splits only on / \\ : | ; ,.",
+  "worker_artifacts_checked": {
+    "contributor_tools/common/data_contract.py": "sha256 0c2caa87... matches the handoff",
+    "tests/test_assessment_identity_gaps.py": "sha256 371bd923... matches the handoff",
+    "contributor_tools/DATA_CONTRACT.md": "sha256 e8fdda49... matches the handoff",
+    "tests/test_quality_assessment_safeguards_verify.py": "unchanged (mtime 02:29, before the CORE-08 edits at 02:36-02:42); 96 tests pass"
+  },
+  "checks": [
+    {
+      "id": 1,
+      "area": "placeholders and composites: false negatives and false positives",
+      "result": "pass",
+      "evidence": "All of these are now rejected (contract not publishable): nan, -NaN, <missing>, <UNDEFINED>, N/A, #n/a, NAN, full-width ＮａＮ, zero-width n\\u200ban and \\ufeffnan, NBSP-padded nan, 'nan\\r', and the composites AB01/NaN/1, gt21:AB01/nan, AB01\\nan\\t, a|<NA>|b, a;n/a;b, a,#N/A,b, 'AB01/ nan /t1', AB01/n/a, n/a/AB01, and n／a (full-width slash, folded by NFKC). My CORE-01 probe showed several of these publishable before (<missing>, <undefined>, N/A, #N/A, -nan, \\u200bnan, ＮａＮ). These all still pass, so there are no false positives: NA, NA01, Nancy, nan_trial, Banana/1, AB01/NA/t1, AB01/nan_x/t1, S_null_2, NaT-7, N/A01, AB01/none/t1, gt21:AB01/levelground/ccw_normal_01_01, C:\\data\\nan.csv, AB01/n/a1, AB01/na/t1, AB01/n/b, Na, nAn1, 'trial,nanometer', x:NAN0. task_id: nan, lw/nan, n/a and <missing> are invalid; NA and NA_speed are valid. These pass by the stated design and are recorded as observations: None/null/NaT parts; '_', '-', '.' and space joins (AB01_NaN, AB01-nan); empty or blank parts (AB01//t1, AB01/ /t1); and tokens outside the claim (#NA, 1.#QNAN, +nan, nan%, soft-hyphen na\\u00adn)."
+    },
+    {
+      "id": 2,
+      "area": "unique-value correctness, categoricals, NA in categories",
+      "result": "pass",
+      "evidence": "_nonempty_strings and the placeholder scan use pd.unique on object values. Results: a single-category categorical is publishable, with no TypeError (G7 fixed). An unused category 'nan' is ignored, because only present values count. A categorical holding an NA value is invalid_identity. A present categorical value 'nan' is invalid and the affected subject is named. All four identity columns categorical: 3 of 3 eligible. pyarrow-backed string dtype is publishable. FutureWarning promoted to error raised nothing."
+    },
+    {
+      "id": 3,
+      "area": "observation naming",
+      "result": "failed (count only)",
+      "evidence": "Two observations, one with source_recording_id AB01/NaN/2. The bad observation gets invalid_identity with its identity and a message quoting the value. A file-level placeholder_identity_in_file issue makes both observations invalid and not eligible; the good one carries only the file-level reason, so fail-closed is preserved. Defect: affected = sum(issue.code == 'invalid_identity' ...) counts issues, not observations. One observation with subject 'nan' and source_recording_id 'AB01/nan' produces the message '2 observation(s) have placeholder identities' when only one observation is affected."
+    },
+    {
+      "id": 4,
+      "area": "categorical row order (non-alphabetical categories)",
+      "result": "pass",
+      "evidence": "assess_observations orders observations by first appearance for both the plain and categorical inputs: ['S2','S1','S3'] for subject categories [S3,S1,S2], and o1,o2,o3 for reversed observation_id categories. End-to-end release in the scratchpad (build_release, synthetic 3-observation fixture, legacy profile): the plain-string input and the categorical input with reverse-lexical categories in subject, source_recording_id and observation_id both give 450 filtered rows in the same observation order [o3, o2, o1]. _filtered_rows casts categorical identities to object before sorting, so the order is lexical either way. This covers the handoff's untested case."
+    },
+    {
+      "id": 5,
+      "area": "DATA_CONTRACT.md text vs code",
+      "result": "failed (one sentence)",
+      "evidence": "These match the code: the side-none role sentence; 'any recorded clock value fails the contract'; the whole-value token list with case, full-width and zero-width folding; 'NA alone remains valid'; naming each affected observation, with no observation in the file eligible; categorical columns assessed like strings; 'earliest and latest values after sorting'. The release section's refusal of reviewed/approved profiles without applicability is now true, because the builder calls profile_applicability_gaps. The mismatch: 'Neither is a composite ID with such a part' covers None, null and NaT parts, but _PLACEHOLDER_PARTS excludes them on purpose, and the text does not say which separators split a composite."
+    },
+    {
+      "id": 6,
+      "area": "profile_applicability_gaps",
+      "result": "pass",
+      "evidence": "A reviewed profile without applicability returns ['level_walking']; after adding a population block it returns []. A legacy (unlabelled) profile returns []. An approved profile with an empty applicability {} returns ['level_walking']. The builder now enforces it (build_dataset_release.py lines 479-484)."
+    },
+    {
+      "id": 7,
+      "area": "tests and gates",
+      "result": "pass",
+      "evidence": "With the AGENTS prefix and -W error::FutureWarning, this run gave 465 passed: test_assessment_identity_gaps (94), my test_quality_assessment_safeguards_verify (96, unchanged), test_quality_assessment_safeguards, test_data_contract, test_dataset_release, test_release_lineage_adversarial, test_release_lineage_verify, test_release_builder_gaps, test_release_publish_drvfs, test_quality_page, test_backlog_workflow and test_data_documentation. The two G7 refusal tests the handoff called obsolete no longer fail; they have since been updated. docs/build.py --check: exit 0, 40 pages, 1665 assets. build_backlog_page.py --check: Backlog valid; HTML current (89 tasks)."
+    }
+  ],
+  "required_fixes": [
+    "F1 (data_contract.py): count distinct affected observation identities for placeholder_identity_in_file, not invalid_identity issues, so that one observation with placeholders in two columns reports 1. Add a fixture with two placeholder columns in one observation.",
+    "F2 (DATA_CONTRACT.md): state the composite rule exactly. Parts are split only on / \\ : | ; , and a part fails only when it is one of nan, -nan, <NA>, <missing>, <undefined>, N/A, #N/A. None, null and NaT parts are accepted because they can be real labels. Parts joined by _, -, . or spaces are not split."
+  ],
+  "optional": [
+    "Consider rejecting empty or blank composite parts (AB01//t1, AB01/ /t1). They are the typical result of formatting a missing string component, e.g. sprintf with an empty value, and no source identity needs an empty path segment.",
+    "Consider adding #NA and 1.#QNAN (spreadsheet and MSVC NaN spellings) to the token sets. Neither can be a real identity."
+  ],
+  "observations_not_blocking": [
+    "By design, composites with None/null/NaT parts and identities joined by _, -, . or spaces are not inspected. This is a reasonable trade-off against false positives (nan_trial, NaT-7, AB01/none/t1), and it should be documented exactly (F2).",
+    "Homoglyph or soft-hyphen variants (na\\u00adn) pass. They cannot come from stringification, so no action is needed.",
+    "The effect on existing converted exports is still unknown until a bounded pilot re-assessment runs under the guarded launcher (as stated in the handoff)."
+  ],
+  "questions_for_jose": [],
+  "test_runs": [
+    {
+      "command": "scratchpad probe core08/probe.py (synthetic, warnings as errors)",
+      "result": "results as listed in checks 1-4 and 6"
+    },
+    {
+      "command": "scratchpad core08/release_probe.py: build_release on plain vs reverse-categorical synthetic input",
+      "result": "identical filtered observation order [o3, o2, o1], 450 rows each"
+    },
+    {
+      "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider -W error::FutureWarning tests/test_assessment_identity_gaps.py tests/test_quality_assessment_safeguards_verify.py tests/test_quality_assessment_safeguards.py tests/test_data_contract.py tests/test_dataset_release.py tests/test_release_lineage_adversarial.py tests/test_release_lineage_verify.py tests/test_release_builder_gaps.py tests/test_release_publish_drvfs.py tests/test_quality_page.py tests/test_backlog_workflow.py tests/test_data_documentation.py",
+      "result": "465 passed"
+    },
+    {
+      "command": "python3 docs/build.py --check",
+      "result": "exit 0; 40 HTML pages, 1665 assets"
+    },
+    {
+      "command": "python3 contributor_tools/build_backlog_page.py --check",
+      "result": "Backlog valid; HTML current (89 tasks)"
+    }
+  ],
+  "next_action": "Worker applies F1 (one-line count plus a fixture) and F2 (one sentence) and returns CORE-08 to review. The verifier then rechecks only those two items and reruns the suite."
+}

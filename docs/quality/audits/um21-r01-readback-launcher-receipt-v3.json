@@ -1,0 +1,383 @@
+{
+  "schema": "locohub.guarded_launcher.receipt/2",
+  "job_id": "UM21-R01-readback-v3",
+  "status": "completed",
+  "scientific_approval": false,
+  "envelope": {
+    "path": "docs/quality/audits/pm01-um21-tread-pilot-handoff.json",
+    "reviewed_sha256": "9f204cfd9ba6b2beb256e4d962778183ec2dd4895fd5009591680cb479a8dee9",
+    "limits": {
+      "timeout_seconds_max": 3600,
+      "kill_after_seconds_max": 30,
+      "poll_seconds_max": 15,
+      "startup_memory_mib_min": {
+        "linux": 3584,
+        "windows": 2816
+      },
+      "runtime_memory_mib_min": {
+        "linux": 2048,
+        "windows": 2048
+      },
+      "output_volume_free_mib_min": 5120,
+      "c_drive_free_mib_min": 1024,
+      "c_drive_path": "/mnt/c",
+      "address_space_mib_max": 768
+    },
+    "sha256": "9f204cfd9ba6b2beb256e4d962778183ec2dd4895fd5009591680cb479a8dee9"
+  },
+  "spec": {
+    "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+    "kill_after_seconds": 30,
+    "poll_seconds": 15,
+    "disk_admission": [],
+    "thread_env": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "ARROW_NUM_THREADS": "1",
+      "NUMEXPR_NUM_THREADS": "1"
+    },
+    "expected_output_names": [
+      "readback.json"
+    ],
+    "address_space_mib": 768,
+    "job_id": "UM21-R01-readback-v3",
+    "command": [
+      "python3",
+      "contributor_tools/readback_um21_r01_package.py",
+      "run",
+      "--output-root",
+      "converted_datasets/reconversion_v2/um21_r01_readback_v3",
+      "--package-root",
+      "converted_datasets/reconversion_v2/um21_r01_package_v3"
+    ],
+    "output_root": "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/um21_r01_readback_v3",
+    "receipt_path": "/mnt/s/workspace/locomotion-data-standardization/docs/quality/audits/um21-r01-readback-launcher-receipt-v3.json",
+    "bindings": {
+      "contributor_tools/readback_um21_r01_package.py": "a79ad4968e9fe240544212771be8ba738a16a4286979789262f1448903c6edf5",
+      "docs/quality/audits/um21-s02-full-launcher-receipt-v7.json": "504f380783a4b6b5d79ac4000909ecc4891fdf09c92e07d7f60343873389161a",
+      "converted_datasets/reconversion_v2/um21_s02_frame_full_v7/s02_summary.json": "f9c9daaead809f87ae77b20cdecc657001e0ed2954d4bdb410dea70010875102",
+      "converted_datasets/reconversion_v2/um21_r01_package_v3/manifest.json": "d6d7280aed56ac4d18351ec46cc6542fb8583a80e9179aaefdc016eadbed65de"
+    },
+    "timeout_seconds": 3600,
+    "startup_memory_mib": {
+      "linux": 3584,
+      "windows": 2816
+    },
+    "runtime_memory_mib": {
+      "linux": 2048,
+      "windows": 2048
+    }
+  },
+  "spec_sha256": "ea3173d4ddc235a2b31322faaa787d487b438d076d848487f745f4a8b511fe5c",
+  "launcher_sha256": "372519f9dd1f52510f747eed3779044765fdc158b08ca007deb8d6d8708c844f",
+  "checked_at_utc": "2026-11-24T21:43:09+00:00",
+  "chaining": "none; no successor is started",
+  "bindings_before": {
+    "contributor_tools/readback_um21_r01_package.py": {
+      "expected": "a79ad4968e9fe240544212771be8ba738a16a4286979789262f1448903c6edf5",
+      "actual": "a79ad4968e9fe240544212771be8ba738a16a4286979789262f1448903c6edf5",
+      "bytes": 22105,
+      "matches": true
+    },
+    "docs/quality/audits/um21-s02-full-launcher-receipt-v7.json": {
+      "expected": "504f380783a4b6b5d79ac4000909ecc4891fdf09c92e07d7f60343873389161a",
+      "actual": "504f380783a4b6b5d79ac4000909ecc4891fdf09c92e07d7f60343873389161a",
+      "bytes": 37839,
+      "matches": true
+    },
+    "converted_datasets/reconversion_v2/um21_s02_frame_full_v7/s02_summary.json": {
+      "expected": "f9c9daaead809f87ae77b20cdecc657001e0ed2954d4bdb410dea70010875102",
+      "actual": "f9c9daaead809f87ae77b20cdecc657001e0ed2954d4bdb410dea70010875102",
+      "bytes": 1186117,
+      "matches": true
+    },
+    "converted_datasets/reconversion_v2/um21_r01_package_v3/manifest.json": {
+      "expected": "d6d7280aed56ac4d18351ec46cc6542fb8583a80e9179aaefdc016eadbed65de",
+      "actual": "d6d7280aed56ac4d18351ec46cc6542fb8583a80e9179aaefdc016eadbed65de",
+      "bytes": 12253,
+      "matches": true
+    }
+  },
+  "disk_admission": [
+    {
+      "path": "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/um21_r01_readback_v3",
+      "min_free_mib": 5120,
+      "source": "envelope: output volume (S:)",
+      "free_mib": 34019.67578125,
+      "passes": true
+    },
+    {
+      "path": "/mnt/c",
+      "min_free_mib": 1024,
+      "source": "envelope: C:",
+      "free_mib": 21739.4140625,
+      "passes": true
+    }
+  ],
+  "census_before": {
+    "linux": {
+      "checked_at_utc": "2026-11-24T21:43:10+00:00",
+      "boot_id": "a81def3c-fa85-4161-b227-f59ffadc384d",
+      "process_count": 191,
+      "exempt": [
+        {
+          "pid": 1697587,
+          "start_ticks": 99403742,
+          "cwd": "/home/jmontp",
+          "cmdline": "/home/jmontp/.local/bin/pretty daemon",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1697596,
+          "start_ticks": 99403750,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "-zsh",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 2354851,
+          "start_ticks": 109454620,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "claude --resume",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 3270821,
+          "start_ticks": 118479723,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1795464455432-zuopx8.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'which'; \\builtin unset -f -- 'which'; } >/dev/null 2>&1 || true && { \\builtin unalias -- 'un",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 3270822,
+          "start_ticks": 118479724,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "python3 -m contributor_tools.guarded_launcher run docs/quality/audits/um21-r01-readback-spec-v3.json",
+          "why": "launcher itself (CLI)"
+        }
+      ],
+      "workers": []
+    },
+    "windows": {
+      "checked_at_utc": "2026-11-24T21:43:11+00:00",
+      "last_boot_utc": "2026-09-07T21:16:10.5000000Z",
+      "process_count": 332,
+      "free_physical_mib": 8966.64453125,
+      "workers": []
+    }
+  },
+  "startup_memory": {
+    "linux": {
+      "available_mib": 8768.140625,
+      "reserve_mib": 3584,
+      "passes": true
+    },
+    "windows": {
+      "available_mib": 8966.64453125,
+      "reserve_mib": 2816,
+      "passes": true
+    }
+  },
+  "launch_ledger": {
+    "parent": {
+      "pid": 3270821,
+      "ppid": 2354851,
+      "start_ticks": 118479723,
+      "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1795464455432-zuopx8.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'which'; \\builtin unset -f -- 'which'; } >/dev/null 2>&1 || true && { \\builtin unalias -- 'un",
+      "interactive_terminal": false
+    },
+    "claimed": true,
+    "entries": [
+      "/tmp/locohub_guarded_launcher_uid1000/a81def3c-fa85-4161-b227-f59ffadc384d/3270821-118479723.json"
+    ],
+    "keys": [
+      {
+        "pid": 3270821,
+        "ppid": 2354851,
+        "start_ticks": 118479723,
+        "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1795464455432-zuopx8.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'which'; \\builtin unset -f -- 'which'; } >/dev/null 2>&1 || true && { \\builtin unalias -- 'un",
+        "interactive_terminal": false
+      }
+    ]
+  },
+  "launched": true,
+  "process_identity": {
+    "leader_pid": 3270894,
+    "launched_at_utc": "2026-11-24T21:43:11+00:00",
+    "argv": [
+      "timeout",
+      "--signal=TERM",
+      "--kill-after=30s",
+      "3600",
+      "nice",
+      "-n",
+      "19",
+      "ionice",
+      "-c",
+      "3",
+      "python3",
+      "contributor_tools/readback_um21_r01_package.py",
+      "run",
+      "--output-root",
+      "converted_datasets/reconversion_v2/um21_r01_readback_v3",
+      "--package-root",
+      "converted_datasets/reconversion_v2/um21_r01_package_v3"
+    ],
+    "log_path": "/mnt/s/workspace/locomotion-data-standardization/docs/quality/audits/um21-r01-readback-launcher-receipt-v3.log",
+    "parent_death_signal": "SIGTERM",
+    "parent_death_signal_set": true,
+    "pgid": 3270894,
+    "sid": 3270894,
+    "own_session_verified": true,
+    "boot_id": "a81def3c-fa85-4161-b227-f59ffadc384d",
+    "leader_start_ticks": 118479851
+  },
+  "job_outcome": "completed",
+  "finished_at_utc": "2026-11-24T21:43:47+00:00",
+  "exit_code": 0,
+  "wall_time_seconds": 35.637,
+  "peak_rss_kib_largest_process": 364336,
+  "peak_group_rss_kib_sampled": 336860,
+  "runtime_guard": {
+    "poll_seconds": 15,
+    "reserve_mib": {
+      "linux": 2048,
+      "windows": 2048
+    },
+    "polls": 2,
+    "min_linux_available_mib": 8622.2,
+    "min_windows_free_mib": 9153.6,
+    "breach": null,
+    "observed_address_space_limits": [
+      "805306368"
+    ],
+    "observed_address_space_by_process": [
+      {
+        "pid": 3270894,
+        "start_ticks": 118479851,
+        "limit": "805306368",
+        "cmdline": "timeout --signal=TERM --kill-after=30s 3600 nice -n 19 ionice -c 3 python3 contributor_tools/readback_um21_r01_package.py run --output-root converted_datasets/reconversion_v2/um21_r01_readback_v3 --pa"
+      },
+      {
+        "pid": 3270895,
+        "start_ticks": 118479851,
+        "limit": "805306368",
+        "cmdline": "python3 contributor_tools/readback_um21_r01_package.py run --output-root converted_datasets/reconversion_v2/um21_r01_readback_v3 --package-root converted_datasets/reconversion_v2/um21_r01_package_v3"
+      }
+    ]
+  },
+  "stop_actions": [],
+  "orphans_at_leader_exit": [],
+  "launcher_errors": [],
+  "finalisation_errors": [],
+  "clean_success": true,
+  "retry": "never automatic",
+  "cleanup_proof": {
+    "checked_at_utc": "2026-11-24T21:43:47+00:00",
+    "basis": "same_boot_proc_scan",
+    "proven": true,
+    "boot_id_now": "a81def3c-fa85-4161-b227-f59ffadc384d",
+    "pgid_members": [],
+    "leader_pid_with_same_start_ticks_present": false,
+    "attempts": 1
+  },
+  "census_after": {
+    "linux": {
+      "checked_at_utc": "2026-11-24T21:43:47+00:00",
+      "boot_id": "a81def3c-fa85-4161-b227-f59ffadc384d",
+      "process_count": 191,
+      "exempt": [
+        {
+          "pid": 1697587,
+          "start_ticks": 99403742,
+          "cwd": "/home/jmontp",
+          "cmdline": "/home/jmontp/.local/bin/pretty daemon",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1697596,
+          "start_ticks": 99403750,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "-zsh",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 2354851,
+          "start_ticks": 109454620,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "claude --resume",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 3270821,
+          "start_ticks": 118479723,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1795464455432-zuopx8.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'which'; \\builtin unset -f -- 'which'; } >/dev/null 2>&1 || true && { \\builtin unalias -- 'un",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 3270822,
+          "start_ticks": 118479724,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "python3 -m contributor_tools.guarded_launcher run docs/quality/audits/um21-r01-readback-spec-v3.json",
+          "why": "launcher itself (CLI)"
+        }
+      ],
+      "workers": []
+    },
+    "windows": {
+      "checked_at_utc": "2026-11-24T21:43:48+00:00",
+      "last_boot_utc": "2026-09-07T21:16:10.5000000Z",
+      "process_count": 332,
+      "free_physical_mib": 9187.7578125,
+      "workers": []
+    }
+  },
+  "windows_new_workers": [],
+  "bindings_after": {
+    "contributor_tools/readback_um21_r01_package.py": {
+      "expected": "a79ad4968e9fe240544212771be8ba738a16a4286979789262f1448903c6edf5",
+      "actual": "a79ad4968e9fe240544212771be8ba738a16a4286979789262f1448903c6edf5",
+      "bytes": 22105,
+      "matches": true
+    },
+    "docs/quality/audits/um21-s02-full-launcher-receipt-v7.json": {
+      "expected": "504f380783a4b6b5d79ac4000909ecc4891fdf09c92e07d7f60343873389161a",
+      "actual": "504f380783a4b6b5d79ac4000909ecc4891fdf09c92e07d7f60343873389161a",
+      "bytes": 37839,
+      "matches": true
+    },
+    "converted_datasets/reconversion_v2/um21_s02_frame_full_v7/s02_summary.json": {
+      "expected": "f9c9daaead809f87ae77b20cdecc657001e0ed2954d4bdb410dea70010875102",
+      "actual": "f9c9daaead809f87ae77b20cdecc657001e0ed2954d4bdb410dea70010875102",
+      "bytes": 1186117,
+      "matches": true
+    },
+    "converted_datasets/reconversion_v2/um21_r01_package_v3/manifest.json": {
+      "expected": "d6d7280aed56ac4d18351ec46cc6542fb8583a80e9179aaefdc016eadbed65de",
+      "actual": "d6d7280aed56ac4d18351ec46cc6542fb8583a80e9179aaefdc016eadbed65de",
+      "bytes": 12253,
+      "matches": true
+    }
+  },
+  "outputs": [
+    {
+      "path": "readback.json",
+      "bytes": 13941,
+      "sha256": "cc5e0a6bc0e28000ea2c550edd1c5c62904686d94cd621034b6af61e8504d8b1"
+    }
+  ],
+  "expected_outputs_missing": [],
+  "log_sha256": "67ccf1f88ee44ffac45d0190f011a021343c6f1e874ca9c265293ff266f5e098",
+  "checks": {
+    "cleanup_proven": true,
+    "bindings_unchanged": true,
+    "envelope_unchanged": true,
+    "linux_no_new_worker": true,
+    "windows_no_new_worker": true,
+    "no_orphans_at_leader_exit": true,
+    "outputs_hashed": true,
+    "expected_outputs_present": true
+  }
+}

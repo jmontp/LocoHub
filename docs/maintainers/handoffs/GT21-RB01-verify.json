@@ -1,0 +1,154 @@
+{
+  "task_id": "GT21-RB01",
+  "role": "independent verifier (second agent; did not write the work; did not import the worker's code for Part A)",
+  "verified_at_utc": "2026-11-24T01:05:00+00:00",
+  "scientific_approval": false,
+  "resource_record": {
+    "before": "Linux available 8252 MiB (floor 3584), Windows free 5850 MiB (floor 2816); no MATLAB process; host otherwise idle for this turn",
+    "probes": "all read-only, one file at a time, 1 MiB streamed, nice 19 / ionice idle, /usr/bin/time -v; nothing written under converted_datasets/ or source folders; scratch scripts in /tmp/v21 only",
+    "peak_rss_mib": {
+      "receipt_check": 18.1,
+      "member_sample": 24.1,
+      "recount_and_channel_stat": 17.1,
+      "powershell_text_probes": 18.4,
+      "pytest_14_tests": 96.2
+    },
+    "left_running": "nothing; no MATLAB started; no Windows process other than short read-only PowerShell queries"
+  },
+  "part_A_python_outputs": {
+    "verdict": "PASS (one documented deviation noted below)",
+    "1_receipts": {
+      "result": "pass",
+      "evidence": "8 receipts checked (6 extractions, AB17 r2, inventory) plus the refused AB17 first attempt. All status completed, exit 0, no launcher/finalisation errors, no missing outputs, no orphans, cleanup_proof proven (same-boot proc scan, empty group). Bindings: every spec binding sha256 equals the file now, and bindings_after all match. launcher_sha256 in every receipt equals the current guarded_launcher.py (8df6f115...).",
+      "explained_not_clean": "AB12 and AB17-r2 have clean_success false only because linux_no_new_worker is false. The census_after rows are other sessions' processes (a Claude shell 'zsh -c ...' and 'python3 docs/build.py'); none is this job. Windows census clean, cleanup proven. Accepted.",
+      "refused_attempt": "gt21-rb01-extract-AB17-launcher-receipt.json is refused_precondition (foreign worker); correctly kept, r2 spec used."
+    },
+    "2_archive_members": {
+      "result": "pass",
+      "sample": "seed 20261125, python random.Random, 6 members per participant, 36 members total (AB12, AB15, AB17, AB19, AB23, AB28). For each: sha256, CRC32 and size recomputed streaming from the extracted file; all equal the ledger and the zip directory entry (zip central directory only, read with zipfile; AB23 from AB23_attempt2/AB23.zip). 36 of 36 pass.",
+      "full_directory_check": "For all members of all six (10,189 members: 1770/1638/1602/1722/1746/1711), ledger size and CRC32 equal the zip directory; no member in the zip directory missing from the ledger; files on disk per participant equal the ledger count exactly (no extra, no missing)."
+    },
+    "3_recording_counts": {
+      "result": "pass",
+      "method": "directory listing only: conditions/*.mat per session/mode, then os.stat of the 11 other channel names; no file opened",
+      "local_16": {
+        "levelground": 506,
+        "ramp": 1015,
+        "stair": 665,
+        "treadmill": 115,
+        "recordings": 2301
+      },
+      "six_new": {
+        "levelground": 174,
+        "ramp": 379,
+        "stair": 251,
+        "treadmill": 42,
+        "recordings": 846
+      },
+      "channels": "all 12 channel files exist for all 3,147 recordings (0 missing); every channel size equals recording_ledger.jsonl (0 mismatches); the set of (subject, session, mode, recording) equals the ledger's 3,147 rows exactly."
+    },
+    "4_source_folder": {
+      "result": "pass",
+      "evidence": "CAMARGO_ET_AL_J_BIOMECH_DATASET: 29,301 entries (files and folders); newest mtime 2025-08-11T14:49:55 UTC, 0 entries modified since 2026-11-23, so nothing was written during the work. 16 participant folders, 2,301 recordings. All 27,612 local channel-file sizes equal the inventory ledger. The mirror zips were not touched (mirror dir read only for the zip directory).",
+      "note": "The evidence report states no source file counts or mtimes to compare against; the comparison is against the inventory ledger and the recorded job window instead."
+    },
+    "anomalies": [
+      "Deviation from acceptance line 1: the 2024 listing was not re-read before each extraction (AB28 is a live folder). The handoff documents this (zips hash-verified against the acquisition, which re-listed before and after). I did not re-list the live folder either (network step). Treat as accepted-with-caveat unless José wants a fresh AB28 listing.",
+      "Evidence report generated_at_utc and handoff last_checked_at_utc say 2026-11-23T22:00, but the AB15 to inventory receipts are timestamped 2026-11-24T00:45 to 00:51 UTC. The stamp is stale, not the data.",
+      "Evidence field disk_used_on_S is garbled ('6.6 GB (6,005,... bytes sum 7005667538)'). The sum of member bytes is 7,005,667,538 (7.0 GB, 6.5 GiB); I recomputed it from the six ledgers. Fix the text.",
+      "Acceptance lines 3 to 5 (22 Weight literals re-read from SubjectInfo.mat, label export agreeing with 1,680 labels, AB06 pilot) are not met; they depend on the label export. The task therefore cannot be done as a whole."
+    ]
+  },
+  "part_B_native_matlab_extension": {
+    "verdict": "NOT APPROVED YET: approve after the 2 blocking changes below. Code review only; MATLAB not run. Module sha256 be29b8f4... and script sha256 a32859f9... equal the handoff. 14 tests pass (7 + 7, 1.06 s).",
+    "checks": {
+      "command_allow_list": "pass. Executable, flags (-batch, -singleCompThread), script name and function name are constants. The spec carries only job id, subject (AB##), source_root, output_root, receipt_path, bindings, timeout. Every substituted value passes a strict character set (no quotes, $, backtick, %, ;). I rendered start_script and parsed it with the PowerShell parser (0 errors, nothing executed), and passed the argument string through the same WSL to powershell.exe path as _powershell: the embedded double quotes, doubled single quotes, a path with a space and parentheses survive intact; CreationDate comes back as ...Z ISO text, the same format PS_TREE uses. Weak spot (non-blocking): source_root and output_root are any absolute path; only 'output not inside source' is enforced. addpath adds the whole Gtech_2021 folder (11 other .m files), none shadows a MATLAB built-in; no C:\\startup.m exists.",
+      "limits": "pass for what they claim. timeout max 1800 (stricter than the 3600 envelope), poll 15 s (envelope max), startup floors Linux 3584 / Windows 2816 MiB checked before launch, runtime floors 2048 / 2048 MiB checked every poll with unreadable counted as breach, output volume 5 GiB, C: free 1 GiB, envelope hash, bindings, output_root absent, one-launch-per-ancestor ledger. These equal the AGENTS.md and launcher values. Working set is polled (see gap 3).",
+      "process_kill": "pass in design. taskkill only on the recorded PID, only after the creation time and the nonce in the command line still equal the recorded values, re-checked before the forced step; no image-name kill; identity mismatch stops nothing and marks the run not clean. I ran PS_TREE read-only against PID 4 (5 rows parsed) and a non-existent PID (returns empty tree, parsed as []). Open risk: see blocking change B2.",
+      "census": "sees MATLAB on the Windows side (is_windows_worker: process name starts with 'matlab'; also 'contributor_tools' in a command line) and any WSL command line with 'matlab'. Before launch any worker refuses; after the run new workers make the run not clean. But see blocking change B1 for the Linux self-count.",
+      "output_scope": "pass. The .m reads only SubjectInfo.mat, dir() listings of <source>/<subject>, and load() of <source>/<subject>/<session>/<mode>/conditions/*.mat. It writes only labels_<subject>.jsonl and subject_info_<subject>.json into out_dir with fopen 'wx' (never overwrites), and refuses a missing out_dir. It converts, filters and infers nothing. MATLAB's own preference and log files are outside the script's control. The stderr file '<log>.err' is next to the log and not covered by the 'log exists' check (non-blocking)."
+    },
+    "gaps": [
+      {
+        "gap": "Census counts the module itself as a worker",
+        "blocks": true,
+        "verified": "is_launcher_cli(['python3','-m','contributor_tools.guarded_launcher_native','x']) returns False. In Host.linux_census the 'pid == me' branch then adds this process to workers ('library caller of run_job'), so census_before always has a Linux worker and every real run ends refused_precondition foreign_worker_linux; if it were bypassed, the post-run census would always make linux_no_new_worker false. The tests use a fake linux_census, so none of this is exercised.",
+        "minimal_change": "One-line exemption in guarded_launcher.py (line 377 of is_launcher_cli), only reachable for the process that is itself the native CLI, and only through -m. Exact diff:\n--- a/contributor_tools/guarded_launcher.py\n+++ b/contributor_tools/guarded_launcher.py\n@@ def is_launcher_cli(argv):\n         if a == \"-m\":\n-            return i + 1 < len(args) and args[i + 1] == \"contributor_tools.guarded_launcher\"\n+            return i + 1 < len(args) and args[i + 1] in (\"contributor_tools.guarded_launcher\", \"contributor_tools.guarded_launcher_native\")\nThis changes the launcher sha256, so rerun tests/test_guarded_launcher*.py and re-bind. Alternative with no launcher edit: in NativeHost, override linux_census to move the row whose pid is os.getpid() and whose argv is '-m contributor_tools.guarded_launcher_native' from workers to exempt. Also add a test that uses the real Host.linux_census (fake /proc) with the native argv."
+      },
+      {
+        "gap": "PowerShell start path untested against real Windows",
+        "blocks": false,
+        "verified": "Parsed start_script (0 syntax errors), confirmed argument quoting survives WSL interop with a harmless echo, confirmed the CIM identity query and CreationDate format, and ran PS_TREE read-only (existing PID and missing PID). Start-Process itself with matlab.exe was not run (rule).",
+        "minimal_change": "None for the text. Keep the first run as the supervised AB06 pilot with a dry run first. Unverified premise: that bin\\matlab.exe stays alive as the parent of the real MATLAB process for -batch. See B2."
+      },
+      {
+        "gap": "Working set polled, not enforced",
+        "blocks": false,
+        "verified": "Polled every 15 s (cap 2048 MiB, tree sum of WorkingSetSize) plus Windows free floor 2048 MiB and Linux floor 2048 MiB; unreadable counts as breach. Windows has no address-space limit here. The export loads one 11 KB conditions file at a time, so growth between polls is small; MATLAB start-up is about 1 GB, inside the cap.",
+        "minimal_change": "Accept as a stated limit. Optional: POLL_S = 5 in guarded_launcher_native.py (stricter than the envelope). The receipt already records peak_tree_working_set_mib; the pilot must report it."
+      },
+      {
+        "gap": "Table variable names assumed in the .m",
+        "blocks": false,
+        "verified": "Subject, Weight, Header, Speed, Label, rampIncline, stairHeight, conditions are the names the existing converter convert_gtech_2021_time_to_parquet.m uses. That converter reads SubjectInfo as load(...).data, i.e. the table variable is named 'data'. The new script takes fieldnames(info){1}, which is correct only if the file holds exactly one variable.",
+        "minimal_change": "In gt21_rb01_label_export.m replace 'tbl = info.(names{1});' with a check: if isfield(info,'data') use info.data, else error unless numel(names)==1. Optional: wrap the jsonencode/fprintf in the per-recording loop in try/catch so one unencodable recording writes an error line instead of aborting the participant. Rebind the script sha256 after editing."
+      }
+    ],
+    "blocking_changes_before_AB06_pilot": [
+      "B1: census self-count (gap 1). Apply the one-line diff or the in-module override, add a real-census test, rebind.",
+      "B2: orphaned MATLAB. The watch loop roots the tree at the recorded PID and ends as soon as that PID has no row. If bin\\matlab.exe is only a stub that starts the real MATLAB and exits, the tree is empty at the first poll, the job is reported 'completed' while MATLAB runs unwatched and un-killable by this code; the post-run census would only flag it afterwards. I could not confirm which behaviour R2023b has without running MATLAB. Minimal safe change: after the root PID has no row, query Windows processes whose command line contains the run nonce and whose name starts with 'matlab'; if one exists, adopt its PID and creation time as the recorded identity (written into the receipt) and keep watching and stopping it; if the tree is gone and outputs are missing within the first poll, mark the run failed rather than completed. Add a fake-host test for this. A supervised pilot would settle the real behaviour."
+    ],
+    "non_blocking_recommendations": [
+      "Constrain source_root to the two reviewed roots (repo CAMARGO folder, gt21_author_mirror_2024_extracted) and output_root to converted_datasets/reconversion_v2/ in validate_native_spec.",
+      "If start_matlab raises after the process started, no identity exists and MATLAB could run unwatched; on exception also run the nonce query from B2.",
+      "The Windows after-run census flags any new process whose name starts with 'matlab' (for example MathWorks helper services), so a healthy run can still show windows_no_new_worker false. The pilot should list them; decide an exemption by name and path only after seeing them."
+    ],
+    "tests": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_guarded_launcher_native.py tests/test_run_gt21_rb01.py -> 14 passed in 1.06 s (peak 96 MiB). Coverage limit: fake host for Linux census, Windows census and tree; no test uses the real linux_census."
+  },
+  "backlog_decision": "GT21-RB01 stays in 'review'. The backlog has one status per task and the label export (acceptance lines 3 to 5) is a deliverable of the same task, so the Python parts cannot be set done separately. Python-part verification result is recorded in the task handoff instead.",
+  "next_action": "None for GT21-RB01 (done).",
+  "part_B_v2": {
+    "reviewed_commit": "62af10a (diff against 8f34062)",
+    "verdict": "APPROVED for the AB06 dry run and supervised pilot, with one condition and one non-blocking fix",
+    "B1": "pass. Launcher diff is exactly the one is_launcher_cli line (plus docstring); nothing else in guarded_launcher.py changed. Look-alike argv tested: only python -m contributor_tools.guarded_launcher[_native] with exact module name is True; '..._native.x', '-m evil <name>', '-c ... -m <name>', non-python 'bash -m', and a script path named guarded_launcher_native.py are all False. The exemption applies only to pid == os.getpid() in linux_census, so no other process can be exempted by copying the argv.",
+    "B2": "pass. adopt_orphan only accepts Windows processes with name like 'matlab*' AND a command line containing the 16-hex random nonce of this run (PS_NONCE; nonce re-validated against the strict pattern). An unrelated MATLAB cannot match. Adopted identity (pid, creation time) is written to receipt 'adoptions', and tree_identity_ok then requires the nonce again before any taskkill. Missing root + no orphan + missing outputs now ends failed_outputs_missing (not clean). A start_matlab exception also searches by nonce and otherwise records launcher_error. Loop ends: adoption excludes the already-recorded pid, so it cannot spin.",
+    "other_fixes": "pass. .m uses info.data, else the single variable, else errors; jsonencode wrapped in try/catch writing a read_ok=false line. Script still reads only SubjectInfo.mat, dir listings and conditions/*.mat and writes only with fopen 'wx' in out_dir.",
+    "condition_found": "Root restrictions can be bypassed with '..': validate_native_spec uses Path parents without normalising, so source_root .../CAMARGO_ET_AL_J_BIOMECH_DATASET/../../../../../../etc and output_root .../converted_datasets/reconversion_v2/../../elsewhere were both ACCEPTED (tested). Condition: the AB06 spec and all later specs must use normalised absolute paths with no '..' (reviewed by hash). Non-blocking one-line fix: in validate_native_spec reject any path with '..' in Path(x).parts, or require os.path.normpath(x) == x for source_root, output_root and receipt_path.",
+    "tests": "nice -n 19 python3 -m pytest -q tests/test_guarded_launcher_native.py tests/test_guarded_launcher.py tests/test_guarded_launcher_verify.py -> 157 passed in 18.4 s, peak 98 MiB. MATLAB not run.",
+    "next_action": "MATLAB pilot on AB06 (preflight dry run first; spec paths normalised; report peak working set, adoptions and any new Windows matlab* helper processes)"
+  },
+  "part_B_v3": {
+    "reviewed": "diff of guarded_launcher_native.py and gt21_rb01_label_export.m against 13f32b3 (HEAD a824885); guarded_launcher.py unchanged since 13f32b3 (sha 372519f9...)",
+    "verdict": "APPROVED for the other 21 participants, one at a time, with two small conditions",
+    "cmd_root": "pass. The root is accepted only if pid, creation time AND the 16-hex nonce in its command line all equal the recorded values (tree_identity_ok, unchanged). The nonce sits in the cmd line (inside the MATLAB expression), so another cmd.exe cannot match; adoption still requires a matlab* name plus the nonce.",
+    "kill_covers_tree": "pass. The tree walk is by ParentProcessId from the recorded cmd.exe root (cmd, matlab.exe stub, MATLAB.exe) and taskkill /PID <root> /T [/F] kills that whole tree. Quoting: all substituted values still pass the strict patterns (no & % ^ | > quote); '..' now rejected in source, output and receipt paths. AB06 r5 receipt: root pid 71720 recorded, polls 1, peak tree working set 216 MiB, no stop needed, tree gone proven, windows_new_workers [], Linux workers [], clean_success true, outputs labels_AB06.jsonl and subject_info_AB06.json hashed, no adoptions.",
+    "no_overwrite": "pass with one nit. MATLAB fopen has no exclusive mode, so isfile checks plus 'w' replace 'wx'; the folder is created fresh and empty by the runner, so the check-then-write race is not reachable. The log is protected by the launcher's 'log exists' check, but cmd's 2> writes <log>.err without that check (could overwrite an old .err). Nit: add log_path.with_suffix('.log.err').exists() to the line 273 refusal. Not blocking (receipt/log names are fresh per run).",
+    "cleanup_proof_without_pgid": "sound. verify-cleanup only proves Linux process groups (it needs boot_id and pgid in the identity), so a native receipt always shows 'not proven' there; that is a limit of the tool, not a leftover process. The native proof is: the recorded Windows root re-queried and absent (prove_tree_gone, 20 tries) plus the Windows census after the run showing no new matlab*, python* or contributor_tools command lines (cmd, stub and MATLAB all carry the script path and nonce, so a straggler would be flagged) plus the Linux census. Limits: it is taken once at run end, and a straggler would only be flagged as a new worker, not killed. Accepted for 22 short (about 25 s) jobs run one at a time.",
+    "script_changes": "pass. 'labels' variable (falls back to 'conditions'), trialStarts/trialEnds/transLeg* recorded as read; still reads only SubjectInfo.mat and conditions/*.mat folders; writes only labels_<subject>.jsonl and subject_info_<subject>.json in out_dir.",
+    "binding_condition": "The AB06 r5 receipt binds guarded_launcher_native.py sha fc40e592..., which equals neither 13f32b3 nor the current file (250e57fe..., the version I reviewed, differing from 13f32b3 by POLL_S 5 and the cmd.exe start). I cannot recover fc40e592; it was presumably the pre-POLL_S edit. Condition: the 21 remaining specs must bind the current module sha 250e57fe..., the .m 452fe668... and launcher 372519f9... (the .m and launcher equal the r5 receipt). Do not edit the module again without re-review.",
+    "tests": "nice -n 19 python3 -m pytest -q tests/test_guarded_launcher_native.py -> 17 passed in 0.8 s. MATLAB not run; nothing left running.",
+    "next_action": "Export the other 21 participants one at a time with specs binding the current hashes; then compare labels with the 1,680 checked ramp and stair labels and re-read the 22 Weight literals."
+  },
+  "part_C_final_label_export": {
+    "verified_at_utc": "2026-11-24",
+    "verdict": "PASS; GT21-RB01 set to done",
+    "1_receipts": "22 final label receipts (gt21-rb01-labels-final-<ID>): all completed, clean_success true, every check true, no adoptions, no stop actions, no launcher errors; each binds native module 250e57fe..., .m 452fe668..., launcher 372519f9... (spec bindings, module_sha256, launcher_sha256 and bindings_after all match), 2 output files each, peak tree working set 960 to 1000 MiB over 2 polls (cap 2048). AB06 final receipt is not byte-identical to r5 (timestamps and PIDs differ, as expected) but its two output files have identical sha256 to r5 (labels f2e57769..., subject_info 81687a2d...). Copy job receipt: completed, clean, cleanup proven, bindings runner 91914fd8... (equals current run_gt21_rb01.py) and SubjectInfo.mat bc990b2c....",
+    "2_copy_job": "The extracted-six root holds exactly one new file, SubjectInfo.mat (plus the record folder _subjectinfo_copy); participant folders and _ledgers have older mtimes. sha256 of the copy and of the local source are both bc990b2c182e0cfc7b405b99fb429026585c224ce6d1ff5249734ec89cb2ce08 = publisher record in the crosswalk.",
+    "3_labels": "Source format is MATLAB v5 with the label table stored as an opaque MCOS table, so scipy.io.loadmat alone returns only an opaque stub; I decoded the table by reading the embedded function workspace with scipy (one file at a time, no MATLAB). Sample seed 20261126: 12 non-treadmill recordings (4 per mode, across AB07, AB08, AB11, AB15, AB16, AB20, AB21, AB28, AB30; both local and extracted-six sources) + 2 treadmill + all 4 recordings with 8 windows (AB10 stair_1_r_01_02, AB11 ramp_3_r_01_01, AB15 ramp_3_r_01_01, AB15 stair_2_l_01_04). For the 16 labelled recordings: label runs (label, first and last Header, row count), n_rows, header first and last, trialStarts, trialEnds, rampIncline, stairHeight all equal the exported jsonl. The 2 treadmill recordings hold no labels table (only trialStarts, trialEnds and a 'speed' table), matching label_present false. 18 of 18 agree (my script flagged the two treadmill files only because its field filter skipped the opaque speed table; checked by hand). Not checked: the other ~3,100 recordings; the earlier 1,680-label cross-check is the worker's.",
+    "4_weights": "22 of 22 Weight literals equal the crosswalk (Weight_literal) and variable_units for Weight is 'kg' in all 22; 1 matching row each; g17 values consistent. Read from the MATLAB export, not independently decoded from SubjectInfo.mat by me.",
+    "5_totals": "3,147 unique rows, no duplicates, set equal to the inventory ledger; per mode 506/1015/665/115 (local) and 174/379/251/42 (six); read_ok everywhere, no errors; labels present for 680 levelground, 1,394 ramp, 916 stair recordings; treadmill 157 (115+42) none have a label table.",
+    "resources": "read-only; peak 103 MiB; nice 19; no MATLAB; nothing running; Linux available 8.3 GB",
+    "next_action": "None for RB01. RB02 onward may use the label exports and the extracted root; mass unit is kg from SubjectInfo VariableUnits."
+  },
+  "status": "done_verified",
+  "part_D_rb03_label_export_fields": {
+    "reviewed": "git diff HEAD of gt21_rb01_label_export.m (452fe668... to 4336c742...559b579); native module 250e57fe... and launcher 372519f9... unchanged (sha256 recomputed). MATLAB not run.",
+    "verdict": "APPROVED to run the 22 exports (one at a time) with the 22 rb03 specs",
+    "1_scope": "pass. The diff touches only describe_recording and one new helper (run_values). Reads are still only SubjectInfo.mat and conditions/*.mat via load(); writes still only labels_<subject>.jsonl and subject_info_<subject>.json in out_dir (isfile refusal then fopen 'w'; folder is created fresh and empty by the runner).",
+    "2_no_inference": "pass. leadingLegStart/Stop and turn are copied with cellstr; speed table values are copied as stored and only grouped into consecutive equal runs (value, first Header, last Header, row count). Limit: jsonencode writes numbers with 15 significant digits (not exact binary doubles); fine for the decimal literals here (Header steps of 0.001, speeds) but say 'to 15 digits' in docs, or use sprintf('%.17g') if bit-exactness is required.",
+    "3_explicit_flags": "pass. Missing leading_leg_*/turn stay as empty cell lists (the field's presence is also visible in top_level_fields). speed_table_present is false unless 'speed' is a table with Header and Speed columns; speed_has_nan is explicit; NaN rows each form their own run. Source facts I checked with scipy (one file at a time): in all 680 levelground recordings (local and extracted six) leadingLegStart and leadingLegStop are 1x1 cells holding a char and turn is a char ('cw'/'ccw'), so cellstr cannot fail; in levelground files 'speed' is a char label ('slow','fast'), not a table, so speed_table_present is false there (the label text is not exported); a treadmill file has a speed table with columns Header and Speed (159,600 rows).",
+    "4_syntax": "plausibly correct: struct() constructor with {{}} cells and 'speed_runs', [] matches existing usage; the new if blocks and the run_values function (for/if/end, runs(end+1)=struct(...) with the same four field names as the empty struct) are balanced; short-circuit || is used correctly; table access data.speed.Speed and data.speed.Header is valid. Non-blocking cautions: (a) the new reads sit before the label-table read inside the same try, so an unexpected type would set read_ok false and skip the label table for that recording (visible, not silent; not expected given 680 of 680 uniform); safer is to move them after the label block or give them their own try/catch. (b) a speed table with many distinct values would make one run per row (up to 159,600 structs, a very long line); treadmill speeds are expected to be near constant, so check the treadmill line sizes after the AB06-class pilot.",
+    "5_specs": "pass. 22 specs docs/quality/audits/gt21-rb03-authors-fields-<ID>-spec.json: each binds the new .m 4336c742..., native module 250e57fe... and launcher 372519f9... (3 bindings), validates under validate_native_spec, source_root is the repo CAMARGO folder (16 local) or gt21_author_mirror_2024_extracted (six), output_root is converted_datasets/reconversion_v2/gt21_rb03_authors_fields_20261125/<ID> (does not exist yet), receipt_path is fresh under docs/quality/audits, timeout 1200 s.",
+    "next_action": "Run the 22 rb03 exports one at a time (dry run first, first participant as pilot), then diff the unchanged fields against gt21_rb01_labels_final_20261124."
+  }
+}

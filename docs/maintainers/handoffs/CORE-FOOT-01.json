@@ -1,0 +1,442 @@
+{
+  "task_id": "CORE-FOOT-01",
+  "status": "review",
+  "scientific_approval": false,
+  "written_at_utc": "2026-11-27T22:48:00Z",
+  "decision": "D-REF-6 = A (Jose, chat 2026-11-27): per-person foot-flat zero on foot and ankle angles and the foot-frame CoP (forward, up); everything else unchanged",
+  "summary": "Offsets computed (docs/quality/audits/foot-flat-offsets.json) and applied through Part.transform in three NEW package roots; L1/L5 re-assessed on the shifted values; each package read back independently against the one it was rebuilt from. All builder checks and all readback checks pass.",
+  "output_roots": {
+    "GT23_v12": "converted_datasets/reconversion_v2/gt23_r01_review_v12",
+    "GT21_v2": "converted_datasets/reconversion_v2/gt21_r01_package_v2",
+    "UM21_v6": "converted_datasets/reconversion_v2/um21_r01_package_v6",
+    "readbacks": "converted_datasets/reconversion_v2/core_foot_01_readback_gt23_full2, _gt21_full2, _um21_full",
+    "previous_packages_untouched": [
+      "gt23_r01_review_v11",
+      "gt21_r01_package_v1",
+      "um21_r01_package_v5"
+    ],
+    "passing_pilots": [
+      "gt23_r01_review_pilot_v12",
+      "gt21_r01_package_pilot_v2_a5",
+      "um21_r01_package_pilot_v6_a5"
+    ]
+  },
+  "offsets": {
+    "GT23": {
+      "people_with_offset": 11,
+      "median": -6.718669003170668,
+      "min": -11.753438268380853,
+      "max": -1.322384430888573,
+      "people_without_offset": [
+        "AB07"
+      ]
+    },
+    "GT21": {
+      "people_with_offset": 22,
+      "median": 1.1959379268396138,
+      "min": -1.7544711055311846,
+      "max": 5.2012410719211015,
+      "people_without_offset": []
+    },
+    "UM21": {
+      "people_with_offset": 9,
+      "median": -1.4816201638193442,
+      "min": -4.679106077740476,
+      "max": -0.3370172518824883,
+      "people_without_offset": [
+        "UM21_AB10"
+      ]
+    }
+  },
+  "uncorrected_people": {
+    "GT23": [
+      "AB07 (no matched level walking; AB04 is not in the GT23 package at all)"
+    ],
+    "GT21": [],
+    "UM21": [
+      "UM21_AB10"
+    ]
+  },
+  "counts_before_after": {
+    "GT23": {
+      "full_observations": [
+        19573,
+        19573
+      ],
+      "filtered_observations": [
+        19448,
+        19447
+      ],
+      "failed_observations": [
+        125,
+        126
+      ],
+      "full_rows": {
+        "phase": [
+          2862750,
+          2862750
+        ],
+        "time": [
+          6397787,
+          6397787
+        ]
+      },
+      "filtered_rows": {
+        "phase": [
+          2847900,
+          2848500
+        ],
+        "time": [
+          5724307,
+          5696966
+        ]
+      },
+      "observations_with_L1_failed_samples_by_table": [
+        {
+          "time": 5,
+          "phase": 4
+        },
+        {
+          "time": 10,
+          "phase": 14
+        }
+      ],
+      "observations_with_L5_failed_samples_by_table": [
+        {
+          "time": 21,
+          "phase": 87
+        },
+        {
+          "time": 21,
+          "phase": 73
+        }
+      ],
+      "membership_changes": {
+        "newly_failed": 24,
+        "recovered": 23,
+        "by_table_and_direction": {
+          "time:no_failure_found->failed": 7,
+          "phase:failed->no_failure_found": 21,
+          "phase:no_failure_found->failed": 17,
+          "time:failed->no_failure_found": 2
+        },
+        "by_cause_after": {
+          "L1": 15,
+          "none": 23,
+          "L5": 9
+        },
+        "by_cause_before": {
+          "none": 24,
+          "L5": 23
+        }
+      }
+    },
+    "GT21": {
+      "full_observations": [
+        84793,
+        84793
+      ],
+      "filtered_observations": [
+        83547,
+        83567
+      ],
+      "failed_observations": [
+        1246,
+        1226
+      ],
+      "full_rows": {
+        "phase": [
+          12247050,
+          12247050
+        ],
+        "time": [
+          14415683,
+          14415683
+        ]
+      },
+      "filtered_rows": {
+        "phase": [
+          12171750,
+          12174450
+        ],
+        "time": [
+          11621500,
+          11591668
+        ]
+      },
+      "observations_with_L1_failed_samples_by_table": [
+        {
+          "time": 119,
+          "phase": 67
+        },
+        {
+          "time": 101,
+          "phase": 51
+        }
+      ],
+      "observations_with_L5_failed_samples_by_table": [
+        {
+          "time": 2,
+          "phase": 2
+        },
+        {
+          "time": 6,
+          "phase": 2
+        }
+      ],
+      "membership_changes": {
+        "newly_failed": 26,
+        "recovered": 46,
+        "by_table_and_direction": {
+          "time:failed->no_failure_found": 12,
+          "phase:failed->no_failure_found": 34,
+          "time:no_failure_found->failed": 10,
+          "phase:no_failure_found->failed": 16
+        },
+        "by_cause_after": {
+          "none": 46,
+          "L5": 3,
+          "L1": 23
+        },
+        "by_cause_before": {
+          "L1": 46,
+          "none": 26
+        }
+      }
+    },
+    "UM21": {
+      "full_observations": [
+        7589,
+        7589
+      ],
+      "filtered_observations": [
+        7566,
+        7568
+      ],
+      "failed_observations": [
+        23,
+        21
+      ],
+      "full_rows": {
+        "phase": [
+          1131750,
+          1131750
+        ],
+        "time": [
+          772821,
+          772821
+        ]
+      },
+      "filtered_rows": {
+        "phase": [
+          1128450,
+          1128750
+        ],
+        "time": [
+          755206,
+          755206
+        ]
+      },
+      "observations_with_L1_failed_samples_by_table": [
+        {
+          "phase": 1
+        },
+        {
+          "phase": 1
+        }
+      ],
+      "observations_with_L5_failed_samples_by_table": [
+        {
+          "phase": 21
+        },
+        {
+          "phase": 19
+        }
+      ],
+      "membership_changes": {
+        "newly_failed": 0,
+        "recovered": 2,
+        "by_table_and_direction": {
+          "phase:failed->no_failure_found": 2
+        },
+        "by_cause_after": {
+          "none": 2
+        },
+        "by_cause_before": {
+          "L5": 2
+        }
+      }
+    }
+  },
+  "readback_results": {
+    "GT23": {
+      "all_pass": true,
+      "checks": {
+        "R1": true,
+        "R9a": true,
+        "R9b": true,
+        "R9c": true,
+        "R9d": true,
+        "R9e": true,
+        "R9f": true,
+        "R2.phase": true,
+        "R3.phase": true,
+        "R4.phase": true,
+        "R5.phase": true,
+        "R6.phase": true,
+        "R8.phase": true,
+        "R9g.phase": true,
+        "R7.phase": true,
+        "R2.time": true,
+        "R3.time": true,
+        "R4.time": true,
+        "R5.time": true,
+        "R6.time": true,
+        "R8.time": true,
+        "R9g.time": true,
+        "R7.time": true
+      },
+      "max_angle_deviation_rad": {
+        "R4.phase": 0.0,
+        "R4.time": 0.0
+      },
+      "max_composition_residual_deg_new": {
+        "R5.phase": 5.088887490341627e-14,
+        "R5.time": 1.2722218725854067e-14
+      },
+      "columns_bit_identical": {
+        "R3.phase": 84,
+        "R3.time": 84
+      }
+    },
+    "GT21": {
+      "all_pass": true,
+      "checks": {
+        "R1": true,
+        "R9a": true,
+        "R9b": true,
+        "R9c": true,
+        "R9d": true,
+        "R9e": true,
+        "R9f": true,
+        "R2.phase": true,
+        "R3.phase": true,
+        "R4.phase": true,
+        "R5.phase": true,
+        "R6.phase": true,
+        "R8.phase": true,
+        "R9g.phase": true,
+        "R7.phase": true,
+        "R2.time": true,
+        "R3.time": true,
+        "R4.time": true,
+        "R5.time": true,
+        "R6.time": true,
+        "R8.time": true,
+        "R9g.time": true,
+        "R7.time": true
+      },
+      "max_angle_deviation_rad": {
+        "R4.phase": 0.0,
+        "R4.time": 0.0
+      },
+      "max_composition_residual_deg_new": {
+        "R5.phase": 2.5444437451708134e-14,
+        "R5.time": 2.5444437451708134e-14
+      },
+      "columns_bit_identical": {
+        "R3.phase": 48,
+        "R3.time": 48
+      }
+    },
+    "UM21": {
+      "all_pass": true,
+      "checks": {
+        "R1": true,
+        "R9a": true,
+        "R9b": true,
+        "R9c": true,
+        "R9d": true,
+        "R9e": true,
+        "R9f": true,
+        "R2.phase": true,
+        "R3.phase": true,
+        "R4.phase": true,
+        "R5.phase": true,
+        "R6.phase": true,
+        "R8.phase": true,
+        "R9g.phase": true,
+        "R7.phase": true,
+        "R2.time": true,
+        "R3.time": true,
+        "R4.time": true,
+        "R5.time": true,
+        "R6.time": true,
+        "R8.time": true,
+        "R9g.time": true,
+        "R7.time": true
+      },
+      "max_angle_deviation_rad": {
+        "R4.phase": 0.0,
+        "R4.time": 0.0
+      },
+      "max_composition_residual_deg_new": {
+        "R5.phase": 2.5444437451708134e-14,
+        "R5.time": 1.2722218725854067e-14
+      },
+      "columns_bit_identical": {
+        "R3.phase": 28,
+        "R3.time": 48
+      }
+    }
+  },
+  "cop_sign_proof": {
+    "file": "docs/quality/audits/core-foot-01-cop-sign-proof.json",
+    "rule": "a' = (a+0.1) cos d - v sin d - 0.1 ; v' = (a+0.1) sin d + v cos d ; d = offset (rad); foot angle' = foot angle - d",
+    "max_deviation_m": {
+      "GT23 (gt23_conventions.foot_frame_point, used by run_gt23_c06.py)": 1.1102230246251565e-16,
+      "GT21 (gt21_rb_pass.foot_frame_point)": 1.6653345369377348e-16,
+      "UM21 (run_um21_s02_frame.foot_frame_point)": 1.1102230246251565e-16
+    },
+    "wrong_sign_deviation_m_min": {
+      "GT23 (gt23_conventions.foot_frame_point, used by run_gt23_c06.py)": 0.014494541168649622,
+      "GT21 (gt21_rb_pass.foot_frame_point)": 0.014890902605265322,
+      "UM21 (run_um21_s02_frame.foot_frame_point)": 0.011538980531386384
+    }
+  },
+  "l2_jump_check": "foot and ankle L2 flags compared before/after on every adjacent pair in every observation: 0 changes (GT23 36.7 M pairs, GT21 102.0 M, UM21 5.3 M); the shift is a constant per person, so L2 cannot change",
+  "tests": {
+    "pytest tests/test_foot_flat.py tests/test_foot_flat_package.py (synthetic fixtures; CoP rotation against each dataset own foot_frame_point; transform leaves other columns bit-identical; end-to-end tiny package rebuild plus readback, including a deliberately wrong offset that the readback catches)": "pass",
+    "tests/test_release_package.py, test_gt21_r01_package.py, test_um21_r01_package.py (shared builder change)": "pass"
+  },
+  "unexpected_or_deviations": [
+    "GT23: the E01/E02 table files and the Q01 v2 observations.jsonl that v11 was built from were deleted on 2026-11-25 (disk cleanup approved by Jose). GT23 v12 therefore reads the v11 PACKAGE (full_phase/full_time and assessment.jsonl, hash-checked against its manifest) instead of the E01/E02 inputs; v11 power values are already the D-REF-5 values so the power transform is not applied again. GT21 and UM21 read the same source inputs as v1 and v5.",
+    "Shared builder contributor_tools/common/release_package.py gained an additive, opt-in rule: a part that is itself a package table (carries source_export etc.) has those columns dropped on read and per-row source_export labels kept (strip_extra / package_input). Schemas without them behave exactly as before; the three older runner tests pass.",
+    "Implemented as thin NEW adapter files (run_gt23_r01_bundle_v12.py, run_gt21_r01_package_v2.py, run_um21_r01_package_v6.py) that import the previous runners unedited, so v11/v1/v5 receipt bindings stay valid (UM21 v5 precedent); the shared logic is contributor_tools/common/foot_flat.py and foot_flat_adapter.py.",
+    "Attempt history kept as evidence: GT23 a1/a2 stopped at input checks (deleted files), a3 failed only the G6 check on a pilot subset, a4 ran clean in content but its receipt is unclean because I edited bound files during the run (bindings_unchanged false); GT21 a2 and a3 failed (angle_range None; FF5 wording), a4 superseded by a later code change; UM21 a1 failed (method name clash); readback GT21 first run hit the 768 MiB address-space cap and was rewritten to read a few columns per pass. All final gating pilots, full builds and readbacks have clean receipts.",
+    "GT23 ankle L1 failures grow: observations with ankle samples beyond +50 degrees go from 9 to 24 (the -6.7 degree median offset adds about +6.7 degrees to ankle dorsiflexion); 17 phase and 7 time observations became failed, 21 phase and 2 time recovered (all CoP L5). Not tuned; reported as found.",
+    "Rotated CoP samples outside the coarse CoP limits: counted in evidence/foot_flat_transform_check.csv (not masked; the dataset CoP masks were applied before the shift and are unchanged). UM21 time table carries no L1/L5 assessment, so its CoP is not limit-checked.",
+    "Free disk after the three builds: 19 GiB (launcher floor 15 GiB). Nothing was deleted; failed and superseded pilot roots are still on disk."
+  ],
+  "code_sha256": {
+    "contributor_tools/common/foot_flat.py": "0e8c13b04eb28443f2ff76a8fab8e2b83f123b0ddf41adf963ca51e31041315c",
+    "contributor_tools/common/foot_flat_adapter.py": "b2c432a44a4a318bf4705d990da62df1de9ed8750f36e2007e1e3243e9892d46",
+    "contributor_tools/common/release_package.py": "1a0e6d7f291d7245f1e644abb030b475dde1a10071652414385147455a2ed482",
+    "contributor_tools/compute_foot_flat_offsets.py": "def90758e6fbd422b2d7e46a635d5b1201fff52835bad94f4790b8e0a17c6e93",
+    "contributor_tools/run_gt23_r01_bundle_v12.py": "3d9ac1fe2ac13861915b77e00aade48af16eb7a85312f7acdd6c0d965d94d76a",
+    "contributor_tools/run_gt21_r01_package_v2.py": "da6ef71deb02fdad2d3cf1ecb6eb0735ef73a208931ee3b076ae3ca610458cad",
+    "contributor_tools/run_um21_r01_package_v6.py": "919b705965ee26736a3d0279d2e8d89ae272d1cf9c10f0c13b50bdc8a9d64ac6",
+    "contributor_tools/readback_foot_flat.py": "b566fc596a090ea353d4e22c18f52ed83c7511c69ff0fdc82bb650c46b81ba22",
+    "contributor_tools/summarize_foot_flat.py": "1c54a90a762f64764f24b15997eb14e1d54e0259d8a25005d471f43569bad30b",
+    "contributor_tools/core_foot_01_cop_sign_proof.py": "986aee234ef8763bd9d8c8f20fc8aa0bad2354d06a0fd636411ce66853220894",
+    "tests/test_foot_flat.py": "9dbd7bf2e5a757ac679eb9b3c211e6e1d0c8c20ec6924cbc704e422c36418de0",
+    "tests/test_foot_flat_package.py": "9d2a5bbcacaab2ff0637298b52064a1a20b9848e6269d6b855c0a965806410e0",
+    "docs/quality/audits/foot-flat-offsets.json": "c4f5e05c282b510c0c7299a3ef5348e653a9f9343d6b0b09f7c7d7bd0e97c446"
+  },
+  "remaining": [
+    "Independent verifier (second agent) to check acceptance criteria against the evidence files named here",
+    "Pages and sheet A refresh are not done by this task (deliverables list them)",
+    "Verifier may re-run readback_foot_flat.py through the guarded launcher"
+  ],
+  "next_action": "Second agent: verify acceptance criteria from docs/quality/audits/core-foot-01-readback-*.json, the three summaries and the sign proof; then move CORE-FOOT-01 to done or back with reasons."
+}

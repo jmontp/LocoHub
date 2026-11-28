@@ -1,0 +1,441 @@
+# Container Build and Push Workflow
+#
+# Created: 2025-06-20 with user permission
+# Purpose: Build and push containerized locomotion analysis environments
+#
+# Intent: Automated container builds with security scanning, multi-platform support,
+# and integration with monitoring systems for production deployment.
+
+name: Build and Push Containers
+
+on:
+  push:
+    branches: [main, develop, 'feature/container-*']
+    paths:
+      - 'containers/**'
+      - 'lib/**'
+      - 'source/**'
+      - 'requirements-container.txt'
+      - '.github/workflows/build-containers.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'containers/**'
+      - 'lib/**'
+      - 'source/**'
+      - 'requirements-container.txt'
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: 'Force rebuild all containers'
+        required: false
+        default: 'false'
+
+env:
+  REGISTRY: ghcr.io
+  REGISTRY_USER: ${{ github.actor }}
+  REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  # Security and lint checks
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run Dockerfile linting
+      uses: hadolint/hadolint-action@v3.1.0
+      with:
+        dockerfile: containers/matlab-dev.Dockerfile
+        failure-threshold: warning
+
+    - name: Run Dockerfile linting (Python)
+      uses: hadolint/hadolint-action@v3.1.0
+      with:
+        dockerfile: containers/python-analysis.Dockerfile
+        failure-threshold: warning
+
+    - name: Run Dockerfile linting (Runtime)
+      uses: hadolint/hadolint-action@v3.1.0
+      with:
+        dockerfile: containers/matlab-runtime.Dockerfile
+        failure-threshold: warning
+
+    - name: Scan requirements for vulnerabilities
+      run: |
+        pip install safety
+        safety check -r requirements-container.txt
+
+  # Build matrix for multi-platform containers
+  build-matrix:
+    needs: security-scan
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        container: [matlab-dev, python-analysis, matlab-runtime]
+        platform: [linux/amd64, linux/arm64]
+        exclude:
+          # MATLAB containers only support amd64 currently
+          - container: matlab-dev
+            platform: linux/arm64
+          - container: matlab-runtime
+            platform: linux/arm64
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ env.REGISTRY_USER }}
+        password: ${{ env.REGISTRY_PASSWORD }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/locomotion-data-standardization/${{ matrix.container }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=raw,value=latest,enable={{is_default_branch}}
+
+    - name: Build and push container
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: containers/${{ matrix.container }}.Dockerfile
+        platforms: ${{ matrix.platform }}
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        build-args: |
+          BUILD_DATE=${{ github.event.head_commit.timestamp }}
+          VCS_REF=${{ github.sha }}
+          VERSION=${{ steps.meta.outputs.version }}
+
+    - name: Run container security scan
+      uses: anchore/scan-action@v3
+      with:
+        image: ${{ env.REGISTRY }}/locomotion-data-standardization/${{ matrix.container }}:${{ github.sha }}
+        severity-cutoff: high
+        fail-build: true
+
+    - name: Upload scan results
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: results.sarif
+
+  # Integration testing with built containers
+  integration-test:
+    needs: build-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        test-suite: [basic-functionality, matlab-integration, python-analysis, monitoring-stack]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ env.REGISTRY_USER }}
+        password: ${{ env.REGISTRY_PASSWORD }}
+
+    - name: Create test data
+      run: |
+        mkdir -p test-data test-output
+        # Create minimal test dataset
+        python -c "
+        import pandas as pd
+        import numpy as np
+        
+        # Generate test locomotion data
+        n_cycles = 5
+        n_points = 150
+        subjects = ['TEST_SUB01', 'TEST_SUB02']
+        tasks = ['level_walking', 'incline_walking']
+        
+        all_data = []
+        for subject in subjects:
+            for task in tasks:
+                for cycle in range(n_cycles):
+                    phase_percent = np.linspace(0, 100, n_points)
+                    data = {
+                        'subject': [subject] * n_points,
+                        'task': [task] * n_points,
+                        'step': [cycle] * n_points,
+                        'phase_percent': phase_percent,
+                        'hip_flexion_angle_ipsi_rad': 0.3 * np.sin(2 * np.pi * phase_percent / 100),
+                        'knee_flexion_angle_ipsi_rad': 0.8 * np.sin(2 * np.pi * phase_percent / 100),
+                        'ankle_flexion_angle_ipsi_rad': 0.2 * np.sin(2 * np.pi * phase_percent / 100)
+                    }
+                    df_cycle = pd.DataFrame(data)
+                    all_data.append(df_cycle)
+        
+        test_df = pd.concat(all_data, ignore_index=True)
+        test_df.to_parquet('test-data/test_locomotion_phase.parquet')
+        print(f'Created test dataset with {len(test_df)} rows')
+        "
+
+    - name: Run basic functionality tests
+      if: matrix.test-suite == 'basic-functionality'
+      run: |
+        # Test container startup and basic functionality
+        docker run --rm \
+          -v $(pwd)/test-data:/opt/locomotion/data \
+          -v $(pwd)/test-output:/opt/locomotion/output \
+          ${{ env.REGISTRY }}/locomotion-data-standardization/python-analysis:${{ github.sha }} \
+          python -c "
+        import sys
+        sys.path.append('/opt/locomotion/python')
+        from lib.core.locomotion_analysis import LocomotionData
+        
+        # Test data loading
+        loco = LocomotionData('/opt/locomotion/data/test_locomotion_phase.parquet', phase_col='phase_percent')
+        print(f'✓ Loaded test data: {len(loco.df)} rows')
+        print(f'✓ Found subjects: {loco.subjects}')
+        print(f'✓ Found tasks: {loco.tasks}')
+        print('✓ Basic functionality test passed')
+        "
+
+    - name: Run MATLAB integration tests
+      if: matrix.test-suite == 'matlab-integration'
+      run: |
+        # Test MATLAB container (if MATLAB license is available)
+        echo "MATLAB integration tests require license - skipping in CI"
+        # docker run --rm \
+        #   -v $(pwd)/test-data:/opt/locomotion/data \
+        #   -v $(pwd)/test-output:/opt/locomotion/output \
+        #   ${{ env.REGISTRY }}/locomotion-data-standardization/matlab-dev:${{ github.sha }} \
+        #   matlab -batch "fprintf('MATLAB container test passed\\n'); exit(0)"
+
+    - name: Run Python analysis tests
+      if: matrix.test-suite == 'python-analysis'
+      run: |
+        # Test Python analysis workflows
+        docker run --rm \
+          -v $(pwd)/test-data:/opt/locomotion/data \
+          -v $(pwd)/test-output:/opt/locomotion/output \
+          ${{ env.REGISTRY }}/locomotion-data-standardization/python-analysis:${{ github.sha }} \
+          python -c "
+        import sys
+        sys.path.append('/opt/locomotion/python')
+        from lib.core.locomotion_analysis import LocomotionData
+        from lib.validation.step_classifier import StepClassifier
+        
+        # Test analysis workflow
+        loco = LocomotionData('/opt/locomotion/data/test_locomotion_phase.parquet', phase_col='phase_percent')
+        
+        # Test 3D array operations
+        data_3d, features = loco.get_cycles('TEST_SUB01', 'level_walking')
+        print(f'✓ 3D array shape: {data_3d.shape}')
+        
+        # Test validation
+        classifier = StepClassifier()
+        print('✓ Validation system initialized')
+        
+        print('✓ Python analysis test passed')
+        "
+
+    - name: Run monitoring stack tests
+      if: matrix.test-suite == 'monitoring-stack'
+      run: |
+        # Test Docker Compose stack startup
+        docker-compose -f docker-compose.yml up -d prometheus grafana
+        
+        # Wait for services to start
+        sleep 30
+        
+        # Test Prometheus
+        curl -f http://localhost:9090/-/healthy || exit 1
+        echo "✓ Prometheus health check passed"
+        
+        # Test Grafana
+        curl -f http://localhost:3000/api/health || exit 1
+        echo "✓ Grafana health check passed"
+        
+        # Cleanup
+        docker-compose -f docker-compose.yml down
+
+  # Performance benchmarking
+  performance-test:
+    needs: build-matrix
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run performance benchmarks
+      run: |
+        # Create larger test dataset for performance testing
+        python -c "
+        import pandas as pd
+        import numpy as np
+        import time
+        
+        # Generate larger test dataset
+        n_cycles = 50
+        n_points = 150
+        subjects = [f'PERF_SUB{i:02d}' for i in range(10)]
+        tasks = ['level_walking', 'incline_walking']
+        
+        start_time = time.time()
+        all_data = []
+        for subject in subjects:
+            for task in tasks:
+                for cycle in range(n_cycles):
+                    phase_percent = np.linspace(0, 100, n_points)
+                    data = {
+                        'subject': [subject] * n_points,
+                        'task': [task] * n_points,
+                        'step': [cycle] * n_points,
+                        'phase_percent': phase_percent,
+                        'hip_flexion_angle_ipsi_rad': 0.3 * np.sin(2 * np.pi * phase_percent / 100),
+                        'knee_flexion_angle_ipsi_rad': 0.8 * np.sin(2 * np.pi * phase_percent / 100),
+                        'ankle_flexion_angle_ipsi_rad': 0.2 * np.sin(2 * np.pi * phase_percent / 100)
+                    }
+                    df_cycle = pd.DataFrame(data)
+                    all_data.append(df_cycle)
+        
+        test_df = pd.concat(all_data, ignore_index=True)
+        test_df.to_parquet('performance_test_data.parquet')
+        
+        creation_time = time.time() - start_time
+        print(f'Created performance test dataset with {len(test_df)} rows in {creation_time:.2f}s')
+        "
+
+        # Test container performance
+        docker run --rm \
+          -v $(pwd):/data \
+          ${{ env.REGISTRY }}/locomotion-data-standardization/python-analysis:${{ github.sha }} \
+          python -c "
+        import sys, time
+        sys.path.append('/opt/locomotion/python')
+        from lib.core.locomotion_analysis import LocomotionData
+        
+        # Performance test
+        start_time = time.time()
+        loco = LocomotionData('/data/performance_test_data.parquet', phase_col='phase_percent')
+        load_time = time.time() - start_time
+        
+        start_time = time.time()
+        data_3d, features = loco.get_cycles('PERF_SUB01', 'level_walking')
+        analysis_time = time.time() - start_time
+        
+        print(f'Performance Results:')
+        print(f'  Data loading: {load_time:.2f}s')
+        print(f'  3D analysis: {analysis_time:.2f}s')
+        print(f'  Dataset size: {len(loco.df)} rows')
+        print(f'  3D array shape: {data_3d.shape}')
+        
+        # Performance thresholds
+        assert load_time < 5.0, f'Loading too slow: {load_time:.2f}s'
+        assert analysis_time < 1.0, f'Analysis too slow: {analysis_time:.2f}s'
+        print('✓ Performance benchmarks passed')
+        "
+
+  # Create release artifacts
+  create-release:
+    needs: [integration-test, performance-test]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Create deployment package
+      run: |
+        # Create deployment package with all necessary files
+        mkdir -p deployment-package
+        
+        # Copy container definitions
+        cp -r containers deployment-package/
+        cp docker-compose.yml deployment-package/
+        cp requirements-container.txt deployment-package/
+        
+        # Copy Kubernetes manifests
+        cp -r k8s deployment-package/
+        
+        # Copy monitoring configuration
+        cp -r monitoring deployment-package/
+        
+        # Create deployment guide
+        cat > deployment-package/DEPLOYMENT.md << 'EOF'
+        # Locomotion Data Analysis - Deployment Guide
+        
+        ## Quick Start with Docker Compose
+        \`\`\`bash
+        # Set environment variables
+        export MATLAB_LICENSE_SERVER="27000@your-license-server"
+        export GRAFANA_PASSWORD="your-secure-password"
+        
+        # Start the stack
+        docker-compose up -d
+        
+        # Access services
+        # - Jupyter Lab: http://localhost:8888
+        # - Grafana: http://localhost:3000
+        # - Prometheus: http://localhost:9090
+        \`\`\`
+        
+        ## Kubernetes Deployment
+        \`\`\`bash
+        # Apply manifests
+        kubectl apply -f k8s/namespace.yaml
+        kubectl apply -f k8s/matlab-deployment.yaml
+        \`\`\`
+        
+        See the full documentation for detailed configuration options.
+        EOF
+        
+        # Create archive
+        tar -czf locomotion-analysis-deployment-${{ github.event.release.tag_name }}.tar.gz deployment-package/
+
+    - name: Upload release assets
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: locomotion-analysis-deployment-${{ github.event.release.tag_name }}.tar.gz
+        asset_name: locomotion-analysis-deployment-${{ github.event.release.tag_name }}.tar.gz
+        asset_content_type: application/gzip
+
+  # Cleanup old images
+  cleanup:
+    needs: [integration-test]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+    - name: Delete old container images
+      uses: actions/delete-package-versions@v4
+      with:
+        package-name: locomotion-data-standardization/matlab-dev
+        package-type: container
+        min-versions-to-keep: 10
+        delete-only-untagged-versions: true

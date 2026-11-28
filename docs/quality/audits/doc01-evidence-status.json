@@ -1,0 +1,227 @@
+{
+ "task_id": "DOC-01",
+ "checked_at_utc": "2026-10-31T06:48:23Z",
+ "scientific_approval": false,
+ "scope": "Static catalog (docs/datasets/index.html, docs/index.html), quality page, preview display scripts, converted_datasets/README.md, and two dataset headers with queued claims. Metadata, small JSON/YAML and HTML only; no Parquet/HDF5/MAT contents opened; no job launched.",
+ "method": "Compared each status, count, download and preview statement with the audit JSONs, dataset metadata records, preview manifest, test record and backlog task statuses. Counts traced to docs/datasets/_metadata comparison_tasks.total_strides and their last_dataset_path.",
+ "status_labels": {
+  "legacy": "no rebuilt, source-checked output",
+  "pilot": "a few recordings rebuilt and matched to source",
+  "partial": "part of the study rebuilt and matched to source",
+  "rebuilt": "full planned scope rebuilt and matched to source; open science remains"
+ },
+ "dataset_status": {
+  "um21": "partial",
+  "gt21": "partial",
+  "gt23": "legacy",
+  "gt24": "pilot",
+  "gt25d": "legacy",
+  "ga26": "legacy",
+  "mb24": "rebuilt",
+  "sp50": "legacy"
+ },
+ "claims": [
+  {
+   "id": "C1",
+   "where": "docs/datasets/index.html and docs/index.html catalog note",
+   "claim": "These downloads are older conversions and have not yet been re-checked. Counts come from earlier reports.",
+   "finding": "True but did not distinguish legacy downloads from local rebuilt/source-checked outputs, and gave no per-dataset status or evidence link.",
+   "correction": "Note now states every download is legacy, unreviewed; rebuilt files are local only; links to Status by dataset. Each row gains a status label (Legacy only / Source-checked pilot / Partly rebuilt / Rebuilt, local only) linked to quality/index.html#status-<slug>; a fold defines the labels. Downloads column renamed \"Legacy downloads\".",
+   "evidence": [
+    "docs/quality/audits/backlog-refresh-20261027.json",
+    "docs/quality/audits/mblue-complete-scope.json",
+    "docs/quality/audits/gt21-completed-force-readback.json",
+    "docs/quality/audits/um21-tread-source-readback.json",
+    "docs/quality/audits/gt24-continuous-pilot.json",
+    "docs/quality/audits/strokepig-source-coverage.json"
+   ]
+  },
+  {
+   "id": "C2",
+   "where": "catalog \"Reported count\" column",
+   "claim": "Single count per study with no artifact named.",
+   "finding": "Counts are sums of comparison_tasks.total_strides in docs/datasets/_metadata/<slug>.yaml, a historical report on last_dataset_path. Mismatches: um21 14,240 counted umich_2021_phase_raw.parquet, not the Full download name umich_2021_phase_dirty.parquet (local raw footer 2,122,650 rows = 14,151 blocks); gt23 task sum 2,940 vs record total_strides 2,215, file not local; mb24 15,825 counts both stair leg views (rebuilt output 15,061); sp50 144 counts a nested converter file while the preview uses a 3-curve root file; gt21 19,519 counted the Full download name while the preview uses the clean file (17,418).",
+   "correction": "Header renamed \"Historical count\"; each cell names what it counted (Full file / local file, no download / leg views, local file / older full file, not the download / disputed: record total 2,215). Legend explains \"Full file\" means same name, bytes not compared.",
+   "evidence": [
+    "docs/datasets/_metadata/um21.yaml",
+    "docs/datasets/_metadata/gt23.yaml",
+    "docs/datasets/_metadata/sp50.yaml",
+    "docs/datasets/aggregate_previews/manifest.json",
+    "docs/quality/audits/mblue-complete-scope.json"
+   ]
+  },
+  {
+   "id": "C3",
+   "where": "docs/quality/index.html \"Corrected data\" block, 12 occurrences of \"queued\"",
+   "claim": "Gait120 rebuild queued; UM21 extension, stair rebuild and 479-cycle recovery queued; GT24 readback queued; GT21 rebuild \"is being rebuilt\", force/COP readback, event/terrain checks, ramp/stair checks and bilateral pilots queued; StrokePiG full export queued.",
+   "finding": "backlog-refresh-20261027 records all 33 watchers stopped_incomplete with no live process and requires replacing queued/scheduled/live wording with prepared/stopped; PM-02 dispositioned every retained job with none started. GT21 reached 102 of 2,301 recordings before stopping.",
+   "correction": "Each queued claim reworded to \"prepared but has not run\" / \"stopped\" / \"has not run\"; GT21 states 102 of 2,301 recordings, run stopped. Block title changed to \"Rebuild details by dataset (local outputs; runs stopped)\". No \"queued\" remains on edited pages.",
+   "evidence": [
+    "docs/quality/audits/backlog-refresh-20261027.json",
+    "docs/quality/audits/pm02-job-dispositions.json"
+   ]
+  },
+  {
+   "id": "C4",
+   "where": "docs/datasets/ga26/index.html header; docs/datasets/fu18/index.html",
+   "claim": "Rebuilding all 6,882 source recordings is queued; first Fukuchi pair scheduled behind existing work.",
+   "finding": "Same stopped-watcher evidence (gait120 watchers and fukuchi_first_pair watcher stopped_incomplete; refresh says do not present Fukuchi as queued/live).",
+   "correction": "Reworded to prepared-but-not-run / stopped-needs-reviewed-launch.",
+   "evidence": [
+    "docs/quality/audits/backlog-refresh-20261027.json"
+   ]
+  },
+  {
+   "id": "C5",
+   "where": "docs/quality/index.html GT23 audit row and evidence paragraph",
+   "claim": "Publisher raw moments are Nm, but current converters label them Nm/kg without division; moment normalization needs correction.",
+   "finding": "Superseded by GT23-C02 (done): Joint_Moments.csv is already N*m/kg; the earlier division proposal would double-normalize and is withdrawn. AB03 mass finding stands (force plates ~114 kg, README 113.5, local table 82.18).",
+   "correction": "Row now \"Participant AB03 mass needs correction; moment units resolved\" with both evidence links; paragraph rewritten to state units resolved, reversal of the earlier review, and the open mass issue, linking the 30 October erratum.",
+   "evidence": [
+    "docs/quality/audits/gt23-c02-moment-units.json",
+    "docs/quality/audits/gt23-publisher-units-and-mass-review.json"
+   ]
+  },
+  {
+   "id": "C6",
+   "where": "docs/quality/index.html software tests (quality.js)",
+   "claim": "Wall of per-module summaries; \"318 passed, 0 failed, 2 skipped\" with no date or coverage statement.",
+   "finding": "test_results.json is a 20 October 2026 (UTC-4) run at base be377de with uncommitted changes; 123 of the 166 tests/test_*.py files present on 31 October are not in it.",
+   "correction": "Tests grouped by purpose (13 fixed purposes, neutral fixed order) in one table: passed/failed/not run with scope under each label; reasons for not-run tests, per-module cases and provenance in folds. Page states the record date and that test files added after it are unassessed (round 2 removed the fixed 166/123 count, see C12). build_quality_page_data.py now records repository_test_modules so future exports report unassessed files automatically.",
+   "evidence": [
+    "docs/quality/test_results.json"
+   ]
+  },
+  {
+   "id": "C7",
+   "where": "preview (aggregate-preview.js) on catalog, home and quality pages",
+   "claim": "\"Averages from a local file; its version may differ from the download.\" Aggregation only inside a fold.",
+   "finding": "Manifest records the source filename; the relation to the catalog downloads and task coverage were not shown (um21 preview covers 3 of 9 listed tasks; gt21/um21 previews use the clean file while counts describe the full file).",
+   "correction": "Visible lineage line: legacy unreviewed local file, whether it has the same name as the Full/Filtered download (bytes not compared) or none, tasks covered of those listed, equal-subject-weight mean and ±1 SD between subjects, and pooling of speeds/conditions. Caption repeats pooling for the chosen task. Quality coverage table now shows input file, download-name match, curves, blocks not used and tasks previewed of listed.",
+   "evidence": [
+    "docs/datasets/aggregate_previews/manifest.json",
+    "docs/datasets/comparison_data.json"
+   ]
+  },
+  {
+   "id": "C8",
+   "where": "converted_datasets/README.md",
+   "claim": "\"Phase-indexed dataset with failing strides removed\"; only 3 studies listed; Quick Start reads a nonexistent gtech_2021_phase.parquet.",
+   "finding": "clean files were filtered by a historical, unreviewed profile; 21 legacy parquet files from 8 studies are present; several clean/full pairs do not share a parent (Gait120, UM21).",
+   "correction": "Rewritten: three kinds of file (legacy, rebuilt in reconversion_v2, release bundle none yet), suffix meanings, every local legacy file by study with audited issues, identity warning, and examples that read the synthetic tutorial file.",
+   "evidence": [
+    "docs/quality/audits/umich.json",
+    "docs/quality/audits/gtech.json",
+    "docs/quality/audits/remaining.json"
+   ]
+  },
+  {
+   "id": "C9",
+   "where": "docs/quality/index.html (new section)",
+   "claim": "No per-dataset status summary existed.",
+   "finding": "Readers had to infer status from long paragraphs.",
+   "correction": "Added \"Status by dataset\": one card per catalog study (Downloads / Rebuilt / Checked against source / Open / Evidence), one column on phones, two from 760 px, ids status-<slug> used by catalog links.",
+   "evidence": [
+    "docs/quality/audits/backlog-refresh-20261027.json",
+    "docs/quality/audits/pm02-job-dispositions.json",
+    "docs/quality/audits/gt23-c02-moment-units.json",
+    "docs/quality/audits/gt23-publisher-units-and-mass-review.json",
+    "docs/quality/audits/gt24-c02-ankle-sign.json",
+    "docs/quality/audits/gt24-ankle-converter-pilot.json",
+    "docs/quality/audits/gt24-continuous-pilot.json",
+    "docs/quality/audits/gt21-completed-force-readback.json",
+    "docs/quality/audits/um21-tread-source-readback.json",
+    "docs/quality/audits/um21-full-tread-curation.json",
+    "docs/quality/audits/mblue-complete-scope.json",
+    "docs/quality/audits/strokepig-source-coverage.json",
+    "docs/quality/audits/gait120-extended-source-review.json",
+    "docs/quality/audits/gt25-ankle-audit-independence-review.json"
+   ]
+  },
+  {
+   "id": "C10",
+   "where": "StrokePiG card and both catalog labels (round 2, verifier F1)",
+   "claim": "Source-checked pilot; Rebuilt: 2 of 151 walking recordings.",
+   "finding": "The two pilot outputs are native source-channel time-series exports (504 and 168 rows, components and residuals checked), not rebuilt gait cycles. PM-02 row strokepig_serial_20261020 records a completed 46/46-recording run (136 observations) that is completed_unreviewed with no source check.",
+   "correction": "Label changed to Legacy only on the card and both catalogs; card states no checked gait cycles, the unreviewed 46-recording run, and the 2-recording native time-series readback; label legend now says gait cycles explicitly; run-record evidence link added.",
+   "evidence": [
+    "docs/quality/audits/strokepig-source-coverage.json",
+    "docs/quality/audits/pm02-job-dispositions.json",
+    "docs/maintainers/handoffs/DOC-01-verify.json"
+   ]
+  },
+  {
+   "id": "C11",
+   "where": "converted_datasets/README.md reconversion_v2 row (round 2, verifier F2)",
+   "claim": "Every reconversion_v2/<job>/ directory is rebuilt and source-checked.",
+   "finding": "PM-02 dispositions: 103 completed_unreviewed, 167 superseded, 100 needing a fresh reviewed plan, 37 obsolete, 12 quarantined (419 rows); directories include plans, censuses and stopped runs.",
+   "correction": "Row renamed Reconstruction job records; only outputs with a completed source-readback receipt are source-checked, for that scope; links Status by dataset and the PM-02 record.",
+   "evidence": [
+    "docs/quality/audits/pm02-job-dispositions.json"
+   ]
+  },
+  {
+   "id": "C12",
+   "where": "optional round-2 notes",
+   "claim": "GT24 label without the withdrawn-fix caveat; MBLUE receipts presented without review status; hand-written test-file count.",
+   "finding": "GT24-C02 withdrew the ankle negation the pilot checked; MB24-F01 (reconcile MBLUE receipts) is still ready; the 166 count was already stale.",
+   "correction": "GT24 label reads Source-checked pilot; ankle fix withdrawn on card and both catalogs; MBLUE card says receipts are not yet independently reconciled; test note says files added after the recorded run are unassessed, without a fixed count.",
+   "evidence": [
+    "docs/quality/audits/gt24-c02-ankle-sign.json",
+    "docs/maintainers/backlog.json"
+   ]
+  }
+ ],
+ "preserved": [
+  "GT24 erratum sentence and \"LocoHub does not negate the source ankle channels\" on docs/quality/index.html (verified present once each)",
+  "docs/datasets/gt23*, gt24* errata pages not edited",
+  "GT21 sign-rule sentence added by another agent on docs/quality/index.html",
+  "concurrent sign-rule edit on docs/datasets/ga26/index.html"
+ ],
+ "not_changed_with_reason": [
+  "Generated audit block (AUDIT_EVIDENCE) structure: build_audit_evidence_page.py would drop hand edits already in that block (GT25 paragraph, GT23 paragraphs, GT21 forces section); left as is apart from the GT23 correction.",
+  "docs/quality/test_results.json not regenerated: a full pytest run was not in this task’s requested checks; its age and coverage are now stated on the page.",
+  "aggregate_previews/manifest.json not rebuilt; lineage is derived in the browser from its source filename and the catalog download URLs.",
+  "docs/datasets/index.md markdown copy not published by the static site; left unchanged.",
+  "Comparison page shared y scales and modes not modified; not re-audited here beyond unchanged code."
+ ],
+ "inputs_sha256": {
+  "docs/quality/audits/backlog-refresh-20261027.json": "438d71f9af35921b689ba80eca6c6cf9022886499471251ffeadc0b8586c29b3",
+  "docs/quality/audits/pm02-job-dispositions.json": "c11882704b9ca097bc2c2742ffd8cdf33d862daffda634a8f4ac7eb7bc79cb29",
+  "docs/quality/audits/gt23-c02-moment-units.json": "065c1b51e88bbe008333f0e2700b26390d6d40b9f8d8ede95c6df735713ab694",
+  "docs/quality/audits/gt23-publisher-units-and-mass-review.json": "1b72859fe21600435315c08b2c70ec2878ce9da55e7111a508c63b0e1431ba98",
+  "docs/quality/audits/gt24-c02-ankle-sign.json": "9607250fe4cf40da13f14b667114f9b0d8765387b13b6c70269011959539597c",
+  "docs/quality/audits/gt24-ankle-converter-pilot.json": "1c31cdc884dfa8858ffb65ebf199225c0c8611e1a73459fdcc83f1bee516287f",
+  "docs/quality/audits/gt24-continuous-pilot.json": "b28dd243e3ab9246a3cdcd8d669b30e7808fdacd3522355e808ff3fbd6f30077",
+  "docs/quality/audits/gt21-completed-force-readback.json": "d7da2802987e814522630deac2f76cd678db5cf9b0c872edbc61a743835aebef",
+  "docs/quality/audits/um21-tread-source-readback.json": "e207acafacf7e97e67b72938f2ef7ef5ef2cc99cf0594f1fd0e16e31ad577e54",
+  "docs/quality/audits/um21-full-tread-curation.json": "e62ed185b56e900cbd1ee0bae07abe4034fd9c8c5aeea665dd25810c9f0b3241",
+  "docs/quality/audits/mblue-complete-scope.json": "f6be3bb620982247824d32e72a62cd907bc51f59a04b13473151d9d857610ae0",
+  "docs/quality/audits/strokepig-source-coverage.json": "417f721df536c9cd415424da73e140311e93454436dd3b26da68a8007beeec62",
+  "docs/quality/audits/gait120-extended-source-review.json": "dc850699086e9f957408912ab2a7621ba11d704540daaf43b4db84797390343d",
+  "docs/quality/audits/gt25-ankle-audit-independence-review.json": "11cdf59c1f3029c0dbbdb934d79d6fc37eeb552c4e31efb731d3162931bc1c91",
+  "docs/quality/test_results.json": "bd34ce328de7f7ccedf91bcd816d712ebf4c898c04b0fb7fd1506b808eb0052a",
+  "docs/datasets/aggregate_previews/manifest.json": "87faf9acf8278f1a51bb0d9180e9f3d3adc474fcb7aaa997720c97cd5eb6ef78",
+  "docs/datasets/comparison_data.json": "511f2bb0f82d9b3f5a5fe7e8bc184334504c9309d82589581a6d971b0101664b",
+  "docs/datasets/_metadata/um21.yaml": "e4279f557cb0d8e6a67ea248e4297fc754749c96749194bb1903d592a877cfdd",
+  "docs/datasets/_metadata/gt21.yaml": "293eecb75a95e306f4c21921f7e6f39b07b57030a22f082ba9ff1c2a81b68b1b",
+  "docs/datasets/_metadata/gt23.yaml": "8d4d4377150c4ccf16af4144a7a83c4244b460486b611838defe049a325483cb",
+  "docs/datasets/_metadata/sp50.yaml": "e59fc1c6cb28bc3ebd8dfb77b5e3ec74781e8f45262b30a17b7363ba64fa075e",
+  "docs/maintainers/backlog.json": "2dc0947f1898c583b979a53dcafa75c853915fe3aa695cdf5cc52e48daf7e113"
+ },
+ "outputs_sha256": {
+  "docs/quality/index.html": "5f6ddec3695f671f8a20aa9b3769225ac8157f0b227520f35f4df78e7bc9cd6d",
+  "docs/datasets/index.html": "dd596c47ba9f2f91a3a3d5b1a6466387a981ae3f50fd71b2288cc5932a6d6577",
+  "docs/index.html": "3b84ce6050c124f5405693c685db74e615623790e1a534e317c22a75a8a6d177",
+  "converted_datasets/README.md": "a5c19a67333d5cb2fe19b28af4b33701cbe124409c14be12f6047bb901f6c179",
+  "docs/javascripts/quality.js": "dbb0bc294bbe08e2264b3d8595f0d4f6feb83d88c04dacaffa52635a612a6470",
+  "docs/javascripts/aggregate-preview.js": "c2bac9b90cdbbdaf965d83e259622c5994f29095e4ad267b5e290ba19b31a81f",
+  "docs/javascripts/data-preview.js": "3c618d4dc509c68bedfbdee03534792b4501a0849a5b9e9cec5f4870692a68a2",
+  "docs/javascripts/extra.js": "cbf59cf5a4f4436f32a2814bf118b5c4ed56425e1b2e656c188b92814858af94",
+  "contributor_tools/build_quality_page_data.py": "26ab42758abbb50b59dfde249a3bab74ed9b57852db40e425a0bfa5398b2253b",
+  "docs/stylesheets/quality.css": "a7a5d0fadb3b5a2bac1e8ac8fd1be2532f8274c928d2d149e6ce9bdc5f9fa242",
+  "docs/stylesheets/data-preview.css": "1ea4bbaff38cd8873f1bbf7e2d8fc6420a98ae941e66a43e1495ac0fa0701966",
+  "docs/datasets/ga26/index.html": "80c11fa858d3cba92ee08545cc05cfaf7ae069fcf9e6117919ed84c1577754a9",
+  "docs/datasets/fu18/index.html": "4146ca551567ee5e72fa3748459aac63dbbfafa576e3a92a341fecb525e4a82f"
+ }
+}

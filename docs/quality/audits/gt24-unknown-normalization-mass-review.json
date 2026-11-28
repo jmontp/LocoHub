@@ -1,0 +1,83 @@
+{
+  "status": "isolated_successor_prepared_not_executed",
+  "scientific_approval": false,
+  "problem": "Existing exporter withholds derived model-weight force when model mass is None, but independent audit unconditionally divides by that missing mass and crashes. Audit also rejects missing participant mass rather than checking explicit withheld participant-BW values.",
+  "successor": "contributor_tools/apply_gt24_participant_normalization_v2.py",
+  "policy": [
+    {
+      "participant": "known",
+      "model": "unknown",
+      "canonical_force_BW": "raw_N/(participant_kg*9.81)",
+      "derived_model_weight_force": "withheld",
+      "source_force_N": "preserved"
+    },
+    {
+      "participant": "unknown",
+      "model": "known",
+      "canonical_force_BW": "withheld",
+      "derived_model_weight_force": "raw_N/(model_kg*9.81), separate source-model alias only",
+      "source_force_N": "preserved"
+    },
+    {
+      "participant": "unknown",
+      "model": "unknown",
+      "canonical_force_BW": "withheld",
+      "derived_model_weight_force": "withheld",
+      "source_force_N": "preserved"
+    }
+  ],
+  "other_signals": "Raw source-normalized net/biological moments and unknown-unit interaction aliases retained. Canonical moments remain withheld while original normalization denominator is unverified. Canonical assistance is known zero only with explicit no-exo state; otherwise withheld. No sign changes, denominator guesses or invented day/model identities.",
+  "coverage_matrix": {
+    "path": "converted_datasets/reconversion_v2/gt24_source_mass_coverage_v4_20261021/matrix.json",
+    "sha256": "688dec9d45ecf103c43a57740c0fbc019ab3e67b47fd37834a726bdd6062b462",
+    "counts": {
+      "parsed_records": 2421,
+      "native_dynamic_records": 1358,
+      "existing_mass_differs": 862,
+      "mass_unresolved": 482,
+      "task_dispositions": {
+        "source_only_unmapped_task": 869,
+        "canonical_parsed_candidate_requires_source_audit": 1552
+      },
+      "participant_mass_bound": 1712,
+      "participant_mass_unresolved": 709
+    },
+    "cross_tab": [
+      {
+        "model": "single_model_candidate_requires_membership",
+        "participant": "participant_bound",
+        "parsed_records": 1712
+      },
+      {
+        "model": "no_model_candidate",
+        "participant": "participant_unresolved",
+        "parsed_records": 482
+      },
+      {
+        "model": "single_model_candidate_requires_membership",
+        "participant": "participant_unresolved",
+        "parsed_records": 227
+      }
+    ],
+    "limit": "These are unresolved metadata candidates, not admitted records or proof of completed source membership. Current matrix has no participant-bound/no-model-candidate group; synthetic fixtures cover that permitted state. No records removed from the 2,421-record scope, including 869 unmapped source-only tasks."
+  },
+  "validation": {
+    "tests": 11,
+    "result": "passed synthetic tests, including 513-row persisted Parquet boundaries and false-finite corruption rejection",
+    "actual_scientific_data_run": false,
+    "withheld_values": "Counted separately as missing/unassessed, never finite passes."
+  },
+  "bindings": {
+    "/mnt/s/workspace/locomotion-data-standardization/contributor_tools/apply_gt24_participant_normalization.py": "94ca1e8e1fc4ce89294dbdd26b83d0f8e5338a05f78c2caef04f748b01578963",
+    "/mnt/s/workspace/locomotion-data-standardization/contributor_tools/apply_gt24_participant_normalization_v2.py": "2a5a9e86dce1cb2cbfa8916ac1e3539b59e52bd95c6f3870e209e12b81ff7765",
+    "/mnt/s/workspace/locomotion-data-standardization/contributor_tools/gt24_mass_field_policy.py": "7088ac6bba7f5791c7e78286a0853288ae46714a55be1718f15e3eb556c72298",
+    "/mnt/s/workspace/locomotion-data-standardization/contributor_tools/stream_gt24_continuous_record.py": "31c064bf9ece95ef4b50902bde46484659404bb207a4c59824dcdadf83c9c2f1",
+    "/mnt/s/workspace/locomotion-data-standardization/tests/test_gt24_unknown_normalization_mass.py": "ba563e87c126ca7f84cf21b89387ca7ba03622a9608cc231d953d6acbde5c764"
+  },
+  "integration_gate": "Root prepares a fresh full-normalization runner/plan bound to this new module and its dependencies after reviewing actual source membership and source mass evidence. Existing pilot helpers/plans remain immutable; no scientific execution or automatic queue replacement.",
+  "next_checks": [
+    "Independent native/raw membership and source units remain required per record.",
+    "For a bounded actual successor pilot, choose an already reviewed unknown-model record only if its original source/mass/phase/day evidence is bound; do not fabricate a missing model on real data.",
+    "Keep unresolved participant mass records source-only for participant-normalized force; do not borrow model mass."
+  ]
+}

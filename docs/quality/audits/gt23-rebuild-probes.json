@@ -1,0 +1,1259 @@
+{
+ "task_id": "GT23-REB-PLAN",
+ "kind": "read_only_probes",
+ "scientific_approval": false,
+ "script": "contributor_tools/audit_probes/2026_11_23/probe_gt23_rebuild_source.py",
+ "script_sha256": "ca7371d1b67c1f6bf33a53e157bfbf122ef55536be998a016df538e1a14c078a",
+ "conditions": "one recording per invocation; flock /tmp/locohub-probe.lock nice -n 19 ionice -c 3 /usr/bin/time -v python3; outputs to /tmp only; nothing written under converted_datasets/ or source folders; no MATLAB; memory checked before each (Linux available 8.1-8.6 GB, Windows free 7.8-8.3 GB); all peaks 150-241 MiB RSS",
+ "seed": 20261123,
+ "pilot_draw": "random.Random(20261123).choice per task group of the 488 recordings (group = key in gt23-problem-scope.json), plus AB05/AB12 normal_walk_1 as known-value cases and AB02/AB05 for the large-file and mass cases",
+ "probes": [
+  {
+   "file": "gt23_probe_cop_AB03_step_ups.json",
+   "peak_rss_mib_time_v": 160.9,
+   "wall": "0:00.84",
+   "under_address_space_768_mib": null,
+   "result": {
+    "frames_trc": 13876,
+    "frames_grf": 13876,
+    "time_diff_max_s": 0.0,
+    "left": {
+     "stances": 24,
+     "anterior_m_first10pct_median": 0.03050752523404168,
+     "anterior_m_last10pct_median": 0.05971662500950162,
+     "vertical_m_median": -0.10136550479004039,
+     "lateral_m_median": 0.005740652090811153,
+     "lateral_m_iqr": [
+      0.0002299834993664989,
+      0.007704885553564306
+     ],
+     "ankle_height_above_floor_m_median": 0.11636634750000001,
+     "foot_length_m_median": 0.20585239890857243
+    },
+    "right": {
+     "stances": 27,
+     "anterior_m_first10pct_median": 0.04513319362596798,
+     "anterior_m_last10pct_median": 0.0551399998257422,
+     "vertical_m_median": -0.10188608048954394,
+     "lateral_m_median": 0.01649373553264314,
+     "lateral_m_iqr": [
+      0.014195843980979728,
+      0.021213842638249755
+     ],
+     "ankle_height_above_floor_m_median": 0.11600639750000001,
+     "foot_length_m_median": 0.21205788738763326
+    },
+    "probe": {
+     "mode": "cop",
+     "subject": "AB03",
+     "recording": "step_ups",
+     "self_reported_peak_rss_mib": 160.90625
+    }
+   }
+  },
+  {
+   "file": "gt23_probe_cop_AB05_normal_walk_1.json",
+   "peak_rss_mib_time_v": 195.9,
+   "wall": "0:01.10",
+   "under_address_space_768_mib": null,
+   "result": {
+    "frames_trc": 45895,
+    "frames_grf": 45895,
+    "time_diff_max_s": 0.0,
+    "left": {
+     "stances": 137,
+     "anterior_m_first10pct_median": -0.15559113436986438,
+     "anterior_m_last10pct_median": 0.09891543612819712,
+     "vertical_m_median": -0.09482547632211553,
+     "lateral_m_median": 0.00347264272221298,
+     "lateral_m_iqr": [
+      -0.0055851223347852235,
+      0.007183656422057441
+     ],
+     "ankle_height_above_floor_m_median": 0.10331789425000001,
+     "foot_length_m_median": 0.20273581253200257
+    },
+    "right": "no stance with force above 20 N",
+    "probe": {
+     "mode": "cop",
+     "subject": "AB05",
+     "recording": "normal_walk_1",
+     "self_reported_peak_rss_mib": 195.9453125
+    }
+   }
+  },
+  {
+   "file": "gt23_probe_cop_AB09_tire_run_1.json",
+   "peak_rss_mib_time_v": 161.0,
+   "wall": "0:00.82",
+   "under_address_space_768_mib": null,
+   "result": {
+    "frames_trc": 13780,
+    "frames_grf": 13780,
+    "time_diff_max_s": 0.0,
+    "left": {
+     "stances": 50,
+     "anterior_m_first10pct_median": 0.08531044229653764,
+     "anterior_m_last10pct_median": 0.08491224072289541,
+     "vertical_m_median": -0.09279929475570159,
+     "lateral_m_median": 0.008591949065253564,
+     "lateral_m_iqr": [
+      0.003824818981668389,
+      0.017071756374144525
+     ],
+     "ankle_height_above_floor_m_median": 0.13897308,
+     "foot_length_m_median": 0.20728096901051402
+    },
+    "right": {
+     "stances": 50,
+     "anterior_m_first10pct_median": 0.07926850132235301,
+     "anterior_m_last10pct_median": 0.08348817727317334,
+     "vertical_m_median": -0.0900526458999251,
+     "lateral_m_median": -0.01246095694320172,
+     "lateral_m_iqr": [
+      -0.015946917296916312,
+      -0.007872555442856005
+     ],
+     "ankle_height_above_floor_m_median": 0.13908604000000002,
+     "foot_length_m_median": 0.2156418818541617
+    },
+    "probe": {
+     "mode": "cop",
+     "subject": "AB09",
+     "recording": "tire_run_1",
+     "self_reported_peak_rss_mib": 161.0078125
+    }
+   }
+  },
+  {
+   "file": "gt23_probe_euler_AB02_normal_walk_1.json",
+   "peak_rss_mib_time_v": 175.8,
+   "wall": "0:01.75",
+   "under_address_space_768_mib": null,
+   "result": {
+    "rows_euler": 61933,
+    "rows_ik": 61933,
+    "first_col": "Header",
+    "best_matches": [
+     [
+      0.8295446270374556,
+      2.3399756362071664,
+      "xzy",
+      [
+       2,
+       1,
+       0
+      ],
+      false
+     ],
+     [
+      0.8295446270374585,
+      2.3399756362071558,
+      "YZX",
+      [
+       0,
+       1,
+       2
+      ],
+      false
+     ],
+     [
+      0.956539689928229,
+      3.636801839973001,
+      "YXZ",
+      [
+       0,
+       2,
+       1
+      ],
+      false
+     ],
+     [
+      0.9565396899282306,
+      3.636801839973001,
+      "zxy",
+      [
+       1,
+       2,
+       0
+      ],
+      false
+     ]
+    ],
+    "time_first_diff": 0.005,
+    "time_head": [
+     0.0,
+     0.005,
+     0.01
+    ],
+    "probe": {
+     "mode": "euler",
+     "subject": "AB02",
+     "recording": "normal_walk_1",
+     "self_reported_peak_rss_mib": 175.81640625
+    }
+   }
+  },
+  {
+   "file": "gt23_probe_euler_AB05.json",
+   "peak_rss_mib_time_v": 171.2,
+   "wall": "0:01.20",
+   "under_address_space_768_mib": null,
+   "result": {
+    "rows_euler": 45895,
+    "rows_ik": 45895,
+    "first_col": "Header",
+    "best_matches": [
+     [
+      0.08977506278376876,
+      0.7044290114222593,
+      "YZX",
+      [
+       0,
+       1,
+       2
+      ],
+      false
+     ],
+     [
+      0.08977506278376929,
+      0.7044290114222593,
+      "xzy",
+      [
+       2,
+       1,
+       0
+      ],
+      false
+     ],
+     [
+      0.40424857100938333,
+      3.748932420679437,
+      "YXZ",
+      [
+       0,
+       2,
+       1
+      ],
+      false
+     ],
+     [
+      0.4042485710093834,
+      3.74893242067945,
+      "zxy",
+      [
+       1,
+       2,
+       0
+      ],
+      false
+     ]
+    ],
+    "time_first_diff": 0.005,
+    "time_head": [
+     0.0,
+     0.005,
+     0.01
+    ],
+    "probe": {
+     "mode": "euler",
+     "subject": "AB05",
+     "recording": "normal_walk_1",
+     "self_reported_peak_rss_mib": 171.234375
+    }
+   }
+  },
+  {
+   "file": "gt23_probe_euler_AB12_normal_walk_1.json",
+   "peak_rss_mib_time_v": 171.3,
+   "wall": "0:01.18",
+   "under_address_space_768_mib": null,
+   "result": {
+    "rows_euler": 44266,
+    "rows_ik": 44266,
+    "first_col": "Header",
+    "best_matches": [
+     [
+      0.0905652529584127,
+      0.7111028692146298,
+      "YZX",
+      [
+       0,
+       1,
+       2
+      ],
+      false
+     ],
+     [
+      0.09056525295841401,
+      0.7111028692146294,
+      "xzy",
+      [
+       2,
+       1,
+       0
+      ],
+      false
+     ],
+     [
+      0.32168318373844673,
+      1.213501291884728,
+      "zxy",
+      [
+       1,
+       2,
+       0
+      ],
+      false
+     ],
+     [
+      0.32168318373844684,
+      1.2135012918847223,
+      "YXZ",
+      [
+       0,
+       2,
+       1
+      ],
+      false
+     ]
+    ],
+    "time_first_diff": 0.005,
+    "time_head": [
+     0.0,
+     0.005,
+     0.01
+    ],
+    "probe": {
+     "mode": "euler",
+     "subject": "AB12",
+     "recording": "normal_walk_1",
+     "self_reported_peak_rss_mib": 171.328125
+    }
+   }
+  },
+  {
+   "file": "gt23_probe_hs_AB05_normal_walk_1.json",
+   "peak_rss_mib_time_v": 150.6,
+   "wall": "0:00.74",
+   "under_address_space_768_mib": null,
+   "result": {
+    "rate_hz": 200.0000000001819,
+    "files": {
+     "normal_walk_1_0-6_parsing.mat:left": {
+      "author_strides": 13,
+      "median_abs_offset_ms": 0.0,
+      "max_abs_offset_ms": 0.0,
+      "share_within_10ms": 1.0,
+      "share_within_50ms": 1.0,
+      "our_heel_strikes_in_recording": 138
+     },
+     "normal_walk_1_0-6_parsing.mat:right": {
+      "author_strides": 0,
+      "our_heel_strikes_in_recording": 0
+     },
+     "normal_walk_1_1-2_parsing.mat:left": {
+      "author_strides": 17,
+      "median_abs_offset_ms": 0.0,
+      "max_abs_offset_ms": 0.0,
+      "share_within_10ms": 1.0,
+      "share_within_50ms": 1.0,
+      "our_heel_strikes_in_recording": 138
+     },
+     "normal_walk_1_1-2_parsing.mat:right": {
+      "author_strides": 0,
+      "our_heel_strikes_in_recording": 0
+     },
+     "normal_walk_1_1-8_parsing.mat:left": {
+      "author_strides": 19,
+      "median_abs_offset_ms": 0.0,
+      "max_abs_offset_ms": 0.0,
+      "share_within_10ms": 1.0,
+      "share_within_50ms": 1.0,
+      "our_heel_strikes_in_recording": 138
+     },
+     "normal_walk_1_1-8_parsing.mat:right": {
+      "author_strides": 0,
+      "our_heel_strikes_in_recording": 0
+     },
+     "normal_walk_1_2-0_parsing.mat:left": {
+      "author_strides": 0,
+      "our_heel_strikes_in_recording": 138
+     },
+     "normal_walk_1_2-0_parsing.mat:right": {
+      "author_strides": 0,
+      "our_heel_strikes_in_recording": 0
+     },
+     "normal_walk_1_2-5_parsing.mat:left": {
+      "author_strides": 0,
+      "our_heel_strikes_in_recording": 138
+     },
+     "normal_walk_1_2-5_parsing.mat:right": {
+      "author_strides": 0,
+      "our_heel_strikes_in_recording": 0
+     },
+     "normal_walk_1_shuffle_parsing.mat:left": {
+      "author_strides": 10,
+      "median_abs_offset_ms": 0.0,
+      "max_abs_offset_ms": 0.0,
+      "share_within_10ms": 1.0,
+      "share_within_50ms": 1.0,
+      "our_heel_strikes_in_recording": 138
+     },
+     "normal_walk_1_shuffle_parsing.mat:right": {
+      "author_strides": 0,
+      "our_heel_strikes_in_recording": 0
+     },
+     "normal_walk_1_skip_parsing.mat:left": {
+      "author_strides": 6,
+      "median_abs_offset_ms": 0.0,
+      "max_abs_offset_ms": 0.0,
+      "share_within_10ms": 1.0,
+      "share_within_50ms": 1.0,
+      "our_heel_strikes_in_recording": 138
+     },
+     "normal_walk_1_skip_parsing.mat:right": {
+      "author_strides": 0,
+      "our_heel_strikes_in_recording": 0
+     }
+    },
+    "probe": {
+     "mode": "hs",
+     "subject": "AB05",
+     "recording": "normal_walk_1",
+     "self_reported_peak_rss_mib": 150.578125
+    }
+   }
+  },
+  {
+   "file": "gt23_probe_hs_AB12_normal_walk_1.json",
+   "peak_rss_mib_time_v": 149.0,
+   "wall": "0:01.19",
+   "under_address_space_768_mib": null,
+   "result": {
+    "rate_hz": 200.0000000001819,
+    "files": {
+     "normal_walk_1_0-6_parsing.mat:left": {
+      "author_strides": 12,
+      "median_abs_offset_ms": 0.0,
+      "max_abs_offset_ms": 0.0,
+      "share_within_10ms": 1.0,
+      "share_within_50ms": 1.0,
+      "our_heel_strikes_in_recording": 226
+     },
+     "normal_walk_1_0-6_parsing.mat:right": {
+      "author_strides": 0,
+      "our_heel_strikes_in_recording": 77
+     },
+     "normal_walk_1_1-2_parsing.mat:left": {
+      "author_strides": 17,
+      "median_abs_offset_ms": 0.0,
+      "max_abs_offset_ms": 0.0,
+      "share_within_10ms": 1.0,
+      "share_within_50ms": 1.0,
+      "our_heel_strikes_in_recording": 226
+     },
+     "normal_walk_1_1-2_parsing.mat:right": {
+      "author_strides": 0,
+      "our_heel_strikes_in_recording": 77
+     },
+     "normal_walk_1_1-8_parsing.mat:left": {
+      "author_strides": 21,
+      "median_abs_offset_ms": 0.0,
+      "max_abs_offset_ms": 0.0,
+      "share_within_10ms": 1.0,
+      "share_within_50ms": 1.0,
+      "our_heel_strikes_in_recording": 226
+     },
+     "normal_walk_1_1-8_parsing.mat:right": {
+      "author_strides": 0,
+      "our_heel_strikes_in_recording": 77
+     },
+     "normal_walk_1_2-0_parsing.mat:left": {
+      "author_strides": 24,
+      "median_abs_offset_ms": 0.0,
+      "max_abs_offset_ms": 0.0,
+      "share_within_10ms": 1.0,
+      "share_within_50ms": 1.0,
+      "our_heel_strikes_in_recording": 226
+     },
+     "normal_walk_1_2-0_parsing.mat:right": {
+      "author_strides": 24,
+      "median_abs_offset_ms": 0.0,
+      "max_abs_offset_ms": 0.0,
+      "share_within_10ms": 1.0,
+      "share_within_50ms": 1.0,
+      "our_heel_strikes_in_recording": 77
+     },
+     "normal_walk_1_2-5_parsing.mat:left": {
+      "author_strides": 26,
+      "median_abs_offset_ms": 0.0,
+      "max_abs_offset_ms": 0.0,
+      "share_within_10ms": 1.0,
+      "share_within_50ms": 1.0,
+      "our_heel_strikes_in_recording": 226
+     },
+     "normal_walk_1_2-5_parsing.mat:right": {
+      "author_strides": 26,
+      "median_abs_offset_ms": 0.0,
+      "max_abs_offset_ms": 0.0,
+      "share_within_10ms": 1.0,
+      "share_within_50ms": 1.0,
+      "our_heel_strikes_in_recording": 77
+     },
+     "normal_walk_1_shuffle_parsing.mat:left": {
+      "author_strides": 9,
+      "median_abs_offset_ms": 0.0,
+      "max_abs_offset_ms": 0.0,
+      "share_within_10ms": 1.0,
+      "share_within_50ms": 1.0,
+      "our_heel_strikes_in_recording": 226
+     },
+     "normal_walk_1_shuffle_parsing.mat:right": {
+      "author_strides": 0,
+      "our_heel_strikes_in_recording": 77
+     },
+     "normal_walk_1_skip_parsing.mat:left": {
+      "author_strides": 15,
+      "median_abs_offset_ms": 0.0,
+      "max_abs_offset_ms": 0.0,
+      "share_within_10ms": 1.0,
+      "share_within_50ms": 1.0,
+      "our_heel_strikes_in_recording": 226
+     },
+     "normal_walk_1_skip_parsing.mat:right": {
+      "author_strides": 0,
+      "our_heel_strikes_in_recording": 77
+     }
+    },
+    "probe": {
+     "mode": "hs",
+     "subject": "AB12",
+     "recording": "normal_walk_1",
+     "self_reported_peak_rss_mib": 148.98046875
+    }
+   }
+  },
+  {
+   "file": "gt23_probe_markers_AB02_normal_walk_1.json",
+   "peak_rss_mib_time_v": 234.6,
+   "wall": "0:01.54",
+   "under_address_space_768_mib": null,
+   "result": {
+    "frames": 61933,
+    "rate_hz": 200.0,
+    "grf_rows": 61933,
+    "markers_in_file": 35,
+    "missing_requested": [],
+    "stance_samples": {
+     "L": 27933,
+     "R": 0
+    },
+    "pelvis_deg_from_markers": {
+     "mean": -6.756674086468673,
+     "sd": 3.7108133530021035
+    },
+    "pelvis_deg_percentiles_5_50_95": [
+     -13.063118845270692,
+     -6.398639613837016,
+     -1.2933921263997774
+    ],
+    "pelvis_vs_IK_tilt_walking_frames": {
+     "frames": 53813,
+     "corr": -0.012836712924005927,
+     "offset_mean_deg": -6.580105631609946,
+     "offset_sd_deg": 6.336493688129765,
+     "sd_markers_deg": 3.5949401172580817,
+     "sd_IK_deg": 5.172060081198562
+    },
+    "right_foot_deg_midstance_median": null,
+    "right_shank_deg_percentiles_5_50_95": [
+     -71.30997126495225,
+     -22.373151080268023,
+     15.007492524000709
+    ],
+    "right_ankle_centre_finite_in_stance": null,
+    "left_foot_deg_midstance_median": -12.616695781144493,
+    "left_shank_deg_percentiles_5_50_95": [
+     -69.51784265290038,
+     -20.22562364694009,
+     15.545592779339197
+    ],
+    "left_knee_flexion_markers_vs_minus_IK_knee_angle": {
+     "frames": 53813,
+     "corr": 0.9990117523261612,
+     "offset_mean_deg": -1.6530432587234551,
+     "resid_sd_deg": 2.759560121003857,
+     "peak_markers_deg": 94.30910842181548,
+     "peak_IK_deg": 103.0212342892,
+     "note": "thigh from GTR->knee-centre marker line (hip centre not a marker), coarse"
+    },
+    "left_ankle_centre_finite_in_stance": 1.0,
+    "probe": {
+     "mode": "markers",
+     "subject": "AB02",
+     "recording": "normal_walk_1",
+     "self_reported_peak_rss_mib": 234.60546875
+    },
+    "coverage_summary": {
+     "markers_checked": 22,
+     "min_finite_overall": 0.992,
+     "min_finite_in_own_stance": 0.9824
+    }
+   }
+  },
+  {
+   "file": "gt23_probe_markers_AB02_normal_walk_1_AS768.json",
+   "peak_rss_mib_time_v": 235.8,
+   "wall": "0:01.24",
+   "under_address_space_768_mib": true,
+   "result": {
+    "frames": 61933,
+    "rate_hz": 200.0,
+    "grf_rows": 61933,
+    "markers_in_file": 35,
+    "missing_requested": [],
+    "stance_samples": {
+     "L": 27933,
+     "R": 0
+    },
+    "pelvis_deg_from_markers": {
+     "mean": -6.756674086468673,
+     "sd": 3.7108133530021035
+    },
+    "pelvis_deg_percentiles_5_50_95": [
+     -13.063118845270692,
+     -6.398639613837016,
+     -1.2933921263997774
+    ],
+    "pelvis_vs_IK_tilt_walking_frames": {
+     "frames": 53813,
+     "corr": -0.012836712924005927,
+     "offset_mean_deg": -6.580105631609946,
+     "offset_sd_deg": 6.336493688129765,
+     "sd_markers_deg": 3.5949401172580817,
+     "sd_IK_deg": 5.172060081198562
+    },
+    "right_foot_deg_midstance_median": null,
+    "right_shank_deg_percentiles_5_50_95": [
+     -71.30997126495225,
+     -22.373151080268023,
+     15.007492524000709
+    ],
+    "right_ankle_centre_finite_in_stance": null,
+    "left_foot_deg_midstance_median": -12.616695781144493,
+    "left_shank_deg_percentiles_5_50_95": [
+     -69.51784265290038,
+     -20.22562364694009,
+     15.545592779339197
+    ],
+    "left_knee_flexion_markers_vs_minus_IK_knee_angle": {
+     "frames": 53813,
+     "corr": 0.9990117523261612,
+     "offset_mean_deg": -1.6530432587234551,
+     "resid_sd_deg": 2.759560121003857,
+     "peak_markers_deg": 94.30910842181548,
+     "peak_IK_deg": 103.0212342892,
+     "note": "thigh from GTR->knee-centre marker line (hip centre not a marker), coarse"
+    },
+    "left_ankle_centre_finite_in_stance": 1.0,
+    "probe": {
+     "mode": "markers",
+     "subject": "AB02",
+     "recording": "normal_walk_1",
+     "self_reported_peak_rss_mib": 235.83203125
+    },
+    "coverage_summary": {
+     "markers_checked": 22,
+     "min_finite_overall": 0.992,
+     "min_finite_in_own_stance": 0.9824
+    }
+   }
+  },
+  {
+   "file": "gt23_probe_markers_AB03_step_ups.json",
+   "peak_rss_mib_time_v": 160.6,
+   "wall": "0:00.83",
+   "under_address_space_768_mib": null,
+   "result": {
+    "frames": 13876,
+    "rate_hz": 200.0,
+    "grf_rows": 13876,
+    "markers_in_file": 35,
+    "missing_requested": [],
+    "stance_samples": {
+     "L": 11014,
+     "R": 10576
+    },
+    "pelvis_deg_from_markers": {
+     "mean": -18.291449443472306,
+     "sd": 7.067648314740538
+    },
+    "pelvis_deg_percentiles_5_50_95": [
+     -33.554220210570854,
+     -17.16240971075913,
+     -8.241068563276453
+    ],
+    "right_foot_deg_midstance_median": -5.10808172881726,
+    "right_shank_deg_percentiles_5_50_95": [
+     -34.74364014718296,
+     -11.379957946712256,
+     -2.291318994167934
+    ],
+    "right_ankle_centre_finite_in_stance": 1.0,
+    "left_foot_deg_midstance_median": -5.232350078999893,
+    "left_shank_deg_percentiles_5_50_95": [
+     -34.13980550122664,
+     -11.231015348539632,
+     -6.384712300683402
+    ],
+    "left_ankle_centre_finite_in_stance": 1.0,
+    "probe": {
+     "mode": "markers",
+     "subject": "AB03",
+     "recording": "step_ups",
+     "self_reported_peak_rss_mib": 160.5546875
+    },
+    "coverage_summary": {
+     "markers_checked": 22,
+     "min_finite_overall": 1.0,
+     "min_finite_in_own_stance": 1.0
+    }
+   }
+  },
+  {
+   "file": "gt23_probe_markers_AB05_normal_walk_1.json",
+   "peak_rss_mib_time_v": 215.9,
+   "wall": "0:01.29",
+   "under_address_space_768_mib": null,
+   "result": {
+    "frames": 45895,
+    "rate_hz": 200.0,
+    "grf_rows": 45895,
+    "markers_in_file": 35,
+    "missing_requested": [],
+    "stance_samples": {
+     "L": 20346,
+     "R": 0
+    },
+    "pelvis_deg_from_markers": {
+     "mean": -22.912735540536524,
+     "sd": 4.763335627755005
+    },
+    "pelvis_deg_percentiles_5_50_95": [
+     -31.07813362554385,
+     -22.145368702814263,
+     -16.900202871899086
+    ],
+    "pelvis_vs_IK_tilt_walking_frames": {
+     "frames": 34814,
+     "corr": 0.05784474828447602,
+     "offset_mean_deg": -23.225857084067645,
+     "offset_sd_deg": 5.642186987431175,
+     "sd_markers_deg": 4.889927679466897,
+     "sd_IK_deg": 3.111794451803378
+    },
+    "right_foot_deg_midstance_median": null,
+    "right_shank_deg_percentiles_5_50_95": [
+     -86.64139762054207,
+     -18.88591264902953,
+     12.59021977337673
+    ],
+    "right_ankle_centre_finite_in_stance": null,
+    "left_foot_deg_midstance_median": -4.608764134571173,
+    "left_shank_deg_percentiles_5_50_95": [
+     -85.3310766228844,
+     -20.540554722045112,
+     10.885237698933254
+    ],
+    "left_knee_flexion_markers_vs_minus_IK_knee_angle": {
+     "frames": 34814,
+     "corr": 0.9992300508364702,
+     "offset_mean_deg": 2.362650225250577,
+     "resid_sd_deg": 2.0347648469781583,
+     "peak_markers_deg": 97.1716566687851,
+     "peak_IK_deg": 101.84427352320003,
+     "note": "thigh from GTR->knee-centre marker line (hip centre not a marker), coarse"
+    },
+    "left_ankle_centre_finite_in_stance": 1.0,
+    "probe": {
+     "mode": "markers",
+     "subject": "AB05",
+     "recording": "normal_walk_1",
+     "self_reported_peak_rss_mib": 215.8828125
+    },
+    "coverage_summary": {
+     "markers_checked": 22,
+     "min_finite_overall": 1.0,
+     "min_finite_in_own_stance": 1.0
+    }
+   }
+  },
+  {
+   "file": "gt23_probe_markers_AB05_turn_and_step_1.json",
+   "peak_rss_mib_time_v": 162.2,
+   "wall": "0:00.84",
+   "under_address_space_768_mib": null,
+   "result": {
+    "frames": 15992,
+    "rate_hz": 200.0,
+    "grf_rows": 15992,
+    "markers_in_file": 35,
+    "missing_requested": [],
+    "stance_samples": {
+     "L": 6123,
+     "R": 5272
+    },
+    "pelvis_deg_from_markers": {
+     "mean": -19.109956273606798,
+     "sd": 3.043117022961097
+    },
+    "pelvis_deg_percentiles_5_50_95": [
+     -25.49223262064954,
+     -18.74321804882982,
+     -14.783078787930288
+    ],
+    "right_foot_deg_midstance_median": -3.474880498449763,
+    "right_shank_deg_percentiles_5_50_95": [
+     -43.70706438039226,
+     -7.7357706273473905,
+     16.86737669528585
+    ],
+    "right_ankle_centre_finite_in_stance": 1.0,
+    "left_foot_deg_midstance_median": -4.605922472046705,
+    "left_shank_deg_percentiles_5_50_95": [
+     -47.03019278234777,
+     -8.916103162498619,
+     14.89673323253943
+    ],
+    "left_ankle_centre_finite_in_stance": 1.0,
+    "probe": {
+     "mode": "markers",
+     "subject": "AB05",
+     "recording": "turn_and_step_1",
+     "self_reported_peak_rss_mib": 162.203125
+    },
+    "coverage_summary": {
+     "markers_checked": 22,
+     "min_finite_overall": 1.0,
+     "min_finite_in_own_stance": 1.0
+    }
+   }
+  },
+  {
+   "file": "gt23_probe_markers_AB09_tire_run_1.json",
+   "peak_rss_mib_time_v": 160.9,
+   "wall": "0:00.81",
+   "under_address_space_768_mib": null,
+   "result": {
+    "frames": 13780,
+    "rate_hz": 200.0,
+    "grf_rows": 13780,
+    "markers_in_file": 35,
+    "missing_requested": [],
+    "stance_samples": {
+     "L": 3046,
+     "R": 3042
+    },
+    "pelvis_deg_from_markers": {
+     "mean": -8.094247594564923,
+     "sd": 4.420133870040214
+    },
+    "pelvis_deg_percentiles_5_50_95": [
+     -14.593658405825986,
+     -8.590666148072472,
+     -0.36795035727729203
+    ],
+    "right_foot_deg_midstance_median": -13.048003453438508,
+    "right_shank_deg_percentiles_5_50_95": [
+     -50.899260837738375,
+     -19.7656759820277,
+     -4.079093901032548
+    ],
+    "right_ankle_centre_finite_in_stance": 1.0,
+    "left_foot_deg_midstance_median": -11.734268509833518,
+    "left_shank_deg_percentiles_5_50_95": [
+     -49.06792352517735,
+     -20.472354956227562,
+     -1.6321141716702763
+    ],
+    "left_ankle_centre_finite_in_stance": 1.0,
+    "probe": {
+     "mode": "markers",
+     "subject": "AB09",
+     "recording": "tire_run_1",
+     "self_reported_peak_rss_mib": 160.875
+    },
+    "coverage_summary": {
+     "markers_checked": 22,
+     "min_finite_overall": 0.9774,
+     "min_finite_in_own_stance": 1.0
+    }
+   }
+  },
+  {
+   "file": "gt23_probe_markers_AB11_squats_1.json",
+   "peak_rss_mib_time_v": 159.0,
+   "wall": "0:00.84",
+   "under_address_space_768_mib": null,
+   "result": {
+    "frames": 8318,
+    "rate_hz": 200.0,
+    "grf_rows": 8318,
+    "markers_in_file": 35,
+    "missing_requested": [],
+    "stance_samples": {
+     "L": 8318,
+     "R": 8318
+    },
+    "pelvis_deg_from_markers": {
+     "mean": -8.924751224294658,
+     "sd": 7.108852254063413
+    },
+    "pelvis_deg_percentiles_5_50_95": [
+     -22.198077160040103,
+     -6.257174535162216,
+     0.02961259522944482
+    ],
+    "right_foot_deg_midstance_median": -2.633522979375325,
+    "right_shank_deg_percentiles_5_50_95": [
+     -33.43452126183944,
+     -8.104097521194596,
+     -3.5582921515151917
+    ],
+    "right_ankle_centre_finite_in_stance": 1.0,
+    "left_foot_deg_midstance_median": -3.9627484703028317,
+    "left_shank_deg_percentiles_5_50_95": [
+     -37.57877894203713,
+     -8.536945626908548,
+     -2.272149101698576
+    ],
+    "left_ankle_centre_finite_in_stance": 1.0,
+    "probe": {
+     "mode": "markers",
+     "subject": "AB11",
+     "recording": "squats_1",
+     "self_reported_peak_rss_mib": 158.9765625
+    },
+    "coverage_summary": {
+     "markers_checked": 22,
+     "min_finite_overall": 1.0,
+     "min_finite_in_own_stance": 1.0
+    }
+   }
+  },
+  {
+   "file": "gt23_probe_markers_AB12_normal_walk_1.json",
+   "peak_rss_mib_time_v": 214.0,
+   "wall": "0:01.29",
+   "under_address_space_768_mib": null,
+   "result": {
+    "frames": 44266,
+    "rate_hz": 200.0,
+    "grf_rows": 44266,
+    "markers_in_file": 35,
+    "missing_requested": [],
+    "stance_samples": {
+     "L": 23974,
+     "R": 4522
+    },
+    "pelvis_deg_from_markers": {
+     "mean": -10.340600344691218,
+     "sd": 4.07566761686559
+    },
+    "pelvis_deg_percentiles_5_50_95": [
+     -17.86811486004229,
+     -9.476720012062053,
+     -5.012867138706957
+    ],
+    "pelvis_vs_IK_tilt_walking_frames": {
+     "frames": 44266,
+     "corr": -0.08181195280509009,
+     "offset_mean_deg": -9.775470470683402,
+     "offset_sd_deg": 6.300405800188419,
+     "sd_markers_deg": 4.07566761686559,
+     "sd_IK_deg": 4.482704096589833
+    },
+    "right_foot_deg_midstance_median": -6.651408617486348,
+    "right_shank_deg_percentiles_5_50_95": [
+     -64.02545870438361,
+     -13.838080705461852,
+     15.553092762859068
+    ],
+    "right_knee_flexion_markers_vs_minus_IK_knee_angle": {
+     "frames": 11903,
+     "corr": 0.9997202320241777,
+     "offset_mean_deg": -4.635985242755197,
+     "resid_sd_deg": 1.261873659110512,
+     "peak_markers_deg": 84.88793153431628,
+     "peak_IK_deg": 92.1024758632,
+     "note": "thigh from GTR->knee-centre marker line (hip centre not a marker), coarse"
+    },
+    "right_ankle_centre_finite_in_stance": 1.0,
+    "left_foot_deg_midstance_median": -5.434789266386169,
+    "left_shank_deg_percentiles_5_50_95": [
+     -65.34971323236911,
+     -14.029242209924286,
+     15.672517622975654
+    ],
+    "left_knee_flexion_markers_vs_minus_IK_knee_angle": {
+     "frames": 44266,
+     "corr": 0.9987953342760691,
+     "offset_mean_deg": -1.3037139078924662,
+     "resid_sd_deg": 1.3028072159273374,
+     "peak_markers_deg": 98.57565764650718,
+     "peak_IK_deg": 104.48527312749997,
+     "note": "thigh from GTR->knee-centre marker line (hip centre not a marker), coarse"
+    },
+    "left_ankle_centre_finite_in_stance": 1.0,
+    "probe": {
+     "mode": "markers",
+     "subject": "AB12",
+     "recording": "normal_walk_1",
+     "self_reported_peak_rss_mib": 213.953125
+    },
+    "coverage_summary": {
+     "markers_checked": 22,
+     "min_finite_overall": 1.0,
+     "min_finite_in_own_stance": 1.0
+    }
+   }
+  },
+  {
+   "file": "gt23_probe_markers_AB12_obstacle_walk_1.json",
+   "peak_rss_mib_time_v": 162.5,
+   "wall": "0:00.88",
+   "under_address_space_768_mib": null,
+   "result": {
+    "frames": 16460,
+    "rate_hz": 200.0,
+    "grf_rows": 16460,
+    "markers_in_file": 35,
+    "missing_requested": [],
+    "stance_samples": {
+     "L": 10604,
+     "R": 0
+    },
+    "pelvis_deg_from_markers": {
+     "mean": -5.883147105419213,
+     "sd": 1.5641231859461868
+    },
+    "pelvis_deg_percentiles_5_50_95": [
+     -8.428453200113058,
+     -5.862027735592754,
+     -3.4664634858515027
+    ],
+    "right_foot_deg_midstance_median": null,
+    "right_shank_deg_percentiles_5_50_95": [
+     -50.58364872557087,
+     -7.5616264253527,
+     19.20194408585895
+    ],
+    "right_ankle_centre_finite_in_stance": null,
+    "left_foot_deg_midstance_median": -5.274608389044268,
+    "left_shank_deg_percentiles_5_50_95": [
+     -50.95955104165467,
+     -7.602587355531599,
+     20.839200219729076
+    ],
+    "left_ankle_centre_finite_in_stance": 1.0,
+    "probe": {
+     "mode": "markers",
+     "subject": "AB12",
+     "recording": "obstacle_walk_1",
+     "self_reported_peak_rss_mib": 162.5
+    },
+    "coverage_summary": {
+     "markers_checked": 22,
+     "min_finite_overall": 0.9999,
+     "min_finite_in_own_stance": 1.0
+    }
+   }
+  },
+  {
+   "file": "gt23_probe_markers_AB13_walk_backward_1.json",
+   "peak_rss_mib_time_v": 162.8,
+   "wall": "0:00.95",
+   "under_address_space_768_mib": null,
+   "result": {
+    "frames": 18379,
+    "rate_hz": 200.0,
+    "grf_rows": 18379,
+    "markers_in_file": 35,
+    "missing_requested": [],
+    "stance_samples": {
+     "L": 11802,
+     "R": 0
+    },
+    "pelvis_deg_from_markers": {
+     "mean": -19.530652324921217,
+     "sd": 2.119036485888952
+    },
+    "pelvis_deg_percentiles_5_50_95": [
+     -22.997231489316135,
+     -19.508662455391384,
+     -15.942442168299156
+    ],
+    "right_foot_deg_midstance_median": null,
+    "right_shank_deg_percentiles_5_50_95": [
+     -40.038833020839,
+     -9.798201126370635,
+     15.366211956299182
+    ],
+    "right_ankle_centre_finite_in_stance": null,
+    "left_foot_deg_midstance_median": -4.55342756058965,
+    "left_shank_deg_percentiles_5_50_95": [
+     -42.630387334317234,
+     -11.370689908668405,
+     13.287122378102827
+    ],
+    "left_ankle_centre_finite_in_stance": 1.0,
+    "probe": {
+     "mode": "markers",
+     "subject": "AB13",
+     "recording": "walk_backward_1",
+     "self_reported_peak_rss_mib": 162.80859375
+    },
+    "coverage_summary": {
+     "markers_checked": 22,
+     "min_finite_overall": 0.9989,
+     "min_finite_in_own_stance": 1.0
+    }
+   }
+  },
+  {
+   "file": "gt23_probe_moments_AB01_normal_walk_1.json",
+   "peak_rss_mib_time_v": 171.5,
+   "wall": "0:01.01",
+   "under_address_space_768_mib": null,
+   "result": {
+    "rows_jm": 48461,
+    "rows_sto": 48461,
+    "time_aligned_max_abs_s": 0.0,
+    "ankle_angle_l_moment": {
+     "n": 19175,
+     "slope_Nm_over_perkg": 78.90010584750902,
+     "ratio_median": 78.89998206794505,
+     "corr": 0.9999999994774538
+    },
+    "knee_angle_l_moment": {
+     "n": 20186,
+     "slope_Nm_over_perkg": 78.90005030955888,
+     "ratio_median": 78.89999243431325,
+     "corr": 0.9999999910844352
+    },
+    "probe": {
+     "mode": "moments",
+     "subject": "AB01",
+     "recording": "normal_walk_1",
+     "self_reported_peak_rss_mib": 171.4765625
+    }
+   }
+  },
+  {
+   "file": "gt23_probe_moments_AB05.json",
+   "peak_rss_mib_time_v": 169.9,
+   "wall": "0:00.94",
+   "under_address_space_768_mib": null,
+   "result": {
+    "rows_jm": 45895,
+    "rows_sto": 45895,
+    "time_aligned_max_abs_s": 0.0,
+    "ankle_angle_l_moment": {
+     "n": 16108,
+     "slope_Nm_over_perkg": 78.89992805993488,
+     "ratio_median": 78.8999952972624,
+     "corr": 0.9999999996718784
+    },
+    "knee_angle_l_moment": {
+     "n": 13363,
+     "slope_Nm_over_perkg": 78.89991306770037,
+     "ratio_median": 78.89989350053521,
+     "corr": 0.999999998445305
+    },
+    "probe": {
+     "mode": "moments",
+     "subject": "AB05",
+     "recording": "normal_walk_1",
+     "self_reported_peak_rss_mib": 169.90234375
+    }
+   }
+  },
+  {
+   "file": "gt23_probe_moments_AB06_normal_walk_1.json",
+   "peak_rss_mib_time_v": 171.3,
+   "wall": "0:01.11",
+   "under_address_space_768_mib": null,
+   "result": {
+    "rows_jm": 49375,
+    "rows_sto": 49375,
+    "time_aligned_max_abs_s": 0.0,
+    "hip_flexion_r_moment": {
+     "n": 10173,
+     "slope_Nm_over_perkg": 71.50000000214585,
+     "ratio_median": 71.50000000601727,
+     "corr": 0.9999999999999993
+    },
+    "knee_angle_r_moment": {
+     "n": 6727,
+     "slope_Nm_over_perkg": 71.49999999251067,
+     "ratio_median": 71.49999995902225,
+     "corr": 0.9999999999999998
+    },
+    "ankle_angle_r_moment": {
+     "n": 4463,
+     "slope_Nm_over_perkg": 71.50000000850264,
+     "ratio_median": 71.50000001458703,
+     "corr": 1.0
+    },
+    "ankle_angle_l_moment": {
+     "n": 23189,
+     "slope_Nm_over_perkg": 71.50000001698973,
+     "ratio_median": 71.50000000727398,
+     "corr": 1.0
+    },
+    "knee_angle_l_moment": {
+     "n": 24052,
+     "slope_Nm_over_perkg": 71.49999999538825,
+     "ratio_median": 71.50000000000001,
+     "corr": 1.0
+    },
+    "probe": {
+     "mode": "moments",
+     "subject": "AB06",
+     "recording": "normal_walk_1",
+     "self_reported_peak_rss_mib": 171.2578125
+    }
+   }
+  },
+  {
+   "file": "gt23_probe_moments_AB10_normal_walk_1.json",
+   "peak_rss_mib_time_v": 170.5,
+   "wall": "0:00.99",
+   "under_address_space_768_mib": null,
+   "result": {
+    "rows_jm": 46091,
+    "rows_sto": 46091,
+    "time_aligned_max_abs_s": 0.0,
+    "ankle_angle_l_moment": {
+     "n": 13440,
+     "slope_Nm_over_perkg": 84.09988906190377,
+     "ratio_median": 84.0999316849973,
+     "corr": 0.9999999993983676
+    },
+    "knee_angle_l_moment": {
+     "n": 9660,
+     "slope_Nm_over_perkg": 84.09954737935678,
+     "ratio_median": 84.09993831360454,
+     "corr": 0.9999999975328268
+    },
+    "probe": {
+     "mode": "moments",
+     "subject": "AB10",
+     "recording": "normal_walk_1",
+     "self_reported_peak_rss_mib": 170.52734375
+    }
+   }
+  }
+ ]
+}

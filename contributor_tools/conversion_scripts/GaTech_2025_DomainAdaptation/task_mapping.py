@@ -39,9 +39,9 @@ FULL_TASK_MAPPING: Dict[str, Tuple[str, str, Dict]] = {
     r'stairs.*_down': ('stair_descent', 'stair_descent', {'incline_deg': 0.0, 'surface': 'stairs'}),
 
     # Backward walking
-    r'walk_backward.*_0-6': ('backward_walking', 'backward_0.6ms', {'speed_m_s': 0.6, 'incline_deg': 0.0, 'surface': 'treadmill'}),
-    r'walk_backward.*_0-8': ('backward_walking', 'backward_0.8ms', {'speed_m_s': 0.8, 'incline_deg': 0.0, 'surface': 'treadmill'}),
-    r'walk_backward.*_1-0': ('backward_walking', 'backward_1.0ms', {'speed_m_s': 1.0, 'incline_deg': 0.0, 'surface': 'treadmill'}),
+    r'walk_backward.*_0-6': ('walk_backward', 'backward_0.6ms', {'speed_m_s': 0.6, 'incline_deg': 0.0, 'surface': 'treadmill'}),
+    r'walk_backward.*_0-8': ('walk_backward', 'backward_0.8ms', {'speed_m_s': 0.8, 'incline_deg': 0.0, 'surface': 'treadmill'}),
+    r'walk_backward.*_1-0': ('walk_backward', 'backward_1.0ms', {'speed_m_s': 1.0, 'incline_deg': 0.0, 'surface': 'treadmill'}),
 
     # Sit-to-stand variations
     r'sit_to_stand.*_short-arm': ('sit_to_stand', 'sit_stand_short_arm', {'incline_deg': 0.0, 'chair': 'short', 'arm_rest': True}),

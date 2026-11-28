@@ -1,0 +1,64 @@
+{
+ "task_id": "GT23-R01",
+ "verdict": "done",
+ "verified_at_utc": "2026-11-24T20:08:15Z",
+ "scientific_approval": false,
+ "scope": "Local review package gt23_r01_review_v10 and shared builder contributor_tools/common/release_package.py. Not scientific approval, not published. v1-v9 roots ignored.",
+ "independence": "Did not import the worker's builder or readback. Own streamed pyarrow scripts under prlimit 600 MiB, nice 19; only the repo's data_contract.inspect_contract was imported for the contract check.",
+ "checks": [
+  {
+   "id": 1,
+   "item": "Receipts and code",
+   "result": "pass",
+   "evidence": "Pilot and full v10 receipts: completed, exit 0, no launcher/finalisation errors, no orphans, clean_success, cleanup proven. Specs differ only in output root, disk admission, receipt path, job id, command paths, and the full spec additionally binds the pilot receipt. Both bind builder sha 45d9843e... and adapter sha c2b4dd54...; all 50 and 51 bound files match their current sha256 now. Peak 236,856 KiB pilot, 428,356 KiB full."
+  },
+  {
+   "id": 2,
+   "item": "Hashes",
+   "result": "pass",
+   "evidence": "sha256 (streamed) of all 15 files on disk equal manifest.json files{} (13 files plus sizes) ; manifest.sha256 equals manifest.json (8f24665a...); binding hashes for 4 tables, exclusions.csv and assessment.jsonl equal disk; dataset_index, phase_preview, test_summary and limitations carry the same binding object."
+  },
+  {
+   "id": 3,
+   "item": "Variants",
+   "result": "pass",
+   "evidence": "Per (observation_id, reference_side), phase and time: full keys = filtered keys + 125 assessment failures, disjoint; row counts per kept observation identical full vs filtered; failed rows 14,850 phase and 673,480 time equal full minus filtered; failed keys equal assessment status failed (99 phase, 26 time); quality_status failed only in full. Phase 19,085 x 150 rows; time 488 recordings. Seeded sample (20261206) of 10 observations (1 time, 9 phase), full and filtered, bit-identical to source (all E01; none was E02 or failed by chance). Supplement with the same seed: 3 E02-recording observations (identical, source_export GT23-E02) and 3 failed (identical in full, absent from filtered). 13 replaced recordings carry only E02 rows (91,950 phase, 176,983 time = E02 source totals); no E01 rows for them."
+  },
+  {
+   "id": 4,
+   "item": "Exclusions",
+   "result": "pass",
+   "evidence": "5,281 rows = 1,415 export_exclusion + 3,741 authors_window_not_exported + 125 assessment_failed. Export exclusions equal the 1,415 E01 segment ids exactly (E02's 22 exclusions for the 13 replaced recordings are identical to E01's); authors windows 3,741 equal the not_exported/missed count in the E01 authors_windows.jsonl (13,119 total, 9,378 exported); assessment_failed set equals the assessment failures."
+  },
+  {
+   "id": 5,
+   "item": "Contract and layout",
+   "result": "pass",
+   "evidence": "inspect_contract on both phase files, streamed in 1,500-3,000-row batches under prlimit 600 MiB: filtered_phase 18,986 observations and full_phase 19,085, no issues, all identified/schema_passed/publishable. Files on disk equal the DATA_CONTRACT.md layout (13 files plus evidence/ and manifest.sha256; nothing extra). Builder release_package.py has no GT23 names (only contract column names phase_ipsi/time_s and observation types); all GT23 specifics are in the adapter. Time files were not run through the contract (observations up to about 100k rows)."
+  },
+  {
+   "id": 6,
+   "item": "README and limitations",
+   "result": "pass_with_notes",
+   "evidence": "README states the 24 Nov 2026 CoP frame (ankle frame, leg plane, 100 mm forward origin, foot = shank + ankle, toe-out as sideways offset). limitations.json lists 11 entries with counts, including AB03 side_shuffle_1: 19 observations, 16 failed (L5) and out of filtered, 3 in filtered, values not held, text says values stay in full with failures recorded. Handled honestly. Note: the 3 observations that remain in filtered (phase L/0000513, L/0002814, R/0000462) passed the limits but belong to the same mismatched recording; the README bullet gives only '19 observations' and not the 16/3 split."
+  }
+ ],
+ "tests": {
+  "new": "13 passed (tests/test_release_package.py 6, tests/test_gt23_r01_bundle.py 7)",
+  "existing": "279 passed (-k 'release or um21_r01', includes dataset release and UM21 bundle tests)",
+  "backlog_check": "Backlog valid; HTML current (122 tasks)"
+ },
+ "findings_nonblocking": [
+  "Handoff says 14 new tests (7+7); there are 13 (6+7).",
+  "exclusion_id is not unique in exclusions.csv: 361 authors-window ids repeat across participants and sides (ids are like ball_toss_1_center_parsing.mat#0). Unique key is exclusion_id + subject + source_recording_id + reference_side. DATA_CONTRACT.md does not claim uniqueness; say so in the contract.",
+  "README AB03 side_shuffle_1 bullet should state 16 out of filtered and 3 still in filtered.",
+  "My filtered_phase contract probe peaked at 317 MiB RSS, above the 300 MiB probe cap (batch 3,000 rows; wrote nothing). The full_phase probe used batch 1,500 and peaked at 266 MiB. Recorded, not repeated.",
+  "Dataset page for GT23 is still to be built; catalog/download/preview must name this exact package (hash 8f24665a... manifest) or stay legacy."
+ ],
+ "not_checked": [
+  "time-table contract",
+  "scientific correctness of Q01 v2 limits (draft, not approved)",
+  "inputs_sha256 against the source files (checked only via receipts bindings)"
+ ],
+ "cleanup": "No guarded jobs launched, nothing left running; scratch scripts in /tmp/vgt only."
+}

@@ -1,0 +1,304 @@
+---
+title: "Getting Started with LocomotionData"
+author: "José A. Montes Pérez"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting Started with LocomotionData}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
+```
+
+# Introduction
+
+The LocomotionData package provides tools for loading, processing, and analyzing standardized biomechanical locomotion data. This vignette demonstrates the basic usage and key features of the package.
+
+## Installation
+
+```{r eval=FALSE}
+# Install from source (once available)
+# devtools::install_github("jmontp/locomotion-data-standardization", subdir = "source/lib/r")
+
+# For now, install dependencies
+install.packages(c("data.table", "arrow", "ggplot2", "dplyr", "tibble"))
+```
+
+## Loading the Package
+
+```{r eval=FALSE}
+library(LocomotionData)
+```
+
+# Quick Start
+
+## Loading Data
+
+The LocomotionData package works with phase-indexed biomechanical data in parquet or CSV format. The data must follow the standard naming convention for biomechanical variables.
+
+```{r eval=FALSE}
+# Load data from a parquet file
+loco <- loadLocomotionData("path/to/gait_data.parquet")
+
+# Or specify column names if different
+loco <- loadLocomotionData("path/to/data.csv", 
+                          subject_col = "participant_id",
+                          task_col = "condition", 
+                          phase_col = "gait_phase")
+```
+
+## Exploring the Data
+
+```{r eval=FALSE}
+# View basic information
+loco
+summary(loco)
+
+# Get available subjects and tasks
+subjects <- getSubjects(loco)
+tasks <- getTasks(loco)
+features <- getFeatures(loco)
+
+print(subjects[1:5])  # First 5 subjects
+print(tasks)          # All tasks
+print(features[1:3])  # First 3 features
+```
+
+## Basic Analysis
+
+### Extract Gait Cycles
+
+```{r eval=FALSE}
+# Get 3D array of cycles for a specific subject and task
+cycles_result <- getCycles(loco, "SUB01", "normal_walk")
+data_3d <- cycles_result$data_3d
+feature_names <- cycles_result$feature_names
+
+# Array dimensions: (n_cycles, 150_phases, n_features)
+dim(data_3d)
+```
+
+### Calculate Mean Patterns
+
+```{r eval=FALSE}
+# Get mean patterns across all cycles
+mean_patterns <- getMeanPatterns(loco, "SUB01", "normal_walk")
+
+# Access specific feature
+knee_angle_mean <- mean_patterns[["knee_flexion_angle_contra_rad"]]
+```
+
+### Data Quality Assessment
+
+```{r eval=FALSE}
+# Validate cycles based on biomechanical constraints
+valid_mask <- validateCycles(loco, "SUB01", "normal_walk")
+cat(sprintf("Valid cycles: %d/%d\n", sum(valid_mask), length(valid_mask)))
+
+# Find outlier cycles
+outliers <- findOutlierCycles(loco, "SUB01", "normal_walk", threshold = 2.0)
+cat(sprintf("Outlier cycles: %s\n", paste(outliers, collapse = ", ")))
+
+# Get summary statistics
+stats <- getSummaryStatistics(loco, "SUB01", "normal_walk")
+print(stats)
+```
+
+### Range of Motion Analysis
+
+```{r eval=FALSE}
+# Calculate ROM per cycle
+rom_per_cycle <- calculateROM(loco, "SUB01", "normal_walk", by_cycle = TRUE)
+
+# Calculate overall ROM
+rom_overall <- calculateROM(loco, "SUB01", "normal_walk", by_cycle = FALSE)
+
+# View knee ROM
+print(rom_per_cycle[["knee_flexion_angle_contra_rad"]])
+```
+
+# Visualization
+
+## Phase Pattern Plots
+
+```{r eval=FALSE}
+# Plot mean patterns with confidence bands
+plotPhasePatterns(loco, "SUB01", "normal_walk", 
+                 features = c("knee_flexion_angle_contra_rad", 
+                             "hip_flexion_angle_contra_rad"),
+                 plot_type = "mean")
+
+# Plot individual cycles (spaghetti plot)
+plotPhasePatterns(loco, "SUB01", "normal_walk", 
+                 features = c("knee_flexion_angle_contra_rad"),
+                 plot_type = "spaghetti")
+
+# Plot both mean and individual cycles
+plotPhasePatterns(loco, "SUB01", "normal_walk", 
+                 features = c("knee_flexion_angle_contra_rad"),
+                 plot_type = "both")
+```
+
+## Task Comparison
+
+```{r eval=FALSE}
+# Compare mean patterns across different tasks
+plotTaskComparison(loco, "SUB01", 
+                  tasks = c("normal_walk", "fast_walk", "slow_walk"),
+                  features = c("knee_flexion_angle_contra_rad", 
+                              "hip_flexion_angle_contra_rad"))
+```
+
+## Time Series Plots
+
+```{r eval=FALSE}
+# Plot time series data (if time column available)
+plotTimeSeries(loco, "SUB01", "normal_walk",
+              features = c("knee_flexion_angle_contra_rad"),
+              time_col = "time_s")
+```
+
+# Variable Naming Convention
+
+The package enforces a strict variable naming convention:
+
+**Format:** `<joint>_<motion>_<measurement>_<side>_<unit>`
+
+## Examples
+
+- `knee_flexion_angle_contra_rad` - Knee flexion angle, contralateral side, radians
+- `hip_flexion_moment_ipsi_Nm` - Hip flexion moment, ipsilateral side, Newton-meters  
+- `ankle_flexion_velocity_contra_rad_s` - Ankle flexion velocity, contralateral side, radians per second
+
+## Validation
+
+```{r eval=FALSE}
+# Check if a variable name is standard compliant
+isStandardCompliant("knee_flexion_angle_contra_rad")  # TRUE
+isStandardCompliant("knee_angle")                     # FALSE
+
+# Get suggestions for non-standard names
+suggestStandardName("knee_angle")  # "knee_flexion_angle_ipsi_rad"
+
+# Get validation report for loaded data
+validation_report <- getValidationReport(loco)
+print(validation_report)
+```
+
+# Advanced Features
+
+## Feature Constants
+
+```{r eval=FALSE}
+# Access predefined feature lists
+angle_features <- ANGLE_FEATURES
+velocity_features <- VELOCITY_FEATURES
+moment_features <- MOMENT_FEATURES
+
+# Get feature mappings
+kinematic_map <- getKinematicFeatureMap()
+kinetic_map <- getKineticFeatureMap()
+
+# Get all constants
+constants <- getFeatureConstants()
+```
+
+## Efficient 3D Reshaping
+
+```{r eval=FALSE}
+# Standalone function for 3D reshaping
+result <- efficientReshape3D(
+  data = loco@data,
+  subject = "SUB01", 
+  task = "normal_walk",
+  features = c("knee_flexion_angle_contra_rad", "hip_flexion_angle_contra_rad")
+)
+
+data_3d <- result$data_3d
+valid_features <- result$valid_features
+```
+
+## Utility Functions
+
+```{r eval=FALSE}
+# Unit conversions
+angles_deg <- c(0, 30, 60, 90)
+angles_rad <- deg2rad(angles_deg)
+back_to_deg <- rad2deg(angles_rad)
+
+# Phase calculations (for time-indexed data)
+time <- seq(0, 2, by = 0.01)
+heel_strikes <- c(0, 1, 2)
+phase <- calculatePhase(time, heel_strikes)
+
+# Interpolate to standard phase grid
+interpolated <- interpolateToPhase(phase, sin(2*pi*time), n_points = 150)
+
+# Data validation
+is_valid <- validateDataDimensions(n_points = 300, points_per_cycle = 150)
+
+# Feature summary
+features <- c("knee_flexion_angle_contra_rad", "hip_flexion_moment_ipsi_Nm")
+feature_summary <- createFeatureSummary(features)
+```
+
+# Best Practices
+
+## Data Format
+
+1. Use phase-indexed data with exactly 150 points per gait cycle
+2. Follow the standard variable naming convention
+3. Include subject, task, and phase columns
+4. Use radians for angles, rad/s for velocities, Nm for moments
+
+## Analysis Workflow
+
+1. Load data and validate structure
+2. Check variable name compliance
+3. Assess data quality with validation functions
+4. Remove outlier cycles if necessary
+5. Calculate summary statistics and mean patterns
+6. Create visualizations for interpretation
+
+## Performance Tips
+
+1. Use the caching system - repeated calls to `getCycles()` are fast
+2. Filter features before analysis to reduce memory usage
+3. Use `efficientReshape3D()` for batch processing
+4. Save intermediate results for large datasets
+
+# Troubleshooting
+
+## Common Issues
+
+1. **"Non-standard variable name detected"**: Check variable names follow the standard convention
+2. **"Data length not divisible by 150"**: Ensure data is properly phase-indexed
+3. **"No data found for subject-task"**: Check subject and task names match exactly
+
+## Getting Help
+
+```{r eval=FALSE}
+# Package help
+help(package = "LocomotionData")
+
+# Function help
+?loadLocomotionData
+?plotPhasePatterns
+
+# Vignettes
+vignette("getting-started", package = "LocomotionData")
+```
+
+# Conclusion
+
+The LocomotionData package provides a comprehensive framework for biomechanical gait analysis in R. With its strict data standards, efficient processing, and publication-ready visualizations, it enables reproducible and reliable locomotion research.
+
+For more advanced usage and integration with other R packages, see the additional vignettes and documentation.

@@ -1,0 +1,2274 @@
+{
+  "task_id": "UM21-T01",
+  "status": "scope_declared_unreviewed",
+  "scientific_approval": false,
+  "inputs_sha256": {
+    "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/conversion_summary.json": "349b896e7daa28589d1af705a7be6fbbb1af32f7b09f092d289e63869554172d",
+    "converted_datasets/reconversion_v2/um21_tread_full_readback_20261021/source_comparison.json": "958a2b2cb8bddab8822d3db1d737136bf354b60fa04ccb79716cdb481b02ea51",
+    "docs/quality/audits/um21-full-tread-curation.json": "e62ed185b56e900cbd1ee0bae07abe4034fd9c8c5aeea665dd25810c9f0b3241",
+    "converted_datasets/reconversion_v2/um21_tread_full_curation_v2_20261021/cycle_membership.jsonl": "86d31c91c3b20ba22cd9ac012338b42a9b44445219ba03529980231a3c7893aa"
+  },
+  "source": {
+    "path": "contributor_tools/conversion_scripts/Umich_2021/Streaming.mat",
+    "bytes": 2195168300,
+    "streaming_sha256_recorded": "df8b3e31d2fe6869b95b4776a8f77639da476685b4c0ccb86c985bee3f01b531",
+    "normalized_sha256_recorded": "c83cad34fca5748dd565c212a335658c2e7ea0a5be1b162c6b7d70b010c03dae",
+    "sha256_note": "Recorded by the conversion and curation receipts; not recomputed here.",
+    "readback_probe_sha256": "f340d4866a6d7c91b77be9bf5f3b526f780e59f31e7cf274c8f125357fa27d87",
+    "curation_probe_sha256": "89fa05a370bbf9fcfed3be29e3ef46bc6a3d8d8ae5ca0fd17e44005b46f6a18c",
+    "tread_trials_in_source": 50,
+    "converted_equals_source_inventory": true
+  },
+  "recordings": 50,
+  "observations": 8626,
+  "excluded_pairs": 3674,
+  "curation_totals": {
+    "exported_in_original_curation": 7773,
+    "exported_not_in_original_curation": 853,
+    "excluded_in_original_curation": 479,
+    "excluded_not_in_original_curation": 3195
+  },
+  "all_receipts_agree": true,
+  "columns": {
+    "identity_checked_by_probe": [
+      "observation_id",
+      "reference_side",
+      "task_id",
+      "source_start_time_s",
+      "source_end_time_s",
+      "time_s",
+      "phase_ipsi"
+    ],
+    "identity_unchecked": [
+      "subject",
+      "source_recording_id",
+      "observation_type",
+      "task",
+      "task_info",
+      "step"
+    ],
+    "values_identical_to_source": [
+      "pelvis_sagittal_angle_rad",
+      "hip_flexion_angle_ipsi_rad",
+      "hip_flexion_angle_contra_rad",
+      "knee_flexion_angle_ipsi_rad",
+      "knee_flexion_angle_contra_rad",
+      "source_ankle_sagittal_angle_ipsi_rad",
+      "source_ankle_sagittal_angle_contra_rad"
+    ],
+    "derived_checked_against_source_derivative": [
+      "hip_flexion_velocity_ipsi_rad_s",
+      "hip_flexion_velocity_contra_rad_s",
+      "knee_flexion_velocity_ipsi_rad_s",
+      "knee_flexion_velocity_contra_rad_s"
+    ],
+    "pending_conventions_UM21_C01": [
+      "ankle_dorsiflexion_angle_ipsi_rad",
+      "ankle_dorsiflexion_angle_contra_rad",
+      "thigh_sagittal_angle_ipsi_rad",
+      "thigh_sagittal_angle_contra_rad",
+      "shank_sagittal_angle_ipsi_rad",
+      "shank_sagittal_angle_contra_rad"
+    ],
+    "not_exported_source_groups": {
+      "forceplates": [
+        "LCoP",
+        "LForce",
+        "LMoment",
+        "RCoP",
+        "RForce",
+        "RMoment"
+      ],
+      "jointAngles": [
+        "LAnkleAngles",
+        "LFootProgressAngles",
+        "LHipAngles",
+        "LKneeAngles",
+        "LPelvisAngles",
+        "RAnkleAngles",
+        "RFootProgressAngles",
+        "RHipAngles",
+        "RKneeAngles",
+        "RPelvisAngles"
+      ],
+      "jointForces": [
+        "LAnkleForce",
+        "LHipForce",
+        "LKneeForce",
+        "RAnkleForce",
+        "RHipForce",
+        "RKneeForce"
+      ],
+      "jointMoments": [
+        "LAnkleMoment",
+        "LHipMoment",
+        "LKneeMoment",
+        "RAnkleMoment",
+        "RHipMoment",
+        "RKneeMoment"
+      ],
+      "jointPowers": [
+        "LAnklePower",
+        "LHipPower",
+        "LKneePower",
+        "RAnklePower",
+        "RHipPower",
+        "RKneePower"
+      ],
+      "markers": [
+        "L1M",
+        "L5M",
+        "LANK",
+        "LANKM",
+        "LASI",
+        "LGT",
+        "LHEE",
+        "LIC",
+        "LKNE",
+        "LKNEM",
+        "LPSI",
+        "LTHI",
+        "LTIB",
+        "LTOE",
+        "R1M",
+        "R5M",
+        "RANK",
+        "RANKM",
+        "RASI",
+        "RGT",
+        "RHEE",
+        "RIC",
+        "RKNE",
+        "RKNEM",
+        "RPSI",
+        "RTHI",
+        "RTIB",
+        "RTOE"
+      ]
+    },
+    "not_exported_owner": "Joint components UM21-T02/T03; forceplates and markers UM21-X01/X02",
+    "not_exported_note": "jointAngles groups are listed whole; their sagittal hip, knee, pelvis and ankle parts are exported above, other planes are not."
+  },
+  "odd_duration_screen": {
+    "rule": "exported stride outside 0.5-1.5x its recording median duration",
+    "exported": 58,
+    "rule_only": 47
+  },
+  "membership_policy": "Open decision D-1 (UM21-R01).",
+  "pilot_record": {
+    "subject": "AB01",
+    "condition": "d10",
+    "decided_by": "agent",
+    "reason": "Both legs, steady and transition cycles, 77 exclusions, and the unresolved ankle column present; an existing producer pilot uses current code."
+  },
+  "random_sample": {
+    "seed": 20261027,
+    "record": "AB02/i5"
+  },
+  "records": [
+    {
+      "subject": "AB01",
+      "condition": "d10",
+      "normalized_condition": "in10",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB01/d10/phase.parquet",
+      "phase_sha256": "da06be57d17dce9330c0b2b42a4c16eace6392e28eb3528f3e48c54da786ff0b",
+      "ledger_sha256": "4c15745a29d504e150ee02bcc87bc0f340243b533e22a1c86c55997e06931048",
+      "readback_maximum_error": 1.2434497875801753e-13,
+      "observations": 183,
+      "excluded_pairs": 77,
+      "observations_by_side": {
+        "left": 92,
+        "right": 91
+      },
+      "observations_by_task": {
+        "decline_walking": 165,
+        "transition": 18
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 67,
+        "exported_in_original_curation": 165,
+        "excluded_in_original_curation": 10,
+        "exported_not_in_original_curation": 18,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 0,
+      "odd_duration_rule_only": 0,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB01",
+      "condition": "d5",
+      "normalized_condition": "in5",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB01/d5/phase.parquet",
+      "phase_sha256": "dac6403c7271049d37b9c834c1af020f36923022685b2491b8eb4164d24250e7",
+      "ledger_sha256": "1dadab8fdd6ad00e18c3f5d7d945758026929b16b7ecd6aff8e548c755d1c07c",
+      "readback_maximum_error": 1.4921397450962104e-13,
+      "observations": 163,
+      "excluded_pairs": 71,
+      "observations_by_side": {
+        "left": 83,
+        "right": 80
+      },
+      "observations_by_task": {
+        "decline_walking": 150,
+        "transition": 13
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 63,
+        "exported_in_original_curation": 157,
+        "exported_not_in_original_curation": 6,
+        "excluded_in_original_curation": 8,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 0,
+      "odd_duration_rule_only": 0,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB01",
+      "condition": "i0",
+      "normalized_condition": "i0",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB01/i0/phase.parquet",
+      "phase_sha256": "2a699639a72dd312d1a516ec8f205adb5612abf63f854241a8c39ce931fec1ff",
+      "ledger_sha256": "9205c93cd0d7e9c1243600918e1f7811cbc27a280d18b78312c74bc31bedfdde",
+      "readback_maximum_error": 1.5631940186722204e-13,
+      "observations": 160,
+      "excluded_pairs": 63,
+      "observations_by_side": {
+        "left": 80,
+        "right": 80
+      },
+      "observations_by_task": {
+        "level_walking": 142,
+        "transition": 18
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 54,
+        "exported_not_in_original_curation": 12,
+        "exported_in_original_curation": 148,
+        "excluded_in_original_curation": 9,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 1,
+      "odd_duration_rule_only": 0,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB01",
+      "condition": "i10",
+      "normalized_condition": "i10",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB01/i10/phase.parquet",
+      "phase_sha256": "93b57e4e40b671e5c48fc83b38b2c2a88c27a04d6835fc363cc4f72fe851aa05",
+      "ledger_sha256": "9044f6b16550f43641443081a22cc9a6c1f09a8cd5d22b77fa565d32577c2424",
+      "readback_maximum_error": 1.2079226507921703e-13,
+      "observations": 154,
+      "excluded_pairs": 70,
+      "observations_by_side": {
+        "left": 77,
+        "right": 77
+      },
+      "observations_by_task": {
+        "incline_walking": 135,
+        "transition": 19
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 62,
+        "exported_in_original_curation": 134,
+        "excluded_in_original_curation": 8,
+        "exported_not_in_original_curation": 20,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 1,
+      "odd_duration_rule_only": 0,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB01",
+      "condition": "i5",
+      "normalized_condition": "i5",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB01/i5/phase.parquet",
+      "phase_sha256": "da76db8a26f25ab0873eac3f1e72d98c48ea2b583242517a6f3588e163424240",
+      "ledger_sha256": "bfaeb104ddc63fc095c9a6a5579f80f5c4663e35320234f78ef5d4ca85b1909b",
+      "readback_maximum_error": 1.2789769243681803e-13,
+      "observations": 148,
+      "excluded_pairs": 76,
+      "observations_by_side": {
+        "left": 74,
+        "right": 74
+      },
+      "observations_by_task": {
+        "incline_walking": 133,
+        "transition": 15
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 66,
+        "exported_in_original_curation": 134,
+        "excluded_in_original_curation": 10,
+        "exported_not_in_original_curation": 14,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 1,
+      "odd_duration_rule_only": 1,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB02",
+      "condition": "d10",
+      "normalized_condition": "in10",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB02/d10/phase.parquet",
+      "phase_sha256": "44ac708050cf525ad3bce20ff7f4a0480ee3a4c0e6d075f7121e6ae2de695a68",
+      "ledger_sha256": "6e5622a0fd30c6f58f79e2f86b33af916a36fb04766a0a87bfaf4d388e17d4f1",
+      "readback_maximum_error": 1.5631940186722204e-13,
+      "observations": 176,
+      "excluded_pairs": 73,
+      "observations_by_side": {
+        "left": 88,
+        "right": 88
+      },
+      "observations_by_task": {
+        "decline_walking": 157,
+        "transition": 19
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 65,
+        "exported_in_original_curation": 160,
+        "excluded_in_original_curation": 8,
+        "exported_not_in_original_curation": 16,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 0,
+      "odd_duration_rule_only": 0,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB02",
+      "condition": "d5",
+      "normalized_condition": "in5",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB02/d5/phase.parquet",
+      "phase_sha256": "297f2a911535e11a9e4cd7b387528e6e6f1f2b7b7b6b9c6b070a61de10784aed",
+      "ledger_sha256": "960dc18d4287c9d9af217e1ba4fe085577aee6ae0f25375809c0799e9b193c05",
+      "readback_maximum_error": 1.9895196601282805e-13,
+      "observations": 167,
+      "excluded_pairs": 77,
+      "observations_by_side": {
+        "left": 84,
+        "right": 83
+      },
+      "observations_by_task": {
+        "decline_walking": 149,
+        "transition": 18
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 67,
+        "exported_in_original_curation": 153,
+        "exported_not_in_original_curation": 14,
+        "excluded_in_original_curation": 10,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 1,
+      "odd_duration_rule_only": 1,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB02",
+      "condition": "i0",
+      "normalized_condition": "i0",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB02/i0/phase.parquet",
+      "phase_sha256": "987639337c7b973baf53ad8389952eea6ea72d9661152afd6318bfd037f5140f",
+      "ledger_sha256": "74fe564a40a49a64611338668ddd5e00c02b212513a186f26486f0757dda42d9",
+      "readback_maximum_error": 1.7408297026122455e-13,
+      "observations": 158,
+      "excluded_pairs": 72,
+      "observations_by_side": {
+        "left": 78,
+        "right": 80
+      },
+      "observations_by_task": {
+        "level_walking": 140,
+        "transition": 18
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 63,
+        "exported_in_original_curation": 139,
+        "exported_not_in_original_curation": 19,
+        "excluded_in_original_curation": 9,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 1,
+      "odd_duration_rule_only": 1,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB02",
+      "condition": "i10",
+      "normalized_condition": "i10",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB02/i10/phase.parquet",
+      "phase_sha256": "fcabfd643a45f6f005b38b77d5e411d9368b45c50abed2392d3199c4734afd3d",
+      "ledger_sha256": "e44593ff2dd0489bb75da3a52d7293f42a9d137c357117ac813694ada57e8b57",
+      "readback_maximum_error": 1.0658141036401503e-13,
+      "observations": 151,
+      "excluded_pairs": 69,
+      "observations_by_side": {
+        "left": 74,
+        "right": 77
+      },
+      "observations_by_task": {
+        "incline_walking": 136,
+        "transition": 15
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 59,
+        "exported_in_original_curation": 141,
+        "exported_not_in_original_curation": 10,
+        "excluded_in_original_curation": 10,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 0,
+      "odd_duration_rule_only": 0,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB02",
+      "condition": "i5",
+      "normalized_condition": "i5",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB02/i5/phase.parquet",
+      "phase_sha256": "02cb3b88fa6680069b8fff5fec3ff9faba9dfa268e11166a6ffe0f9f5246c357",
+      "ledger_sha256": "c2718b37e38fce76724228fb40711034084ec47584794fca9e3da7e182d6daa9",
+      "readback_maximum_error": 1.4921397450962104e-13,
+      "observations": 148,
+      "excluded_pairs": 66,
+      "observations_by_side": {
+        "left": 74,
+        "right": 74
+      },
+      "observations_by_task": {
+        "incline_walking": 133,
+        "transition": 15
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 56,
+        "exported_not_in_original_curation": 16,
+        "exported_in_original_curation": 132,
+        "excluded_in_original_curation": 10,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 1,
+      "odd_duration_rule_only": 1,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB03",
+      "condition": "d10",
+      "normalized_condition": "in10",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB03/d10/phase.parquet",
+      "phase_sha256": "f54bb4c2bb65f75ca6b249abb8088efca631aa12d7b338e5791474d2390fa8ae",
+      "ledger_sha256": "0e807598839776e43be4d13cd5f4d7e3288076db8b0d284a3cbb5c9640f118e5",
+      "readback_maximum_error": 1.4566126083082054e-13,
+      "observations": 175,
+      "excluded_pairs": 68,
+      "observations_by_side": {
+        "left": 87,
+        "right": 88
+      },
+      "observations_by_task": {
+        "decline_walking": 155,
+        "transition": 20
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 59,
+        "exported_not_in_original_curation": 17,
+        "exported_in_original_curation": 158,
+        "excluded_in_original_curation": 9,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 1,
+      "odd_duration_rule_only": 0,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB03",
+      "condition": "d5",
+      "normalized_condition": "in5",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB03/d5/phase.parquet",
+      "phase_sha256": "d338d7bf1582f7f1ffb1dce9edf56b7597d57edad2313d32343dff0f310cdb47",
+      "ledger_sha256": "9d5b4b13651fd15e6a36adb4a976e0699183032111572062999f1347ad10a610",
+      "readback_maximum_error": 1.7763568394002505e-13,
+      "observations": 173,
+      "excluded_pairs": 66,
+      "observations_by_side": {
+        "left": 87,
+        "right": 86
+      },
+      "observations_by_task": {
+        "decline_walking": 151,
+        "transition": 22
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 56,
+        "exported_in_original_curation": 150,
+        "exported_not_in_original_curation": 23,
+        "excluded_in_original_curation": 10,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 1,
+      "odd_duration_rule_only": 1,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB03",
+      "condition": "i0",
+      "normalized_condition": "i0",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB03/i0/phase.parquet",
+      "phase_sha256": "5046635c7d5e3338c04c99e249e3f777b786df179afa9c6bee5277e352350ff3",
+      "ledger_sha256": "efef96c9cb9655ccf6bab0a2357ac167f474021e662ed6a10df8934024373040",
+      "readback_maximum_error": 1.092459456231154e-13,
+      "observations": 159,
+      "excluded_pairs": 63,
+      "observations_by_side": {
+        "left": 80,
+        "right": 79
+      },
+      "observations_by_task": {
+        "level_walking": 143,
+        "transition": 16
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "exported_not_in_original_curation": 24,
+        "exported_in_original_curation": 135,
+        "excluded_in_original_curation": 10,
+        "excluded_not_in_original_curation": 53,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 2,
+      "odd_duration_rule_only": 1,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB03",
+      "condition": "i10",
+      "normalized_condition": "i10",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB03/i10/phase.parquet",
+      "phase_sha256": "5693ecf0113495f292bf60418d16b19e0ceeb8ae10a705855be8fd94c31c7efc",
+      "ledger_sha256": "d97e1286e239867e55f69afa60f23304ff9c450c222f90e629316c77e26e8812",
+      "readback_maximum_error": 1.1368683772161603e-13,
+      "observations": 164,
+      "excluded_pairs": 69,
+      "observations_by_side": {
+        "left": 83,
+        "right": 81
+      },
+      "observations_by_task": {
+        "incline_walking": 148,
+        "transition": 16
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "exported_not_in_original_curation": 14,
+        "excluded_in_original_curation": 10,
+        "excluded_not_in_original_curation": 59,
+        "exported_in_original_curation": 150,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 4,
+      "odd_duration_rule_only": 3,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB03",
+      "condition": "i5",
+      "normalized_condition": "i5",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB03/i5/phase.parquet",
+      "phase_sha256": "9d095ef6249cd63d9ddd4bdf6232a84186f70eb96bb0b439151b2b571dfb9c8a",
+      "ledger_sha256": "729d4e8eb4c89d72a46242ec1dfc1929bda3adcf5d22e5d63b542e7b445d1f89",
+      "readback_maximum_error": 1.0658141036401503e-13,
+      "observations": 159,
+      "excluded_pairs": 64,
+      "observations_by_side": {
+        "left": 80,
+        "right": 79
+      },
+      "observations_by_task": {
+        "incline_walking": 141,
+        "transition": 18
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 53,
+        "exported_not_in_original_curation": 15,
+        "exported_in_original_curation": 144,
+        "excluded_in_original_curation": 11,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 3,
+      "odd_duration_rule_only": 2,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB04",
+      "condition": "d10",
+      "normalized_condition": "in10",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB04/d10/phase.parquet",
+      "phase_sha256": "a5cf6095dde17e00a14bad355515a8aa4869ecec2480db4f4b2bea9974d3d94a",
+      "ledger_sha256": "679d7a766a327c9225d6711591c995131b81cabf7f04520349aba52e1bacef7f",
+      "readback_maximum_error": 1.723066134218243e-13,
+      "observations": 180,
+      "excluded_pairs": 77,
+      "observations_by_side": {
+        "left": 90,
+        "right": 90
+      },
+      "observations_by_task": {
+        "decline_walking": 159,
+        "transition": 21
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 68,
+        "exported_not_in_original_curation": 13,
+        "exported_in_original_curation": 167,
+        "excluded_in_original_curation": 9,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 0,
+      "odd_duration_rule_only": 0,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB04",
+      "condition": "d5",
+      "normalized_condition": "in5",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB04/d5/phase.parquet",
+      "phase_sha256": "200bc667f888acff42d1707dadc6b511a5af3460cf9888e52c36287dab9be192",
+      "ledger_sha256": "0fa691a334d345a583762ea8ddcceca9a7eff7e416ec6c55e40f33627e313d74",
+      "readback_maximum_error": 1.3455903058456897e-13,
+      "observations": 176,
+      "excluded_pairs": 70,
+      "observations_by_side": {
+        "left": 87,
+        "right": 89
+      },
+      "observations_by_task": {
+        "decline_walking": 157,
+        "transition": 19
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "exported_not_in_original_curation": 10,
+        "exported_in_original_curation": 166,
+        "excluded_in_original_curation": 11,
+        "excluded_not_in_original_curation": 59,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 1,
+      "odd_duration_rule_only": 0,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB04",
+      "condition": "i0",
+      "normalized_condition": "i0",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB04/i0/phase.parquet",
+      "phase_sha256": "69cdb5ba118b931ab622acdffe2bcaba8591fcb396dc7e4bf6076a51a6af1b36",
+      "ledger_sha256": "967d7349133f91e4f0dae72c1a0dba922c3ef984f4728f50d9d461b8f3c61ade",
+      "readback_maximum_error": 1.5631940186722204e-13,
+      "observations": 165,
+      "excluded_pairs": 69,
+      "observations_by_side": {
+        "left": 83,
+        "right": 82
+      },
+      "observations_by_task": {
+        "level_walking": 149,
+        "transition": 16
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 58,
+        "exported_not_in_original_curation": 19,
+        "exported_in_original_curation": 146,
+        "excluded_in_original_curation": 11,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 0,
+      "odd_duration_rule_only": 0,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB04",
+      "condition": "i10",
+      "normalized_condition": "i10",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB04/i10/phase.parquet",
+      "phase_sha256": "062823a176829d3ab4b3528ba2d161ec5910be66824c8da27d3064e72f5daa59",
+      "ledger_sha256": "3a4d41b1a513a1c514b0cbf75f939420cfa14ac00d3a426c176ef84df745c6fb",
+      "readback_maximum_error": 9.592326932761353e-14,
+      "observations": 152,
+      "excluded_pairs": 67,
+      "observations_by_side": {
+        "left": 76,
+        "right": 76
+      },
+      "observations_by_task": {
+        "incline_walking": 138,
+        "transition": 14
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "exported_not_in_original_curation": 14,
+        "exported_in_original_curation": 138,
+        "excluded_in_original_curation": 12,
+        "excluded_not_in_original_curation": 55,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 2,
+      "odd_duration_rule_only": 2,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB04",
+      "condition": "i5",
+      "normalized_condition": "i5",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB04/i5/phase.parquet",
+      "phase_sha256": "e2553c6f5c97437a2b3206af5845ddbed50ffbc17b3dd084a7223623a7d56ab4",
+      "ledger_sha256": "2066a3d73a89005e8fc2bf21f37b314c97111acc061c5ce292a1fed2d8e39d11",
+      "readback_maximum_error": 1.5631940186722204e-13,
+      "observations": 151,
+      "excluded_pairs": 83,
+      "observations_by_side": {
+        "left": 78,
+        "right": 73
+      },
+      "observations_by_task": {
+        "incline_walking": 137,
+        "transition": 14
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 73,
+        "exported_in_original_curation": 122,
+        "excluded_in_original_curation": 10,
+        "exported_not_in_original_curation": 29,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 3,
+      "odd_duration_rule_only": 3,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB05",
+      "condition": "d10",
+      "normalized_condition": "in10",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB05/d10/phase.parquet",
+      "phase_sha256": "bac97da707b05aa653487f71a948d198a8e579ddd5ebe0557991c157c6349b4d",
+      "ledger_sha256": "8683825f663a69f874516c4249db3a6354fdda010887f06cd6aef23e8e20d44a",
+      "readback_maximum_error": 1.4921397450962104e-13,
+      "observations": 197,
+      "excluded_pairs": 86,
+      "observations_by_side": {
+        "left": 98,
+        "right": 99
+      },
+      "observations_by_task": {
+        "decline_walking": 174,
+        "transition": 23
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 79,
+        "exported_in_original_curation": 176,
+        "exported_not_in_original_curation": 21,
+        "excluded_in_original_curation": 7,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 2,
+      "odd_duration_rule_only": 2,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB05",
+      "condition": "d5",
+      "normalized_condition": "in5",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB05/d5/phase.parquet",
+      "phase_sha256": "9dff2ff2c1bb340087a81118101c5d6e86edc0de9fce9fabffbf61fc854291f0",
+      "ledger_sha256": "6ef204f2371a5004caf6dd73f7f63c2cbe1215fb0719a6266e184233b963b2e3",
+      "readback_maximum_error": 1.3278267374516872e-13,
+      "observations": 183,
+      "excluded_pairs": 75,
+      "observations_by_side": {
+        "left": 92,
+        "right": 91
+      },
+      "observations_by_task": {
+        "decline_walking": 161,
+        "transition": 22
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 64,
+        "exported_not_in_original_curation": 13,
+        "exported_in_original_curation": 170,
+        "excluded_in_original_curation": 11,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 0,
+      "odd_duration_rule_only": 0,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB05",
+      "condition": "i0",
+      "normalized_condition": "i0",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB05/i0/phase.parquet",
+      "phase_sha256": "11eba9553752844d245f4155c78572eafc6bad8c2861870021d86d9f71d71f9d",
+      "ledger_sha256": "2267704d00c318e3b2b18de13350c70ef5d4fa375d2712c0a038ef5e772ed01f",
+      "readback_maximum_error": 7.247535904753022e-13,
+      "observations": 174,
+      "excluded_pairs": 73,
+      "observations_by_side": {
+        "left": 88,
+        "right": 86
+      },
+      "observations_by_task": {
+        "level_walking": 153,
+        "transition": 21
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "exported_not_in_original_curation": 17,
+        "exported_in_original_curation": 157,
+        "excluded_in_original_curation": 13,
+        "excluded_not_in_original_curation": 60,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 1,
+      "odd_duration_rule_only": 1,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB05",
+      "condition": "i10",
+      "normalized_condition": "i10",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB05/i10/phase.parquet",
+      "phase_sha256": "c33f07a60d29ff2fb0e89e207b9f2b58cecb5b23ffb6f074db98cc1b5dedc916",
+      "ledger_sha256": "96d6f8598bb25e76bac858c349be7a2ded422c3d1cdbdbff2bf985db328110ec",
+      "readback_maximum_error": 9.947598300641403e-14,
+      "observations": 164,
+      "excluded_pairs": 71,
+      "observations_by_side": {
+        "left": 82,
+        "right": 82
+      },
+      "observations_by_task": {
+        "incline_walking": 149,
+        "transition": 15
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 61,
+        "exported_in_original_curation": 148,
+        "exported_not_in_original_curation": 16,
+        "excluded_in_original_curation": 10,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 1,
+      "odd_duration_rule_only": 0,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB05",
+      "condition": "i5",
+      "normalized_condition": "i5",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB05/i5/phase.parquet",
+      "phase_sha256": "12bdfdb36699928de8e79ed5c08bc74386a533507c6ed6fa97051f474119883d",
+      "ledger_sha256": "9634a76caeeed1fd142fb2b39b7dcf967e4f2c9105ae7bb268b89712144f7ce3",
+      "readback_maximum_error": 8.384404281969182e-13,
+      "observations": 175,
+      "excluded_pairs": 76,
+      "observations_by_side": {
+        "left": 88,
+        "right": 87
+      },
+      "observations_by_task": {
+        "incline_walking": 154,
+        "transition": 21
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "exported_not_in_original_curation": 25,
+        "exported_in_original_curation": 150,
+        "excluded_not_in_original_curation": 67,
+        "excluded_in_original_curation": 9,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 5,
+      "odd_duration_rule_only": 5,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB06",
+      "condition": "d10",
+      "normalized_condition": "in10",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB06/d10/phase.parquet",
+      "phase_sha256": "8593273857c2441b08d75c6b88f359d47e05164868ee576f27817e25bb921590",
+      "ledger_sha256": "7e43c159944acb3e621bb90637f7a1f719b817e618204cf6636b0c90c430d110",
+      "readback_maximum_error": 1.4210854715202004e-13,
+      "observations": 197,
+      "excluded_pairs": 83,
+      "observations_by_side": {
+        "left": 99,
+        "right": 98
+      },
+      "observations_by_task": {
+        "decline_walking": 176,
+        "transition": 21
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 74,
+        "exported_in_original_curation": 189,
+        "excluded_in_original_curation": 9,
+        "exported_not_in_original_curation": 8,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 0,
+      "odd_duration_rule_only": 0,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB06",
+      "condition": "d5",
+      "normalized_condition": "in5",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB06/d5/phase.parquet",
+      "phase_sha256": "17e319b46562f7779e6996b20df23ce150697b11c72a4833d638e5e5d2c91e82",
+      "ledger_sha256": "22ac87eaf97ddc2c20940204cc13e14989985172233ffaab9858be12215cc665",
+      "readback_maximum_error": 3.730349362740526e-13,
+      "observations": 184,
+      "excluded_pairs": 76,
+      "observations_by_side": {
+        "left": 93,
+        "right": 91
+      },
+      "observations_by_task": {
+        "decline_walking": 161,
+        "transition": 23
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 67,
+        "exported_in_original_curation": 169,
+        "exported_not_in_original_curation": 15,
+        "excluded_in_original_curation": 9,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 1,
+      "odd_duration_rule_only": 1,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB06",
+      "condition": "i0",
+      "normalized_condition": "i0",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB06/i0/phase.parquet",
+      "phase_sha256": "5451b34e9bab85463feb50587089ea34d624a5f898ec0bc4c89efe4f88015da1",
+      "ledger_sha256": "57ffeaed9ef8b32f1036cb5219beabe7abcccf301bf305dfeba81a2cbf0e5dde",
+      "readback_maximum_error": 1.9539925233402755e-13,
+      "observations": 169,
+      "excluded_pairs": 78,
+      "observations_by_side": {
+        "left": 85,
+        "right": 84
+      },
+      "observations_by_task": {
+        "level_walking": 151,
+        "transition": 18
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "exported_not_in_original_curation": 9,
+        "exported_in_original_curation": 160,
+        "excluded_in_original_curation": 10,
+        "excluded_not_in_original_curation": 68,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 1,
+      "odd_duration_rule_only": 1,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB06",
+      "condition": "i10",
+      "normalized_condition": "i10",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB06/i10/phase.parquet",
+      "phase_sha256": "17f9ebd92a5d5c6ce22ad2b00a423c0b8a418cf366f6e4f2b3f56066c8b6eade",
+      "ledger_sha256": "a70d62d0607c19161f2dfce5156e13de131ba8dca32519b679842912f2eaf284",
+      "readback_maximum_error": 9.947598300641403e-14,
+      "observations": 169,
+      "excluded_pairs": 76,
+      "observations_by_side": {
+        "left": 85,
+        "right": 84
+      },
+      "observations_by_task": {
+        "incline_walking": 151,
+        "transition": 18
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 65,
+        "excluded_in_original_curation": 11,
+        "exported_in_original_curation": 157,
+        "exported_not_in_original_curation": 12,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 1,
+      "odd_duration_rule_only": 1,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB06",
+      "condition": "i5",
+      "normalized_condition": "i5",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB06/i5/phase.parquet",
+      "phase_sha256": "0015c4d79e91c1e4577770000d41453ce231b085639778ee8b2211f094987fd0",
+      "ledger_sha256": "be9a483e2c321c0b37aada3e1fa52c779c8557f0de943654dbc0218c27564c1b",
+      "readback_maximum_error": 1.4921397450962104e-13,
+      "observations": 157,
+      "excluded_pairs": 76,
+      "observations_by_side": {
+        "left": 80,
+        "right": 77
+      },
+      "observations_by_task": {
+        "incline_walking": 141,
+        "transition": 16
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 66,
+        "excluded_in_original_curation": 10,
+        "exported_not_in_original_curation": 12,
+        "exported_in_original_curation": 145,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 0,
+      "odd_duration_rule_only": 0,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB07",
+      "condition": "d10",
+      "normalized_condition": "in10",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB07/d10/phase.parquet",
+      "phase_sha256": "3d00b8c9425bce87d245638d73187ba494961413d40cd6cb3d75ff21800ff5b9",
+      "ledger_sha256": "cdb0c7ebd4609731729239b81bb6e4ac98db585d4c62ea1d4202a1ae45375b6b",
+      "readback_maximum_error": 1.6342482922482304e-13,
+      "observations": 195,
+      "excluded_pairs": 76,
+      "observations_by_side": {
+        "left": 98,
+        "right": 97
+      },
+      "observations_by_task": {
+        "decline_walking": 170,
+        "transition": 25
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 66,
+        "exported_not_in_original_curation": 19,
+        "exported_in_original_curation": 176,
+        "excluded_in_original_curation": 10,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 1,
+      "odd_duration_rule_only": 1,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB07",
+      "condition": "d5",
+      "normalized_condition": "in5",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB07/d5/phase.parquet",
+      "phase_sha256": "750500fa0e27d5386ddd1af1bdb455bdca41e8f02a94a1b9049a973e28c25a7c",
+      "ledger_sha256": "42e9527c585694edfe9758dc38e128b09b12e2aa2c2af0685a82596a66ba566b",
+      "readback_maximum_error": 1.438849039914203e-13,
+      "observations": 187,
+      "excluded_pairs": 83,
+      "observations_by_side": {
+        "left": 93,
+        "right": 94
+      },
+      "observations_by_task": {
+        "decline_walking": 163,
+        "transition": 24
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 73,
+        "exported_not_in_original_curation": 21,
+        "exported_in_original_curation": 166,
+        "excluded_in_original_curation": 10,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 3,
+      "odd_duration_rule_only": 2,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB07",
+      "condition": "i0",
+      "normalized_condition": "i0",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB07/i0/phase.parquet",
+      "phase_sha256": "d245f99ddce37d2776950c6c72d2f38b7ebede44a11c4cf1f90d52f15cf1f621",
+      "ledger_sha256": "8a9baf29da374257607915729b31aefa7addb8cdf0abe4310308f518a9fb6851",
+      "readback_maximum_error": 1.7763568394002505e-13,
+      "observations": 180,
+      "excluded_pairs": 70,
+      "observations_by_side": {
+        "left": 90,
+        "right": 90
+      },
+      "observations_by_task": {
+        "level_walking": 156,
+        "transition": 24
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "exported_not_in_original_curation": 18,
+        "exported_in_original_curation": 162,
+        "excluded_in_original_curation": 8,
+        "excluded_not_in_original_curation": 62,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 3,
+      "odd_duration_rule_only": 3,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB07",
+      "condition": "i10",
+      "normalized_condition": "i10",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB07/i10/phase.parquet",
+      "phase_sha256": "5a81f9a36af746f31551ab136eaecd4dfd8e3d7d34d99fd3b3f692d0a6412166",
+      "ledger_sha256": "f75b969b136b2ab8d8c850d34ab9d76ad5b64621f31917f9b766192ab0922616",
+      "readback_maximum_error": 1.8740564655672642e-13,
+      "observations": 169,
+      "excluded_pairs": 72,
+      "observations_by_side": {
+        "left": 85,
+        "right": 84
+      },
+      "observations_by_task": {
+        "incline_walking": 148,
+        "transition": 21
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 64,
+        "exported_not_in_original_curation": 38,
+        "exported_in_original_curation": 131,
+        "excluded_in_original_curation": 8,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 1,
+      "odd_duration_rule_only": 1,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB07",
+      "condition": "i5",
+      "normalized_condition": "i5",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB07/i5/phase.parquet",
+      "phase_sha256": "1904d8dd1a5f2b8871d557071df85c332911f3f93cd8de3177071421ef263cb5",
+      "ledger_sha256": "4beb967b4c68071098bac0fd17c1234865d098fa62c99cc00d1c9369976538bb",
+      "readback_maximum_error": 1.4921397450962104e-13,
+      "observations": 168,
+      "excluded_pairs": 82,
+      "observations_by_side": {
+        "left": 85,
+        "right": 83
+      },
+      "observations_by_task": {
+        "incline_walking": 150,
+        "transition": 18
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 72,
+        "exported_not_in_original_curation": 11,
+        "excluded_in_original_curation": 10,
+        "exported_in_original_curation": 157,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 1,
+      "odd_duration_rule_only": 1,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB08",
+      "condition": "d10",
+      "normalized_condition": "in10",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB08/d10/phase.parquet",
+      "phase_sha256": "b8196281bd01b5ae5acb0a9bdf1b71819236155c7c2d7129fd48fce709f66141",
+      "ledger_sha256": "7982fe849f43ff0f098a437671dffd418d3159f6e9a36bc0b3b17c302de9a57e",
+      "readback_maximum_error": 1.247890679678676e-13,
+      "observations": 182,
+      "excluded_pairs": 80,
+      "observations_by_side": {
+        "left": 90,
+        "right": 92
+      },
+      "observations_by_task": {
+        "decline_walking": 159,
+        "transition": 23
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 69,
+        "exported_in_original_curation": 154,
+        "exported_not_in_original_curation": 28,
+        "excluded_in_original_curation": 11,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 0,
+      "odd_duration_rule_only": 0,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB08",
+      "condition": "d5",
+      "normalized_condition": "in5",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB08/d5/phase.parquet",
+      "phase_sha256": "8e53632a909124063858e656231261033b4bd55dda76f7023f8b580acf74dbad",
+      "ledger_sha256": "103b7ba004797c3c354f5e53af660f91927e37c05e086060f3c47e43f99fd020",
+      "readback_maximum_error": 1.7763568394002505e-13,
+      "observations": 165,
+      "excluded_pairs": 74,
+      "observations_by_side": {
+        "left": 82,
+        "right": 83
+      },
+      "observations_by_task": {
+        "decline_walking": 148,
+        "transition": 17
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 64,
+        "exported_not_in_original_curation": 20,
+        "exported_in_original_curation": 145,
+        "excluded_in_original_curation": 10,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 1,
+      "odd_duration_rule_only": 1,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB08",
+      "condition": "i0",
+      "normalized_condition": "i0",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB08/i0/phase.parquet",
+      "phase_sha256": "52e3ff0ee1cdeaede9fc4ac6e39f7017dab748a7fa47fd6e45a98b16dcc32b24",
+      "ledger_sha256": "9292be36c96afb2c853fda403f8dc63c88497d8b3de7728a72e1e596817c2178",
+      "readback_maximum_error": 1.8118839761882555e-13,
+      "observations": 162,
+      "excluded_pairs": 73,
+      "observations_by_side": {
+        "left": 80,
+        "right": 82
+      },
+      "observations_by_task": {
+        "level_walking": 144,
+        "transition": 18
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 66,
+        "exported_not_in_original_curation": 43,
+        "exported_in_original_curation": 119,
+        "excluded_in_original_curation": 7,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 1,
+      "odd_duration_rule_only": 1,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB08",
+      "condition": "i10",
+      "normalized_condition": "i10",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB08/i10/phase.parquet",
+      "phase_sha256": "d29befd9183152843454750eaff092f4e397f4a5d71cf7b2d8246ab6ce571ad6",
+      "ledger_sha256": "b2a7b8a857e0758998b64c6b995e834319afe2d6bc2bbb984b5278e97ebf6c6c",
+      "readback_maximum_error": 1.2079226507921703e-13,
+      "observations": 225,
+      "excluded_pairs": 45,
+      "observations_by_side": {
+        "left": 112,
+        "right": 113
+      },
+      "observations_by_task": {
+        "incline_walking": 208,
+        "transition": 17
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 37,
+        "exported_not_in_original_curation": 18,
+        "exported_in_original_curation": 207,
+        "excluded_in_original_curation": 8,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 2,
+      "odd_duration_rule_only": 2,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB08",
+      "condition": "i5",
+      "normalized_condition": "i5",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB08/i5/phase.parquet",
+      "phase_sha256": "00671f0b0f88246819ab69db5bf11e1b5f5f9bd491b0bcdde135755fa6cb4c87",
+      "ledger_sha256": "854fb594a59560b63d3640b21f02e2854f0f0bde831a771378f5a3f998173a0d",
+      "readback_maximum_error": 1.7763568394002505e-13,
+      "observations": 153,
+      "excluded_pairs": 69,
+      "observations_by_side": {
+        "left": 76,
+        "right": 77
+      },
+      "observations_by_task": {
+        "incline_walking": 134,
+        "transition": 19
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 57,
+        "exported_not_in_original_curation": 16,
+        "exported_in_original_curation": 137,
+        "excluded_in_original_curation": 12,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 0,
+      "odd_duration_rule_only": 0,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB09",
+      "condition": "d10",
+      "normalized_condition": "in10",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB09/d10/phase.parquet",
+      "phase_sha256": "d94571a73e2cd0b3bba252a851a62765006e8c120e4db1b67363ebf4067647ef",
+      "ledger_sha256": "1d59dda82ca76f05203d941eb69ca61b45249793fc898a0950a689ff75650fd2",
+      "readback_maximum_error": 1.4210854715202004e-13,
+      "observations": 214,
+      "excluded_pairs": 87,
+      "observations_by_side": {
+        "left": 107,
+        "right": 107
+      },
+      "observations_by_task": {
+        "decline_walking": 185,
+        "transition": 29
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 78,
+        "exported_in_original_curation": 200,
+        "excluded_in_original_curation": 9,
+        "exported_not_in_original_curation": 14,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 1,
+      "odd_duration_rule_only": 0,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB09",
+      "condition": "d5",
+      "normalized_condition": "in5",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB09/d5/phase.parquet",
+      "phase_sha256": "41cb1a63c61a2bcacf6293868e9ca36263638dbd11412f34e5a26b844da08792",
+      "ledger_sha256": "c8552fe85e05baa92eff6ddd1d448206ec6d65a6cb997ea69c9947892fd0e1da",
+      "readback_maximum_error": 1.2789769243681803e-13,
+      "observations": 194,
+      "excluded_pairs": 76,
+      "observations_by_side": {
+        "left": 99,
+        "right": 95
+      },
+      "observations_by_task": {
+        "decline_walking": 171,
+        "transition": 23
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 69,
+        "exported_not_in_original_curation": 9,
+        "exported_in_original_curation": 185,
+        "excluded_in_original_curation": 7,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 1,
+      "odd_duration_rule_only": 1,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB09",
+      "condition": "i0",
+      "normalized_condition": "i0",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB09/i0/phase.parquet",
+      "phase_sha256": "20a4b863d926614d8345143dda1a0dae57c7a0f1e92c5b19014beccf486b3675",
+      "ledger_sha256": "0c3722c4fc3f53f1d0c26623ce13d21d1c6fcb183bce79d749eb088cf8741af3",
+      "readback_maximum_error": 1.2789769243681803e-13,
+      "observations": 186,
+      "excluded_pairs": 86,
+      "observations_by_side": {
+        "left": 93,
+        "right": 93
+      },
+      "observations_by_task": {
+        "level_walking": 162,
+        "transition": 24
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 76,
+        "exported_not_in_original_curation": 14,
+        "exported_in_original_curation": 172,
+        "excluded_in_original_curation": 10,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 2,
+      "odd_duration_rule_only": 2,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB09",
+      "condition": "i10",
+      "normalized_condition": "i10",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB09/i10/phase.parquet",
+      "phase_sha256": "369bdd256896e6987a3affb6fc23340aef83141d94339e03d82921f8ea4c03fe",
+      "ledger_sha256": "999575e116ba6a778db9202902ca441d1857a8e666ac0bc19da59582d2cf0088",
+      "readback_maximum_error": 8.526512829121202e-14,
+      "observations": 178,
+      "excluded_pairs": 82,
+      "observations_by_side": {
+        "left": 89,
+        "right": 89
+      },
+      "observations_by_task": {
+        "incline_walking": 161,
+        "transition": 17
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 77,
+        "exported_in_original_curation": 162,
+        "exported_not_in_original_curation": 16,
+        "excluded_in_original_curation": 5,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 1,
+      "odd_duration_rule_only": 1,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB09",
+      "condition": "i5",
+      "normalized_condition": "i5",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB09/i5/phase.parquet",
+      "phase_sha256": "3450186a52a993f87e6f66337dc7a3a3f4ec24715610ff28aeae5c4d1f13b500",
+      "ledger_sha256": "85ac493e6a666125f765810fd955e0aeb2168bf5edd10282fd7f587b09cf602e",
+      "readback_maximum_error": 1.1368683772161603e-13,
+      "observations": 177,
+      "excluded_pairs": 79,
+      "observations_by_side": {
+        "left": 89,
+        "right": 88
+      },
+      "observations_by_task": {
+        "incline_walking": 157,
+        "transition": 20
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 69,
+        "exported_in_original_curation": 153,
+        "exported_not_in_original_curation": 24,
+        "excluded_in_original_curation": 10,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 0,
+      "odd_duration_rule_only": 0,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB10",
+      "condition": "d10",
+      "normalized_condition": "in10",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB10/d10/phase.parquet",
+      "phase_sha256": "76d99ef84cf9fd36b9af913116ac1bfc9d2d598ca65bdc2c4bc3e356a6db719c",
+      "ledger_sha256": "41dbe68dc179da011d04a93653dca7771a6c764de251b0508fdb5153c40a46fb",
+      "readback_maximum_error": 2.1671553440683056e-13,
+      "observations": 182,
+      "excluded_pairs": 85,
+      "observations_by_side": {
+        "left": 91,
+        "right": 91
+      },
+      "observations_by_task": {
+        "decline_walking": 163,
+        "transition": 19
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 74,
+        "exported_in_original_curation": 172,
+        "excluded_in_original_curation": 11,
+        "exported_not_in_original_curation": 10,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 1,
+      "odd_duration_rule_only": 0,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB10",
+      "condition": "d5",
+      "normalized_condition": "in5",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB10/d5/phase.parquet",
+      "phase_sha256": "04e5cd64b5870926416f73584d8927471491ad152e27ee84a17d2f8b9a4c1070",
+      "ledger_sha256": "045cbc075b430a52fb23f508f54c52da1c45d8c63cacb3c2ca1db190359b8e72",
+      "readback_maximum_error": 1.8118839761882555e-13,
+      "observations": 181,
+      "excluded_pairs": 80,
+      "observations_by_side": {
+        "left": 91,
+        "right": 90
+      },
+      "observations_by_task": {
+        "decline_walking": 161,
+        "transition": 20
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "excluded_not_in_original_curation": 71,
+        "exported_in_original_curation": 158,
+        "excluded_in_original_curation": 9,
+        "exported_not_in_original_curation": 23,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 1,
+      "odd_duration_rule_only": 1,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB10",
+      "condition": "i0",
+      "normalized_condition": "i0",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB10/i0/phase.parquet",
+      "phase_sha256": "f749a2b6b167ce4b5791f55a79857a914514c18e5fbdf42e1dde05f3f3bc21b7",
+      "ledger_sha256": "106901a36c1f40970679861affb331e73d9f1423bd179d283ac905f58910e441",
+      "readback_maximum_error": 2.3447910280083306e-13,
+      "observations": 167,
+      "excluded_pairs": 58,
+      "observations_by_side": {
+        "left": 84,
+        "right": 83
+      },
+      "observations_by_task": {
+        "level_walking": 156,
+        "transition": 11
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "exported_not_in_original_curation": 13,
+        "exported_in_original_curation": 154,
+        "excluded_in_original_curation": 8,
+        "excluded_not_in_original_curation": 50,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 0,
+      "odd_duration_rule_only": 0,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB10",
+      "condition": "i10",
+      "normalized_condition": "i10",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB10/i10/phase.parquet",
+      "phase_sha256": "d22f9d91571585a2bda5d9361b67df66d782d908f6f72811b6dbbb2c8403348a",
+      "ledger_sha256": "ae18be9d407eaae92f3178667311af39f51626427a0c778827b2a959c2f45c6f",
+      "readback_maximum_error": 1.1368683772161603e-13,
+      "observations": 160,
+      "excluded_pairs": 63,
+      "observations_by_side": {
+        "left": 80,
+        "right": 80
+      },
+      "observations_by_task": {
+        "incline_walking": 146,
+        "transition": 14
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "exported_not_in_original_curation": 7,
+        "exported_in_original_curation": 153,
+        "excluded_in_original_curation": 11,
+        "excluded_not_in_original_curation": 52,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 2,
+      "odd_duration_rule_only": 2,
+      "receipts_agree": true
+    },
+    {
+      "subject": "AB10",
+      "condition": "i5",
+      "normalized_condition": "i5",
+      "phase_parquet": "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB10/i5/phase.parquet",
+      "phase_sha256": "f9af291ab53ac277f9b378c2e0295c4eaedf07f96a86655985224aa7ccdc86af",
+      "ledger_sha256": "c311693ff488853ec84c01bb03439d13631e9556d5ac433b75d820821b765e62",
+      "readback_maximum_error": 1.8474111129762605e-13,
+      "observations": 170,
+      "excluded_pairs": 74,
+      "observations_by_side": {
+        "left": 86,
+        "right": 84
+      },
+      "observations_by_task": {
+        "incline_walking": 153,
+        "transition": 17
+      },
+      "exclusion_reasons": [
+        "outside or ambiguous task interval"
+      ],
+      "curation": {
+        "exported_not_in_original_curation": 20,
+        "exported_in_original_curation": 150,
+        "excluded_in_original_curation": 11,
+        "excluded_not_in_original_curation": 63,
+        "original_curated_cycles_absent_from_streaming_ledger": 0
+      },
+      "nan_in_checked_columns": 0,
+      "pending_columns_all_nan": {
+        "ankle_dorsiflexion_angle_ipsi_rad": true,
+        "ankle_dorsiflexion_angle_contra_rad": true,
+        "thigh_sagittal_angle_ipsi_rad": false,
+        "thigh_sagittal_angle_contra_rad": false,
+        "shank_sagittal_angle_ipsi_rad": false,
+        "shank_sagittal_angle_contra_rad": false
+      },
+      "identity_agreement_ledger_membership": true,
+      "odd_duration_exported": 1,
+      "odd_duration_rule_only": 1,
+      "receipts_agree": true
+    }
+  ],
+  "limitations": [
+    "Counts and receipts only; no new numerical source comparison was run.",
+    "Original curation agreement does not validate event timing or the opposite leg."
+  ]
+}

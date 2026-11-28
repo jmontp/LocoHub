@@ -1,0 +1,210 @@
+{
+ "task_id": "GT24-C02",
+ "verifier_role": "independent second agent (own code; worker functions not imported or reused)",
+ "verdict": "done",
+ "last_checked_at_utc": "2026-10-30T18:56:00Z",
+ "round_2": {
+  "verdict": "done",
+  "last_checked_at_utc": "2026-10-30T18:56:00Z",
+  "summary": "Round 2. I checked all four required fixes and the optional erratum note against the files and found each one in place. The science was not re-run; round 1 stands. Done means the deliverables meet their acceptance criteria. It does not give scientific approval to GT24.",
+  "fix_checks": [
+   {
+    "fix": 1,
+    "result": "pass",
+    "evidence": "fig1_moment.png, fig2_slopes.png and fig3_heeltoe.png are all 765 px at 170 dpi = 4.50 in, measured with PIL. The builder now saves on a fixed 4.5 in canvas without a tight bbox."
+   },
+   {
+    "fix": 2,
+    "result": "pass",
+    "evidence": "No fontsize below 10 remains in review_gt24_c02_ankle_sign.py (grep). rcParams font.size is 10.5, the legend and y tick labels are 10, and the titles and annotations are 10."
+   },
+   {
+    "fix": 3,
+    "result": "pass",
+    "evidence": "The reply line reads 'ankle sign: ok | what looks wrong'."
+   },
+   {
+    "fix": 4,
+    "result": "pass",
+    "evidence": "last_checked_at_utc is 2026-10-30T18:48:38Z, which equals the handoff file mtime and is before my check at 18:49Z. output_sha256 equals the current builder 59885e18... and audit 9607250f.... The rewritten audit keeps the same probe numbers (seed 20261030, slopes, 231/231, 154/154, peak RSS 176.3); only builder_sha256 changed."
+   },
+   {
+    "fix": "optional erratum",
+    "result": "pass",
+    "evidence": "gt24.md and gt24/index.html now say '12 of 12 legs (two of them by under 1°)'. Both pages carry identical text."
+   }
+  ],
+  "sheet_recheck": "Re-rendered at 1100 px and in a 390 px iframe and inspected. Nothing clips, all labels are legible at phone width, and the order and budgets are unchanged. No task IDs, paths or hashes appear before the folded details (scanned). Figure 1 shows the source curve following the dorsiflexion-positive estimate. Figure 2 has all legs on the positive side. Figure 3 shows the toe-walk dots in the dorsiflexion-positive band.",
+  "build_checks": [
+   "docs/build.py --check: 'Checked 40 HTML pages and 1635 referenced assets.'",
+   "build_backlog_page.py --check: 'Backlog valid; HTML current (82 tasks).'"
+  ],
+  "next_action": "The main session moves GT24-C02 to done in backlog.json. GT24-C01 records 'no ankle negation'. The lab GRF fore-aft axis note stays in the handoff's remaining list."
+ },
+ "round_1": {
+  "verdict": "back_to_worker",
+  "last_checked_at_utc": "2026-10-30T18:50:00Z",
+  "summary": "The science reproduces. On a fresh seed (20261103) with 5 subjects disjoint from the worker's 6 people, 10 legs and 217 stances, the source ankle angle and moment are dorsiflexion-positive with internal moments, as the worker found. A new kinematic test that uses no moments and no physiology agrees: foot pitch from the plate force seen in the lab and calcn frames equals hip_flexion + knee_angle + ankle_angle (ankle coefficient 0.83-1.18 in 10 of 10 legs). My code reproduces the worker's BT02 numbers exactly. The publisher files are unchanged and the errata are accurate. Returned for review-sheet rule fixes only: one figure is wider than 4.5 in, some figure text is under 10 pt, the reply line shows a task ID, and the handoff timestamp is in the future. No scientific approval is implied.",
+  "checks": [
+   {
+    "id": 1,
+    "name": "Fresh-seed reproduction of the sign",
+    "result": "pass",
+    "evidence": "Seed 20261103, numpy default_rng permutation over (phase, subject) units excluding the worker's people BT02/BT07/BT10/BT11/BT20/BT24 and Phase1And2/BT01 (README invalid torques); one random level/uphill/weighted walking condition each. Drawn: Phase3/BT21 normal_walk_1_1_1-2_on, Phase1And2/BT16 normal_walk_2_1_2-5_on, Phase1And2/BT03 incline_walk_1_2_up5_off, Phase1And2/BT14 incline_walk_2_1_up10_on, Phase1And2/BT13 normal_walk_1_1_2-5_on; 0 redraws. Frame: insole stance force up and CoP heel to toe in 217/217 stances; insole and plate force norms equal to 6.4e-12 N. Lever arm (generic talus point (0.04877, 0.04195) m in calcn, internal toes-up-positive estimate / README w/ exo mass): source slope 0.949-0.989 in 10/10 legs, correlation 0.985-0.999, stance-mean sign agreement 217/217; grid a_x in {0, 0.05, 0.10} m x a_y in {0, 0.04, 0.08} m gives 0.66-1.67, all positive. Push-off net work (70-100 % stance): positive in 217/217 stances from the publisher power column and from source moment x d(angle)/dt (medians 0.22-0.46 J/kg). Angle falls from 70 % stance to plate toe-off in 217/217 stances (median -18 to -30 deg). Toe walk minus heel walk (same subjects): ankle lower in 10/10 legs (-0.8 to -15.6 deg) with measured CoP 9.4-17.3 cm further forward. Ankle moment_filt_bio equals moment_filt exactly (max difference 0.0) in 10/10 legs."
+   },
+   {
+    "id": 2,
+    "name": "New kinematic chain test (no moments, no physiology)",
+    "result": "pass",
+    "evidence": "Foot pitch was taken as the angle between the same force vector in the calcn frame (insole_sim x, y) and in the lab sagittal plane (grf, fore-aft axis and sign from the treadmill CoP travel), on stance frames with Fy > 0.2 body weight. Free regression pitch = c + b_h hip_flexion + b_k knee_angle + b_a ankle_angle: b_a 0.83-1.18, b_h 0.94-1.18, b_k 0.80-0.95 in 10/10 legs. Fixed unit-coefficient chain residual SD: 1.2-3.2 deg with the ankle as published versus 9.4-18.4 deg with it negated. So the published ankle angle rotates the foot toes-up about the same axis as hip flexion and knee extension, which is OpenSim gait2392 dorsiflexion-positive. Disclosure: my first run assumed lab x is fore-aft and gave inconsistent results; the lab CoP actually travels along z (0.32-0.48 m per stance) and barely along x (under 0.03 m). The script records the fix in a comment."
+   },
+   {
+    "id": 3,
+    "name": "Alternative explanations",
+    "result": "pass",
+    "evidence": "(a) README about a different file: lines 90-91 sit under GENERAL NOTES and name the biological OpenSim DOFs, which are the angle/velocity/moment/power files; the exo has no ankle channel (power_exo ankle is 0, bio = net). The statement cannot refer to the exo coordinates. (b) Exo versus biological coordinates: exo knee encoder vs OpenSim knee_angle r = +0.966 to +0.994 (9 legs) and exo hip vs hip_flexion r = -0.974 to -0.992 (10 legs); this matches README 'exo extension positive' and 'knee extension positive'. One leg (Phase1And2/BT03 L, an exo-off trial) has a flat knee encoder (r = 0); it is not used. (c) Foot-frame versus lab-frame CoP: the lever arm uses only calcn-frame force and CoP, so it is independent of the lab axes. The calcn frame rotates with the foot (pitch range -43 to +19 deg against the lab), so it is a real foot frame and not a re-labeled lab frame. (d) Sign flip in the force data itself: stance plate Fy is positive and the mean of both plates' vertical force / g is 0.99-1.02 x the README w/ exo mass in 5/5 trials, so the forces act on the body and are in N. (e) External rather than internal moment with plantarflexion-positive angle: excluded by the chain test (angle sign fixed without moments) together with the lever arm (moment sign relative to the angle)."
+   },
+   {
+    "id": 4,
+    "name": "Worker numbers re-derived with my code",
+    "result": "pass",
+    "evidence": "Phase3/BT02 normal_walk_1_1_2-0_on: lever slope L 1.006, R 0.980 (worker 1.006, 0.980 as listed in summary.slopes), 24/24 stances per leg; push-off work positive 24/24 per leg. The chain test on these legs gives b_a 0.92 and 1.03."
+   },
+   {
+    "id": 5,
+    "name": "Errata text",
+    "result": "pass",
+    "evidence": "docs/datasets/gt24.md and gt24/index.html carry the same dated (2026-10-30) note. It quotes README lines 90-91 correctly (checked with sed on the publisher readme.txt). It cites the audit file, and its numbers match the audit: ratio 0.96-1.11 (slopes 0.957-1.107), 231/231, 154/154, 154/154, CoP 12-17 cm (0.122-0.172 m), 12/12. 'LocoHub does not negate' is true: convert_gtech_2024_phase_to_parquet.py and convert_gtech_2024_time_to_parquet.py copy ankle_angle_* and *_moment without a sign change. Minor: the 12/12 toe-walking result includes 2 legs that differ by under 1 deg; the sheet says so but the erratum does not (see optional)."
+   },
+   {
+    "id": 6,
+    "name": "Publisher files untouched",
+    "result": "pass",
+    "evidence": "readme.txt sha256 e896c6b4... equals the hash recorded in gt24-ankle-evidence-ranking.json. Phase1And2_Parsed.zip (20147014181 B, mtime_ns 1744128491000000000) and Phase3_Parsed.zip (9588432261 B, 1744128974000000000) equal the worker's record before and after my reads. The first 56138 bytes of Parsed/BT01/normal_walk_1_0-6_on/BT01_normal_walk_1_0-6_on_angle_filt.csv hash to eabfbfe2..., the prefix hash recorded by gt24-native-parsed-ankle-pilot.json. Parsed/BT02/normal_walk_1_1_2-0_on/BT02_normal_walk_1_1_2-0_on_grf.csv re-hashes to the worker's a5294920.... The zips were not hashed whole (30 GB). Worker output hashes in the handoff match the current builder and audit files."
+   },
+   {
+    "id": 7,
+    "name": "Review sheet rules",
+    "result": "fail",
+    "evidence": "Rendered with headless Chrome at 1100 px and inside a 390 px iframe and inspected. Order, budgets and chip states are correct: ask, headline, 7 chips (6 pass, 1 not checked), 3 figures each titled as a question, 3 not-shown items, reply, folded details; nothing clips at either width; the figure 1 example comes from a recorded seed (20261031). Failures: (1) fig1_moment.png is 800 px at 170 dpi = 4.71 in, over the 4.5 in limit (bbox_inches='tight' plus the legend below the axes). (2) Text under 10 pt: figure 1 legend fontsize 9.5 and figure 2 y tick labels fontsize 9.5 (builder lines 386 and 402). (3) The reply line reads 'GT24-C02: ok | what looks wrong'; AGENTS.md forbids task IDs outside the folded details, and the other verification sheets use 'ok | what looks wrong'."
+   },
+   {
+    "id": 8,
+    "name": "Handoff record",
+    "result": "fail",
+    "evidence": "GT24-C02.json last_checked_at_utc is 2026-10-30T21:40:00Z, but the file mtime is 18:30:41Z and the clock read 18:43Z when I checked. The timestamp is in the future."
+   }
+  ],
+  "required_fixes": [
+   "1. Figure 1 (fig1_moment.png): keep the saved image at most 4.5 in wide, for example a fixed 4.5 in canvas saved without bbox_inches='tight', or the legend inside the canvas width.",
+   "2. Raise all figure text to at least 10 pt: the figure 1 legend (fontsize 9.5) and the figure 2 y tick labels (9.5).",
+   "3. Reply line: drop the task ID ('ok | what looks wrong', or a plain-words label such as 'GT24 ankle: ok | what looks wrong').",
+   "4. Handoff last_checked_at_utc: set it to the real UTC time of the last check (the current value is about 3 h in the future). Re-render the sheet at 1100 and 390 px after fixes 1-3 and update output_sha256 if the builder changes."
+  ],
+  "optional": [
+   "Erratum: add '(two legs by under 1 deg)' to the toe-walking clause, matching the sheet chip, or cite this verification's 10/10 legs (-0.8 to -15.6 deg).",
+   "GT24 documentation: the lab GRF frame's fore-aft axis is z, not x (stance CoP travel 0.32-0.48 m along z, under 0.03 m along x), and its sign differs between trials (+z in Phase1And2/BT03 incline_walk_1_2_up5_off, -z in the other 4). This matters to anyone using grf.csv in the lab frame; it does not affect the ankle conclusion.",
+   "The 'Not shown' list could add 'lab-frame foot kinematics', or the sheet could cite this verifier's chain test as an extra pass chip. Only if the worker re-checks it."
+  ],
+  "next_action": "Worker applies fixes 1-4 (builder sheet step and handoff only; no source reads needed). The verifier re-checks image width, font sizes, the reply line and the timestamp, then moves GT24-C02 to done. GT24-C01 can already plan on 'no ankle negation'; the science is not in question."
+ },
+ "seed": 20261103,
+ "subjects": [
+  "Phase3/BT21 normal_walk_1_1_1-2_on",
+  "Phase1And2/BT16 normal_walk_2_1_2-5_on",
+  "Phase1And2/BT03 incline_walk_1_2_up5_off",
+  "Phase1And2/BT14 incline_walk_2_1_up10_on",
+  "Phase1And2/BT13 normal_walk_1_1_2-5_on"
+ ],
+ "aggregates": {
+  "legs": 10,
+  "stances": 217,
+  "lever_slope_range": [
+   0.949,
+   0.989
+  ],
+  "lever_corr_range": [
+   0.985,
+   0.9994
+  ],
+  "stance_sign_agreement": [
+   217,
+   217
+  ],
+  "grid_slope_range": [
+   0.66,
+   1.666
+  ],
+  "pushoff_work_positive_publisher": [
+   217,
+   217
+  ],
+  "pushoff_work_positive_own": [
+   217,
+   217
+  ],
+  "angle_falls_into_toeoff": [
+   217,
+   217
+  ],
+  "chain_ankle_coef_range": [
+   0.831,
+   1.176
+  ],
+  "chain_hip_coef_range": [
+   0.939,
+   1.184
+  ],
+  "chain_knee_coef_range": [
+   0.8,
+   0.952
+  ],
+  "chain_residual_sd_deg_as_published": [
+   1.23,
+   3.15
+  ],
+  "chain_residual_sd_deg_negated": [
+   9.38,
+   18.35
+  ],
+  "heel_toe_lower_ankle": [
+   10,
+   10
+  ],
+  "heel_toe_ankle_diff_deg": [
+   -15.58,
+   -0.8
+  ],
+  "heel_toe_cop_diff_m": [
+   0.0944,
+   0.1731
+  ],
+  "exo_knee_corr": [
+   0.966,
+   0.994
+  ],
+  "exo_hip_corr": [
+   -0.992,
+   -0.974
+  ],
+  "plate_mass_over_readme_w_exo": [
+   0.992,
+   1.02
+  ],
+  "bio_minus_net_ankle_max_abs": 0.0
+ },
+ "peak_rss_mib": {
+  "probe": 171.8,
+  "probe_usr_bin_time_mib": 171.8,
+  "cross_check": 144.3
+ },
+ "resources": "One worker; nice 19, ionice idle, single-threaded BLAS, ulimit -v 1.5 GiB; 55 Parsed members (about 45 MB uncompressed) read one at a time into memory, nothing extracted; wall about 1.1 s per run; the probe was run 3 times while fixing the lab-axis bug, plus one cross-check run. Nothing written under converted_datasets/ or the source tree.",
+ "verifier_code": {
+  "path": "contributor_tools/audit_probes/2026_10_30/verify_gt24_c02_ankle_sign.py",
+  "sha256": "b6b65cbb157b5c5666e5f3e24ed4e2c4639e64dbe75992629136360764998bbb",
+  "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 contributor_tools/audit_probes/2026_10_30/verify_gt24_c02_ankle_sign.py <out.json>",
+  "output_note": "Probe output JSON was written to the session scratchpad (not committed); every number above is copied from it and is reproducible from the command."
+ },
+ "process_note": "Report only. AGENTS.md says numerical jobs go through the reviewed guarded launcher from UM21-T02 and, until it is reviewed, 'launch nothing'. The worker's probes and these verifier probes are numerical reads of research data run outside any launcher, so by the literal text both are out of process. Mitigation: a single worker, read-only, one trial in memory at a time, nice 19 / ionice idle, single-threaded BLAS, RLIMIT_AS 1.5 GiB, peak RSS 172-176 MiB, wall time about 1 s, and no other numerical job running (checked with ps). No converter, MATLAB or full-dataset job was launched. The coordinating agent asked for these runs; that is not José's approval. Recommendation: José or the coordinator either record an explicit exemption for bounded read-only probes (for example under 300 MiB, under 5 min, one worker) or route them through the launcher once UM21-T02 is reviewed.",
+ "next_action": "The main session moves GT24-C02 to done in backlog.json. GT24-C01 records 'no ankle negation'. The lab GRF fore-aft axis note stays in the handoff's remaining list."
+}

@@ -1,0 +1,58 @@
+{
+  "task_id": "CORE-10",
+  "title": "Close CORE-09 verifier residuals V1 and V2",
+  "status": "review",
+  "last_checked_at_utc": "2026-10-31T14:30:00Z",
+  "resource_class": "fixture",
+  "research_data_read": false,
+  "scientific_approval": false,
+  "authorizes_publication": false,
+  "changes": {
+    "V1": "_TASK_KEYS is now {task, task_id, observation_type, reference_side}. A reviewed or approved profile whose applicability block uses only these keys is refused, in any combination, the same way task-only blocks are. The message keeps 'more than the task' and adds 'or observation structure'. Blocks that add a population or condition key (e.g. population plus reference_side) still release.",
+    "V2": "Chose to refuse rather than serialize. Before any read, build_release json.dumps the profile review (allow_nan=False) for every supplied profile, labelled or legacy, because both copy it into quality.json and manifest.json. A non-JSON value such as an unquoted YAML date raises a ReleaseError asking for dates to be quoted. The existing rule that reviewed_at must be quoted is unchanged; it still fails first, with 'quote timestamps'.",
+    "V1_identity": "At the coordinator's request, _TASK_KEYS is now {task, task_id, observation_type} plus IDENTITY_COLUMNS (subject, source_recording_id, observation_id, reference_side). A block made only of identity keys is refused like a task-only block. New test: test_identity_only_applicability_is_refused (4 cases). Run against a scratchpad copy with the previous key set (no repository edits), all 4 failed; they pass now."
+  },
+  "committed_profiles": "No committed range profile declares review_status or a top-level review, so neither change newly refuses any of them.",
+  "changed_files": [
+    "contributor_tools/build_dataset_release.py",
+    "contributor_tools/DATA_CONTRACT.md (only the release-section refusal sentence; now names the identity columns)",
+    "tests/test_release_builder_gaps.py (new CORE-10 tests: structural-key combinations, population plus structure, unquoted date for reviewed and legacy profiles, reviewed_at still needs quotes)",
+    "tests/test_release_builder_gaps_verify.py (verifier file: only the V1 and V2 strict-xfail decorator lines removed)",
+    "docs/maintainers/handoffs/CORE-10.json (this file)"
+  ],
+  "failing_then_passing": [
+    {
+      "change": "V1, V2 (verifier pins)",
+      "before": "3 XFAIL (strict): test_structural_only_applicability_is_refused x2, test_non_json_profile_review_values_fail_with_a_release_error",
+      "after": "3 XPASS(strict) after the fixes; markers removed; 3 passed. Assertions unchanged."
+    },
+    {
+      "change": "V1, V2 (own tests)",
+      "before": "The new tests were run against a scratchpad copy of the pre-CORE-10 builder, loaded by a pytest plugin with no repository edits. 4 failed for the expected reasons: two structural combinations were not refused, and two cases raised 'TypeError: Object of type date is not JSON serializable'. The other 41 tests in the file passed.",
+      "after": "all pass"
+    }
+  ],
+  "checks": [
+    {
+      "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_release_builder_gaps.py tests/test_release_publish_drvfs.py tests/test_release_lineage_adversarial.py tests/test_dataset_release.py tests/test_release_builder_gaps_verify.py tests/test_release_publish_drvfs_verify.py tests/test_release_lineage_verify.py tests/test_backlog_workflow.py -rxXs",
+      "result": "315 passed, 0 xfailed, nothing skipped (the drvfs cases ran)"
+    },
+    {
+      "command": "python3 contributor_tools/build_backlog_page.py --check",
+      "result": "Backlog valid; HTML current (91 tasks)."
+    },
+    {
+      "command": "ls -a /mnt/s/workspace | grep core0",
+      "result": "no temporary drvfs test directories left"
+    }
+  ],
+  "file_sha256": {
+    "contributor_tools/build_dataset_release.py": "fafb70219a1c90493a9c8ced99ca9af0c9c1deb122aa61b3230688216de5af30",
+    "tests/test_release_builder_gaps.py": "b6a329056fc3da10cd3a3191472651e75f4b838c0a8a84b29f8540f37fc70f9b",
+    "tests/test_release_builder_gaps_verify.py": "d69a8c74ee8378e32037bc18853a579dfc7196a228b92874ec5ab243ee579ac0"
+  },
+  "remaining": [
+    "Independent verification."
+  ],
+  "next_action": "Verifier: rerun the check command and confirm that the only change to the verifier file is the three removed decorator lines."
+}

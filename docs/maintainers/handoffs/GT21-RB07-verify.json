@@ -1,0 +1,122 @@
+{
+  "task_id": "GT21-RB07",
+  "verdict": "pass",
+  "verified_at_utc": "2026-11-25T21:00:00+00:00",
+  "verifier": "independent verifier agent (own read-only probes /tmp/probe_*.py)",
+  "scientific_approval": false,
+  "probe_rules": "prlimit --as=600 MiB, nice 19, ionice idle, OMP_NUM_THREADS=1, ARROW_DEFAULT_MEMORY_POOL=system, iter_batches(4096), one recording at a time; peak RSS 166 MiB (rule/right-foot), 267 MiB (export compare), 123 MiB (short stances); all under 300 MiB; nothing written under converted_datasets.",
+  "checks": {
+    "1_rule_in_code": {
+      "result": "pass",
+      "evidence": "toe_off_from_force: first sample index i0+1.. up to t1 (i0 = first sample at or after left heel strike) with finite force and force < FORCE_MASK_N (20.0 N, the existing mask threshold); None when none. Applied in run_gt21_rb_segment.segment_recording only when left_toe_off_copied_from_right (treadmill, gcLeft ToeOff identical to gcRight). Right leg and all other modes use the old path. No other numeric constants. Strides with none get stance_unavailable=left_belt_force_never_below_20_N_after_heel_strike_inside_stride. Seg ledgers: 156 treadmill recordings rebuilt (157th has no table, excluded as before), 20,433 left strides, 20,431 rebuilt, 2 unavailable (matches handoff)."
+    },
+    "2_recompute_left_and_right": {
+      "result": "pass",
+      "seed": 20261127,
+      "participants": [
+        "AB07",
+        "AB14",
+        "AB25"
+      ],
+      "left": "20 random left treadmill strides each (60) recomputed from the pass force (grf_vertical_left_BW x body weight): 0 toe-off mismatches against steps.jsonl toe_off_s. Note: step stance_samples equals (toe-off index minus heel-strike index) + 1 in 59 of 60 (the step window includes the next heel-strike sample); in the remaining one it equals the difference. This matches the existing inclusive stride window and is not a rule issue.",
+      "right": {
+        "AB07": {
+          "recordings": 2,
+          "strides": 261,
+          "median_ms": 0.0,
+          "p95_abs_ms": 5.0,
+          "worst_ms": 15.0
+        },
+        "AB14": {
+          "recordings": 2,
+          "strides": 300,
+          "median_ms": 0.0,
+          "p95_abs_ms": 10.0,
+          "worst_ms": 15.0
+        },
+        "AB25": {
+          "recordings": 2,
+          "strides": 295,
+          "median_ms": 0.0,
+          "p95_abs_ms": 15.0,
+          "worst_ms": 195.0
+        }
+      },
+      "claim": "Worker claim (median 0, p95 15 ms, worst 195 ms AB25) reproduced: AB25 worst 195.0 ms exactly in my 2 recordings."
+    },
+    "3_export_before_after": {
+      "result": "pass",
+      "participants": [
+        "AB06",
+        "AB10",
+        "AB21"
+      ],
+      "method": "lockstep iter_batches(4096) of gt21_rb06_export_<ID>_r2 vs gt21_rb07_export_<ID>; every non-task_info column compared with NaN equality; task_info parsed and diffed by key; observations.jsonl, exclusions.jsonl, recordings.jsonl compared line by line.",
+      "AB06_log_only_participant": {
+        "phase_rows": 584700,
+        "time_rows": 698218,
+        "row_groups_equal": true,
+        "schema_equal": true,
+        "cols_changed": {},
+        "phase_task_info_rows_changed": 144000,
+        "time_task_info_rows_changed": 0,
+        "obs": 4041,
+        "obs_ids_order_same": true,
+        "obs_field_diffs": {
+          "left/treadmill/force_missing_stance_fraction": 960
+        },
+        "exclusions_identical": true,
+        "recordings_identical": true
+      },
+      "AB10": {
+        "phase_rows": 547200,
+        "time_rows": 646273,
+        "cols_changed": {},
+        "phase_task_info_rows_changed": 126300,
+        "obs": 3794,
+        "obs_ids_order_same": true,
+        "obs_field_diffs": {
+          "left/treadmill/force_missing_stance_fraction": 842
+        },
+        "exclusions_identical": true,
+        "recordings_identical": true
+      },
+      "AB21": {
+        "phase_rows": 565200,
+        "time_rows": 591132,
+        "cols_changed": {},
+        "phase_task_info_rows_changed": 126300,
+        "obs": 3911,
+        "obs_ids_order_same": true,
+        "obs_field_diffs": {
+          "left/treadmill/force_missing_stance_fraction": 842
+        },
+        "exclusions_identical": true,
+        "recordings_identical": true
+      },
+      "summary": "Only left-reference phase rows' task_info keys stance_samples, force_missing_stance_samples, force_missing_stance_fraction changed (rows = 150 x changed observations); no phase or time data column changed; time.parquet task_info identical; observation ids, order, counts, exclusions and recordings identical. Observation flags unchanged in these three."
+    },
+    "4_short_left_stances": {
+      "result": "pass_with_note",
+      "list": "22 entries: 2 unavailable plus 20 with stance <= 5 samples (matches handoff).",
+      "checked": [
+        "AB08/treadmill_07_01/left/0101",
+        "AB21/treadmill_02_01/left/0051",
+        "AB12/treadmill_06_01/left/0086"
+      ],
+      "seed_for_random_two": 20261128,
+      "finding": "Not a real early unloading and not an isolated force glitch. In all three the left heel strike falls while the left force is still falling off the previous contact (e.g. 315, 245, 77 N) or already near zero oscillating around +-100 N, with the right belt fully loaded (550 to 1200 N). Real loading of the left foot (205 to 849 N) begins in the last 1-2 samples of the stride. So the source heel-strike time is early (mislocated at the previous stance end/swing) and the 20 N rule correctly returns a stance of 2 to 5 samples. The rule behaves as specified; these 20 strides are visible and counted and could be reviewed as a heel-strike timing question, not a toe-off one. No tuning proposed."
+    },
+    "5_receipts_hashes_tests": {
+      "result": "pass",
+      "receipts": "49 RB07 launcher receipts (22 seg, 22 export, 5 readback): status completed, exit 0, clean_success true, no launcher/finalisation errors, no orphans, no missing outputs, all bindings before and after match. Largest-process peak RSS up to 336 MiB (launcher-run exports, within the job's 2048 MiB budget).",
+      "hashes": "sha256sum -c docs/quality/audits/gt21-rb07-code-sha256.txt: all 4 files OK; they equal the receipt bindings of seg-AB06.",
+      "tests": "48 passed (tests/test_gt21_rb_segment.py, tests/test_gt21_rb_export.py)."
+    }
+  },
+  "not_verified": [
+    "Only 3 of 22 participants were stream-compared for exports; the other 19 rely on the worker's compare logs/JSON (AB06-AB11 log-only; AB06 and AB10 rechecked here).",
+    "Force input is the merged-pass table, not re-read from the source .mat force files (RB06 verified the pass table)."
+  ],
+  "scientific_note": "Task completion does not confer scientific approval; the 20 short left stances are a heel-strike timing question left open."
+}

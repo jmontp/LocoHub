@@ -1,0 +1,57 @@
+{
+  "status": "prepared_not_run",
+  "dataset": "um24k",
+  "scientific_approval": false,
+  "source_file": "dataset_S2.mat",
+  "source_sha256": "3f347db39ee86441140695aa94de5ec440fc2f61f61fc0925bf74f5e669b3c8f",
+  "source_url": "https://datadryad.org/api/v2/versions/314890/files",
+  "readme": "docs/quality/audits/source_evidence/um24k/publisher-readme.txt",
+  "readme_sha256": "5bc99c9848ff17adaf60310580fa6318e23cecc9ff7f01a657d63b6a6e54723a",
+  "source_semantics": [
+    "Five 21 by 10 progression fields, each with bare and exo conditions: 2,100 original values. Progression runs from -100 to +100 percent in steps of 10; zero is participant-declared fatigue, not gait phase.",
+    "Five 1 by 10 post-fatigue summaries for each condition: 100 original values, keeping the publisher definitions of comparison baselines and units.",
+    "Six by ten modifiedQUEST ratings: 60 original values; preserve actual source task-header strings and leave condition not separately labelled.",
+    "MATLAB function-workspace bytes remain preserved in the original MAT, not falsely interpreted as scientific observations."
+  ],
+  "method": [
+    "No interpolation, normalization, sign transformation or pooling. Copy each source cell into an explicitly identified structured row.",
+    "Independent reviewer loads original MAT with a different SciPy struct representation, reconstructs identities, rows, units and source values without producer extraction helpers.",
+    "Finite values including signed zero must preserve source bits; missing NaN values remain missing and unassessed.",
+    "No fabricated durations, individual cycles, sample clocks, within-participant SD or anatomical side."
+  ],
+  "expected_scope": {
+    "participants": 10,
+    "progression_rows": 2100,
+    "post_fatigue_summary_rows": 100,
+    "questionnaire_rows": 60,
+    "total_source_values": 2260
+  },
+  "tests": {
+    "synthetic_only": true,
+    "passed": 8,
+    "seconds": 0.82,
+    "cap_mib": 768,
+    "coverage": [
+      "Exact full documented source-cell scope",
+      "Original fatigue progression versus gait phase",
+      "Literal questionnaire task headers",
+      "Missing values and signed-zero bits",
+      "Corrupted condition, subject column, progression and units",
+      "Duplicate questionnaire headers and malformed summary shape",
+      "Persisted independent MAT-to-Parquet readback",
+      "Missing questionnaire row rejection"
+    ]
+  },
+  "actual_source_status": "Only top-level source metadata inspected. Strict real nested fields, shapes and questionnaire header representations remain prerequisites of first controlled execution; no actual arrays loaded.",
+  "plan": {
+    "path": "converted_datasets/reconversion_v2/um24k_s2_restoration_preparation_20261021/plan.json",
+    "sha256": "1ab75abdb9c94318824f4cb3fcde9cbc2383f5793f37f60d72b566cbc7549e1b",
+    "bindings": 6
+  },
+  "bindings": {
+    "contributor_tools/restore_um24k_fatigue_summaries.py": "5051f2e524153d7b51e4bee72d4dcd026d12588071433d91edb4f2b769998162",
+    "contributor_tools/audit_um24k_fatigue_summaries.py": "9e17b1f208df7b96d2753d9f4cbec04ad0223a59782c660d7b05084d13e817da",
+    "tests/test_um24k_fatigue_restoration.py": "b3bd07c2bccd0cf9092cc801dce1cc8614e7577ac1877578d0cef945be2267f8"
+  },
+  "next_action": "Root review, then prepare serial S2 watcher after actual launched S1 watcher. One 768 MiB worker only, external resource guard and fresh outputs. Do not declare full UM24K restored until both actual independent source readbacks pass."
+}

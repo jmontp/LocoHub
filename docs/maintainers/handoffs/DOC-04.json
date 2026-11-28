@@ -1,0 +1,108 @@
+{
+ "task_id": "DOC-04",
+ "title": "Label legacy validation-range snapshots as old pelvis sign",
+ "status": "review",
+ "last_checked_at_utc": "2026-10-31T07:09:25Z",
+ "summary": "Added the label \"Legacy record: pelvis tilt for run, walking and stair uses the old anterior-positive sign; current ranges follow the reference sign rule\", linked to docs/reference/index.html#signs-and-frames, beside both snapshot links (Validation Ranges list item and Validation Ranges Snapshot paragraph) on each of the 20 published dataset pages that link a snapshot: 40 labels. Snapshots not edited.",
+ "changed_files": [
+  "contributor_tools/manage_dataset_documentation.py",
+  "docs/datasets/ca23/index.html",
+  "docs/datasets/fa16/index.html",
+  "docs/datasets/fr12/index.html",
+  "docs/datasets/ga26/index.html",
+  "docs/datasets/gt21/index.html",
+  "docs/datasets/gt23/index.html",
+  "docs/datasets/gt24/index.html",
+  "docs/datasets/gt25d/index.html",
+  "docs/datasets/ha13/index.html",
+  "docs/datasets/ha23/index.html",
+  "docs/datasets/mb24/index.html",
+  "docs/datasets/mo15/index.html",
+  "docs/datasets/sp50/index.html",
+  "docs/datasets/ta21/index.html",
+  "docs/datasets/ta22/index.html",
+  "docs/datasets/ti19/index.html",
+  "docs/datasets/um21/index.html",
+  "docs/datasets/um24k/index.html",
+  "docs/datasets/vz22/index.html",
+  "docs/datasets/wa23/index.html",
+  "docs/maintainers/handoffs/DOC-04.json"
+ ],
+ "left_unchanged_with_reason": [
+  "The 20 docs/datasets/*_validation_ranges.yaml snapshots: must stay byte-identical (acceptance).",
+  "docs/datasets/.generated/*.md and docs/datasets/um21_validation.md also mention the snapshots but are unpublished Markdown sources; the static site serves only the HTML pages.",
+  "No CSS added; the label uses a <small> element inside the existing list item or paragraph so shared stylesheets edited by other tasks are untouched."
+ ],
+ "checks": [
+  "git diff --quiet 569ee8f -- docs/datasets/*_validation_ranges.yaml -> identical (20 files).",
+  "grep: legacy-sign-label on 20 pages, 40 occurrences; every snapshot link on a published page has one.",
+  "Playwright with system Chrome: um21 at a true 390 px viewport and gt24 at 1100 px; both labels visible beside their links, horizontal overflow 0 px; screenshots inspected.",
+  "Prefix OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3: docs/build.py --check -> Checked 40 HTML pages and 1681 referenced assets; pytest tests/test_data_documentation.py tests/test_quality_page.py tests/test_data_preview.py tests/test_static_aggregate_preview.py -> 21 passed; build_backlog_page.py --check -> Backlog valid; HTML current (93 tasks).",
+  "Anchor id=\"signs-and-frames\" present once in docs/reference/index.html."
+ ],
+ "remaining": [
+  "No in-repo Markdown-to-HTML renderer for dataset pages exists, so the HTML pages carry their labels as authored; any future renderer must keep the <small class=\"legacy-sign-label\"> span."
+ ],
+ "next_action": "Independent reviewer: confirm snapshot identity to 569ee8f and that each of the 40 snapshot links on the 20 pages carries the label.",
+ "evidence_paths": [
+  "docs/maintainers/handoffs/CORE-07-verify.json"
+ ],
+ "snapshot_sha256": {
+  "docs/datasets/ca23_validation_ranges.yaml": "85db3b9d48595b1f06d37e92494aa5cbc70500d6e2cf96d531d66876f0262e9a",
+  "docs/datasets/fa16_validation_ranges.yaml": "85db3b9d48595b1f06d37e92494aa5cbc70500d6e2cf96d531d66876f0262e9a",
+  "docs/datasets/fr12_validation_ranges.yaml": "85db3b9d48595b1f06d37e92494aa5cbc70500d6e2cf96d531d66876f0262e9a",
+  "docs/datasets/ga26_validation_ranges.yaml": "f21f475865de1870104f6bbb3621c5c16c20f6cc19d70e4c0e7793a973f434a2",
+  "docs/datasets/gt21_validation_ranges.yaml": "fc02975543fa044f77cb731de712e901f8469c4b577359531b652e9e81422611",
+  "docs/datasets/gt23_validation_ranges.yaml": "fc02975543fa044f77cb731de712e901f8469c4b577359531b652e9e81422611",
+  "docs/datasets/gt24_validation_ranges.yaml": "fc02975543fa044f77cb731de712e901f8469c4b577359531b652e9e81422611",
+  "docs/datasets/gt25d_validation_ranges.yaml": "f21f475865de1870104f6bbb3621c5c16c20f6cc19d70e4c0e7793a973f434a2",
+  "docs/datasets/ha13_validation_ranges.yaml": "85db3b9d48595b1f06d37e92494aa5cbc70500d6e2cf96d531d66876f0262e9a",
+  "docs/datasets/ha23_validation_ranges.yaml": "85db3b9d48595b1f06d37e92494aa5cbc70500d6e2cf96d531d66876f0262e9a",
+  "docs/datasets/mb24_validation_ranges.yaml": "fc02975543fa044f77cb731de712e901f8469c4b577359531b652e9e81422611",
+  "docs/datasets/mo15_validation_ranges.yaml": "85db3b9d48595b1f06d37e92494aa5cbc70500d6e2cf96d531d66876f0262e9a",
+  "docs/datasets/sp50_validation_ranges.yaml": "f21f475865de1870104f6bbb3621c5c16c20f6cc19d70e4c0e7793a973f434a2",
+  "docs/datasets/ta21_validation_ranges.yaml": "85db3b9d48595b1f06d37e92494aa5cbc70500d6e2cf96d531d66876f0262e9a",
+  "docs/datasets/ta22_validation_ranges.yaml": "85db3b9d48595b1f06d37e92494aa5cbc70500d6e2cf96d531d66876f0262e9a",
+  "docs/datasets/ti19_validation_ranges.yaml": "85db3b9d48595b1f06d37e92494aa5cbc70500d6e2cf96d531d66876f0262e9a",
+  "docs/datasets/um21_validation_ranges.yaml": "fc02975543fa044f77cb731de712e901f8469c4b577359531b652e9e81422611",
+  "docs/datasets/um24k_validation_ranges.yaml": "6abe9f53e9bd7810585aa9017d4e6ca96030d9fd460aae64c1072451008fdc93",
+  "docs/datasets/vz22_validation_ranges.yaml": "85db3b9d48595b1f06d37e92494aa5cbc70500d6e2cf96d531d66876f0262e9a",
+  "docs/datasets/wa23_validation_ranges.yaml": "85db3b9d48595b1f06d37e92494aa5cbc70500d6e2cf96d531d66876f0262e9a"
+ },
+ "output_sha256": {
+  "docs/datasets/ca23/index.html": "7261206ca491f976ad8c7bbd332bbdf84a8a85c6af659f20f10428a347d7dead",
+  "docs/datasets/fa16/index.html": "1f37b1320e1d395c51de6ebde27253080a74783b95501a6ebc8f26bc271b3f29",
+  "docs/datasets/fr12/index.html": "4a4d0ca89fbd57e3bbc8ebf1c3b70c3f69c669e7787ea5d1b89cc24d7566ad1c",
+  "docs/datasets/ga26/index.html": "7dd84e220a7f6662b86a13437347594e5cf6386e01a5a2431f58ada1a810210e",
+  "docs/datasets/gt21/index.html": "8dd3467a0eb845f8c071f4d1cf69b604c41358c6afcc36755a29392c78eefc09",
+  "docs/datasets/gt23/index.html": "a9343f39d456e2efec4c2a21a41cecd1b8220b65ec6ec23dafd91b61b46a6900",
+  "docs/datasets/gt24/index.html": "9148af6747de2f0610999b3085665629ff41f3a2ca60772ac83b5dedb659d8ec",
+  "docs/datasets/gt25d/index.html": "f37195842b98a2179d9576d81cc32586ad577821e19911efd2d396a63b9d6332",
+  "docs/datasets/ha13/index.html": "ec411a46c7c11d40bf2ff0067edea672ce497b5a06b305e7637c2b527d4b21a3",
+  "docs/datasets/ha23/index.html": "6550f66358eccdb9d79e7a9826199bd21117c89d7a7c91b75743fbf12ec5add0",
+  "docs/datasets/mb24/index.html": "edcd38f06ec4c5b1febff0ec46f12a0b83b97b31693c63c42e21a0af6ce9a31a",
+  "docs/datasets/mo15/index.html": "e2212c25d6eaa1dbf0f9d6d052f7c269d5a7f939038c9b17e31f4000be5cddd3",
+  "docs/datasets/sp50/index.html": "759c5612c4a8b61b7b5fb3e64b1338eed5763dbe0f617228f0c23d09c185f184",
+  "docs/datasets/ta21/index.html": "e15b671cdced8e6d9b4caf36a32f70977d56e074c40ea3734bb61965d92a999d",
+  "docs/datasets/ta22/index.html": "9e977c0df3f922c165a774b61fc968239ca89360ba4e56d0201a1ebc6639ae11",
+  "docs/datasets/ti19/index.html": "390183b348308390f9f5ed54dc94647f1f5188ed6707b4a46d8b66c31febd70c",
+  "docs/datasets/um21/index.html": "a9c3b77fa78ec5984fecfbc6a2865aece91122ee944a4d53fea2b64fac758537",
+  "docs/datasets/um24k/index.html": "4f0382ed74c2b542b57d4dd4d35fd88c8175f25985a79db8438ecaa703081ac4",
+  "docs/datasets/vz22/index.html": "e28799c9cb02b33499d07b55b616a6fd71e8bba0be8a26be51365b8112e783f1",
+  "docs/datasets/wa23/index.html": "6ac44ba73e0abd5fb8940b04ebc2049e40481bde43b1600dcf56f1f5e53ea129"
+ },
+ "resources": "Read-only; one local http.server and one headless Chrome for two screenshots; no data opened, no job launched.",
+ "round_2": {
+  "request": "Coordinator: carry the label into the page generator so regeneration keeps it; check with a scratchpad-only generation.",
+  "change": "manage_dataset_documentation.py: LEGACY_PELVIS_SIGN_SNAPSHOT_SHA256 (the 4 distinct SHA-256 values of the 20 snapshots at 569ee8f), LEGACY_PELVIS_SIGN_LABEL, SIGN_RULE_LINK and _legacy_snapshot_label(). generate_dataset_page appends the label to the Validation Ranges entry and generate_validation_page appends it to the snapshot download line, only when the linked snapshot bytes match a legacy hash; a snapshot copied from the current ranges gets no label, so the label cannot become false after a fresh snapshot.",
+  "checks": [
+   "Scratchpad generation (script kept outside the repo): patched the module output roots to a scratchpad copy of the 20 snapshots, regenerated um21 documentation and validation Markdown: label present once in each; a validation page for a snapshot of the current default_ranges.yaml has no label. SHA-256 of all 1,725 files under docs/datasets identical before and after.",
+   "Published dataset pages still match the DOC-04 output_sha256 values; snapshots byte-identical to 569ee8f.",
+   "docs/build.py --check -> Checked 40 HTML pages and 1681 referenced assets; docs tests -> 21 passed; build_backlog_page.py --check -> valid (93 tasks)."
+  ],
+  "note": "The repository has no tool that renders the published dataset HTML from these Markdown sources; the generator emits the label in Markdown with an inline <small class=\"legacy-sign-label\"> wrapper and a ../reference/index.md#signs-and-frames link, matching the existing ../reference/index.md links in generated pages.",
+  "output_sha256": {
+   "contributor_tools/manage_dataset_documentation.py": "9c65c03fcbfed5aff40ee17e668fdd8a09095dcbe39083d397a5572431c327f7"
+  }
+ }
+}

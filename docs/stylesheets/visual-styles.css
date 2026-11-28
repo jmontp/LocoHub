@@ -1,0 +1,56 @@
+/* Slate layout choices for the data browser and study pages. */
+.data-heading { display: flex; align-items: baseline; justify-content: space-between; gap: .75rem 1.25rem; margin-bottom: .25rem; }
+.data-heading h1 { margin-bottom: 0; }
+.visual-style-picker { position: relative; flex: none; z-index: 5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+.visual-style-picker > summary { display: list-item; padding: .35rem .6rem; border: 1px solid var(--control); border-radius: 4px; background: var(--surface); color: var(--muted); font-size: .8125rem; line-height: 1.5; cursor: pointer; white-space: nowrap; }
+.visual-style-picker > summary:hover { border-color: var(--accent); }
+.visual-style-picker > summary strong { color: var(--ink); font-weight: 600; }
+.visual-style-options { position: absolute; top: calc(100% + .4rem); right: 0; width: 17rem; max-width: calc(100vw - 2rem); margin: 0; padding: .35rem; border: 1px solid var(--line-strong); border-radius: 5px; background: var(--surface); box-shadow: 0 8px 24px #0002; }
+.visual-style-option { display: grid; grid-template-columns: 1rem 1.65rem 1fr; gap: .65rem; align-items: center; padding: .65rem .55rem; border-radius: 3px; cursor: pointer; }
+.visual-style-option:hover { background: var(--soft); }
+.visual-style-option:has(input:checked) { background: var(--selected); }
+.visual-style-option input { margin: 0; width: 1rem; height: 1rem; accent-color: var(--accent); }
+.visual-style-option strong { display: block; color: var(--ink); font-size: .8125rem; font-weight: 600; line-height: 1.4; }
+.visual-style-option small { display: block; color: var(--muted); font-size: .75rem; line-height: 1.5; }
+/* All choices inherit the same Slate colors and fonts from site.css. */
+.visual-style-swatch { display: block; width: 1.65rem; height: 1.65rem; border: 1px solid var(--control); background: repeating-linear-gradient(transparent 0 7px, var(--line) 7px 8px); }
+.visual-style-swatch[data-swatch="clean"] { border-width: 0 0 1px; }
+.visual-style-swatch[data-swatch="soft"] { border-radius: 8px; background: var(--soft); }
+.visual-style-swatch[data-swatch="compact"] { background: repeating-linear-gradient(transparent 0 4px, var(--line) 4px 5px); }
+.visual-style-swatch[data-swatch="outline"] { border: 2px solid var(--control); border-radius: 3px; }
+
+/* Shared controls: maintain comfortable targets even in the denser layouts. */
+[data-style] .data-page :is(input, select, .preview-button),
+[data-style] .dataset-detail :is(.button, .download-button) { min-height: 2.125rem; }
+
+[data-style="ruled"] :is(.data-page, .dataset-detail) :is(th, td) { border: 1px solid var(--line); }
+[data-style="ruled"] :is(.data-page, .dataset-detail) :is(input, select, .button, .download-button, .preview-button, .preview-table-wrap, details) { border-radius: 0; }
+[data-style="ruled"] #data-preview .preview-head { padding-bottom: .7rem; border-bottom: 1px solid var(--line-strong); }
+
+[data-style="soft"] :is(.data-page, .dataset-detail) :is(input, select, .button, .download-button, .preview-button, .preview-table-wrap) { border-radius: 9px; }
+[data-style="soft"] :is([data-dataset-catalog], .dataset-detail) td { padding-top: .9rem; padding-bottom: .9rem; }
+[data-style="soft"] #data-preview { padding: 1.25rem; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+[data-style="soft"] .dataset-detail :is(.dataset-downloads, .study-facts, .dataset-table-details) { border-radius: 12px; }
+[data-style="soft"] #data-preview summary { padding-top: .85rem; padding-bottom: .85rem; }
+
+[data-style="compact"] :is([data-dataset-catalog], .dataset-detail) :is(th, td) { padding-top: .4rem; padding-bottom: .4rem; }
+[data-style="compact"] .data-page .catalog-controls { gap: .5rem .75rem; }
+[data-style="compact"] #data-preview .preview-controls { margin-top: .65rem; gap: .35rem .65rem; }
+[data-style="compact"] #data-preview summary { padding: .4rem 0; }
+[data-style="compact"] .dataset-detail h2 { margin-top: 1.5rem; }
+[data-style="compact"] :is(.data-page, .dataset-detail) :is(input, select, .button, .download-button, .preview-button) { border-radius: 2px; }
+
+[data-style="outline"] #data-preview { padding: 1.15rem; border: 1px solid var(--control); border-radius: 4px; }
+[data-style="outline"] [data-dataset-catalog] .table-scroll,
+[data-style="outline"] .dataset-detail :is(.dataset-downloads, .dataset-table-details) { border: 1px solid var(--control); border-radius: 4px; }
+[data-style="outline"] :is([data-dataset-catalog], .dataset-detail) th { border-bottom: 2px solid var(--line-strong); }
+[data-style="outline"] :is(.data-page, .dataset-detail) :is(.preview-button, .button, .download-button) { border-color: var(--control); box-shadow: 0 1px 0 var(--line); }
+
+@media (max-width: 720px) {
+  .data-heading { align-items: flex-start; gap: .6rem; }
+  .visual-style-picker > summary { padding: .4rem .5rem; }
+  .visual-style-options { width: 17rem; }
+  .visual-style-option { min-height: 3.5rem; }
+  [data-style] .data-page :is(input, select, .preview-button) { min-height: 2.75rem; }
+  [data-style="soft"] #data-preview, [data-style="outline"] #data-preview { padding: .8rem; }
+}

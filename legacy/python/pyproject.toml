@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "locohub"
+version = "0.1.0"
+description = "Standardized locomotion data analysis for biomechanical locomotion datasets."
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "LocoHub Maintainers", email = "jmontp@umich.edu" }]
+requires-python = ">=3.9"
+dependencies = [
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "scipy>=1.10",
+    "pyarrow>=12",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+
+[project.urls]
+Homepage = "https://jmontp.github.io/LocoHub/"
+Repository = "https://github.com/jmontp/LocoHub"
+Issues = "https://github.com/jmontp/LocoHub/issues"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["locohub*"]
+
+[project.optional-dependencies]
+visualization = [
+    "matplotlib>=3.7",
+    "seaborn>=0.12",
+]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "black>=23.7",
+    "flake8>=6.0",
+]

@@ -1,0 +1,474 @@
+{
+  "task_id": "CORE-11-P-UM21",
+  "verifier": "independent second agent",
+  "verdict": "pilot_verified",
+  "verdict_note": "Round 5: the v4 re-pilot (audited_signs.json 261f344d..., UM21 entries byte-identical) passes and reproduces v3r1 exactly in every verdict, sign, multiplier, correction and array hash. Round-4 condition C1 is resolved (test updated, passing). The current pilot evidence is the v4 record c459e7a7... and receipt 3b6ff3f4...; v3r1 is history. backlog.json not edited by the verifier.",
+  "rounds": {
+    "round_1": {
+      "phase": "pre-launch review of adapter, runner and plan-only spec",
+      "checked_at_utc": "2026-10-31",
+      "verdict": "back_to_worker",
+      "verdict_reason": "The coordinator requires a power layout-2 recording in the sample, and the v1 spec has none. The adapter, runner and spec are otherwise sound; one robustness check on the power slot is also requested.",
+      "research_data_read": false,
+      "launched": false,
+      "reviewed_sha256": {
+        "contributor_tools/adapters/um21_sign_adapter.py": "e7f6e73e9eb80556a7cc3014eb93fc263c560b17d5a4c5ee0fc89bfc766c2ac1",
+        "contributor_tools/run_core11_um21_pilot.py": "69fac07aeb2ea6f46750ace610f26223125ce17d734dc740a1a2f31e58eec86f",
+        "docs/quality/audits/core11-p-um21-pilot-spec.json": "357721598a2e0bb3687bcbc7d289be7c0b83e5812ea5f4040d9faf68eda0fb3a"
+      },
+      "checks": [
+        {
+          "claim": "No segment angle or velocity can leak into the hook",
+          "result": "pass",
+          "evidence": [
+            "Hook inputs are built only from the fixed ANGLES and JOINTS tables: pelvis, hip, knee and ankle angle, moment and power.",
+            "apply_leg raises on any SEGMENT_CHANNELS name or *_velocity suffix before the hook runs.",
+            "Evidence keys are restricted by the hook's EVIDENCE_KEYS.",
+            "check_group re-checks the hook log for forbidden names.",
+            "On a 17,100-frame synthetic, the hook log channels are exactly the ten inputs."
+          ]
+        },
+        {
+          "claim": "Velocity spacing stride duration / 149 is right for phase data",
+          "result": "pass",
+          "evidence": [
+            "Units span frames a..b inclusive, which is (b - a) intervals at 100 Hz, resampled to 150 samples, giving 149 equal intervals of (b - a) / 100 / 149 s.",
+            "This equals the UM21 phase converter's effective_Hz = (150 - 1) / stride_duration_s.",
+            "Velocities are derived only from the published pelvis tilt and from derive_segment_angles outputs, hash-linked in the log."
+          ]
+        },
+        {
+          "claim": "Memory and the 768 MiB address-space limit are realistic for ~17k-frame recordings",
+          "result": "pass (synthetic)",
+          "evidence": [
+            "Synthetic Streaming-like HDF5: 17,100 frames per recording, gzip-chunked datasets as in MATLAB v7.3, plates at 10 samples per frame.",
+            "Run under RLIMIT_AS 768 MiB with the package import chain (pandas included), the adapter, the hook, check_group and _write_group, for two recordings.",
+            "VmPeak 531 MiB and VmHWM 209 MiB: under the 768 MiB limit and the runner's 300 MiB RSS cap.",
+            "Real HDF5 chunking was not reproduced; the CORE-04 probe's real peak RSS was 224 MiB."
+          ]
+        },
+        {
+          "claim": "Pilot record and receipt can satisfy the CORE-11 full-run gate",
+          "result": "pass with conditions (record writer not yet written)",
+          "evidence": [
+            "check_pilot_record requires a record committed under docs/quality/audits with dataset 'UM21', pilot_task 'CORE-11-P-UM21', outcome 'passed' and launcher_receipt {path, sha256}.",
+            "It requires bindings equal to the receipt's spec bindings and including the bound build. The spec binds all five bound-build files at the current hashes.",
+            "It requires the receipt committed, completed and clean, with every binding matching before and after, and spec.cwd equal to the repo root (it is).",
+            "The backlog task must be done, with dataset um21 (upper-cases to UM21), and must cite the record path, record sha256 and receipt sha256.",
+            "Any later change to audited_signs.json or another bound file invalidates the pilot for full runs, as designed."
+          ]
+        },
+        {
+          "claim": "Spec bindings are correct",
+          "result": "pass with one note",
+          "evidence": [
+            "All nine file bindings equal the files on disk.",
+            "Streaming.mat is bound at its recorded sha256 (UM21-C03: not rehashed); the launcher hashes it before and after, so a wrong record refuses rather than passes.",
+            "The backlog is snapshotted and hashed, not bound; it drives the exclusion decision and the AB04/i0 correction. UM21-P02 is now done, so the correction will be active.",
+            "Note: unbound executed code. The adapter imports contributor_tools.common, whose __init__ imports pandas, phase_detection, stride_segmentation, config_manager, derivatives and force_plate. None of these feed the computation, but none are bound."
+          ]
+        },
+        {
+          "claim": "Layout-2 power handling",
+          "result": "pass on synthetic; not in the sample or the tests",
+          "evidence": [
+            "Synthetic AB05/i0 with layout 2 (components 1 and 2 zero, component 3 = +(M x w)): the adapter picks slot 3 for all joints, ankle power is applied +1, check_group passes, and cross_group_review flags ankle_power as inconsistent between layouts (expected).",
+            "tests/test_um21_sign_adapter.py stores layout 1 only."
+          ]
+        },
+        {
+          "claim": "Tests and backlog check",
+          "result": "pass",
+          "evidence": "test_um21_sign_adapter + test_sign_application + test_backlog_workflow: 234 passed, 1 warning; the detector, probe-builder and policy tests: 169 passed. build_backlog_page.py --check: valid (103 tasks)."
+        }
+      ],
+      "required_before_launch": [
+        {
+          "id": "R1",
+          "what": "Add a power layout-2 recording to the seeded sample (coordinator requirement).",
+          "how": [
+            "Take the layout-2 list from the bound UM21-C03 record (kinetic_layout.power_layout_2_recordings) minus the exclusions, rather than hard-coding it. Pick one by the recorded seed, or require a named one.",
+            "Re-plan to a new spec path with a new job_id, output_root and receipt_path (v2), since plan never overwrites.",
+            "Mark the v1 spec superseded. It is untracked and never launched; delete it or record it as superseded so v1 cannot be launched.",
+            "Update the spec test to require one layout-2 recording."
+          ]
+        },
+        {
+          "id": "R2",
+          "what": "Cross-check the power slot against the census.",
+          "how": [
+            "The adapter takes the first filled slot. The runner or adapter should fail a group whose chosen slot disagrees with the C03 kinetic layout for that recording (layout 2: slot 3 for every joint; otherwise slot 1).",
+            "Add a synthetic layout-2 fixture test: slot 3, published +1, and the cross-group power item present and explained by the slots."
+          ]
+        }
+      ],
+      "recommended": [
+        "Make each cross_group_review item an explained or unexplained finding in pilot_summary (explained only when the groups' power slots differ). Per-group truth checks already cover signs, but an unexplained cross-group item should not sit next to an automated pass.",
+        "Bind the import chain that executes in the job (contributor_tools/common/__init__.py and contributor_tools/adapters/__init__.py), or import sign_application by path as core11_gt21_publication_effect.py does.",
+        "The pilot record writer must emit dataset 'UM21', pilot_task, outcome, launcher_receipt {path, sha256} and bindings identical to the receipt's spec bindings. Write it as a committed script and test it against check_pilot_record on a synthetic repo before the run."
+      ],
+      "not_checked": [
+        "No research data read; memory and slot logic measured on synthetic HDF5 only.",
+        "Guarded launcher dry-run not performed (the numerical slot is held by another agent).",
+        "Streaming.mat bytes not hashed."
+      ],
+      "scratch": "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/{mem_make.py, mem_run.py, layout2.py}",
+      "resources": "nice 19, ionice idle, single-threaded; synthetic memory probe under RLIMIT_AS 768 MiB, VmHWM 209 MiB",
+      "next_action": "Worker: R1 and R2, re-plan to a v2 spec path, rerun tests; then a second pre-launch check of the v2 spec bindings and sample."
+    },
+    "round_2": {
+      "phase": "second pre-launch check (v2 spec)",
+      "checked_at_utc": "2026-10-31",
+      "verdict": "back_to_worker",
+      "verdict_reason": "The new 'held in some groups, published in others' explanation hides exactly the anomaly the pilot exists to find: a recording where the detector contradicts the audited sign is held, and the pilot then passes. The record writer also accepts a receipt whose spec dropped the adapter or runner bindings. Everything else is ready.",
+      "research_data_read": false,
+      "launched": false,
+      "reviewed_sha256": {
+        "contributor_tools/adapters/um21_sign_adapter.py": "81c14488ee0e88b6121073604e039f712c28c94cd8dc33c10a0f25e0525f5aec",
+        "contributor_tools/run_core11_um21_pilot.py": "12d5aeea0974269e0064c1b9fd05dce2163ead7974bc08aed88352fd026b128a",
+        "docs/quality/audits/core11-p-um21-pilot-spec-v2.json": "5b0c5300e999f888c950eedcadb9ddec7fdcda3df482781a578d6a9057d18c24"
+      },
+      "ruling_on_held_vs_published_category": {
+        "ruling": "Not sound as written; sound only in a narrowed form.",
+        "why": [
+          "The publication rule holds a channel that has a verified audit when the detector suggests or applies the opposite sign or reports a conflict. That per-recording disagreement is how the AB04/i0 reversed pelvis was found.",
+          "The current test (logged hold reason + every published group matches the truth) never looks at the held group's own detector result. The hook always logs a hold reason, so the condition is nearly always true.",
+          "Crafted logs show knee_angle published +1 in one group and held in another where the detector suggests -1, applies -1, or reports a conflict: all three are marked explained, and the pilot would pass."
+        ],
+        "required_form": [
+          "A held group explains the item only when its hold is not a sign disagreement, judged from structured log fields, not reason text.",
+          "Accept: the detector verdict is not 'conflict', and the detector sign is None or equals expected_sign for that group (power by its slot).",
+          "Accept as well: holds from a per-recording exception or a not-released channel.",
+          "Any held group whose detector opposes the truth or reports a conflict leaves the item unexplained, so the pilot fails and the item goes to review.",
+          "Add synthetic tests for the three contradicting cases (suggest opposite, apply opposite, conflict) and for the benign abstain hold."
+        ]
+      },
+      "checks": [
+        {
+          "claim": "Layout-2 pick, checked independently",
+          "result": "pass",
+          "evidence": [
+            "From the census and C03 JSON with my own code: the clock failures equal the five excluded; scope is 44 recordings.",
+            "Layout-2 candidates (minus AB04/i0): AB03/i10, AB04/d10, AB04/d5, AB04/i5, AB05/d10, AB05/d5, AB05/i0, AB05/i10.",
+            "random.Random(20261102): choice gives AB04/d10, then sample(5) gives AB06/i5, AB10/i10, AB10/i5, AB03/i10, AB03/d10.",
+            "This equals the v2 spec exactly. The sample holds two layout-2 recordings (AB04/d10, AB03/i10)."
+          ]
+        },
+        {
+          "claim": "v2 spec bindings and validate_spec",
+          "result": "pass",
+          "evidence": [
+            "All nine file bindings equal the files on disk. Streaming.mat is bound at the C03 recorded sha256.",
+            "guarded_launcher.validate_spec accepts the spec.",
+            "Output root, receipt path, job id and record path are all v2.",
+            "The v1 spec is absent and plan refuses while it exists."
+          ]
+        },
+        {
+          "claim": "R2 power slot against the census",
+          "result": "pass",
+          "evidence": "The expected slot comes from the bound C03 kinetic_layout (layout 2: slot 3, else 1). read_recording raises PowerSlotError when the first filled slot differs or none is filled, and the run aborts with a non-zero exit (fail-closed). Synthetic tests cover slot 3 publishing +1 and mismatches."
+        },
+        {
+          "claim": "No package __init__ in the job",
+          "result": "pass",
+          "evidence": "The runner loads the adapter by path, and the adapter loads the hook by path (the hook imports only the standard library and numpy). The run fails if contributor_tools, .common or .adapters appear in sys.modules."
+        },
+        {
+          "claim": "Record writer cannot mark a dirty receipt as passed",
+          "result": "partial",
+          "evidence": [
+            "Each of these makes the outcome 'failed': clean_success false or the string 'true'; status 'failed'; one binding not matching after the run; a missing or absent bindings_after; another job_id; the summary's hash not among the receipt outputs; the summary's automated outcome 'failed'; the summary's bound build missing or different; another cwd.",
+            "The launcher sets status 'completed' only on exit code 0, which the runner returns only on an automated pass.",
+            "Gap: a receipt whose spec dropped the adapter (and its before/after entries) still gives 'passed'. build_record checks only that the bound build is bound, not that the receipt ran the reviewed v2 spec."
+          ]
+        },
+        {
+          "claim": "Tests and backlog check",
+          "result": "pass",
+          "evidence": "Seven test files: 415 passed, 1 warning. build_backlog_page.py --check: valid (103 tasks)."
+        }
+      ],
+      "required_before_launch": [
+        {
+          "id": "R3",
+          "what": "Narrow the held-vs-published explanation as in the ruling, with tests (both change runner.explain_cross_group, so the runner hash changes)."
+        },
+        {
+          "id": "R4",
+          "what": "In build_record, require that the receipt ran the committed v2 spec.",
+          "how": "Receipt spec_sha256 equal to the sha256 of docs/quality/audits/core11-p-um21-pilot-spec-v2.json (or receipt spec bindings equal to the spec file's bindings), with a test for the dropped-adapter receipt."
+        },
+        {
+          "id": "R5",
+          "what": "Re-plan, because the runner hash changes.",
+          "how": "Re-plan to a new spec path (v3 paths; plan never overwrites). Record v2 as superseded and delete it, as was done for v1."
+        }
+      ],
+      "not_checked": [
+        "No research data read; guarded-launcher dry-run not performed; Streaming.mat bytes not hashed."
+      ],
+      "scratch": "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/v2check.py",
+      "next_action": "Worker: R3 to R5; then a short third pre-launch check (explain rule, record writer, v3 bindings)."
+    },
+    "round_3": {
+      "phase": "third pre-launch check (v3 spec)",
+      "checked_at_utc": "2026-10-31",
+      "verdict": "ok_to_launch",
+      "research_data_read": false,
+      "launched": false,
+      "reviewed_sha256": {
+        "contributor_tools/adapters/um21_sign_adapter.py": "81c14488ee0e88b6121073604e039f712c28c94cd8dc33c10a0f25e0525f5aec",
+        "contributor_tools/run_core11_um21_pilot.py": "33de204ad14031819b559df83035d12170aa5e12b633687ddbb83f67b0cc2d24",
+        "docs/quality/audits/core11-p-um21-pilot-spec-v3.json": "0781e671ab70264edf11111c2ae1a26f9e052371c6e09d43cf6362163abda8da"
+      },
+      "checks": [
+        {
+          "claim": "R3: the explanation rule uses structured fields only",
+          "result": "pass",
+          "evidence": [
+            "My round-2 hand-built logs now give unexplained for a held knee_angle whose detector suggests -1, applies -1, or reports a conflict.",
+            "Benign holds stay explained: abstain, and suggest +1 matching the truth.",
+            "Layout-2 power: a held group suggesting -1 against slot-3 truth +1 is unexplained; one suggesting +1 is explained.",
+            "A wrong published sign is unexplained even when the hold is benign.",
+            "A hold under a per-recording exception for that channel is explained even when the detector opposes, while an exception for another channel is not. Accepted: exceptions are audited-table entries with recorded tasks and decisions, and an inactive AB04/i0 correction also fails check_group's correction check."
+          ]
+        },
+        {
+          "claim": "R4: the record writer requires the reviewed v3 spec",
+          "result": "pass",
+          "evidence": [
+            "Synthetic receipts: the good one gives passed.",
+            "Dropped-adapter bindings fail (spec bindings differ); another spec_sha256 fails; an unclean receipt fails.",
+            "The launcher's spec_sha256 is sha256_file(spec_path), the same quantity build_record compares, so a genuine run can pass."
+          ]
+        },
+        {
+          "claim": "R5: v3 spec, bindings, validate_spec, superseded specs",
+          "result": "pass",
+          "evidence": [
+            "Spec sha256 is 0781e671...a8da.",
+            "All nine file bindings equal the disk, and Streaming.mat is bound at the C03 recorded sha256. The detector argument equals the detector binding.",
+            "validate_spec ok.",
+            "Job id, output root, receipt and record paths are v3, and the runner constants match.",
+            "The v1 and v2 specs are absent. The sample is unchanged: AB04/i0, AB04/d10, AB06/i5, AB10/i10, AB10/i5, AB03/i10, AB03/d10."
+          ]
+        },
+        {
+          "claim": "Tests and backlog check",
+          "result": "pass",
+          "evidence": "Seven test files: 425 passed, 1 warning. build_backlog_page.py --check: valid (103 tasks)."
+        }
+      ],
+      "launch_conditions": [
+        "Launch only when the numerical slot is free, after checking process ownership and headroom; dry-run first, then exactly one launch of the v3 spec through the guarded launcher.",
+        "Any edit to a bound file (bound build, adapter, runner, census, C03 record) invalidates v3; re-plan rather than launch.",
+        "UM21-P02 must still be done when the run starts, or the AB04/i0 correction check fails the pilot (fail-closed)."
+      ],
+      "not_checked": [
+        "No research data read; guarded-launcher dry-run not performed; Streaming.mat bytes not hashed; memory on real recordings estimated from the synthetic 17,100-frame probe (VmPeak 531 MiB) and the CORE-04 probe (RSS 224 MiB)."
+      ],
+      "scratch": "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/v3check.py"
+    },
+    "round_4": {
+      "phase": "post-launch verification of the v3r1 pilot run and record",
+      "checked_at_utc": "2026-10-31",
+      "verdict": "pass_with_conditions",
+      "verdict_reason": "All seven claims hold against the receipt, record, summary, the 14 per-leg logs and arrays, and the files on disk. One stale pre-launch test now fails because the run happened (C1); it must be updated before commit. Evidence-gate anomalies in four groups are listed as not checked; they do not touch any published sign.",
+      "research_data_read": "pilot outputs only (hook_outputs.npz, derived.npz, logs), one group at a time; Streaming.mat not read",
+      "launched": false,
+      "method": [
+        "Phase A, while HIST-05 ran: Read tool plus sha256sum, ls and stat only.",
+        "Phase B, after the coordinator reported HIST-05 finished (python allowed, no launch): ps showed no launcher, pytest or repository worker and about 13 GB available. One read-only scratch script, nice 19, ionice idle, single-threaded, peak RSS 39.8 MiB; a NaN probe, 31.7 MiB; a per-group evidence survey; pytest on two fixture files; backlog --check."
+      ],
+      "reviewed_sha256": {
+        "docs/quality/audits/core11-p-um21-pilot-spec-v3.json": "0781e671ab70264edf11111c2ae1a26f9e052371c6e09d43cf6362163abda8da",
+        "docs/quality/audits/core11-p-um21-pilot-spec-v3r1.json": "b8197e6fbb670ed5c295ff3fe5999f004cf8374e7ccc4f36400e7a9d3549b61f",
+        "docs/quality/audits/core11-p-um21-launcher-receipt-v3.json": "e2e537f47362a3c02d591d010d560263baf4660637d6d5f1dc64118c9c669a21",
+        "docs/quality/audits/core11-p-um21-launcher-receipt-v3r1.json": "6f4cfe0a9ded88777afb5f01efdca61dac27a4c5ad663143359160b5b564e752",
+        "docs/quality/audits/core11-p-um21-launcher-receipt-v3r1.log": "7ed384acf96a4eeb9ff92e5921f822c813c2ed5076889259c3bdec5313bef664",
+        "docs/quality/audits/core11-p-um21-pilot-record-v3.json": "7385e6984821bd5c837a1549bec11330d9c42818848d0e6a7878a9b63cce39ee",
+        "converted_datasets/reconversion_v2/core11_p_um21_pilot_v3/pilot_summary.json": "14b1896f4f1eae95362fba974b7288916b9ef422b42c35cd64f26f6d0546bac1",
+        "contributor_tools/run_core11_um21_pilot.py": "33de204ad14031819b559df83035d12170aa5e12b633687ddbb83f67b0cc2d24",
+        "contributor_tools/adapters/um21_sign_adapter.py": "81c14488ee0e88b6121073604e039f712c28c94cd8dc33c10a0f25e0525f5aec",
+        "contributor_tools/guarded_launcher.py": "8df6f11529b0c5280a95259e73caeeb41c1a9db5b757f189bafde109c6321b7b"
+      },
+      "checks": [
+        {
+          "claim": "1. v3r1 differs from v3 only in receipt_path",
+          "result": "pass",
+          "evidence": [
+            "Read side by side: only line 18 (receipt_path) differs.",
+            "Parsed-JSON diff over all keys: ['receipt_path'].",
+            "The receipt's spec equals v3r1 in job_id, command, bindings, limits and expected outputs; the paths are resolved to absolute. receipt.spec_sha256 = sha256(v3r1 file)."
+          ]
+        },
+        {
+          "claim": "2. Single launch: completed, exit 0, clean_success, all checks true, peak RSS about 158 MiB",
+          "result": "pass",
+          "evidence": [
+            "receipt-v3r1: status completed, launched true, job_outcome completed, exit_code 0, clean_success true. All eight entries of checks are true. launcher_errors, finalisation_errors, stop_actions and orphans_at_leader_exit are empty, and cleanup_proof.proven is true.",
+            "peak_rss_kib_largest_process 161840 KiB = 158.0 MiB. The runner's own figure is 156.5 MiB (pilot_summary.resources; the log has per-recording peaks of 134 to 157 MiB). The cap is 300 MiB, and observed RLIMIT_AS is 805306368 (768 MiB) on both processes.",
+            "Single launch: receipt-v3 has status refused_precondition, launched false, refusal foreign_worker_linux. The audits folder holds no other CORE-11-P-UM21 receipt, .conflict-* or .final-* file.",
+            "Note: runtime_guard.polls is 0 and peak_group_rss_kib_sampled is 0. The job took 7.2 s, under the 15 s poll interval, so the runtime memory poll never sampled; the peak RSS comes from the per-process figure."
+          ]
+        },
+        {
+          "claim": "3. Receipt and record hashes match the files; the runner hash is the reviewed one",
+          "result": "pass",
+          "evidence": [
+            "sha256sum: the ten bound files equal the receipt's bindings (before and after). The envelope equals its reviewed sha256, and guarded_launcher.py equals receipt.launcher_sha256.",
+            "All 72 receipt outputs match the files on disk in sha256 and size. No file on disk is unlisted and none is missing. receipt.log_sha256 matches the .log file.",
+            "record.launcher_receipt.sha256 = 6f4cfe0a... = sha256(receipt-v3r1); record.spec.sha256 = b8197e6f... = sha256(spec-v3r1); record.pilot_summary_sha256 = 14b1896f... = sha256(pilot_summary.json); record bindings equal the receipt's spec bindings.",
+            "The runner's 33de204a... equals the handoff hashes_sha256, round 3's reviewed_sha256, the spec binding and pilot_summary.code_sha256.",
+            "Rebuilding the record in memory (build_record with absolute paths, nothing written) gives a dict identical to the stored record."
+          ]
+        },
+        {
+          "claim": "4. 14 legs, no wrong published signs, no guard refusals; powers publish only on a detector apply; hip and knee power held everywhere; ankle power published 8, held 6",
+          "result": "pass",
+          "evidence": [
+            "pilot_summary: automated_outcome passed, failures {}, unexplained_cross_group_items 0, package_inits_imported [], 14 groups. Each group has empty findings and guard_refused 0. Each group's summary counts equal its sign_application.json counts.",
+            "All 14 logs tallied with my own code: every published non-power channel has its audited sign. Every published power is verdict apply, detector_applied, guard set, audit null and sign_basis detector.",
+            "hip_power held 14 (suggest 8, abstain 6); knee_power held 14 (abstain 14); ankle_power published 8 (apply, -1, slot 1: AB04/i0, AB06/i5, AB10/i10 and AB10/i5, both legs) and held 6 (suggest: AB04/d10 and AB03/i10 on slot 3, AB03/d10 on slot 1).",
+            "The per-channel tallies equal the handoff's per_channel_14_legs exactly. The one cross-group item (ankle_power) is explained by structured fields: each held leg's detector sign equals its slot's truth."
+          ]
+        },
+        {
+          "claim": "5. AB04/i0 pelvis correction (x -1) applied in both legs under D-UM21-P01-1 = C; no other recording",
+          "result": "pass",
+          "evidence": [
+            "Only AB04/i0:right and AB04/i0:left have corrections_applied (my tally over all 14 logs): id UM21-P01-AB04-i0-pelvis, factor -1, decision D-UM21-P01-1 = C, audit tasks UM21-P01 and UM21-P02, net_multiplier +1.",
+            "AB04_i0_left log: pelvis_tilt source_correction.applied true, multiplier +1, sign_vs_corrected_source -1, and input_sha256 = output_sha256 (stored x -1 x -1). AB04/d10 has no correction.",
+            "The run's backlog snapshot (inputs/backlog_snapshot.json) has D-UM21-P01-1 answer C (answered 2026-10-31T16:59:46Z) and UM21-P01, UM21-P02 and UM21-C03 done. The current backlog still records C, and A for D-UM21-T02-1.",
+            "Thigh, shank and foot, and the four velocities, were derived in both AB04/i0 legs."
+          ]
+        },
+        {
+          "claim": "6. Published signs follow rule B (named direction +, segments CCW, pelvis anterior tilt -)",
+          "result": "pass",
+          "evidence": [
+            "Definition: audited_signs.json gives UM21 pelvis -1 vs the clinical source (anterior +) and hip, knee and ankle angles and moments +1 vs clinical flexion, dorsiflexion and flexor-positive internal moments. SEGMENT_CHAIN gives thigh = pelvis + hip, shank = thigh - knee, foot = shank + ankle, which is CCW with forward to the right.",
+            "Spot checks: AB04/i0 left (required correction case) and AB10/i10 right (picked by the first byte of the summary sha256, 0x14 = 20, mod 6 over the remaining recordings; a disclosed rule, not a hand pick). Logs: joint angles and moments +1, pelvis -1 (AB04/i0 net +1 via the correction), ankle power -1 on slot 1 by detector apply.",
+            "Data-level landmarks on the mean stride from the published arrays, checked in all 14 groups and all passing. Knee swing peak 59 to 70 deg (flexion +). Ankle at push-off below its stance peak by 7 to 37 deg (dorsiflexion +). Hip at heel strike above mid-stride by 26 to 63 deg. Pelvis mean -14 to -1.6 deg (anterior tilt -). Ankle moment minimum at 30-60% of -1.85 to -1.02 N*m/kg (plantarflexor -). Hip moment at 45-55% above 3-12%. Thigh, shank and foot larger at heel strike than at mid-stride or toe-off (CCW, distal end forward, toe up). Ankle power peak at 45-65% of 2.3 to 3.4 W/kg (generation +).",
+            "Segments recomputed from the published arrays equal derived.npz exactly in all 14 groups (NaN-aware: AB04/d10 right has one unit with NaN joint angles, which propagates identically). Undo of every hook output reproduces the logged input hash, and the npz outputs equal the logged output hashes."
+          ]
+        },
+        {
+          "claim": "7. Record-step failure on a relative --spec wrote nothing; record created exclusively after the run; runner not edited after the run",
+          "result": "pass",
+          "evidence": [
+            "Code (runner line 352): spec_path.relative_to(repo_root) on an unresolved relative path raises inside build_record, before write_record calls sa.write_json_exclusive. Reproduced in memory: ValueError '... is not in the subpath of ...'; nothing written.",
+            "write_json_exclusive opens with mode 'x' (sign_application.py line 912). Only one record file exists.",
+            "Times (UTC): launch 23:48:37, finish 23:48:44, summary 23:48:45, receipt final write 23:48:53, record 23:49:15, handoff 23:49:57.",
+            "Runner mtime 22:55:33 UTC, 53 min before the launch. Its sha256 equals the binding before and after the run and the reviewed round-3 hash."
+          ]
+        }
+      ],
+      "conditions": [
+        {
+          "id": "C1",
+          "what": "Stale test: tests/test_um21_sign_adapter.py::test_pilot_spec_is_seeded_includes_ab04_i0_and_a_layout_2_recording_and_validates fails now (1 failed, 184 passed). It asserts that the v3 output root does not exist (line 485); after that it asserts the v3 receipt path.",
+          "how": "Before commit, turn the pre-launch existence assertions into post-launch facts, or skip them once the output root exists. Changing a test file does not change any bound hash."
+        }
+      ],
+      "notes_for_coordinator": [
+        "The runner's default --spec and --receipt are still the v3 paths. build_record against the v3 spec fails with 'receipt spec_sha256 is not the reviewed spec file's sha256', as expected under option B. The record was written with explicit v3r1 paths; keep that in mind with the relative-path fix for future pilots.",
+        "Stale handoff text: pilot_spec.validated still says 'not launched', and changed_files omits the v3r1 spec, both receipts, the .log and the record (listed under remaining). backlog.json still shows CORE-11-P-UM21 as ready.",
+        "On done, the backlog record should cite the record path, 7385e698... and the receipt 6f4cfe0a... (full-run gate)."
+      ],
+      "not_checked": [
+        "Detector evidence gates not passing in some groups (logged, no published sign affected; every landmark passes): leg_assignment_check 'unknown' in AB03/i10 L/R (knee peak in swing 0.348/0.694) and AB10/i10 L/R (0.55/0.764); cop_within_foot 'fail' in AB03/i10 L/R; cop_progression 'unknown' in AB03/d10 R and AB04/d10 L/R. All on incline or decline plates; cause not investigated.",
+        "AB04/d10 right: one stride unit has NaN in all four joint angles (33 samples); pilot_summary does not report NaN units.",
+        "check_pilot_record (the full-run gate) not run: it needs the record and receipt committed and the task done."
+      ],
+      "commands": [
+        "sha256sum / stat / ls on the files listed in reviewed_sha256 and the output tree",
+        "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 <scratch>/verify_core11_p_um21.py (read-only; peak RSS 39.8 MiB)",
+        "same prefix: python3 -m pytest -q tests/test_um21_sign_adapter.py tests/test_sign_application.py -> 1 failed (C1), 184 passed, 1 warning",
+        "same prefix: python3 contributor_tools/build_backlog_page.py --check -> Backlog valid; HTML current (103 tasks)"
+      ],
+      "scratch": "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/{verify_core11_p_um21.py, verify_out.json, core11_p_um21_pilot_verify_notes.md}",
+      "next_action": "Worker or coordinator: fix C1 and the stale handoff fields, commit the pilot artifacts, then move CORE-11-P-UM21 to done citing the record and receipt hashes. Optionally queue a look at the incline/decline evidence-gate anomalies before the full UM21 run."
+    },
+    "round_5": {
+      "phase": "verification of the v4 re-pilot (HIST-06 changed audited_signs.json)",
+      "checked_at_utc": "2026-11-02",
+      "verdict": "pass",
+      "research_data_read": "pilot outputs only (v3 and v4 logs and summaries; array files compared by sha256); Streaming.mat not read",
+      "launched": false,
+      "method": "ps: no launcher, pytest or repository worker; about 12.7 GB available. Read-only scratch script (nice 19, ionice idle, single-threaded, peak RSS 18.5 MiB); guarded_launcher verify-cleanup, which only prints (checked in code, lines 1040-1074); git show/diff; pytest on two fixture files; backlog --check.",
+      "reviewed_sha256": {
+        "docs/quality/audits/core11-p-um21-pilot-spec-v4.json": "6f5cc5a7e53f3a2c97a4aaf7641ee3926bc15356955576c89aa4783f68956df6",
+        "docs/quality/audits/core11-p-um21-launcher-receipt-v4.json": "3b6ff3f4759a9e5e90d77ded35079ab4851f2310e6a579740fcccd6163724505",
+        "docs/quality/audits/core11-p-um21-launcher-receipt-v4.log": "271b302767d9331a16e951ac9e1cfe7ef99bc264903579764746922e36deaa46",
+        "docs/quality/audits/core11-p-um21-pilot-record-v4.json": "c459e7a7238105547d0efa10d6a6173af0f0bb5aafc6981023e9cad759788be3",
+        "converted_datasets/reconversion_v2/core11_p_um21_pilot_v4/pilot_summary.json": "81e5a7335fe75b3cde6dbb06ae08d181faa12a8a32ec80cd06fe9c8c0059d27c",
+        "contributor_tools/common/audited_signs.json": "261f344d578f30c6c8049acee66db3e1b3598ca9c1403c43815d6ee688b51ee6",
+        "contributor_tools/run_core11_um21_pilot.py": "33de204ad14031819b559df83035d12170aa5e12b633687ddbb83f67b0cc2d24",
+        "contributor_tools/adapters/um21_sign_adapter.py": "81c14488ee0e88b6121073604e039f712c28c94cd8dc33c10a0f25e0525f5aec"
+      },
+      "checks": [
+        {
+          "claim": "1. v4 differs from v3r1 only in the audited_signs binding, the output root and the receipt path",
+          "result": "pass",
+          "evidence": [
+            "diff of the two spec files: four lines. They are the command's --output-root argument and output_root (_v3 -> _v4), receipt_path (-v3r1 -> -v4), and the audited_signs.json binding (3403390d... -> 261f344d...).",
+            "Seed, recordings, detector sha256, the other nine bindings, limits, expected outputs and job id are unchanged."
+          ]
+        },
+        {
+          "claim": "2. Clean receipt, one launch, verify-cleanup proven, hashes match",
+          "result": "pass",
+          "evidence": [
+            "receipt-v4: status completed, launched true, exit_code 0, clean_success true, all eight checks true. No stop actions, orphans, launcher or finalisation errors, or new Linux/Windows workers. Peak RSS 163372 KiB = 159.5 MiB; RLIMIT_AS 805306368.",
+            "One launch: one launch-ledger entry; no v4 .conflict-* or .final-* receipt; verify-cleanup shows fallback_receipts [].",
+            "My own verify-cleanup run at 2026-11-02T18:27:03Z: proven true (same_boot_proc_scan, no group members, leader gone).",
+            "Hashes: spec_sha256 = sha256(spec-v4); log_sha256 = sha256(.log); receipt bindings = spec-v4 bindings; the nine file bindings equal the files on disk. All 72 outputs match disk in sha256 and size, with nothing unlisted or missing. The record's receipt, spec and summary hashes match the files, and its bindings equal the receipt's."
+          ]
+        },
+        {
+          "claim": "3. v4 and v3r1 summaries and leg logs identical in verdicts, published signs, multipliers, AB04/i0 corrections and output array hashes",
+          "result": "pass",
+          "evidence": [
+            "Own script, 2,464 comparisons over 14 legs. Per channel: verdict, detector sign, confidence, families, detector_applied, guard, multiplier, sign_basis, publication, hold_reason, sign_vs_corrected_source, votes, audit, offset, source_correction, input and output sha256. Per leg: corrections_applied, recording_exceptions, exceptions_applied, counts, unit_ids, evidence_sha256. 0 differences.",
+            "A full recursive diff of every leg's sign_application.json differs only at bound_build.audited_signs.json. sign_review.json, derivations.json, hook_outputs.npz and derived.npz are byte-identical in all 14 legs (56 files).",
+            "The pilot_summary diff covers only backlog_snapshot_sha256, bound_build.audited_signs.json, the 14 sign_application.json hashes (bound-build field), and resources.peak_rss_mib and wall_seconds. The backlog snapshot differs because the backlog changed between runs; the identical audit, source_correction and corrections_applied fields show the same decisions and tasks were in force."
+          ]
+        },
+        {
+          "claim": "4. Audited table vs HEAD~1: UM21 entries byte-identical",
+          "result": "pass",
+          "evidence": [
+            "HEAD~1 (5d144a9) = 3403390d... (the v3r1 binding); HEAD (5de8448, HIST-06) = disk = 261f344d... (the v4 binding).",
+            "git numstat: 231 insertions, 0 deletions. Parsed-JSON diff: only datasets.FA16, datasets.TA21 and datasets.TA22 added; schema_version, purpose, target_rule, seeded, omitted, and UM21, GT21, GT23 and GT24 unchanged.",
+            "The serialized UM21 block (6,643 characters, sha256 3306e7ac...) is byte-identical in both commits."
+          ]
+        },
+        {
+          "claim": "5. The test change does not weaken the seeding, AB04/i0 or layout-2 assertions",
+          "result": "pass",
+          "evidence": [
+            "git diff HEAD touches only the post-launch block (and adds a pathlib import). The function's lines 464-486 match the round-4 copy line for line: the seeded layout-2 choice and sample, AB04/i0 first, rec[1] in the C03 layout-2 list, pool 42, no excluded recording, job id, detector, bound-build/adapter/runner/source bindings, and the planned v3 output root and receipt.",
+            "New block: v4 (current) must equal the planned spec after normalising output root, command argument and receipt path, so it binds the current build. v3r1 (history) must equal it except for bindings, with the same binding keys, and its bindings are pinned by its receipt's spec bindings and spec_sha256. Each existing output root must come from a clean receipt of exactly that spec. The v4 spec must exist.",
+            "The only relaxation is v3r1's bindings no longer matching the current build. That is necessary after HIST-06 and does not touch seeding, AB04/i0 or layout 2.",
+            "pytest tests/test_um21_sign_adapter.py tests/test_sign_application.py: 206 passed, 1 warning. Round-4 C1 is resolved. build_backlog_page.py --check: valid (107 tasks)."
+          ]
+        }
+      ],
+      "notes_for_coordinator": [
+        "The v4 run reuses job id CORE-11-P-UM21-pilot-v3 (needed by the runner's JOB_ID check; documented in the handoff). v3r1 and v4 are told apart by spec sha256, receipt path and output root, not by job id.",
+        "Round-4 not-checked items still apply and are unchanged in v4: evidence-gate 'unknown'/'fail' results on the AB03/i10, AB10/i10, AB03/d10 and AB04/d10 plates, and one AB04/d10-right unit with NaN joint angles.",
+        "check_pilot_record (the full-run gate) not run: the v4 record and receipt are not yet committed."
+      ],
+      "commands": [
+        "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m contributor_tools.guarded_launcher verify-cleanup docs/quality/audits/core11-p-um21-launcher-receipt-v4.json -> proven, no fallback receipts",
+        "same prefix: python3 <scratch>/compare_v3r1_v4.py (read-only; peak RSS 18.5 MiB)",
+        "same prefix: python3 -m pytest -q tests/test_um21_sign_adapter.py tests/test_sign_application.py -> 206 passed, 1 warning",
+        "same prefix: python3 contributor_tools/build_backlog_page.py --check -> Backlog valid; HTML current (107 tasks)"
+      ],
+      "scratch": "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/{compare_v3r1_v4.py, compare_out.json}",
+      "next_action": "Coordinator: commit the v4 spec, receipt (and .log if tracked), record, handoff, verify file and test; then CORE-11-P-UM21 can be done, citing the v4 record c459e7a7... and receipt 3b6ff3f4..."
+    }
+  }
+}

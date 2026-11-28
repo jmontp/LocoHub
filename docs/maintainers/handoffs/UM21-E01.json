@@ -1,0 +1,48 @@
+{
+ "task_id": "UM21-E01",
+ "status": "review",
+ "scientific_approval": false,
+ "last_checked_at_utc": "2026-11-02T00:00:00Z",
+ "summary": "All four anomalies explained from the v4 pilot logs plus single-recording read-only probes. None blocks the full run; no adapter or bound-build change. One summary improvement recommended.",
+ "probes": "AGENTS.md exception: one recording per process, nice 19 / ionice idle, nothing written under converted_datasets or source folders. Script (scratchpad, not committed) used the bound adapter read_recording. AB03/i10, AB10/i10, AB04/i0, AB03/d10, AB04/d10: peak RSS 69-74 MiB (/usr/bin/time max 56-74 MiB), 2 s wall each.",
+ "findings": [
+  {
+   "anomaly": "leg_assignment_check unknown, AB03/i10 (0.348 L, 0.694 R) and AB10/i10 (0.55 L, 0.764 R)",
+   "cause": "Gate artifact on 10 deg incline. The gate takes argmax|knee - median| as the swing flexion peak; on incline the median knee angle is high, so the stance extension excursion competes with the swing peak and the argmax lands in stance in 35-76% of units (detector docstring names this case). Independent checks say the plate-leg assignment is right: ensemble knee flexion peak at samples 112-115 of 150, outside plate stance (about 147 to 96 wrapped); raw argmax of knee flexion lies in swing in 97-99% of units for all four legs; heel/toe height is 4.5-5.1 cm lower in plate stance than in swing.",
+   "blocks_full_run": false
+  },
+  {
+   "anomaly": "cop_within_foot fail, AB03/i10 both legs (median inside 0.73/0.735 vs 0.8; 2 and 6 units inside)",
+   "cause": "Plate CoP excursion exceeds the foot. Relative to the heel-toe midpoint the CoP moves from -0.13/-0.14 m (first stance quarter) to +0.19/+0.21 m (last quarter), a 0.33-0.35 m path over a 0.19-0.20 m heel-toe span (half-span 0.096); 10-15% of stance samples lie more than 3 cm behind the heel and 15-17% ahead of the toe. AB10/i10 shows 0.13 m on a 0.23 m span and passes 100%. The midpoint registration shift is fine (per-unit mean offset 1.6-2.6 cm), so this is not a registration error. The origin of the large CoP path (plate scaling, handrail load, low-force CoP noise) is NOT determined; it fits the open UM21-SLOPE follow-up that AB03/AB10 plates miss 2-9% BW with a fore-aft component. No published value depends on CoP: released moments are source columns and signs come from the audited table (ankle_angle applied; other channels held or suggest with detector sign equal to the audit).",
+   "blocks_full_run": false,
+   "note": "Cause of the CoP excursion left unexplained; relevant only if a CoP or lever-arm quantity is ever released for AB03 i10."
+  },
+  {
+   "anomaly": "cop_progression unknown, AB03/d10 right and AB04/d10 both legs",
+   "cause": "AB03/d10 right: forward in 104/117 units = 0.889, just under the 0.9 vote threshold (left 0.924 passes); median progression is only 3-4 cm. AB04/d10: forward in 56/125 (0.448 R) and 41/125 (0.328 L); median last-minus-first-quarter progression is -0.5 cm, and CoP relative to the heel-toe midpoint is about 0 to +1.8 cm across stance (level walking: -8 to +4 cm; AB10 i10 -5 to +7 cm). On the 10 deg decline the CoP barely moves relative to the foot, so the sign of a ~1 cm difference is noise and the vote splits. Whether that is foot-flat/forefoot loading on decline or a plate effect is not distinguished; the gate abstains correctly instead of failing. cop_within_foot passes (100%) and braking-propulsion passes (>=119/125 pass) in the same groups, so the plate forward axis is not in question.",
+   "blocks_full_run": false
+  },
+  {
+   "anomaly": "AB04/d10 right stride with NaN in all four joint angles (33 samples)",
+   "cause": "Source zero fill. AB04/d10 jointAngles are exact (0,0,0) triples for frames 1-773 (pelvis, hip, knee, ankle; moments zero to about frame 778); the adapter correctly maps zero triples to NaN. The first right heel strikes are 763 and 814 (then 1475, gap 661 frames), so unit 0 = frames 763-814, only 51 frames (0.51 s vs median 104), passes the 50-250 stride rule, and its first 11 frames (about 33 of 150 resampled samples) are zero fill (moments 44 samples). Not reported by pilot_summary because it counts only verdicts, not non-finite units. It is not a data loss: the release baseline already excludes this pair ('outside or ambiguous task interval', ledger starts 763:814 and 814:1475), so no released observation carries these NaNs. The left leg unit set starts at 1479 and has no NaN angle unit.",
+   "blocks_full_run": false
+  }
+ ],
+ "conclusion": "No item blocks the full run. The detector abstentions are on tilted plates; no published sign is affected (audited signs apply; held channels have detector sign equal to the audited truth, per the pilot cross-group review). No bound file changed.",
+ "recommendation": "No adapter or detector change. Optional, at T03 build time: (1) report units with non-finite samples per channel in the run summary; (2) feed the hook the same observation set that is released (the baseline accepted cycles), not every consecutive heel-strike pair within 50-250 frames, so partial-NaN or implausibly short pairs such as AB04/d10 763-814 never enter it. Neither is a convention or exclusion decision: the baseline ledger already excludes the pair. Q01 may note AB03/i10 CoP excursion as a limitation.",
+ "not_checked": [
+  "Physical cause of the AB03/i10 CoP excursion and of near-zero CoP progression on decline (plate scale vs handrail vs foot-flat contact).",
+  "Other slope recordings not in the 7-recording pilot sample; the full run's check_group will refuse any unexplained hold.",
+  "The probe script is in the session scratchpad and is not committed."
+ ],
+ "files_changed": [
+  "docs/maintainers/handoffs/UM21-E01.json",
+  "docs/maintainers/backlog.json"
+ ],
+ "bound_files_changed": false,
+ "evidence_paths": [
+  "converted_datasets/reconversion_v2/core11_p_um21_pilot_v4/groups/AB03_i10_left/sign_application.json",
+  "converted_datasets/reconversion_v2/core11_p_um21_pilot_v4/groups/AB04_d10_right/hook_outputs.npz",
+  "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB04/d10/candidate_ledger.jsonl"
+ ]
+}

@@ -1,0 +1,438 @@
+{
+  "task_id": "CORE-11",
+  "verifier_role": "independent second agent (own adversarial probes; synthetic data only)",
+  "phase": "design and synthetic fixtures",
+  "verdict": "design_phase_accepted",
+  "decision_ready_to_copy": null,
+  "decision_note": "D-CORE-11-1 withdrawn and replaced by a logged publication_rule; nothing to copy.",
+  "last_checked_at_utc": "2026-10-31T19:00:00Z",
+  "round_4": {
+    "verdict": "design_phase_accepted",
+    "hook_sha256_prefix": "50467da9730f",
+    "audited_signs_sha256_prefix": "d1ce8f830cb6",
+    "last_checked_at_utc": "2026-10-31T19:00:00Z",
+    "summary": "All three round-3 items are fixed, and the final table matches my per-entry rulings. Every entry and the AB04/i0 exception link, through explicit whole-token id citations in every listed audit task. No backlog record cites an id that its entry does not list. The GT21 effect recounts at 182 published and 161 held among the 343 non-applied channels, all holds being powers, with 0 wrong. The design phase is accepted. This is not scientific approval, and full runs still need the per-dataset bound-build pilots (CORE-11-P-<DS>). No research data were read.",
+    "checks": [
+      {
+        "id": 1,
+        "name": "Every entry links; nothing links that should not",
+        "result": "pass",
+        "evidence": "load_audited_signs with the real backlog: UM21 7/7, GT21 6/6, GT23 6/6 and GT24 4/4 entries verified, and the UM21-P01-AB04-i0-pelvis exception is linked. For every table id, the set of backlog tasks citing it as a whole token equals its audit_tasks list exactly, with no extra or missing citer. The citation lines in UM21-C03, UM21-P01, GT21-C01, GT23-C02, GT24-C02 and CORE-04 are positive statements listing ids. _cites_id rejects 'GT24-knee_angle_x', 'GT24-knee_angleX' and 'xGT24-knee_angle', and accepts the id followed by punctuation."
+      },
+      {
+        "id": 2,
+        "name": "Round-3 fixes",
+        "result": "pass",
+        "evidence": [
+          "(1) entry_linked now requires an explicit whole-token id in every listed audit task; the channel-name fallback is gone, so a negative mention no longer links.",
+          "(2) The AB04/i0 exception holds pelvis_tilt, thigh_angle, shank_angle and foot_angle.",
+          "(3) Dataset keys 'um21' and 'GT99' raise ValueError: not in the audited-sign table."
+        ]
+      },
+      {
+        "id": 3,
+        "name": "GT21 effect recount",
+        "result": "pass",
+        "evidence": "Own recount from core04-gt21-pilot-probe.json, using the verified GT21 entries (hip, knee and ankle angles and moments). An audited channel holds if the verdict is conflict or the detector sign is opposite to the audit; otherwise it publishes the audit sign. An unaudited channel publishes only on a guarded apply. Result: applied 305 published; non-applied 182 published and 161 held (hip, knee and ankle powers, which no audit covers); 0 published signs differ from the probe truth. core11_gt21_publication_effect.py ('backlog as it stands') gives the same: 343 non-applied, 182 published, 161 held, 0 disagreeing."
+      },
+      {
+        "id": 4,
+        "name": "evidence_basis accuracy",
+        "result": "pass",
+        "evidence": [
+          "The UM21 numbers (8/8 angles; hip moment component best in 5/8; knee moment 7-8/8; ankle moment 8/8, r 0.94-0.98) match um21-c03-conventions.json and its verifier.",
+          "The 'Vicon/vendor definition' text matches C03 vicon_evidence (Plug-in Gait help pages).",
+          "The GT21 numbers (ID-light 71/71, stance timing 47/47, lever arm 45/45; ankle lever arm 70/70 and late stance 70/70; knee lever arm 70/70) and the GT23 numbers (19/19, 17/17, 11/11, 18/18; hip moment 15/15 x3; knee lever arm 18/18) match my recounts of the CORE-04 probes.",
+          "GT24 ankle (push-off, net work, toe walking) and hip/knee encoder ranges match the GT24-C02 handoff and verifier.",
+          "The knee-moment single-family level is stated, and the GT24 hip moment and every SIGN-SURVEY citation are removed, matching the round-3 rulings."
+        ]
+      }
+    ],
+    "test_runs": [
+      {
+        "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_sign_application.py tests/test_sign_offset_detector.py tests/test_sign_offset_detector_verify.py tests/test_core04_probe_builders.py tests/test_documentation_policy.py tests/test_backlog_workflow.py",
+        "result": "351 passed, 1 warning in 8.94s"
+      },
+      {
+        "command": "same prefix: python3 contributor_tools/build_backlog_page.py --check",
+        "result": "Backlog valid; HTML current (95 tasks)."
+      },
+      {
+        "command": "same prefix: python3 contributor_tools/core11_gt21_publication_effect.py",
+        "result": "backlog as it stands: 648 leg-channels, 305 applied, 343 non-applied, 182 published, 161 held, 0 disagree with truth"
+      }
+    ],
+    "remaining_for_full_runs": [
+      "Per-dataset bound-build pilots CORE-11-P-<DS> through the guarded launcher, with the record and receipt committed and cited, before any full run.",
+      "AB04/i0 pelvis, thigh, shank and foot stay held until José answers D-UM21-P01-1."
+    ],
+    "resources": "No research data read."
+  },
+  "round_3": {
+    "verdict": "back_to_worker",
+    "hook_sha256_prefix": "7e8cd9bc725b",
+    "audited_signs_sha256_prefix": "d4a2eb409cac",
+    "last_checked_at_utc": "2026-10-31T18:20:00Z",
+    "summary": "The gate and per-recording exception now work, and the provenance quote is cited. Three code fixes and the table edits listed below remain. (1) entry_linked also accepts any backlog record that merely mentions the channel name under the right dataset, so a negative mention links. Today UM21 ankle_angle, hip_moment and ankle_moment, GT23 ankle_moment and GT24 ankle_angle, ankle_moment and knee_angle already link that way, before any citation was added. (2) The AB04/i0 exception omits foot_angle, whose recipe also uses the reversed pelvis. (3) An unknown or miscased dataset key ('um21') silently loads no entries and no exceptions. That is conservative today, but it bypasses the exception, so it should raise. The per-entry review is below. Six GT23/GT24 entries cite SIGN-SURVEY, which is not a verified backlog task; four GT21 moment and GT23 entries are supported by CORE-04's pilot data rather than the cited audit. No research data were read.",
+    "entry_review": [
+      {
+        "entry": "UM21-pelvis_tilt (-1)",
+        "verdict": "supported",
+        "by": "UM21-C03",
+        "basis": "Marker pelvis angle, best in 8/8 legs per sample; rule-C/B transform -1 (anterior tilt negative). AB04/i0 is covered by the UM21-P01 exception."
+      },
+      {
+        "entry": "UM21-hip_angle (+1)",
+        "verdict": "supported",
+        "by": "UM21-C03",
+        "basis": "Marker hip angle 8/8; opposite sign residuals 14-29 deg."
+      },
+      {
+        "entry": "UM21-knee_angle (+1)",
+        "verdict": "supported",
+        "by": "UM21-C03",
+        "basis": "Marker knee angle, clinical flexion positive 8/8; rule B keeps it."
+      },
+      {
+        "entry": "UM21-ankle_angle (+1)",
+        "verdict": "supported",
+        "by": "UM21-C03",
+        "basis": "Marker ankle angle 8/8."
+      },
+      {
+        "entry": "UM21-hip_moment (+1)",
+        "verdict": "supported (weak component evidence)",
+        "by": "UM21-C03, corroborated by CORE-04",
+        "basis": "C03 force-plate lever arm: sign right, but component 1 best in only 5/8 legs (sample A); the verifier found the sign right in 8/8. The CORE-04 UM21 pilot v2 hip-moment tests were right whenever decided (ID-light, stance timing). Cite both."
+      },
+      {
+        "entry": "UM21-knee_moment (+1)",
+        "verdict": "supported",
+        "by": "UM21-C03",
+        "basis": "Lever arm 7-8/8 per sample, flexor positive (clinical); the verifier reproduced it 8/8. Rule B is flexor positive."
+      },
+      {
+        "entry": "UM21-ankle_moment (+1)",
+        "verdict": "supported",
+        "by": "UM21-C03",
+        "basis": "Lever arm 8/8 (r 0.94-0.98)."
+      },
+      {
+        "entry": "GT21-hip_angle (+1), GT21-knee_angle (-1), GT21-ankle_angle (+1)",
+        "verdict": "supported",
+        "by": "GT21-C01; also cite CORE-04",
+        "basis": "GT21-C01 status 'model_axes_verified_zero_reference_open': the coordinate axes and senses (hip_flexion +flexion, knee_angle +extension with range -120..10 deg, ankle_angle +dorsiflexion) are verified from the shipped models, which fixes the IK sign. In the CORE-04 GT21 pilot the marker reference was right in 71-72/72 legs, and so were the second families. My verifier run (AB10, AB13) gave 0 wrong."
+      },
+      {
+        "entry": "GT21-hip_moment (+1), GT21-ankle_moment (+1)",
+        "verdict": "supported by a different task: CORE-04",
+        "by": "CORE-04 (GT21 pilot), with GT21-C01 for the coordinate axes",
+        "basis": "GT21-C01 lists joint_moments as 'model_axes_verified' only: 'positive along the coordinate'. It did not test the data sign. The data evidence is the CORE-04 GT21 pilot: ankle lever arm right 70/70 and late stance 70/70; hip ID-light right 71/71, stance timing 47/47, lever arm 45/45. My independent GT21 run reproduced it with 0 wrong. Cite docs/quality/audits/core04-gt21-pilot.json per_test and CORE-04-verify pilot_gt21."
+      },
+      {
+        "entry": "GT21-knee_moment (-1)",
+        "verdict": "supported by a different task: CORE-04 (single data family)",
+        "by": "CORE-04 (GT21 pilot), with GT21-C01 for the coordinate axis",
+        "basis": "GT21-C01 verified only the knee_angle axis (extension positive). The survey called the numeric check inconclusive and is not a verified task. The data evidence is the CORE-04 GT21 pilot knee lever arm, right in 70/70 decided legs (2 no decision), reproduced in my run. It is one family (plate geometry) on top of the OpenSim coordinate definition, so the entry should say so."
+      },
+      {
+        "entry": "GT23-ankle_moment (+1)",
+        "verdict": "supported",
+        "by": "GT23-C02",
+        "basis": "GT23-C02 (verify done): dorsiflexion-positive internal against a mass-free lever-arm ankle moment."
+      },
+      {
+        "entry": "GT23-hip_angle (+1), GT23-knee_angle (-1), GT23-ankle_angle (+1), GT23-hip_moment (+1)",
+        "verdict": "unsupported as cited (SIGN-SURVEY is not a backlog task and was never verified); supported by a different task: CORE-04",
+        "by": "CORE-04 (GT23 pilot v2)",
+        "basis": "GT23 pilot v2, all votes right: hip angle markers 19/19 and stance extension 17/17; knee markers 19/19 and knee range 11/11; ankle markers 19/19 and push-off 18/18; hip moment lever arm 15/15, stance timing 15/15, ID-light 15/15. Verified in CORE-04-verify pilot_gt23 rounds 1-3. Re-cite to CORE-04."
+      },
+      {
+        "entry": "GT23-knee_moment (-1)",
+        "verdict": "unsupported as cited; supported by a different task: CORE-04 (single data family)",
+        "by": "CORE-04 (GT23 pilot v2)",
+        "basis": "Knee lever arm right 18/18 (moderate), plus the gait2392 knee_angle coordinate. The survey was 'partly_verified' and numerically inconclusive. Same standing as GT21-knee_moment."
+      },
+      {
+        "entry": "GT24-ankle_angle (+1), GT24-ankle_moment (+1)",
+        "verdict": "supported",
+        "by": "GT24-C02",
+        "basis": "GT24-C02 verdict, reproduced by its verifier and by the CORE-04 GT24 pilot (push-off, lever arm and late stance 40/40)."
+      },
+      {
+        "entry": "GT24-hip_angle (+1), GT24-knee_angle (-1)",
+        "verdict": "supported",
+        "by": "GT24-C02; also cite CORE-04",
+        "basis": "GT24-C02 and its verifier: exo hip encoder vs hip_flexion r -0.974 to -0.992 (10 legs), exo knee encoder vs knee_angle r +0.966 to +0.994 (9 legs), with README 'exo extension positive'. Corroborated by the CORE-04 GT24 pilot: hip stance extension 40/40 and knee range 38/38."
+      },
+      {
+        "entry": "GT24-hip_moment (+1)",
+        "verdict": "unsupported as cited; weakly supported by a different task",
+        "by": "CORE-04 (GT24 pilot), with GT24-C02 for the hip_flexion coordinate",
+        "basis": "SIGN-SURVEY is not a verified task. The only data evidence is CORE-04 GT24 hip-moment stance timing, 40/40, one family: no markers, so no lever arm or ID-light. The coordinate sense comes from GT24-C02's hip encoder check. Recommend removing it (detector alone) unless the coordinator accepts single-family timing plus the coordinate axis; this is the weakest entry."
+      }
+    ],
+    "checks": [
+      {
+        "id": 1,
+        "name": "Pilot gate",
+        "result": "pass",
+        "evidence": "A record now needs: pilot task exactly CORE-11-P-<dataset>, done in the backlog, with backlog dataset equal to the dataset, and a backlog record that cites the record path, record sha256 and receipt sha256; the receipt committed at HEAD and matching its hash and bindings. My round-2 forgery (unrelated done task DOC-01, uncommitted hand-written receipt) fails on three counts. A forger would now have to commit files and have the coordinator mark CORE-11-P-<DS> done with those citations, so authority rests on the backlog, the same anchor as the documentation policy."
+      },
+      {
+        "id": 2,
+        "name": "Table linking (forged or weak citations)",
+        "result": "fail",
+        "evidence": "entry_linked returns True when the record text contains the entry id, or when record.dataset matches and the channel name appears anywhere (underscores read as spaces). A synthetic GT24-C02 record saying only 'knee moment not checked; sign unknown' linked a GT24-knee_moment entry. With the real backlog, 7 entries already link by mention, before any citation was added: UM21 ankle_angle, hip_moment, ankle_moment; GT23 ankle_moment; GT24 ankle_angle, ankle_moment, knee_angle. Fix: link only by explicit entry id. The coordinator's planned citations will carry the ids."
+      },
+      {
+        "id": 3,
+        "name": "Dataset and recording-id mismatch",
+        "result": "partial",
+        "evidence": "Recording ids must fullmatch the dataset's pattern, so 'AB04/I0', 'AB4/i0' and a trailing space are refused. An unknown dataset key (e.g. 'um21') yields no entries, no exceptions and no pattern, so any recording string is accepted and the AB04/i0 exception is skipped. Today that only means 'detector alone' (the pelvis cannot reach a guarded apply), but it should raise."
+      },
+      {
+        "id": 4,
+        "name": "Exception ordering",
+        "result": "pass",
+        "evidence": "held_by is computed before the publication rule, and an excepted channel is held whatever the detector or audit says. Holds apply even when unlinked, which is conservative. Exceptions listed in the log."
+      },
+      {
+        "id": 5,
+        "name": "AB04/i0 foot angle",
+        "result": "fail",
+        "evidence": "The UM21-C03 recipe is foot = hip - pelvis - knee + ankle, so the AB04/i0 foot angle carries the reversed pelvis tilt as well, just like thigh = hip - pelvis and shank = hip - pelvis - knee. Add foot_angle to the exception's channels (and any other pelvis-derived recipe, e.g. trunk if ever released)."
+      },
+      {
+        "id": 6,
+        "name": "Provenance quote",
+        "result": "pass",
+        "evidence": "PREFERENCE_QUOTE 'all standardized names (thats the point of the project)' and PREFERENCE_TASK UM21-C01 are in the hook; test_publication_policy_cites_josé_quote_recorded_under_um21_c01 finds them in backlog.json."
+      },
+      {
+        "id": 7,
+        "name": "Adapter interface",
+        "result": "pass",
+        "evidence": "run_sign_application takes dataset and recording (plus channels and evidence); audited signs come only from the bound audited_signs.json, read once and hashed into the build."
+      }
+    ],
+    "required_fixes": [
+      "entry_linked: accept only an explicit entry id in the audit task's backlog record; drop the dataset plus channel-name fallback. Add a test with a negative mention.",
+      "AB04/i0 exception: add foot_angle (and any other pelvis-derived channel).",
+      "Refuse a dataset key that is not in audited_signs.json, rather than silently using none.",
+      "audited_signs.json, per the entry review: re-cite GT21 hip/knee/ankle moments and the GT23 SIGN-SURVEY entries to CORE-04 (marking the single-family knee moments); remove or re-cite GT24-hip_moment (weakest); add CORE-04 as a corroborating citation for UM21-hip_moment. The table supports one audit_task per entry, so either allow a list or choose CORE-04 where it is the data evidence. The CORE-04 backlog record must then cite those entry ids."
+    ],
+    "test_runs": [
+      {
+        "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_sign_application.py tests/test_sign_offset_detector.py tests/test_sign_offset_detector_verify.py tests/test_core04_probe_builders.py tests/test_documentation_policy.py tests/test_backlog_workflow.py",
+        "result": "329 passed, 18 xfailed, 1 warning in 9.53s"
+      },
+      {
+        "command": "same prefix: python3 contributor_tools/build_backlog_page.py --check",
+        "result": "Backlog valid; HTML current (95 tasks)."
+      }
+    ],
+    "resources": "No research data read: audit JSONs, handoffs, backlog, stored pilot probes, synthetic checks."
+  },
+  "round_2": {
+    "verdict": "back_to_worker",
+    "hook_sha256_prefix": "c2b839f00f6b",
+    "last_checked_at_utc": "2026-10-31T17:20:00Z",
+    "summary": "Four of the round-1 fixes hold: array checks, the frozen family table, hash binding, and undo with an expected log hash. The GT21 publication effect recounts exactly (343 non-applied published, 0 held, 0 against detector evidence). Two gaps remain. Each lets an unverified claim through. (1) The pilot gate still accepts a hand-written receipt: in a temporary git repo, a committed record naming an unrelated done task (DOC-01) plus a self-consistent receipt JSON passed. (2) Audit signs are adapter arguments, verified only by 'some task is done'. An unrelated done task (GT24-C02) made an abstaining channel publish with sign -1. Ruling on the per-recording gap: yes, the rule must consume per-recording exceptions from verified audits before any UM21 full run. Also, the policy's provenance should cite the backlog record of José's words. No research data were read.",
+    "checks": [
+      {
+        "id": 1,
+        "name": "Pilot gate",
+        "result": "fail (still forgeable)",
+        "evidence": [
+          "Temp git repo (repo_root parameter); real repository untouched.",
+          "Committed docs/quality/audits/pilot.json: dataset UM21, outcome passed, pilot_task 'DOC-01' (done in the temp backlog), bindings equal to bound_build().",
+          "Hand-written fake_receipt.json: status completed, clean_success true, spec.cwd = repo, spec.bindings = bindings, all before/after bindings match. Its true sha256 is recorded in the record.",
+          "check_pilot_record returned (record, facts): accepted.",
+          "The checks are internally consistent but authenticate nothing. The receipt is any JSON, need not be committed, and is not tied to the guarded launcher. The pilot task can be any done task, not the pilot of this dataset and build.",
+          "In the real repository a forger must commit a file, so the attack is reviewable, but the gate claims more than it checks.",
+          "Fix: require the verified pilot task's backlog record (or its verify handoff, verdict done) to cite this record path and sha256 and the receipt sha256. That is the same link pattern as the documentation policy's citation test. Also require the receipt to be committed, and check that the task's dataset matches."
+        ]
+      },
+      {
+        "id": 2,
+        "name": "Array checks",
+        "result": "pass",
+        "evidence": "Masked arrays, ndarray subclasses, big-endian float64 and float32 are refused. Only a plain '<f8' 2-D ndarray with one row per unit is accepted."
+      },
+      {
+        "id": 3,
+        "name": "Family-table independence",
+        "result": "pass",
+        "evidence": "The guard uses the hook's own FAMILY_TABLE and PLATE_TIMING_TESTS. test_hook_family_table_equals_the_detector_table asserts equality with the detector's FAMILY_GROUPINGS, so a change to either fails loudly. My round-1 remapping attack no longer affects the guard."
+      },
+      {
+        "id": 4,
+        "name": "Hash binding",
+        "result": "pass",
+        "evidence": "The detector is executed from its hashed bytes. The policy hash is that of the executed bytes. The refuted table is read once and given to the policy as a temp copy of exactly those bytes. The hook hash is taken at import. The run's build dict uses these hashes, and the gate compares it to the record bindings. Evidence arrays (top level and one dict level, e.g. marker_points.*) are hashed before and after."
+      },
+      {
+        "id": 5,
+        "name": "Undo",
+        "result": "pass",
+        "evidence": "With expected_log_sha256, undo needs the log file path and refuses bytes that do not hash to the manifest value, so my round-1 consistent-tamper attack is refused. Without it, a dict log is accepted as before; the design note tells callers to pass the manifest hash."
+      },
+      {
+        "id": 6,
+        "name": "Publication rule and audit sourcing",
+        "result": "fail (unverified audit sign can publish)",
+        "evidence": [
+          "The rule logic is correct. A verified audit plus a detector apply or suggest of the same sign, or an abstention, publishes. An opposite suggest or apply (including a guard-refused apply) or a conflict holds. With no audit, only a guarded apply publishes.",
+          "Sourcing: audited_signs is an argument to run_sign_application. _audits() checks only that the sign is int +-1 and that audit_task is done in the backlog. It does not check that the task established that sign for that dataset and channel.",
+          "Demonstrated on the synthetic group: audited_signs={'hip_power': {'sign': -1, 'audit_task': 'GT24-C02'}} (an unrelated done task). hip_power abstains, so it published with multiplier -1 (basis 'audit').",
+          "Audited signs are also outside bound_build(). The same bound code with different adapter-supplied signs publishes differently, so a pilot does not bind the signs.",
+          "Fix: a committed audited-signs table (dataset, channel, sign, audit_task, citation, per-recording exceptions) read once and included in bound_build(), with a link test that each audit task's backlog record cites its entry. Adapters pass only the dataset key, not signs."
+        ]
+      },
+      {
+        "id": 7,
+        "name": "Per-recording exceptions",
+        "result": "ruling: required before any UM21 full run",
+        "evidence": [
+          "AB04/i0 shows that a dataset-wide audit sign can be wrong for one recording, because Plug-in Gait reversed the walking direction. The current rule publishes the dataset-wide pelvis sign whenever the detector abstains, and pelvis evidence is marker-only and often weak. cross_group_review would not flag it, because it compares published signs, and all groups would publish the same audit sign.",
+          "The audited-signs table must carry per-recording exceptions from verified audits (UM21-P01 is verified). The rule must apply them before publishing.",
+          "For AB04/i0 specifically, the handling depends on José's open D-UM21-P01-1 (exclude, leave missing, or flip from marker evidence). Until he answers, the AB04/i0 pelvis tilt and the thigh and shank derived from it must be held."
+        ]
+      },
+      {
+        "id": 8,
+        "name": "GT21 publication effect",
+        "result": "pass (recount exact)",
+        "evidence": "My recount from the stored probe uses the GT21-C01 truth as the audit sign. A channel holds if the verdict is conflict or the detector sign is opposite to the audit. Result: 305 apply/publish, 216 suggest/publish, 127 abstain/publish; 343 non-applied published, 0 held. core11_gt21_publication_effect.py prints the same counts (guard_refused_stored_applies 0, published_with_wrong_sign 0). Pelvis is absent from the pilot."
+      },
+      {
+        "id": 9,
+        "name": "Provenance of José's preference",
+        "result": "fail (not cited)",
+        "evidence": "backlog.json UM21-C01 handoff now holds: 'José instruction in chat, 2026-10-30, answering D-UM21-C01-2: \"all standardized names (thats the point of the project)\". Standing preference: ... Applied in CORE-11 publication_rule.' The hook's PUBLICATION_POLICY basis still says 'relayed by the coordinator for CORE-11 on 2026-10-31' and does not cite that record. Fix: cite the quote and task UM21-C01, as documentation_policy does, plus a test that finds the quote in backlog.json."
+      },
+      {
+        "id": 10,
+        "name": "Design note",
+        "result": "pass",
+        "evidence": "The stale 'blocked until UM21-T02 is reviewed' and 'until that review, nothing is launched' lines are gone; the pilot section now says each pilot runs through the guarded launcher (contributor_tools/guarded_launcher.py). The hook section says evidence hashes are logged (line 995) and lists the evidence array hashes in the log (line 1042); the code checks them before and after the run. Line 503 still reads 'after the guarded launcher is reviewed', which is historical and now true; no change needed."
+      }
+    ],
+    "required_fixes": [
+      "Pilot gate: link the record to a verified pilot. The done pilot task's backlog record (or verify handoff) must cite the record path and sha256 and the receipt sha256; the receipt must be committed; the dataset must match. Add a test with a self-consistent forged receipt and an unrelated done task.",
+      "Audited signs: move them to a committed table (dataset, channel, sign, audit_task, citation, per-recording exceptions) read once and bound in bound_build(), with a link test from each audit task's backlog record to its entry. Adapters pass the dataset, not signs. Add a test that an unrelated done task cannot publish.",
+      "Per-recording exceptions: apply them before publishing. Hold the UM21 AB04/i0 pelvis (and the thigh and shank derived from it) until José answers D-UM21-P01-1. Required before any UM21 full run.",
+      "Provenance: cite José's quote and task UM21-C01 in PUBLICATION_POLICY, with a test that finds it in backlog.json."
+    ],
+    "test_runs": [
+      {
+        "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_sign_application.py tests/test_sign_offset_detector.py tests/test_sign_offset_detector_verify.py tests/test_core04_probe_builders.py tests/test_documentation_policy.py tests/test_backlog_workflow.py",
+        "result": "307 passed, 1 warning in 7.89s"
+      },
+      {
+        "command": "same prefix: python3 contributor_tools/build_backlog_page.py --check",
+        "result": "Backlog valid; HTML current (95 tasks)."
+      },
+      {
+        "command": "same prefix: python3 contributor_tools/core11_gt21_publication_effect.py",
+        "result": "648 leg-channels; 305 detector applied; 343 non-applied published; 0 held; 0 wrong"
+      }
+    ],
+    "resources": "No research data read: stored probe JSON, synthetic fixtures, temp git repo and backlog in the verifier scratchpad."
+  },
+  "round_1": {
+    "files_checked_sha256_prefix": {
+      "contributor_tools/common/sign_application.py": "6bfda1c7e519",
+      "tests/test_sign_application.py": "043ed299f23b",
+      "contributor_tools/common/sign_offset_detector.py": "ed52fc494cee"
+    },
+    "summary": "The core is sound. Only guarded apply signs change data, and they change it by exact negation. Outputs never alias inputs, and dtype, shape, NaN and signed-zero round-trip bit for bit through undo. Parameter overrides are refused, and the detector is executed from exactly the bytes that were hashed. Four things send it back: (1) the full-mode pilot gate accepts a hand-built dict with any 64-hex receipt string, any 'verified_by' text and the current bindings, so it can be forged; (2) a numpy masked array loses its mask, and masked values come out as data; (3) the guard re-counts families with the detector's own FAMILY_GROUPINGS and PLATE_TIMING_TESTS, so a family-table bug passes both; (4) the design note is stale on the launcher and claims evidence arrays are hash-checked when they are not. D-CORE-11-1 is not ready to copy. It fails the schema (no task_id or status). Its option C does not say what happens when the detector suggests or conflicts against the audit. Under José's standing preference for standardized names by default, 'leave out' options A and B are not neutral, so the question may not need asking. No research data were read.",
+    "checks": [
+      {
+        "id": 1,
+        "name": "Can any path change data beyond an apply sign?",
+        "result": "fail (masked arrays); otherwise pass",
+        "evidence": [
+          "Synthetic fixture from tests/test_sign_application (apply on knee_angle -1, ankle_angle +1, hip_moment +1, ankle_moment +1, ankle_power -1).",
+          "No output shares memory with its input. The same array object under two channel names gives independent outputs.",
+          "float32 and float16 inputs keep their dtype. A Fortran-ordered input gives identical values (C-contiguous output; the hash is order-normalized).",
+          "NaN and +0.0 round-trip bit for bit through undo. An unknown channel name abstains and is returned unchanged. Integer arrays are refused.",
+          "Fail: a numpy.ma.MaskedArray input (10 masked samples whose underlying data were 9999.0) comes out as a plain ndarray. The mask is gone and 9999.0 appears as data, because np.asarray strips the mask. That changes data beyond a sign. The hook should refuse ndarray subclasses (require type(a) is np.ndarray), or carry masks explicitly.",
+          "Note: the verdicts differed between float64 and float32/float16 copies of the same synthetic data. The detector converts to float64 internally, so rounding moved some borderline votes. This is not a hook defect, but adapters should pass channels at their stored precision and not downcast."
+        ]
+      },
+      {
+        "id": 2,
+        "name": "Guard independence",
+        "result": "partial",
+        "evidence": "guard_apply independently re-checks the combine step: two or more agreeing families, no moderate/strong or documentation dissent, claimed families covered by supporting evidence, min_families >= 2. A combine bug that applies on one family is caught. But the family assignment uses det.FAMILY_GROUPINGS and det.PLATE_TIMING_TESTS from the detector module. Demonstrated: remapping hip_stance_extension to 'joint_anatomy' in the detector table makes the guard accept 'joint_anatomy + marker_geometry'. Per-test sign errors (a test voting the wrong sign) are outside any guard that reads the detector's own evidence; they are covered only by the pilots. Fix: give the hook its own frozen family table, covered by the hook hash, and a test that it equals the detector's; a divergence then fails loudly."
+      },
+      {
+        "id": 3,
+        "name": "Build binding and TOCTOU",
+        "result": "pass for the detector; minor gaps for the policy, table and hook",
+        "evidence": [
+          "load_bound_detector reads the file once, hashes those bytes and executes the same bytes, so the declared hash describes the code that ran.",
+          "The policy module is executed from one read (_load_policy), but bound_build() re-reads every file (file_sha256), and split_documentation re-reads refuted_documentation.json itself. A change between reads makes the logged hashes not describe what ran.",
+          "HOOK_PATH is hashed from disk, not from the imported module's source.",
+          "The backlog (task status) controls withholding but is outside the build. The design note discloses this, and the log records each statement's action.",
+          "Fix: hash the policy bytes that were executed, read the refuted table once (pass its bytes or verify its hash after use), and record the hook's hash at import."
+        ]
+      },
+      {
+        "id": 4,
+        "name": "Undo exactness and log tampering",
+        "result": "exact; tampering is undetectable without an external anchor",
+        "evidence": "Undo checks output_sha256, negates or copies, and checks input_sha256, which is exact (NaN, -0.0, dtype). A consistently tampered log (multiplier flipped, input_sha256 recomputed) passes undo and 'restores' the wrong array. Integrity therefore rests on the log's sha256 being recorded elsewhere (write_json_exclusive returns it for the manifest). Recommend an expected_log_sha256 argument to undo, checked against the manifest value."
+      },
+      {
+        "id": 5,
+        "name": "Pilot gate",
+        "result": "fail (forgeable)",
+        "evidence": "check_pilot_record accepts any dict with dataset, outcome 'passed', a non-empty verified_by, any 64-hex launcher_receipt_sha256 and bindings equal to the current bound_build(). A hand-built record with verified_by 'nobody' and receipt '0'*64 let mode='full' run and apply 4 signs. The existing test uses 'a'*64. Required: load the pilot record from a committed audit file; check that the guarded-launcher receipt file exists, hashes to launcher_receipt_sha256 and lists the same bindings; and tie verification to backlog status done for the pilot task (the same authority the documentation policy uses), not to free text."
+      },
+      {
+        "id": 6,
+        "name": "Decision D-CORE-11-1",
+        "result": "not ready to copy",
+        "evidence": [
+          "Schema: validate_backlog rejects it as written ('decision.task_id: expected nonempty text'); with task_id 'CORE-11' and status 'queued' it validates.",
+          "Order ('channels published under the rule, fewest first') is neutral and stated. Labels and consequences do not name the recommendation, and decide_before_recommendation is true.",
+          "Completeness: C is underspecified. It stops only when an applied sign contradicts the audit; it does not say what happens when the detector suggests the opposite sign or conflicts on a channel where the audit has a sign. A safe C holds such a channel for review instead of publishing it.",
+          "Is a decision needed? José's standing preference: signals go under standardized names by default when evidence supports the sign, and 'leave out' is not a neutral option. His 2026-10-30 instruction makes verified audits authoritative over README statements. Every pilot dataset has verified per-channel audits (UM21-C03, GT21-C01, GT23-C02, GT24-C02), so C with a review hold on detector disagreement is that preference applied. The coordinator can adopt it as a logged policy application. If a question is still wanted, it should ask only about the disagreement handling, and A/B should say what evidence would unblock the held channels.",
+          "Minor: the 'check' text is fine, but the consequence counts (343 of 648) cite only the GT21 pilot."
+        ]
+      },
+      {
+        "id": 7,
+        "name": "GT21 sheet fixes at 1100 px and in a 390 px iframe",
+        "result": "pass",
+        "evidence": "The AB24 chip now reads '1 recording left out: its plate file starts 1 ms after the kinematics; dropping one sample would recover it'. Figure 3 uses grey for out-of-band headings, not red. No horizontal scroll at 390 px (content width 373 px). The other rules are unchanged from the GT21 pilot round."
+      }
+    ],
+    "required_fixes": [
+      "Pilot gate: verify a committed pilot record file, the launcher receipt file (exists, hash matches, same bindings), and backlog done status for the pilot task. Add tests for a forged receipt and for a free-text verifier.",
+      "Refuse ndarray subclasses (masked arrays, matrices) or preserve masks explicitly; add a test.",
+      "Guard: the hook's own frozen family table, plus a test that it equals the detector's table.",
+      "TOCTOU: hash the executed policy bytes, read the refuted table once, and record the hook hash at import.",
+      "Design note: remove the stale 'until that review, nothing is launched' (UM21-T02 is done_for_launcher), and either hash-check evidence arrays or remove that claim.",
+      "D-CORE-11-1: add task_id and status. Define C's handling of a detector suggest or conflict against the audit (hold for review). Reconsider whether the question is needed given José's standardize-by-default preference; if asked, A and B must state what evidence would unblock the held channels."
+    ],
+    "recommendations": [
+      "undo_sign_application(expected_log_sha256=...) checked against the manifest.",
+      "Document that adapters must not downcast channels before the hook."
+    ],
+    "test_runs": [
+      {
+        "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_sign_application.py tests/test_sign_offset_detector.py tests/test_sign_offset_detector_verify.py tests/test_core04_probe_builders.py tests/test_documentation_policy.py tests/test_backlog_workflow.py",
+        "result": "268 passed in 6.99s"
+      },
+      {
+        "command": "same prefix: python3 contributor_tools/build_backlog_page.py --check",
+        "result": "Backlog valid; HTML current (95 tasks)."
+      }
+    ],
+    "resources": "Synthetic fixtures only; no research data read; one process at nice 19."
+  }
+}

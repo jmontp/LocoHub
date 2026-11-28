@@ -1,0 +1,108 @@
+{
+  "task_id": "GT21-RB03 (+ RB02 force-mask fix)",
+  "status": "ready_for_independent_verification_rule_A",
+  "scientific_approval": false,
+  "last_checked_at_utc": "2026-11-24T23:46:59+00:00",
+  "summary": "Segmentation of every source step of both legs ran for all 22 participants (3,147 recordings, 107,367 steps) as a derived layer on the merged-pass tables; stance force mask built and applied as a separate layer (pass not rerun). Separate readback passed.",
+  "code_frozen_sha256": {
+    "contributor_tools/gt21_rb_segment.py": "c62e488ebaf6390d08fbc72a6dff43ed50ee7a9bf8977a57969a5d5bcc605dbb",
+    "contributor_tools/run_gt21_rb_segment.py": "2ec53c661ddb0e0dab7db7855e04e25e58e20391e92dd416c440a49aa63b555c"
+  },
+  "readback_code": "contributor_tools/run_gt21_rb_segment_readback.py (separate file; independent scalar code for steps and mask)",
+  "tests": "tests/test_gt21_rb_segment.py: 16 synthetic tests pass",
+  "force_mask_rule": "stance true and the foot's owned-plate vertical force below 20 N -> grf vertical/anterior/lateral missing. 20 N fixed before results: 1.5x the ~13 N levelground Treadmill-plate offset, same as GT23 rule, absolute not BW fraction. Stored as layer force_mask/<ID>/<mode>/<rec>.parquet (time_s, force_missing_left/right); apply_force_mask() sets NaN.",
+  "batches": "converted_datasets/reconversion_v2/gt21_rb_segment_batch_<ID>_20261124 (22), pilots gt21_rb_segment_pilot_20261124 (r1) and _r2; specs/receipts docs/quality/audits/gt21-rb03-*",
+  "readback": "docs/quality/audits/gt21-rb03-readback.json",
+  "events_of_the_run": [
+    "Pilot r1 passed; AB06 batch r1 aborted at the treadmill recordings (address-space cap, 'cannot allocate memory for thread-local data'; receipt gt21-rb03-batch-AB06-launcher-receipt.json kept); fixed by one Arrow thread and eager garbage collection; pilot r2 passed with the same bound code as all 22 batches; AB06 r1 partial output deleted by this worker (its own, incomplete)."
+  ],
+  "checks": {
+    "accounting": "inventory 3,147 = ledger 3,147; steps.jsonl lines = ledger; step ids unique; one disposition each; local 16: 83,206 resets and 78,604 steps reproduce exactly; six new: 30,455 resets, 28,763 steps",
+    "identity_36": "30 levelground recordings: 227 eligible = 227 old exported+opposite, 479 outside = 479 old outside, 0 disagreements step by step. Treadmill 6 recordings: 1,564 steps held (speed table not exported), 1,427 of them the old run exported; so 856+798=1654 and 616 hold only after adding the speed table",
+    "terrain": "11,947 eligible ramp/stair steps: label, incline sign, stair height equal source scalars and window; 0 mismatches; all 2,310 ramp/stair recordings (1,394 + 916) have a positive source value; none defaulted",
+    "mask": "layers for all 3,146 converted recordings equal an independent recomputation; 0 masked stance samples at or above 20 N; 0 unmasked stance samples below 20 N; scalar loop on 66 seeded recordings: 0 mismatches",
+    "authors": "right-leg intervals: 106,818 matched (start/end offset max 5 ms = one sample, median 0), extra 3,390 (partial first/last intervals, none interior), missed 0",
+    "peak_memory": "batches 160 MiB RSS (launcher largest process 160 MiB), readback 179 MiB under a 600 MiB cap"
+  },
+  "open_scope_question": "Resolved by D-GT21-RB03-1 = A (rule A implemented).",
+  "treadmill": "All 157 treadmill recordings / 41,157 steps are 'held': the RB01 label export did not capture the treadmill speed table, so steady speed cannot be assessed. Needs a small MATLAB speed export (22 starts) or a decision.",
+  "remaining": [
+    "Independent verifier (together with GT21-RB02)"
+  ],
+  "next_action": "Independent verifier reviews acceptance against docs/quality/audits/gt21-rb03-readback.json and the ledgers.",
+  "changed_files": [
+    "contributor_tools/gt21_rb_segment.py",
+    "contributor_tools/run_gt21_rb_segment.py",
+    "contributor_tools/run_gt21_rb_segment_readback.py",
+    "tests/test_gt21_rb_segment.py",
+    "docs/quality/audits/gt21-rb03-*",
+    "docs/maintainers/handoffs/GT21-RB03.json"
+  ],
+  "rule_A": {
+    "decision": "D-GT21-RB03-1 = A (Jos\u00e9): steps that cross label windows follow the authors' STRIDES.m rule; defaults accepted: left-leg steps use the same rule flagged authors_rule_extended_to_left_leg, 'stand' kept, treadmill trial window dropped.",
+    "export": "gt21_rb01_label_export.m (hash 4336c742...) run for 22 participants under the approved native launcher (receipts docs/quality/audits/gt21-rb03-authors-fields-<ID>-launcher-receipt.json); output converted_datasets/reconversion_v2/gt21_rb03_authors_fields_20261125. All 3,147 old fields identical to the RB01 export.",
+    "export_notes": [
+      "jsonencode keeps 15 significant digits, so treadmill speed values are written to 15 digits; two speeds that differ only beyond the 15th digit would merge into one distinct value (not seen as a problem: values are belt speeds).",
+      "turn is a char vector; the export splits it to ['c','c','w']; the segmentation joins it back to 'ccw'/'cw' (680 of 680 levelground recordings).",
+      "treadmill speed table is NOT constant: 10,337-13,670 runs per recording (a ramp of tiny steps at the start); 131 MB for 22 files, 1 MB per treadmill line; no NaN rows (speed_has_nan false in 157 of 157)."
+    ],
+    "code_frozen_sha256": {
+      "contributor_tools/gt21_rb_segment.py": "d47255fef7b06440 (prefix)",
+      "contributor_tools/run_gt21_rb_segment.py": "ba9460f2584a0fd2 (prefix); full hashes in each run_summary.json"
+    },
+    "batches": "converted_datasets/reconversion_v2/gt21_rb_segment_batch_<ID>_20261125 (22) after pilot docs/quality/audits/gt21-rb03-pilot-ruleA-*; the 20261124 batches are superseded (window rule only)",
+    "readback": "docs/quality/audits/gt21-rb03-ruleA-readback.json: passed, 0 failures; every step and authors interval re-classified from the text of STRIDES.m (independent parser); peak 226 MiB under a 600 MiB cap; batches peak 192 MiB",
+    "results": {
+      "steps": 107367,
+      "by_mode": {
+        "levelground": {
+          "eligible": 14252,
+          "excluded": 1952
+        },
+        "ramp": {
+          "eligible": 19953,
+          "excluded": 12960
+        },
+        "stair": {
+          "eligible": 10059,
+          "excluded": 7034
+        },
+        "treadmill": {
+          "eligible": 37383,
+          "excluded": 3774
+        }
+      },
+      "recordings": "3,146 segmented, 1 excluded (AB27 treadmill, not converted in the pass)",
+      "excluded_reasons": {
+        "levelground": {
+          "authors_rule_discard": 1900,
+          "authors_rule_case_not_found(left leg)": 52
+        },
+        "ramp": {
+          "authors_rule_discard": 12202,
+          "authors_rule_case_not_found(left leg)": 758
+        },
+        "stair": {
+          "authors_rule_discard": 5768,
+          "authors_rule_case_not_found(left leg)": 1266
+        },
+        "treadmill": {
+          "more_than_2_speeds": 3523,
+          "recording_not_converted": 251
+        }
+      },
+      "agreement_with_authors_right_leg_interior_matched_intervals": {
+        "levelground": "kept 7120 all eligible; dropped 1060 all excluded",
+        "ramp": "kept 10446 all eligible; dropped 5766 all excluded",
+        "stair": "kept 5497 all eligible; dropped 2932 all excluded",
+        "treadmill": "kept 18840: 18716 eligible, 124 not eligible (all AB27 treadmill_06_01, not converted in the pass); dropped 1744 all excluded"
+      },
+      "identity_old_window_rule": "levelground 30 recordings: 227 eligible and 479 outside equal the old run step by step, 0 disagreements (window_rule field)"
+    },
+    "notes": [
+      "Every authors_rule_case_not_found step is a left-leg step (the authors' own right-leg strides never fall through their rule): 1,266 stair, 758 ramp, 52 levelground.",
+      "The authors' class 'stand' never occurs in this data.",
+      "Stair: 916 of 916 recordings now have eligible steps (was 797); 10,059 of 17,093 stair steps eligible (was 2,305)."
+    ]
+  }
+}

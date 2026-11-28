@@ -1,0 +1,170 @@
+{
+  "status": "source_preservation_adapter_prepared_no_real_B3D_execution",
+  "scientific_approval": false,
+  "canonical_dataset_complete": false,
+  "primary_api_source": "https://nimblephysics.org/docs/working-with-addbiomechanics-data.html",
+  "primary_evidence": [
+    {
+      "section": "Contents of a B3D File; ProcessingPassType",
+      "finding": "Kinematics, low-pass filter and dynamics passes are separately retained. Position 1 is not an assured dynamics pass; trial pass availability may differ."
+    },
+    {
+      "section": "SubjectOnDisk.getTrialLength/readFrames; Frame.t/trial",
+      "finding": "Read exact trial length in bounded requests; frame t is trial-local frame index. Out-of-bounds reads may return empty arrays."
+    },
+    {
+      "section": "FramePass groundContactForceInRootFrame/groundContactCenterOfPressureInRootFrame",
+      "finding": "Vectors resolve in model root coordinates, not automatically anatomical forward/lateral or vertical. Contact-body order is obtained from source metadata, not assumed right-first."
+    },
+    {
+      "section": "Frame.missingGRFReason; FramePass.type/pos/vel/tau",
+      "finding": "Quality flags and actual pass type must accompany raw arrays. DOF indices require model-specific mapping; generalized forces are not all implicitly joint moments."
+    }
+  ],
+  "concrete_old_defects": [
+    "Invalid mass replaced with 70 kg.",
+    "Hard-coded pass slot 1 interpreted as dynamics.",
+    "Fixed DOF offsets interpreted as anatomical angles without model mapping.",
+    "Root-frame force/COP vectors assigned anatomical directions/legs.",
+    "Rotation-matrix coefficient labelled as angle in radians.",
+    "One million-frame read could be out of bounds or truncate source.",
+    "Exceptions silently dropped frames and shortened elapsed time.",
+    "Trials grouped only by task before segmentation.",
+    "Opposite-leg phase invented by 50 percent shift; phase rate lacked physical time.",
+    "Missing values interpolated across gaps; event end frame excluded; no complete exclusion accounting."
+  ],
+  "replacement_behavior": [
+    "Preserve original B3D bytes in place and bind SHA256. Export all public source-frame and per-pass properties with array dtype/shape, nested values and explicit nonfinite tokens. Unknown property types fail loudly and leave an incomplete manifest.",
+    "Write separate per-file source Parquet, one raw-frame row and every actual pass row per frame, plus every embedded global-pass model XML and source header/contact-body metadata. Local pass slot is not assumed to identify a global model.",
+    "Use exact source trial length, 32-frame reads, 4 MiB single payload and 32 MiB accumulated batch limits. Stream output; no whole-dataset concatenation.",
+    "Keep exact trial/name/split/frame/file identifiers and original timestep. Time is trial-local frame index times timestep, not reconstructed global session time.",
+    "Retain invalid/missing source mass and availability flag; do not normalize any unsupported channel.",
+    "Do not automatically generate canonical anatomical or phase outputs. Optional standalone phase helper requires reviewed external force mapping, one source recording, finite clock and inclusive endpoints.",
+    "All source files have pending/running/completed disposition. Errors retain partial artifacts and mark stopped_incomplete, not successful conversion.",
+    "Canonical task stays null for all source-only rows. Historical task predictions are retained only as explicitly unreviewed metadata, separate from original trial names."
+  ],
+  "breaking_behavior": "Fresh output directory is mandatory. Output is source-preservation Parquet plus model/metadata files rather than guessed canonical time/phase tables. It is a prerequisite for corrected canonical reconstruction, not completion of that objective. Existing historical artifacts remain unchanged.",
+  "source_json_encoding": "source_fields_json is ordinary JSON. Arrays retain dtype, shape and numeric values; NaN/Infinity use explicit source_nonfinite objects. Floating signed zero is retained. Original B3D remains the authoritative byte source; NaN payload bits are not reinterpreted as scientific values.",
+  "tests": {
+    "synthetic_only": true,
+    "passed": 13,
+    "memory_cap_mib": 768,
+    "cases": [
+      "Variable 1/3 pass counts and unexpected DOF ordering",
+      "All exposed metadata including custom channels, raw force plates, markers and missing-GRF flags",
+      "Exact 65-frame batch boundaries and separate repeated-task trial identity",
+      "Short/misindexed/unsupported frame failures without time shrinkage",
+      "Physical phase rate and unavailable opposite-leg phase",
+      "Inclusive event endpoint",
+      "Persisted Parquet counts, embedded model text, retained original file and overwrite rejection",
+      "Failure ledger includes unstarted source files",
+      "Variable per-frame pass availability explicitly compared to trial header without deleting frames",
+      "Startup WSL reserve and output-disk reserve refusal",
+      "Runtime guard breach retains incomplete source-file ledger",
+      "Historical task guesses never populate the source-only canonical task column; original trial name remains task_id."
+    ],
+    "seconds": 0.78
+  },
+  "remaining_gates": [
+    "No real B3D arrays loaded; a reviewed single-file guarded pilot must verify installed native API/property types and actual on-disk source values independently.",
+    "Expose/model-bind DOF names, axis signs, contact-body identities and participant versus fitted model mass before canonical reconstruction.",
+    "Independent persisted original-B3D readback is still required; current mock tests do not prove real dataset correctness.",
+    "Source header APIs requiring full arrays are not automatically loaded; their omission is explicit in loss ledger and original B3D is retained.",
+    "Cross-file participant identity, historical dataset attribution, trial task mappings, source version/license and source-quality interpretation remain dataset-specific admission gates."
+  ],
+  "bindings": {
+    "contributor_tools/conversion_scripts/AddBiomechanics/convert_addbiomechanics_to_parquet.py": "aef78ed6d6bbc1899e14217499191ab41448d51e554eb931a7b659ab66c58b95",
+    "tests/test_addbiomechanics_source_preservation.py": "464d24af54a36db01abe3d2d7398248fb58532fec183a0555c25ed1eab99573c",
+    "contributor_tools/conversion_scripts/AddBiomechanics/dataset_configs.py": "b20016da068b58f4d4ec82e45eb62ed29fc1a7aab1730066cf4e0a0dad57622d"
+  },
+  "resource_guards": {
+    "cli_address_space_mib": 768,
+    "windows_startup_mib": 2816,
+    "windows_runtime_mib": 2048,
+    "wsl_startup_mib": 3584,
+    "wsl_runtime_mib": 2048,
+    "output_disk_reserve_gib": 5,
+    "shared_guard_c_drive_reserve_gib": 1,
+    "poll_seconds": 15,
+    "probe_timeout_seconds": 10,
+    "thread_count": 1,
+    "priority": "nice 19, ionice idle",
+    "note": "Startup check precedes native reader import; periodic checks occur during hashing, bounded reads and writes. Actual execution still requires coordinator single-worker scheduling."
+  },
+  "independent_auditor": {
+    "status": "implemented_synthetic_tests_only_no_real_B3D_readback",
+    "tests_passed": 24,
+    "imports_writer_encoding_or_extraction": false,
+    "checks": "Every original file/trial/frame/pass, source property, dtype/shape/value, signed zero and missingness, clock, mass availability, metadata, model XML, persisted schema and hashes; rejects empty scope and false task-approval labels.",
+    "bindings": {
+      "contributor_tools/conversion_scripts/AddBiomechanics/audit_source_preservation.py": "982a0cf1d0276f09ae2553362bb641777f2797757b4cc9154f426b7654b9be7f",
+      "tests/test_addbiomechanics_independent_readback.py": "df51c97f794e22e655150c70ac290f6a5973740569c3d2b3089f640c73a72cb7"
+    }
+  },
+  "original_source_availability": {
+    "status": "not_located_in_bounded_local_search",
+    "search_artifact": "converted_datasets/reconversion_v2/swarm_backlog_20261021/adb_local_source_search_20261021.json",
+    "search_sha256": "5a66fe8fde1751328fc6969f14b44f1f6a627b2cbca46851922ae9e3aaeb330c",
+    "b3d_files_found": 0,
+    "study_named_archives_found": 0,
+    "historical_expected_root": "/datasets/AddBiomechanics/raw_data/",
+    "scope_limit": "Partial filename and small-metadata search only. Other mounts, cloud storage, generic archive contents and unvisited directories remain unsearched. This is not a claim of global absence.",
+    "next_action": "Use the separately prepared current-public-release pilot when serial resource admission permits, then independently read back B3D source values. Original historical local-export identity remains unresolved."
+  },
+  "public_source_recovery": {
+    "status": "official_archive_member_inventory_recovered_pilot_prepared_not_downloaded",
+    "official_release_page": "https://addbiomechanics.org/download_data.html",
+    "historical_study_members": 989,
+    "historical_studies": 12,
+    "ledger": "converted_datasets/reconversion_v2/swarm_backlog_20261021/adb_official_release_metadata_20261021/historical_study_member_ledger.json",
+    "ledger_sha256": "e04a5eca9ee65c008132eced5a3395ac7ff81b32f1a85eaf3cef3671d43f177e",
+    "pilot_plan": "converted_datasets/reconversion_v2/adb_tiziana_subject29_source_pilot_v2_20261021/plan.json",
+    "pilot_plan_sha256": "dd275c18f69d9ab1a883cec5246642b535cc9445daa192c7f9762d87fb8f7990",
+    "compressed_bytes": 503665,
+    "expanded_bytes": 3605883,
+    "historical_identity_limit": "Current official archive member identity does not establish equality to historical local B3D exports. Variants and split files are not distinct participants.",
+    "transport_limit": "HTTP archive with pinned ETag, length, local/central ZIP64 identity and CRC; no publisher cryptographic hash available.",
+    "implementation": "Bounded streaming extraction, preserved compressed bytes, SHA256 and independent persisted-file readback before success. No full archive download.",
+    "synthetic_tests_passed": 23,
+    "bindings": {
+      "contributor_tools/acquire_addbiomechanics_zip_member.py": "091c70c5d760c839dc54dd740a77e0f8dd8fbb2c1aef1dcb49e7b4186661dec5",
+      "tests/test_addbiomechanics_member_acquisition.py": "698c96f6d35d3326dee5f7323620eaf426e0051e563889c480cc4ee3578508f9"
+    }
+  },
+  "native_reader_dependency_review": {
+    "status": "static_API_reviewed_direct_loader_implemented_real_import_not_run",
+    "installed_versions": {
+      "nimblephysics": "0.10.52.1",
+      "torch": "2.7.1+cu128",
+      "numpy": "2.2.6",
+      "pandas": "2.2.3",
+      "pyarrow": "20.0.0"
+    },
+    "change": "Top-level nimblephysics imports timestep then installed CUDA-linked torch2.7.1+cu128. New loader directly imports extension through empty nimblephysics_libs/__init__.py, rejects any Torch modules before/after, validates required APIs and records distribution version. No real native smoke import performed.",
+    "synthetic_tests_passed": 45,
+    "real_native_smoke_test_performed": false,
+    "handoff": "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/swarm_backlog_20261021/adb_tiziana_dependency_readiness_20261021.json",
+    "bindings": {
+      "contributor_tools/conversion_scripts/AddBiomechanics/native_reader.py": "4ae402daab563fc00d76f9924ce263202b6297288b98fb22a61cdc48ef5ea169",
+      "tests/test_addbiomechanics_native_reader.py": "6a0b7cd5afa053b54723bf8a2c962ae07beedf91831b655a89b6acf61f13bb4e"
+    }
+  },
+  "single_source_execution_preparation": {
+    "status": "reviewed_prepared_not_launched",
+    "plan": "converted_datasets/reconversion_v2/adb_tiziana_single_pilot_20261021/plan.json",
+    "plan_sha256": "fa4148dae2e4bdf59c97c657244aa9dc5c3467ff5d8770f96e09f7a59f761136",
+    "source": "Tiziana2019 NoArm Subject29, current official archive member",
+    "stages": [
+      "60-second guarded native import smoke test",
+      "bounded acquisition",
+      "source preservation",
+      "independent original-source readback"
+    ],
+    "root_synthetic_tests_passed": 15,
+    "bound_dependencies": 20,
+    "native_extension_byte_hash_bound": true,
+    "memory_cap_mib": 768,
+    "scientific_approval": false,
+    "limitation": "One source file only. Historical export equivalence, all-member coverage and anatomical reconstruction remain unverified."
+  }
+}

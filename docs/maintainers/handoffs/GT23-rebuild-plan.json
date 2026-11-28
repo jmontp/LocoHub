@@ -1,0 +1,436 @@
+{
+  "task_id": "GT23-REB-PLAN",
+  "status": "plan_ready_for_review_no_job_run",
+  "scientific_approval": false,
+  "last_checked_at_utc": "2026-11-23T20:37:08+00:00",
+  "summary": "Seven-step rebuild of Georgia Tech 2023 (12 participants, 488 recordings) in Python from the publisher's tables, with no MATLAB. 153 guarded jobs, one at a time, about 14 hours of job time. Step 1 (source preservation) is ready; every later step is blocked on its predecessor. The source has everything each fix needs. No new decision is needed from José: the standard answers the forward/sideways, knee, zero and foot-frame questions, and the open landmark questions are logged as agent defaults with a pilot check.",
+  "scope": {
+    "participants": 12,
+    "recordings": 488,
+    "tasks": 26,
+    "channel_files": 4880,
+    "event_files": 787,
+    "event_windows": 13119,
+    "recordings_with_event_windows": 398,
+    "recordings_without_event_windows": 90,
+    "decisions_applied": [
+      "D-GT23-C05-3 = B: rescale all 52 recordings by (mass used / own mass); the other 436 stay as published with a note",
+      "D-GT23-C01-2: our own segmentation for all 488 recordings, checked against the authors' strides",
+      "D-GT23-C01-1 = C: forward and sideways only for forward walking; lab axes for the 15 tasks with no single forward direction",
+      "D-REF-1 / D-REF-2 (23 Nov 2026): joint angles are differences of gravity-referenced segment angles; centre of pressure in the foot frame, origin 100 mm forward of the ankle centre",
+      "Knee sign per the standard (flexion positive); AB03 body mass from the publisher's table; our own conversion bugs fixed"
+    ]
+  },
+  "engine_choice": {
+    "decision_owner": "agent (not science)",
+    "choice": "Python only. Numeric tables are read with pyarrow/numpy: Joint_*.csv, GroundFrame_GRFs.csv, TRC marker files, Transforms_Euler/*.csv, MotionFile_EH/*.sto, and the authors' small Segmentation/*_parsing.mat files through scipy. No MATLAB job anywhere.",
+    "why": "The old route needed MATLAB to read the body-transform tables (opaque MATLAB table objects; one is 131 MiB uncompressed and was over the size limit). The same body orientations exist for all 488 recordings as Transforms_Euler CSV files (max 41 MB), and the marker files give positions. The guarded launcher is Linux-only, so a Python route can also run under it."
+  },
+  "problem_to_step": [
+    {
+      "problem": "mass",
+      "step": "GT23-M01",
+      "what": "multiply per-kg moments and powers of the 52 recordings by (mass used / own mass); list and factors come from gt23-c05-rescale-error.json (hash-bound); 7 exact, 45 estimated and matched to the nearest recorded mass; the estimate and its interval are kept in provenance"
+    },
+    {
+      "problem": "units",
+      "step": "GT23-M01",
+      "what": "documented only: values are already per kg and the converters label them per kg; the step checks the label on every moment and power column"
+    },
+    {
+      "problem": "ab03mass",
+      "step": "GT23-M01",
+      "what": "body-weight forces use the publisher's README mass table (hash-bound copy; AB03 113.5 kg, not 82.18). The local RawData/Subject_masses.csv is NOT the publisher's file: its header says it was rebuilt from the models, so it is never read"
+    },
+    {
+      "problem": "forceframe",
+      "step": "GT23-C06",
+      "what": "horizontal ground force is no longer written to forward/sideways columns unless the person's heading is known; lab-axis values keep lab-axis names"
+    },
+    {
+      "problem": "forward",
+      "step": "GT23-C06",
+      "what": "forward and sideways force and pressure point filled only in the 11 forward-walking tasks, from the pelvis heading measured per stride; lab axes in the other 15 (D-GT23-C01-1 = C)"
+    },
+    {
+      "problem": "cop",
+      "step": "GT23-C06",
+      "what": "pressure point re-expressed in the foot frame: origin 100 mm forward of the ankle centre (midpoint of the two ankle markers) along heel to toe (heel marker to the midpoint of the two toe markers)"
+    },
+    {
+      "problem": "signs",
+      "step": "GT23-C06",
+      "what": "knee angle, speed and moment follow the standard (flexion positive); hip and ankle checked against the recomputed angles in every task, not only walking"
+    },
+    {
+      "problem": "segments",
+      "step": "GT23-C06",
+      "what": "pelvis from the PSIS-to-ASIS markers; thigh and shank from the authors' model segment axes (Transforms_Euler); foot from heel to toe markers; joint angles are the differences, no separate zero"
+    },
+    {
+      "problem": "velocity",
+      "step": "GT23-C06",
+      "what": "documented, published speeds kept (knee negated); the step records how well the derivative of each recomputed angle agrees with them, and replaces nothing"
+    },
+    {
+      "problem": "labels",
+      "step": "GT23-E01",
+      "what": "normal-walk 2.0 and 2.5 m/s files labelled run, skipping files labelled skip, from the authors' grouping; labels only"
+    },
+    {
+      "problem": "secondleg",
+      "step": "GT23-S01",
+      "what": "every leg's strides are segmented and exported with its own side"
+    },
+    {
+      "problem": "nowindows",
+      "step": "GT23-S01",
+      "what": "all 90 get an explicit disposition: 23 gait recordings (12 obstacle walks, 5 AB01 stair descents, 6 others) are segmented from the force plates; 3 jump/step-up recordings by the window rule; 64 recordings of tasks with no defensible cycle (meander, poses, push, start-stop, tug of war, twister) are exported as continuous recordings"
+    },
+    {
+      "problem": "merged",
+      "step": "GT23-S01",
+      "what": "one observation per stride or window, never one envelope per file"
+    },
+    {
+      "problem": "fallback",
+      "step": "GT23-S01",
+      "what": "our segmentation is the primary route and has a recorded rule per task; no silent fallback, and an unknown task stops the job instead of defaulting to gait"
+    },
+    {
+      "problem": "oneleg",
+      "step": "GT23-S01",
+      "what": "documented: the right treadmill plate is missing in many trials, so no right-leg stride can be found from force; nothing is invented. Counted per recording"
+    },
+    {
+      "problem": "disagree",
+      "step": "GT23-E01",
+      "what": "documented, kept as published (turn-and-step events, weighted-walk speed 1.0 vs 1.25 m/s, AB02 curb file leg names); recorded in task_info notes, nothing changed"
+    },
+    {
+      "problem": "invented",
+      "step": "GT23-E01",
+      "what": "stair rise 0.152 m citing the paper (Table 1), pass number renamed, no curb or step-up height unless a source gives one"
+    },
+    {
+      "problem": "oversized",
+      "step": "GT23-X01",
+      "what": "closed by the Python route: AB02 normal_walk_1 is read from its Transforms_Euler CSV (probed, 180 MiB peak) and its markers (241 MiB peak, inside the 768 MiB address-space cap)"
+    },
+    {
+      "problem": "notreconverted",
+      "step": "GT23-X01 to GT23-E01",
+      "what": "closes only when E01's independent full readback passes; X01 first preserves and indexes all 488 recordings and 4,880 channel files"
+    }
+  ],
+  "steps": [
+    {
+      "id": "GT23-X01",
+      "name": "source preservation",
+      "jobs": 27,
+      "job_breakdown": "3 pilots + 12 participant batches + 12 independent audit batches",
+      "pilot": "AB05 normal_walk_1 (exact mass case, right plate missing, N·m inverse dynamics present), AB02 normal_walk_1 (largest marker file, 67 MB; the oversized-table recording), and AB11 stairs_1_1 (random draw, seed 20261123 over the sorted 488 recordings)",
+      "seed": 20261123,
+      "what": "Per-recording ledger: sha256 and size of all ten channel files, the marker file, the Transforms_Euler file, the model, the authors' strides files; row counts and clock checks; per-marker finite share overall and inside force-plate stance for the 22 marker names the rebuild needs; per-plate finite share; lossless Parquet companions of the ten channel groups. Binds the publisher's README (sha256 4a5c8ef0...) mass table.",
+      "checks_against_known_values": [
+        "488 recordings, 4,880 channel files, 12 participants, 26 tasks, 787 event files (9 empty), 13,119 windows (7,721 left and 5,398 right), 398 with and 90 without windows",
+        "Marker rows equal channel rows and the clock is 200 Hz (AB05 normal_walk_1: 45,895 rows in both; AB12: 44,266)",
+        "The README mass table equals the twelve values in docs/quality/audits/source_evidence/gt23/publisher-readme.txt",
+        "All 22 needed markers present: 9 of 9 probed recordings, at least 97.7% finite overall and at least 98.2% inside the matching leg's stance",
+        "Every one of the 488 recordings has a marker file and a Transforms_Euler file (listing checked: none missing)",
+        "Hashes of re-read files equal the ledger (audit batches use separate code)"
+      ],
+      "memory": "150 to 250 MiB peak (probe maximum 241 MiB for the largest marker file under a 768 MiB address-space cap); disk: Parquet companions about 12 to 15 GB of the 116 GB free, the launcher's 5 GiB floor stays",
+      "wall_hours": 3.5
+    },
+    {
+      "id": "GT23-S01",
+      "name": "segmentation with our own scripts",
+      "jobs": 28,
+      "job_breakdown": "4 pilots + 12 batches + 12 audits",
+      "pilot": "AB12 normal_walk_1 (both plates, authors have left and right strides), AB01 stairs_1_2 (one of the 5 stair descents with empty event files), AB12 poses_1 (random draw, seed 20261124; continuous recording), AB11 squats_1 (window task, seed 20261123 draw)",
+      "seed": "20261123 / 20261124",
+      "what": "New reviewed module for GT23 only (the repo's common segmenter does not fit, see segmentation_scripts). Rules per task class: gait tasks use the publisher's documented rule (vertical force rising through 20 N, one stride per leg, both legs); window tasks use the documented speed-crossing rule (0.5 m/s of the pelvis or trunk markers); tasks with no defensible cycle become continuous recordings. Output is a ledger of strides, windows and recordings, not data arrays. Speed, incline and weight labels are taken only from the authors' window or file name; a stride outside any authors' window gets no speed label (never inferred).",
+      "checks_against_known_values": [
+        "Authors' stride starts versus our 20 N rising crossings, probed on AB05 and AB12 normal_walk_1: 0 ms median and maximum offset, 100% within 10 ms on 11 parsing files with strides; the same check is the acceptance test on every authors' stride (all 13,119 windows listed as matched, or unmatched with a reason)",
+        "Synthetic force traces with known crossing times give exactly those times (tests/, honestly labelled synthetic)",
+        "All 90 recordings have one named disposition; counts add to 90 (23 gait + 3 window + 64 continuous)",
+        "Every dropped or merged stride has a reason in the ledger; no silent filter (no IQR or first/last-stride trimming)",
+        "Right-plate-missing trials report zero right strides, not invented ones"
+      ],
+      "memory": "under 250 MiB: one 1 MB force file and, only for window tasks, 4 of 35 marker columns per recording",
+      "wall_hours": 1.5
+    },
+    {
+      "id": "GT23-C06",
+      "name": "conventions: segment and joint angles, knee sign, force frame, pressure point",
+      "jobs": 28,
+      "job_breakdown": "4 pilots + 12 batches + 12 audits",
+      "pilot": "AB05 normal_walk_1 (inverse-dynamics and IK references; left plate only), AB12 normal_walk_1 (both plates), AB11 squats_1 (no forward direction; lab axes), AB05 turn_and_step_1 (heading changes; random draw seed 20261123)",
+      "seed": 20261123,
+      "what": "Per recording and sample: segment angles in the person's sagittal plane (forward = up x (right ASIS - left ASIS), per sample), joint angles as differences, knee negated for published speed and moment, pressure point in the foot frame, force in lab axes plus forward/sideways for the 11 forward-walking tasks only.",
+      "checks_against_known_values": [
+        "Knee flexion from segments versus minus the authors' IK knee angle: probed on 4 legs in 3 recordings, correlation 0.9988 to 0.9997, residual sd 1.3 to 2.8 deg, offset -4.6 to +2.4 deg (a real zero difference, as decided); knee positive when flexed, peak 85 to 99 deg",
+        "Foot angle at mid-stance close to flat: probed -2.6 to -13 deg across 9 recordings (median -4.6 deg in AB05 walking)",
+        "Pressure point in the foot frame in AB05 left-leg walking (137 stances): -0.156 m at stance start, +0.099 m at the end, vertical -0.095 m (ankle marker 0.103 m above floor), sideways +0.003 m, foot length 0.203 m",
+        "Composition thigh = pelvis + hip, shank = thigh - knee, foot = shank + ankle holds to 1e-12 by construction and is asserted",
+        "Sign of the published hip, knee (negated) and ankle speeds agrees with the derivative of the recomputed angles in every task class, not only walking",
+        "Left and right sideways force mirror; vertical force sums to about body weight in standing",
+        "Synthetic rigid-body fixtures with known angles give those angles"
+      ],
+      "memory": "250 to 400 MiB peak expected (marker file, Euler file, force and joint files for one recording); pilot must show it stays under the 768 MiB address-space cap",
+      "wall_hours": 3.0
+    },
+    {
+      "id": "GT23-M01",
+      "name": "mass: rescale 52 recordings, AB03 body weight, units notes",
+      "jobs": 27,
+      "job_breakdown": "3 pilots + 12 batches + 12 audits",
+      "pilot": "AB05 normal_walk_1 (exact: mass used 78.9 kg, own 71.5 kg, factor 1.1035), AB03 dynamic_walk_1 (estimated: 84.1 kg used, own 113.5 kg, factor 0.741), AB03 any recording (body-weight force with 113.5 kg)",
+      "seed": "fixed cases, no draw needed",
+      "what": "Moment and power columns of exactly the 52 recordings in the C05 audit are multiplied by (mass used / own mass); every other recording's moments and powers are byte-identical to the source with a note. Body-weight forces use the README table.",
+      "checks_against_known_values": [
+        "Probed: per-kg moment times a constant equals the authors' local N·m inverse dynamics with correlation 1.0000 and slope 78.9 (AB05), 78.9 (AB01), 84.1 (AB10), 71.5 (AB06) kg, as in the C03 audit",
+        "After rescale, moment times own mass equals the N·m inverse dynamics for the 7 exact recordings within 1e-3 N·m",
+        "Exactly 52 recordings rescaled and they are the list in the hash-bound C05 audit; the other 436 are unchanged",
+        "Powers use the same factor as their recording's moments",
+        "AB03 standing vertical force sums to about 1 BW with 113.5 kg (the C02 audit found 113.8 kg from the plates)"
+      ],
+      "memory": "under 200 MiB (column scaling only)",
+      "wall_hours": 1.5
+    },
+    {
+      "id": "GT23-E01",
+      "name": "export (phase and time tables) with full independent readback",
+      "jobs": 27,
+      "job_breakdown": "3 pilots + 12 batches + 12 independent full readbacks against the source",
+      "pilot": "AB05 normal_walk_1 (run and skip labels; second-leg strides), AB01 stairs_1_1 (stair rise 0.152 m, pass number), AB12 poses_1 (continuous recording; seed 20261124)",
+      "seed": 20261124,
+      "what": "One Parquet shard per participant for phase observations (150 samples, 0 to 100 inclusive) and one for continuous time recordings, with identity, task labels and task_info from the authors' grouping, lineage to the X01 ledger, S01 segments, C06 conventions and M01 mass notes. Trunk columns stay missing (no zero defined), frontal and transverse signals keep the source sign and say so.",
+      "checks_against_known_values": [
+        "Every observation has subject, source_recording_id, observation_id, reference_side, and 150 inclusive samples from 0 to 100, or increasing time",
+        "Every source recording and every authors' window is accounted for exactly once, as exported or with a stated exclusion",
+        "The 33 normal-walk event files labelled run or skip; stair rise 0.152 m; no curb or step-up height",
+        "Both legs present wherever force exists; right-plate-missing recordings show the gap, not zeros",
+        "Independent readback re-reads the source and agrees with the exported values to float precision and with the mass rescale and sign rules"
+      ],
+      "memory": "250 to 400 MiB peak; row groups of 4,096 rows, one recording resident",
+      "wall_hours": 3.0
+    },
+    {
+      "id": "GT23-Q01",
+      "name": "quality assessment",
+      "jobs": 13,
+      "job_breakdown": "1 pilot + 12 batches",
+      "pilot": "AB12 normal_walk_1",
+      "seed": "fixed",
+      "what": "Structured assessment per observation (existing Q01 task, unchanged scope): coarse physical limits only, no tuned ranges; unassessed signals stay unassessed.",
+      "checks_against_known_values": [
+        "Chips are pass, failed or not checked; every missing or unassessed signal is not checked, never pass",
+        "The pelvis finding below (marker pelvis tilt versus the model's) is reported, not hidden"
+      ],
+      "memory": "under 250 MiB",
+      "wall_hours": 1.0
+    },
+    {
+      "id": "GT23-R01",
+      "name": "release",
+      "jobs": 3,
+      "job_breakdown": "dry run, one bundle build, one independent verification",
+      "pilot": "n/a",
+      "seed": "n/a",
+      "what": "Existing R01 task: immutable local review bundle, every exclusion accounted. The time table is about 20 million rows, far above the 256 MiB default admission; the phase table alone fits better. What a release contains is José's scope decision, raised only when R01 starts.",
+      "checks_against_known_values": [
+        "Manifest, hashes, counts reconcile with E01 and Q01"
+      ],
+      "memory": "default release admission 256 MiB, not raised",
+      "wall_hours": 1.0
+    }
+  ],
+  "totals": {
+    "jobs": 153,
+    "matlab_jobs": 0,
+    "serial_job_hours_rough": 14.5,
+    "calendar_note": "about 14 hours of one-at-a-time job time; calendar several days because new code is written per step and each step ends with an independent review before the next is unblocked"
+  },
+  "source_checks": {
+    "marker_segments_and_ankle_centre": {
+      "answer": "yes",
+      "evidence": "All 22 needed markers (4 pelvis, greater trochanters, thigh clusters, lateral and medial knee, lateral and medial ankle, heel, MT1 and MT5) are present in 9 of 9 probed recordings across all 7 task groups (level walking, treadmill variants, backward, turn, run, steps, in-place). Finite share at least 97.7% overall and at least 98.2% inside the matching leg's stance. The ankle centre is the midpoint of the lateral and medial ankle markers (both present).",
+      "not_checked": "coverage for the other 480 recordings; X01 measures it for all 488 and fails closed per recording."
+    },
+    "foot_orientation": {
+      "answer": "yes",
+      "evidence": "Heel and toe markers give heel-to-toe. Mid-stance foot angle -2.6 to -13 deg across 9 recordings (flat foot, as expected). Transforms_Euler gives the authors' calcn orientation too."
+    },
+    "segment_poses": {
+      "answer": "yes, for all 488",
+      "evidence": "Transforms_Euler/*.csv exists for all 488 recordings. Its column names are not the axis names: the first angle in the file is the turn about the vertical. The order that reproduces the authors' IK pelvis rotation is intrinsic Y-Z-X with the columns taken in file order (AB05 median residual 0.09 deg, max 0.70; AB12 0.09 and 0.71; AB02 0.83 and 2.34). So the rotations are recoverable without MATLAB, with a stated sub-degree to 2 degree difference from IK."
+    },
+    "moments_in_Nm_for_mass_rescale": {
+      "answer": "partly, and enough",
+      "evidence": "The publisher's Joint_Moments and Joint_Powers are per kg for all 488 recordings, so the rescale is a multiplication and needs no N·m. Local N·m inverse dynamics (MotionFile_EH/inverse_dynamics.sto, provenance unknown) exists for 11 of 12 participants, normal walking only (AB07 has none). It reproduces the mass the authors used in 4 of 4 probed cases (AB05 78.9, AB01 78.9, AB10 84.1, AB06 71.5 kg). So the 7 exact factors can be independently verified and the other 45 rest on the force-plate estimate, as the audit says."
+    },
+    "pelvis_finding": "The marker PSIS-to-ASIS pelvis angle (the standard's definition) is not correlated with the authors' IK pelvis tilt in walking frames (correlation 0.06, -0.01, -0.08 in 3 recordings; mean offsets -23, -6.6 and -9.8 deg). The model pelvis is a different definition. This is not an error to correct; it means the pelvis check cannot use IK and C06 needs another reference (a cited range for the PSIS-ASIS tilt, or the anterior tilt at standing), logged as a limit.",
+    "probe_record": "docs/quality/audits/gt23-rebuild-probes.json (22 runs, peak RSS 150 to 241 MiB; script contributor_tools/audit_probes/2026_11_23/probe_gt23_rebuild_source.py)"
+  },
+  "segmentation_scripts": {
+    "found": [
+      {
+        "path": "contributor_tools/common/stride_segmentation.py",
+        "what": "Python: gait heel-strike to heel-strike (50 N default), standing-action (jump, squat, lunge), sit-stand transfers. Uses one vertical force column, absolute 600/400 N thresholds, drops the first 2 and last 1 strides and IQR outliers, and treats an unknown task as gait.",
+        "verdict": "Fits 11 of 26 tasks (304 of 488 recordings) in kind, but not as it stands: no tests, no callers, threshold 50 N versus the publisher's 20 N, one leg only, silent filters that break the accounting rule, silent gait default. Not used as is; patterns reused in a new GT23 module."
+      },
+      {
+        "path": "contributor_tools/common/phase_detection.py",
+        "what": "Python: threshold crossing helper used by the above.",
+        "verdict": "Same limits."
+      },
+      {
+        "path": "/mnt/s/locomotion_data/Gtech_2023/utilities/segment_jump_cycles.m and segment_sit_stand_transitions.m",
+        "what": "MATLAB jump and sit-stand segmenters with absolute N thresholds.",
+        "verdict": "MATLAB cannot run under the launcher; Python equivalents exist in the common module. Not used."
+      },
+      {
+        "path": "contributor_tools/conversion_scripts/Gtech_2023/convert_gtech_phase_to_parquet.m lines 217-233, 498-579",
+        "what": "Fallback segmentation inside the old converter (600/400 N).",
+        "verdict": "Retired by S01 (no fallback)."
+      }
+    ],
+    "tasks_covered_by_existing_kind": [
+      "normal_walk",
+      "dynamic_walk",
+      "incline_walk",
+      "weighted_walk",
+      "obstacle_walk",
+      "walk_backward",
+      "stairs",
+      "sit_to_stand",
+      "squats",
+      "lunges",
+      "jump"
+    ],
+    "tasks_not_covered": [
+      "ball_toss",
+      "curb_down",
+      "curb_up",
+      "cutting",
+      "lift_weight",
+      "meander",
+      "poses",
+      "push",
+      "side_shuffle",
+      "start_stop",
+      "step_ups",
+      "tire_run",
+      "tug_of_war",
+      "turn_and_step",
+      "twister"
+    ],
+    "plan": "A new GT23 module with the publisher's documented rules per task class (README lines 274 to 277), tested on synthetic traces and checked against the authors' strides; tasks with no defensible cycle are continuous recordings, which the standard allows."
+  },
+  "standard_gaps": [
+    {
+      "id": "G1",
+      "gap": "Where the thigh and shank axes end (hip centre method) and which source gives the segment axes",
+      "standard_says": "thigh and shank long axis, zero straight down; nothing on landmarks",
+      "needed_by": "C06",
+      "action": "agent default, logged: the authors' model femur and tibia long axes (Transforms_Euler) for thigh and shank, markers as the cross-check (probed knee agreement above). If José answers D-GT21-REB-1 differently, GT23 follows in kind. Not asked: GT23 has both markers and model, so nothing is missing and the difference is a few degrees."
+    },
+    {
+      "id": "G2",
+      "gap": "How the ankle joint centre is found",
+      "standard_says": "origin 100 mm forward of the ankle joint centre; no method",
+      "needed_by": "C06 pressure point",
+      "action": "agent default, logged: midpoint of the lateral and medial ankle markers (both present in the source)."
+    },
+    {
+      "id": "G3",
+      "gap": "Full three-dimensional foot frame (how roll about heel-to-toe is resolved)",
+      "standard_says": "forward along heel-to-toe, up perpendicular, sideways outward",
+      "needed_by": "C06 pressure point",
+      "action": "agent default, logged: up is vertical projected perpendicular to heel-to-toe (no roll), as in the probe."
+    },
+    {
+      "id": "G4",
+      "gap": "Which plane the sagittal angles are measured in when the person is not walking forward or changes heading",
+      "standard_says": "+x is the walking direction; D-GT23-C01-1 settled force only",
+      "needed_by": "C06 segment angles in the 15 tasks",
+      "action": "agent default, logged: the plane of the pelvis heading at each sample for angles, lab axes for force in the 15 tasks. Least change; José can overrule."
+    },
+    {
+      "id": "G5",
+      "gap": "What to do with published joint speeds and powers when the angles are recomputed",
+      "standard_says": "speed is the derivative of the angle; power is moment times speed",
+      "needed_by": "C06, M01",
+      "action": "agent default, logged: keep the published speeds and powers (knee negated, rescale applied) and record their agreement with the derivative of the new angles; replace nothing (decided earlier: no recomputation recipe is claimed)."
+    },
+    {
+      "id": "G6",
+      "gap": "Segmentation definitions: no section; stride_segmentation.py cites a Segmentation Archetypes section that is not in docs/reference/index.md",
+      "standard_says": "event definitions belong in provenance; document what start and end mean for non-gait actions",
+      "needed_by": "S01",
+      "action": "not asked: follow the publisher's documented rules and record them in provenance. A reference section would help but nothing is blocked."
+    },
+    {
+      "id": "G7",
+      "gap": "Trunk zero is not defined",
+      "standard_says": "trunk zero not yet defined",
+      "needed_by": "trunk columns",
+      "action": "not asked: trunk columns stay missing (the source has a torso orientation but no zero rule)."
+    },
+    {
+      "id": "G8",
+      "gap": "Frontal and transverse signs not adopted",
+      "standard_says": "keep source sign, do not combine",
+      "needed_by": "hip adduction/rotation, subtalar",
+      "action": "keep the source sign, label it; unchanged."
+    },
+    {
+      "id": "G9",
+      "gap": "Tooling, not the standard: release admission is 256 MiB, the time table is about 20 million rows",
+      "standard_says": "n/a",
+      "needed_by": "R01",
+      "action": "shard by participant and stream; do not raise the admission; ask José only if the builder cannot admit, and then as a scope question (what a release contains)."
+    }
+  ],
+  "decisions_added": [],
+  "findings": [
+    "Local RawData/Subject_masses.csv is not the publisher's file: its header says it was extracted from the models and it lists AB03 as 82.18 kg. The publisher's README says the table is 'also included as a .csv'; that original is not in the local folder. The README table is used.",
+    "Link_Angle.csv and Link_Velocities.csv (dated Aug 2025) are our own earlier derived files, not publisher data. They are never used as source.",
+    "Problem page inconsistency to fix when the page is rebuilt: the 'mass' card says 52 shown and 434 cannot be told, but 488 - 52 = 436 (the 'where' text says 436).",
+    "Without an authors' window, a stride has no known speed or incline. S01 and E01 leave that label unknown instead of guessing it from the force data."
+  ],
+  "risks": [
+    "The pelvis (PSIS-to-ASIS) check has no IK reference (see source_checks.pelvis_finding).",
+    "Transforms_Euler agrees with the authors' IK pelvis to 0.09 deg for AB05 and AB12 but 0.83 deg median (2.3 max) for AB02; C06 pilot reports it per participant.",
+    "The address-space cap of 768 MiB: numpy plus pandas peaks at 326 MiB virtual with one thread and the largest marker file ran under ulimit -v 768 MiB; C06 and E01 pilots must still show it with pyarrow writing.",
+    "Disk: 116 GB free on S: at 88% full; companions plus exports about 25 to 35 GB.",
+    "Right-plate-missing treadmill trials give no right-leg strides from force; any kinematic heel-strike method is new science and is not planned.",
+    "Another agent edits backlog.json (GT21 and UM21 plans are uncommitted); the edit here was made by a single read-modify-write of GT23 entries only."
+  ],
+  "checks": [
+    "Read AGENTS.md, docs/reference/index.md, the GT23 problem page scope (19 cards), handoffs C01 to C05, audits, backlog GT23 tasks and decisions, the old converters, and the UM21 runners.",
+    "22 read-only probe runs, one file at a time, flock + nice 19 + ionice idle, /usr/bin/time -v; peak RSS 150 to 241 MiB; memory checked before each run (Linux available 8.1 to 8.6 GB; Windows free 7.8 to 8.3 GB); nothing written under converted_datasets/ or the source folders; no MATLAB; nothing left running."
+  ],
+  "remaining": [
+    "Review of this plan by José and an independent agent.",
+    "All jobs. X01 first: write and dry-run the guarded specs for the three pilots."
+  ],
+  "next_action": "GT23-X01: write the Python source reader and ledger (fails closed), write the three pilot job specs, and dry-run them through the guarded launcher; run nothing else until the dry runs pass.",
+  "changed_files": [
+    "docs/maintainers/handoffs/GT23-rebuild-plan.json",
+    "docs/quality/audits/gt23-rebuild-probes.json",
+    "contributor_tools/audit_probes/2026_11_23/probe_gt23_rebuild_source.py",
+    "docs/maintainers/backlog.json",
+    "docs/maintainers/backlog.html"
+  ],
+  "evidence_paths": [
+    "docs/quality/audits/gt23-rebuild-probes.json",
+    "docs/quality/audits/gt23-problem-scope.json",
+    "docs/quality/audits/gt23-c01-events-and-frames.json",
+    "docs/quality/audits/gt23-c05-rescale-error.json",
+    "docs/quality/audits/gt23-publisher-units-and-mass-review.json",
+    "docs/quality/audits/pm01-stopped-jobs-review.json"
+  ]
+}

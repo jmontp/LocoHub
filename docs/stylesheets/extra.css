@@ -1,109 +1,38 @@
-/* Removed homepage title hiding to keep a clear H1 */
-
-/* Hero section styles */
-.hero-section {
-  text-align: center;
-  padding: 2rem 0;
-}
-
-.hero-section img {
-  margin: 0 auto;
-}
-
-.hero-actions {
-  margin-top: 2rem;
-}
-
-.hero-button {
-  margin: 0.5rem;
-}
-
-/* Hero banner for contributor page */
-.hero-banner {
-  text-align: center;
-  padding: 2rem 0 3rem 0;
-  margin-bottom: 2rem;
-}
-
-.hero-banner h1 {
-  font-size: 2.5rem !important;
-  margin-bottom: 1rem;
-}
-
-.hero-banner h2 {
-  font-size: 1.5rem !important;
-  font-weight: normal;
-  color: var(--md-default-fg-color--light);
-  margin-bottom: 1rem;
-}
-
-.hero-stats {
-  margin: 2rem 0;
-  font-size: 1.1rem;
-  opacity: 0.9;
-}
-
-/* Increase font size for contributor page */
-.md-content--contributor {
-  font-size: 1.05rem;
-}
-
-.trust-indicators {
-  text-align: center;
-  padding: 1rem 0;
-  font-size: 1.1rem;
-}
-
-.success-icon {
-  color: #4caf50;
-}
-
-.main-sections-grid {
-  display: grid;
-  gap: 2rem;
-  margin-top: 2rem;
-}
-
-.main-section, .dashboard-tile {
-  padding: 1.5rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-}
-
-/* Code mode buttons on tutorials */
-.code-mode-buttons {
+/* Use the documentation theme colors in both light and dark modes. */
+[hidden] { display: none !important; }
+.catalog-controls {
   display: flex;
-  gap: 0.5rem;
-  margin: 0.5rem 0 1rem 0;
-}
-.code-mode-button {
-  display: inline-block;
-  padding: 0.4rem 0.8rem;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 1rem;
+  padding: 1rem;
+  margin: 1rem 0;
   border: 1px solid var(--md-default-fg-color--lightest);
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  text-decoration: none;
+  border-radius: .4rem;
 }
-.code-mode-button.active {
-  background: var(--md-primary-fg-color);
-  color: var(--md-primary-bg-color);
-  border-color: var(--md-primary-fg-color);
+.catalog-controls label { display: grid; gap: .3rem; }
+.catalog-controls input[type="search"], .catalog-controls select, .catalog-controls button {
+  padding: .5rem;
+  max-width: 100%;
+  color: var(--md-default-fg-color);
+  background: var(--md-default-bg-color);
+  border: 1px solid var(--md-default-fg-color--light);
+  border-radius: .2rem;
+  font: inherit;
 }
-
-/* Per-language code visibility controlled by data attribute on <html> */
-:root[data-code-lang="python"] .code-lang-matlab { display: none; }
-:root[data-code-lang="matlab"] .code-lang-python { display: none; }
-
-@media screen and (min-width: 76em) {
-  /* Hide left navigation sidebar on wide screens only */
-  .md-sidebar--primary {
-    display: none;
-  }
-
-  /* Allow main content to expand when sidebar is hidden */
-  .md-content {
-    max-width: 100%;
-    margin-left: 0;
-  }
-}
+.catalog-controls button { cursor: pointer; }
+.catalog-controls fieldset { min-width: 0; border: 0; padding: 0; }
+.catalog-controls legend { font-weight: 700; margin-bottom: .5rem; }
+.catalog-controls .dataset-option { display: inline-flex; align-items: center; margin: .3rem .8rem .3rem 0; }
+.catalog-controls input[type="checkbox"] { width: 1rem; height: 1rem; }
+.catalog-controls :focus-visible, .comparison-card a:focus-visible { outline: 3px solid var(--md-accent-fg-color); outline-offset: 3px; }
+.comparison-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); gap: 1rem; }
+.comparison-card { padding: 1rem; border: 1px solid var(--md-default-fg-color--lightest); border-radius: .4rem; min-width: 0; }
+.comparison-card h2 { margin-top: 0; }
+.comparison-links { display: grid; gap: .5rem; }
+.comparison-card figure { margin: 1rem 0; }
+.comparison-card img { width: 100%; height: auto; }
+.comparison-card figcaption { color: var(--md-default-fg-color--light); font-size: .8rem; }
+.release-status { font-weight: 700; }
+.md-button--disabled { color: var(--md-default-fg-color--light); }
+@media (max-width: 40rem) { .catalog-controls > label { flex: 1 1 100%; } }

@@ -1,0 +1,609 @@
+{
+  "objective": "Correct and verify all converted datasets, not only a selected task/signal subset",
+  "complete": false,
+  "completion_requirements": [
+    "Resolve each observed defect in conversion code and regenerated artifacts",
+    "Cover all source tasks, subjects, conditions and available signals; account for exclusions and unsupported sources",
+    "Preserve measured timing, anatomical identities, mass, units and signs without invented values",
+    "Check source-to-output correspondence across affected tasks and both sides",
+    "Verify full structural integrity and stable identities with bounded reads",
+    "Bind file versions, previews, reports and any filtered variants to source/output hashes and exclusion ledgers",
+    "Keep missing evidence and unverified scientific assumptions open; fixture passes alone are not completion"
+  ],
+  "datasets": [
+    "Umich 2021",
+    "Georgia Tech 2021",
+    "Georgia Tech 2023",
+    "Georgia Tech 2024",
+    "Georgia Tech 2025",
+    "MBLUE Ankle",
+    "Gait120",
+    "StrokePiG"
+  ],
+  "current_limitations": {
+    "umich": "Treadmill hip/knee subset regenerated; all 252 normalized transfer curves preserved with exact source-channel readback but unknown side/timing. MATLAB duplication and ordinal timing removed, native execution unverified. Remaining tasks, canonical signals, source pairing and full release reconciliation open. All 30 locally available Run trials are reconstructed under a 768 MiB limit: 2,681 observations/402,150 rows and 84 original 100 Hz joint-angle/force/moment/power components. Independent full readback verifies all source events and 33,780,600 finite values (maximum component difference 4.22e-11). canonical kinetics, forceplates/markers, Wtr/Stair and full release reconciliation remain open. Stair annotation audit now covers all 403 local recordings: 2,700 explicitly sided movements and 16 explicitly empty MATLAB annotations. Ascent/descent pilot exports 14 movements/2,100 rows; independent readback verifies 63,000 original joint-angle components (maximum difference 8.53e-14), bilateral hip/knee and timing. Full stair reconstruction plus readback is queued after the existing serial queue at um21_stair_serial_queue_20261021; it has not begun. Wtr, raw transfer timing, markers, canonical conventions and release reconciliation remain open. Full Wtr event census covers nine subjects (AB10 absent as documented): 3,138 bilateral heel-strike pairs, of which 2,080 fit one protocol interval, 137 cross interval boundaries and 921 lie outside annotated intervals. All stride-duration arrays agree with source heel strikes. Existing MATLAB phase code wrongly treats direct Wtr fields as separate trials and invents walking/running endpoint speeds; time code labels the whole recording walk_to_run. Wtr reconstruction must preserve protocol labels separately from unverified gait-mode switches and retain all 1,058 boundary/outside pairs explicitly. Wtr source companion exporter now preserves every source heel-strike pair and original joint component without inventing gait labels. AB01 pilot retains all 340 cycles/51,000 rows, including 103 outside intervals and 15 boundary-crossing cycles. Independent readback checks all 4,284,000 finite source-component values (max difference 4.52e-12). Full nine-subject reconstruction plus readback is queued after stairs at um21_wtr_serial_queue_20261021; canonical task labels and other omitted source modalities remain open.",
+    "gt24": "Canonical task labels, short-trial trimming, transfer duration and source-clock interpolation corrected. Three-recording timing/trim pilot: 24 observations checked against source hips/knees. New timing queue running; all-task/signal coverage, event validity, exclusions and conventions remain open. Full parsed-source census finds 2,421 recordings across both phases: 796 unmapped and 73 explicitly skipped before segmentation (869 total omissions). Thirty representative omitted-task files contain 314,222 rows with ordered clocks and finite joint data. The active immutable batch cannot cover these tasks; a separate corrected reconstruction pass is required. The initial Phase3 queue stopped at 484/752 after repeated schema failures: six duplicated lunge intervals across five recordings. Corrected standing segmentation merges identical non-flight intervals before IQR filtering. All five recordings regenerated: 83 unique observations/12,450 rows, exactly 900 duplicate rows removed, all other values unchanged. Full corrected batch restart remains required. Fresh Phase3 and Phase1And2 reconstruction outputs are scheduled after GT21 in corrected_serial_queue_20261021; the old partial run remains preserved.",
+    "gt25": "Seven BT01 recordings regenerated: 152 observations / 22,800 rows, source-matched for checked channels. All-subject/task coverage, ankle sign, segment angles, COP frames, event validity and exclusion accounting remain open. Full inventory now records 676 local recordings across eight subjects: 460 mapped and 216 explicitly excluded tasks. Seventy-two recordings exceed the conservative 64 MiB CSV admission estimate, including 47 mapped recordings. Serial guarded batch runner preserves unresolved task/admission statuses, uses isolated 1.5 GiB workers with live memory/disk guards, and refuses changed-code resume. A fresh normal-walking worker smoke test exports 21 cycles/3,150 rows with independent source agreement (max difference 2.23e-16). Full batch execution remains pending behind the UM21 Wtr queue; full output source checks and missing-task preservation remain open.",
+    "mblue": "Opposite-leg gait signals use temporal overlap; absent duration/pelvis remain missing. Stable source identities now include normalized MAT path, condition, task block, anatomical reference and original column, including nested stair direction/step. Walking pilot: 102 cycles, 45,228 opposite-side angle comparisons; identity migration preserves all 703,800 prior numeric values exactly. Transfer/crouch timing now uses verified equal bilateral clocks instead of an empty shared time field, and interpolation uses recorded nonuniform timestamps. AB01 bare/exo pilot: 60 movements, 54,000 source-matched angle values and source-checked velocities; all schema checks pass. Full-subject reconstruction, gait ipsilateral timestamp interpolation, force/COP mapping, physical conventions and exclusion accounting remain open. Gait reference-side interpolation is now corrected to use observed timestamps too; the 102-cycle AB01 pilot verifies 45,900 ipsilateral and 45,228 contralateral angle values plus velocities (max error 4.45e-16). Whole-source clock census covers 10 subjects/335 blocks/16,418 leg-specific cycles: every cycle has a valid nonuniform clock, and all transfer/crouch bilateral clocks match exactly. All ten normalization masses independently match original FileInfo subject metadata. Full reconstruction, all-signal checks and scientific force/COP conventions remain pending. Full 335-block normalized-source reconstruction is now running in mblue_full_normalized_v2_20261021 with a live independent readback of identities, clocks, angles, derivatives, normalized moments and vertical forces. The initial six-block run stopped when readback caught finite centered derivatives at missing angle samples; derivatives now retain missing center values, and the old partial run is preserved. The native queue memory monitor is temporarily suspended for this one bounded bulk job and automatically resumed on exit. This rebuild does not yet preserve external Vicon COP or every unstandardized source field.",
+    "gt21": "Full 2,301-recording reconstruction is running in gt21_metadata_corrected_20261021 under metadata_serial_queue_20261021. Original SubjectInfo masses for 22 participants have exact native readback; the local recording inventory contains 16 subjects. A live independent checker verifies bilateral angles, velocities, mass-normalized moments, event bounds, hashes and overground task labels. The prior 16-recording run is preserved and superseded because cohort-average speeds were incorrectly presented as measured trial speeds. Corrected native pilot preserves four observations/600 rows with source-matched signals and task labels; speeds now retain filename categories only. Full regeneration, exclusion reconciliation, force/COP and physical sign/frame conventions remain open. Independent event coverage accounting for the first 25 corrected overground recordings finds 560 source pairs: 104 exported, 61 opposite-reference-leg exclusions and 395 outside complete eligible task windows, with zero unexplained omissions in this subset. This explains current policy, not scientific approval of those exclusions; full recording/task coverage and preservation of unsupported windows remain open. Execution update: native prelaunch guard stopped before recording 37 because Windows available memory fell below 4 GiB. The 36 completed recordings/856 observations passed source readback. Failed-launch evidence is preserved; memory_resume_20261021 waits for 4.5 GiB Windows headroom plus host/output disk floors before resuming hash-matched artifacts and reattaching all downstream queues/checkers. No scientific failure was reported.",
+    "gait120": "Removed invented metadata and unsupported leg swaps/half-cycle rotation. Source protocol specifies right-foot cycles. Fourteen recordings across all seven tasks (S001/S011) regenerated and all bilateral sagittal angles source-matched; source anthropometry checked. Full rebuild, independent event/contact verification, model sign/force/COP and inverse-dynamics anomalies remain open. Force/COP timing-based leg guesses removed; all available raw plate force/COP/torque axes preserved on the IK clock (36 source-channel comparisons exact across three force-bearing pilot recordings). Anatomical GRF/COP remains missing until mapping is verified. Full local inventory matches published totals: 6,882 recordings, 120 subjects, seven tasks. Guarded per-recording reconstruction is queued after GT21; only its one-recording worker smoke check has executed. Non-sagittal signal standardization is also still pending. Its waiting dispatcher has now stopped because upstream GT24 ended incomplete; restart with reviewed code fingerprints is required before full-batch execution. Fresh output gait120_corrected_20261021 is now scheduled after corrected GT24 in the reviewed serial queue.",
+    "strokepig": "Source C3D foot strikes, inclusive endpoints, actual-time interpolation and one-frame C3D/IK clock correction verified on TVC03/BWA6 (3 observations, 450 rows). Full reconstruction, clinical side, force/COP, model conventions and empty-recording exclusion accounting remain open.",
+    "gt23": "Native time pilot verifies 2,475 rows/six COP channels. Native phase curb pilot verifies ten observations/1,500 rows and bilateral joint angles/moments, after fixing condition fields incorrectly aliased as anatomical sides. Full time/phase reconstruction, other task conditions, inferred transfer events and physical conventions remain open. Transfer source audit covers 1,199 intervals/12 subjects with matching bilateral motion direction; 787 parsing files resolve to actual source folders. Repeat-recording selection and transfer labels verified natively on 30 AB03 movements/4,500 rows with source-matched bilateral angles. Full reconstruction and boundary/convention checks remain open. Full input preflight finds all expected channels for 787 windows, but 219 exceed the 64 MiB native input admission. Streaming CSV preparation independently preserves exact source lines and interpolation neighbors (94.18 to 38.31 MiB in one pilot). Native transform extraction now preserves the required calcn columns with exact MAT readback. One larger input successfully reconstructed under the unchanged 2 GiB guard: 20,111 time rows, 24 source-matched channels and schema checks. Full batch preparation/reconstruction, the one transform input above 64 MiB, physical conventions and remaining signals stay open. Larger-window native phase pilot preserves 50 annotated transfers/7,500 rows with bilateral source angle checks. Phase allowlist now includes four previously omitted tasks (169 windows); native ball-toss pilot verifies five movements/750 rows. Whole-source annotation audit covers all 787 windows/19 tasks and identifies nine empty left/right annotation pairs; full reconstruction and explicit exclusion handling remain pending. Full serial time/phase runner now inventories all 787 windows and is queued after Gait120. Its larger-input worker smoke test produces 20,111 time rows and 7,500 phase rows exactly equal to independently checked prior pilots; hash-bound resume passes. Full batch has not started. Empty annotations and over-limit inputs remain explicit unresolved statuses, not successful conversions. Its waiting dispatcher has now stopped because upstream GT24 ended incomplete; restart with reviewed code fingerprints is required before full-batch execution. Fresh output gt23_native_corrected_20261021 is now scheduled after Gait120 in the reviewed serial queue."
+  },
+  "findings": [
+    {
+      "id": "umich-1",
+      "finding": "Observation keys collide across separate curves",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/umich_2021_phase_clean.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Preserve historical artifact; regenerate with recording, reference-leg and observation IDs. Never globally group clean file by subject/task/step."
+    },
+    {
+      "id": "umich-2",
+      "finding": "Hip and segment angles violate the declared convention",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/umich_2021_phase_clean.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Do not label clean as convention-verified. Reconcile with source and corrected conversion, then validate both sides across tasks."
+    },
+    {
+      "id": "umich-3",
+      "finding": "Stored hip velocity has a150/149 scale error",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/umich_2021_phase_clean.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Regenerate derivatives using actual149intervals; verify against independently sampled time and angle values."
+    },
+    {
+      "id": "umich-4",
+      "finding": "Clean file is an older, incomplete task set, not a reconciled subset of current raw",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/umich_2021_phase_clean.parquet",
+        "converted_datasets/umich_2021_phase_raw.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Record separate version/lineage and exclusion reasons; show task availability and unreviewed status prominently."
+    },
+    {
+      "id": "umich-5",
+      "finding": "Normalized transfer curve is duplicated into both anatomical channels",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/umich_2021_phase_raw.parquet",
+        "contributor_tools/conversion_scripts/Umich_2021/convert_umich_phase_to_parquet.m"
+      ],
+      "status": "unsafe_mapping_removed_source_preserved_anatomical_reconciliation_pending",
+      "required_followup": "Preserve source-side identity; represent unavailable opposite-side data as missing unless paired source time correspondence is established. Do not assume copied channels are bilateral measurements.",
+      "evidence": "converted_datasets/reconversion_v2/um21_normalized_transfers_20261020/conversion_manifest.json",
+      "native_validation": "MATLAB path edited but not executed; independent Python source-preservation export verified all stored joint-angle and forceplate channels."
+    },
+    {
+      "id": "umich-6",
+      "finding": "Transfer timing is assigned by sequence without an established source match",
+      "scope": "converter",
+      "affected_paths": [
+        "contributor_tools/conversion_scripts/Umich_2021/convert_umich_phase_to_parquet.m"
+      ],
+      "status": "unsafe_mapping_removed_source_preserved_anatomical_reconciliation_pending",
+      "required_followup": "Use original source identifiers/side/cut-point mapping or leave timing and time derivatives unavailable; do not use ordinal matching as proof.",
+      "evidence": "converted_datasets/reconversion_v2/um21_normalized_transfers_20261020/conversion_manifest.json",
+      "native_validation": "MATLAB path edited but not executed; independent Python source-preservation export verified all stored joint-angle and forceplate channels."
+    },
+    {
+      "id": "umich-7",
+      "finding": "Current provenance and full source reconciliation are unavailable",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/umich_2021_phase_raw.parquet",
+        "converted_datasets/umich_2021_time.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Create bounded independently reconciled source-to-output checks per task/side before release; no current-release pass claim."
+    },
+    {
+      "id": "umich-8",
+      "finding": "Time artifact coverage is limited to an initial sample",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/umich_2021_time.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Run bounded full structural assessment and source segment matching, without loading full dataset."
+    },
+    {
+      "id": "umich-9",
+      "finding": "Some transformations are heuristic rather than source-certified",
+      "scope": "converter",
+      "affected_paths": [
+        "contributor_tools/conversion_scripts/Umich_2021/convert_umich_phase_to_parquet.m"
+      ],
+      "status": "open",
+      "required_followup": "Require protocol evidence for hardcoded metadata and convention transforms; document provenance and remove dead/heuristic corrections after source reconciliation."
+    },
+    {
+      "id": "gtech-1",
+      "finding": "Distinct GT21 curves share every legacy observation key",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/gtech_2021_phase_clean.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Reconvert with actual recording/observation identity and retain exclusion lineage; do not repair IDs by guessing source recording from row order."
+    },
+    {
+      "id": "gtech-2",
+      "finding": "GT21 stored angular velocities use 150 intervals for 150 inclusive samples",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/gtech_2021_phase_clean.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Recompute derivatives from verified source timing during reconversion; preserve historical artifact and mark known issue. Test against analytic time ramps and verify real output samples."
+    },
+    {
+      "id": "gtech-3",
+      "finding": "Historical phase files lack source lineage and explicit observation semantics",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/gtech_2021_phase_clean.parquet",
+        "converted_datasets/gtech_2024_phase.parquet",
+        "converted_datasets/gtech_2024_phase_clean.parquet",
+        "converted_datasets/gtech_2025_da_phase_clean.parquet",
+        "converted_datasets/gtech_2025_da_phase_dirty.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Keep legacy/unreviewed status; compare source-linked reconversion and account for every excluded observation before release."
+    },
+    {
+      "id": "gtech-4",
+      "finding": "GT23 phase artifact unavailable locally",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/gtech_2023_phase_raw.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Retrieve exact intended phase artifact plus checksum/provenance or reconvert under coordinated resource budget; do not mark phase passed."
+    },
+    {
+      "id": "gtech-5",
+      "finding": "GT25 source endpoint omitted but labelled 100 percent",
+      "scope": "converter",
+      "affected_paths": [
+        "contributor_tools/conversion_scripts/GaTech_2025_DomainAdaptation/convert_gtech_2025_da_to_parquet.py:371",
+        "contributor_tools/conversion_scripts/GaTech_2025_DomainAdaptation/convert_gtech_2025_da_to_parquet.py:387"
+      ],
+      "status": "code_fixed_pilot_source_checked_full_regeneration_pending",
+      "required_followup": "Use inclusive source endpoints and actual source times; analytic ramp fixture; source-to-export test before regeneration.",
+      "code": "contributor_tools/conversion_scripts/GaTech_2025_DomainAdaptation/convert_gtech_2025_da_to_parquet.py",
+      "tests": "tests/test_converter_scientific_provenance.py",
+      "pilot_evidence": "converted_datasets/reconversion_v2/gt25_source_pilot_20261020/source_comparison.json"
+    },
+    {
+      "id": "gtech-6",
+      "finding": "GT25 invents75kg for unknown subjects",
+      "scope": "converter",
+      "affected_paths": [
+        "contributor_tools/conversion_scripts/GaTech_2025_DomainAdaptation/convert_gtech_2025_da_to_parquet.py:104"
+      ],
+      "status": "code_fixed_pilot_source_checked_full_regeneration_pending",
+      "required_followup": "Return missing mass and unavailable normalized signals or explicitly reject; test unknown subject. Do not infer all stored values are affected.",
+      "code": "contributor_tools/conversion_scripts/GaTech_2025_DomainAdaptation/convert_gtech_2025_da_to_parquet.py",
+      "tests": "tests/test_converter_scientific_provenance.py",
+      "pilot_evidence": "converted_datasets/reconversion_v2/gt25_source_pilot_20261020/source_comparison.json"
+    },
+    {
+      "id": "gtech-7",
+      "finding": "Time exports are inventoried but not scientifically reconciled",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/gtech_2021_time.parquet",
+        "converted_datasets/gtech_2021_time_oldcmp.parquet",
+        "converted_datasets/gtech_2021_time_oldcmp2.parquet",
+        "converted_datasets/gtech_2023_time.parquet",
+        "converted_datasets/gtech_2024_time.parquet",
+        "converted_datasets/gtech_2024_time_bt24.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Prioritize GT21/GT23 representative source-recording comparison for units, signs, GRF/COP axes, timing and measured mass. oldcmp files are historical comparisons, not independent proof of correctness."
+    },
+    {
+      "id": "gtech-8",
+      "finding": "GT21 force-plate mapping still needs independent source verification",
+      "scope": "converter",
+      "affected_paths": [
+        "contributor_tools/conversion_scripts/Gtech_2021/convert_gtech_2021_phase_to_parquet.m:18",
+        "contributor_tools/conversion_scripts/Gtech_2021/convert_gtech_2021_phase_to_parquet.m:25"
+      ],
+      "status": "open",
+      "required_followup": "Match source force-plate contact and anatomical leg for selected stairs/ramps; quantify discontinuities with event context, not an arbitrary phase0 zero target."
+    },
+    {
+      "id": "gtech-9",
+      "finding": "GT21 time source reconciliation requires MATLAB table reader",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/gtech_2021_time.parquet",
+        "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB06/10_09_18/treadmill/ik/treadmill_01_01.mat"
+      ],
+      "status": "open",
+      "required_followup": "Coordinate MATLAB run to export only identified source window/columns to a tiny review CSV, then compare stored time angles/moments/GRF/COP. Do not infer correctness from time consistency alone."
+    },
+    {
+      "id": "remaining-1",
+      "finding": "Legacy MBLUE observation keys collide across conditions",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/mblue_ankle_phase.parquet",
+        "converted_datasets/mblue_ankle_phase_clean.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Assign stable source-recording/condition/reference-side observation identities and verify filtering operates on those identities. Keep mixed speed/exo conditions explicit in comparisons."
+    },
+    {
+      "id": "remaining-2",
+      "finding": "Needs investigation: extreme numeric moment anomaly",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/gait120_phase.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Quarantine this legacy artifact; reconcile OpenSim external loads, inverse dynamics residuals, mass normalization and reference sides against original recordings."
+    },
+    {
+      "id": "remaining-3",
+      "finding": "Stored body mass disagrees with source spreadsheet",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/gait120_phase_clean.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Resolve original generation inputs and regenerate affected normalizations only from verified masses."
+    },
+    {
+      "id": "remaining-4",
+      "finding": "Named full and clean files cannot form a filtered pair",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/gait120_phase.parquet",
+        "converted_datasets/gait120_phase_clean.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Map each variant to an immutable source lineage and publish exclusions by observation identity; never present these two files as paired releases."
+    },
+    {
+      "id": "remaining-5",
+      "finding": "StrokePiG preview and historical checks refer to different files",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/strokepig_phase.parquet",
+        "contributor_tools/conversion_scripts/StrokePiG/converted_datasets/strokepig_phase.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Give each artifact a version and clear coverage; align preview and checks to same fingerprint before presenting a combined dataset verdict."
+    },
+    {
+      "id": "remaining-6",
+      "finding": "Historical artifacts lack modern lineage fields",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/gait120_opensim_phase.parquet",
+        "converted_datasets/gait120_phase.parquet",
+        "converted_datasets/gait120_phase_clean.parquet",
+        "converted_datasets/mblue_ankle_phase.parquet",
+        "converted_datasets/mblue_ankle_phase_clean.parquet",
+        "converted_datasets/strokepig_phase.parquet",
+        "converted_datasets/strokepig_test_ik.parquet",
+        "contributor_tools/conversion_scripts/StrokePiG/converted_datasets/strokepig_phase.parquet",
+        "contributor_tools/conversion_scripts/StrokePiG/contributor_tools/conversion_scripts/StrokePiG/converted_datasets/strokepig_phase.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Reconcile source recording/anatomical identity and create immutable release manifests before approving release."
+    },
+    {
+      "id": "remaining-7",
+      "finding": "Clinical laterality remains unverified in historical StrokePiG",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/strokepig_phase.parquet",
+        "converted_datasets/strokepig_test_ik.parquet",
+        "contributor_tools/conversion_scripts/StrokePiG/converted_datasets/strokepig_phase.parquet",
+        "contributor_tools/conversion_scripts/StrokePiG/contributor_tools/conversion_scripts/StrokePiG/converted_datasets/strokepig_phase.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Require clinical laterality evidence or relabel affected side unknown while preserving anatomical reference side."
+    },
+    {
+      "id": "remaining-8",
+      "finding": "MBLUE substitutes assumed timing and missing pelvis measurements",
+      "scope": "converter",
+      "affected_paths": [
+        "contributor_tools/conversion_scripts/MBLUEAnkle/convert_mblue_ankle_to_parquet.py"
+      ],
+      "status": "code_fixed_limited_real_source_check_full_regeneration_pending",
+      "required_followup": "Use missing values for unavailable timing/angles and add independent fixtures asserting no manufactured measurements.",
+      "pilot_evidence": "converted_datasets/reconversion_v2/mblue_overlap_pilot_20261020/source_comparison.json"
+    },
+    {
+      "id": "remaining-9",
+      "finding": "MBLUE contralateral signals need temporal reconciliation",
+      "scope": "converter",
+      "affected_paths": [
+        "contributor_tools/conversion_scripts/MBLUEAnkle/convert_mblue_ankle_to_parquet.py"
+      ],
+      "status": "code_fixed_limited_real_source_check_full_regeneration_pending",
+      "required_followup": "Align by observed timestamps/events, preserve missing overlap, and test unequal counts and derivative behavior at the wrap seam.",
+      "pilot_evidence": "converted_datasets/reconversion_v2/mblue_overlap_pilot_20261020/source_comparison.json"
+    },
+    {
+      "id": "remaining-10",
+      "finding": "Gait120 can manufacture mass, height, duration and pelvis values",
+      "scope": "converter",
+      "affected_paths": [
+        "contributor_tools/conversion_scripts/Gait120/convert_gait120_to_parquet.py"
+      ],
+      "status": "code_fixed_metadata_source_checked_regeneration_pending",
+      "required_followup": "Reject/mark unknown metadata; test missing source values and propagate missing derived signals.",
+      "evidence": "converted_datasets/reconversion_v2/gait120_anthropometry_review_20261020/source_comparison.json"
+    },
+    {
+      "id": "remaining-11",
+      "finding": "Gait120 phase and anatomical mapping lack independent event verification",
+      "scope": "converter",
+      "affected_paths": [
+        "contributor_tools/conversion_scripts/Gait120/convert_gait120_to_parquet.py"
+      ],
+      "status": "code_fixed_limited_pilot_full_regeneration_pending",
+      "required_followup": "The source paper specifies right heel strike to right heel strike, contradicting the historical leg swap and half-cycle roll; both removed. Fourteen recordings across seven tasks source-matched after actual-time interpolation. Verify boundaries/contact independently across the full source, regenerate all recordings, and validate force/COP and model conventions.",
+      "evidence": "converted_datasets/reconversion_v2/gait120_source_pilot_20261020/source_comparison.json"
+    },
+    {
+      "id": "remaining-12",
+      "finding": "StrokePiG heel-strike labeling relies on unverified ankle peaks",
+      "scope": "converter",
+      "affected_paths": [
+        "contributor_tools/conversion_scripts/StrokePiG/convert_strokepig_to_parquet.py"
+      ],
+      "status": "code_fixed_limited_pilot_full_regeneration_pending",
+      "required_followup": "Original C3D foot strikes now take precedence; fallback peaks are labeled unverified. The TVC03/BWA6 pilot checks all three annotated cycles (450 rows), inclusive endpoints, the corrected C3D/IK clock and bilateral source IK angles. Reconstruct and reconcile all recordings, retain rejected-event counts including empty recordings, and verify force/COP and clinical side separately.",
+      "evidence": "converted_datasets/reconversion_v2/strokepig_events_pilot_20261020/source_comparison.json"
+    },
+    {
+      "id": "remaining-13",
+      "finding": "MBLUE full/filtered exclusions have no verified ledger",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/mblue_ankle_phase.parquet",
+        "converted_datasets/mblue_ankle_phase_clean.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Verify observation subset and unchanged retained values, log each exclusion reason and approved range applicability; separate exo/speed/task conditions in interpretations."
+    },
+    {
+      "id": "gt25-short-trials",
+      "finding": "Removing first/last cycles discards short already-parsed staircase recordings",
+      "status": "code_fixed_pilot_source_checked_full_regeneration_pending",
+      "required_followup": "Two real stair recordings now retain three observations each; complete all-subject regeneration and candidate exclusion accounting."
+    },
+    {
+      "id": "gt25-transfers",
+      "finding": "Gait duration limit drops transfers longer than three seconds",
+      "status": "code_fixed_full_coverage_pending",
+      "required_followup": "Long-transfer fixture passes; independently verify real transfer boundaries and every excluded candidate."
+    },
+    {
+      "id": "gt25-ankle-sign",
+      "finding": "Source README and converter disagree on positive ankle-angle convention",
+      "status": "open",
+      "required_followup": "Resolve from source model or independent geometry before approving canonical ankle angles."
+    },
+    {
+      "id": "gt24-trimming",
+      "finding": "GT24 drops boundary cycles although source README says Parsed transitions were removed",
+      "status": "code_fixed_pilot_source_checked_full_regeneration_pending",
+      "required_followup": "Remove unconditional trimming, verify short real recordings, preserve rejected candidate reasons, and regenerate affected outputs with fresh provenance.",
+      "pilot_evidence": "converted_datasets/reconversion_v2/gt24_timing_trim_pilot_20261020/trim_source_check.json"
+    },
+    {
+      "id": "gt24-timestamps",
+      "finding": "GT24 interpolated by row position and bridged missing measurements",
+      "status": "code_fixed_pilot_source_checked_full_regeneration_pending",
+      "required_followup": "Complete fresh source-linked regeneration and check affected channels and candidates across subjects and tasks."
+    },
+    {
+      "id": "gt24-transfer-duration",
+      "finding": "GT24 applied walking duration limits to chair transfers",
+      "status": "code_fixed_pilot_source_checked_full_regeneration_pending",
+      "required_followup": "Complete fresh source-linked regeneration and check affected channels and candidates across subjects and tasks."
+    },
+    {
+      "id": "gt21-endpoint",
+      "finding": "GT21 ended cycles one sample before the next actual heel-strike reset",
+      "status": "code_fixed_native_pilot_source_checked_full_regeneration_pending",
+      "required_followup": "Regenerate all affected recordings; verify inclusive event boundaries across modes and account for exclusions.",
+      "evidence": "converted_datasets/reconversion_v2/gt21_inclusive_pilot_20261020/source_comparison.json"
+    },
+    {
+      "id": "gt21-subject-inventory",
+      "finding": "Old hard-coded subject exclusions omitted locally available AB27; local inventory contains only 16 subjects",
+      "status": "inventory_based_batch_implemented_regeneration_and_source_coverage_pending",
+      "required_followup": "Process every locally available subject/date, reconcile inventory with original publication/source archive, and account explicitly for unavailable source subjects.",
+      "evidence": "converted_datasets/reconversion_v2/gt21_native_batch_20261020/inventory.json"
+    },
+    {
+      "id": "gait120-force-mapping",
+      "finding": "Gait120 force plate assignment and COP coordinates were inferred inconsistently",
+      "scope": "converter_and_artifact",
+      "affected_paths": [
+        "contributor_tools/conversion_scripts/Gait120/convert_gait120_to_parquet.py",
+        "converted_datasets/gait120_phase.parquet",
+        "converted_datasets/gait120_opensim_phase.parquet"
+      ],
+      "status": "unsafe_mapping_removed_source_channels_preserved_mapping_pending",
+      "required_followup": "Establish original force/TRC frames and plate-to-anatomical-side assignment from source evidence, including transfers and direction changes, before restoring canonical force/COP. Verify ID using the actual source model and external loads. Full regeneration and lineage reconciliation remain required.",
+      "evidence": "converted_datasets/reconversion_v2/gait120_force_pilot_20261020/source_comparison.json"
+    },
+    {
+      "id": "gt23-cop-vertical",
+      "finding": "GT23 replaced measured global COP Y and transformed local COP Y with zero",
+      "scope": "converter_and_artifact",
+      "affected_paths": [
+        "contributor_tools/conversion_scripts/Gtech_2023/convert_gtech_2023_time_to_parquet.m",
+        "contributor_tools/conversion_scripts/Gtech_2023/convert_gtech_phase_to_parquet.m",
+        "converted_datasets/gtech_2023_time.parquet"
+      ],
+      "status": "code_fixed_native_time_pilot_verified_full_regeneration_pending",
+      "required_followup": "Corrected time and phase paths have both executed natively. Six COP channels independently checked in the time pilot; phase pilot verifies intervals and angle/moment routing, not full COP arithmetic. Verify further tasks and original units/frame/contact masking, then regenerate full artifacts.",
+      "evidence": "converted_datasets/reconversion_v2/gt23_native_time_pilot_20261020/source_comparison.json"
+    },
+    {
+      "id": "gt23-condition-anatomy",
+      "finding": "GT23 phase converter confused source condition suffixes with anatomical side and dropped remaining conditions",
+      "scope": "converter",
+      "affected_paths": [
+        "contributor_tools/conversion_scripts/Gtech_2023/convert_gtech_phase_to_parquet.m"
+      ],
+      "status": "code_fixed_native_phase_pilot_verified_full_regeneration_pending",
+      "required_followup": "Named source conditions now pair left_<condition> with right_<condition>. Curb-down native pilot covers all ten source reference intervals and both sides of joint angles/moments. Verify lunges/side-shuffle and other structured names, noncyclic event assumptions and all source/task coverage before release.",
+      "evidence": "converted_datasets/reconversion_v2/gt23_native_phase_pilot_20261020/source_comparison.json"
+    },
+    {
+      "id": "gt23-repeat-recordings-transfer-labels",
+      "finding": "GT23 repeat recordings could select the earlier trial, and named sitting/standing intervals needed distinct task labels",
+      "scope": "converter_and_artifact",
+      "affected_paths": [
+        "contributor_tools/conversion_scripts/Gtech_2023/convert_gtech_phase_to_parquet.m",
+        "contributor_tools/conversion_scripts/Gtech_2023/convert_gtech_2023_time_to_parquet.m"
+      ],
+      "status": "code_fixed_full_source_audit_native_transfer_pilot_verified_full_regeneration_pending",
+      "required_followup": "Native AB03 repeat-recording pilot preserves 15 sitting and 15 standing intervals with correct task labels and bilateral source angles. Source direction audit covers all 1,199 named local transfers. Verify boundary precision, remaining signals and all reconstructed artifacts before release.",
+      "evidence": "converted_datasets/reconversion_v2/gt23_transfer_source_review_20261020/source_comparison.json",
+      "native_evidence": "converted_datasets/reconversion_v2/gt23_native_transfer_pilot_20261020/source_comparison.json"
+    },
+    {
+      "id": "gt23-omitted-tasks",
+      "finding": "Phase task allowlist silently omitted 169 annotated windows across four tasks",
+      "scope": "converter_and_artifact",
+      "affected_paths": [
+        "contributor_tools/conversion_scripts/Gtech_2023/convert_gtech_phase_to_parquet.m"
+      ],
+      "status": "code_fixed_one_native_task_verified_full_regeneration_pending",
+      "required_followup": "Reconstruct all ball-toss, weight-lifting, turn-and-step and tire-running windows; verify conditions, original intervals and all source channels. Nine separate source parsing files have empty bilateral annotations and need explicit exclusion/source-coverage accounting.",
+      "evidence": "converted_datasets/reconversion_v2/gt23_task_coverage_review_20261020/source_coverage.json",
+      "native_evidence": "converted_datasets/reconversion_v2/gt23_all_tasks_phase_pilot_20261020/source_comparison.json"
+    },
+    {
+      "id": "gt24-task-coverage",
+      "finding": "Task mapping drops 869 of 2,421 local parsed recordings before segmentation",
+      "scope": "converter_and_artifact",
+      "affected_paths": [
+        "contributor_tools/conversion_scripts/GaTech_2024_TaskAgnostic/convert_gtech_2024_phase_to_parquet.py"
+      ],
+      "status": "source_coverage_audited_fix_and_full_reconstruction_pending",
+      "required_followup": "Preserve valid time data for all 796 unmapped and 73 explicitly excluded recordings; determine defensible movement boundaries where phase output is appropriate. Add per-record exclusion reasons, then reconstruct under a new code fingerprint after the active immutable batch. Do not interpret no_accepted_observations as invalid source data.",
+      "evidence": "converted_datasets/reconversion_v2/gt24_task_coverage_review_20261020/source_coverage.json",
+      "source_sample_evidence": "converted_datasets/reconversion_v2/gt24_task_coverage_review_20261020/omitted_source_samples.json"
+    },
+    {
+      "id": "gt24-duplicate-standing-intervals",
+      "finding": "Separate velocity bursts expanded to identical standing-to-standing intervals, duplicating six lunge observations",
+      "scope": "shared_segmentation_and_artifact",
+      "affected_paths": [
+        "contributor_tools/common/stride_segmentation.py",
+        "contributor_tools/conversion_scripts/GaTech_2024_TaskAgnostic/convert_gtech_2024_phase_to_parquet.py"
+      ],
+      "status": "code_fixed_all_five_observed_failures_regenerated_full_batch_pending",
+      "required_followup": "Restart corrected full reconstruction with new source/code fingerprints, check other standing-action tasks and datasets using shared segmentation, and retain candidate accounting. Physiological event validation remains separate.",
+      "evidence": "converted_datasets/reconversion_v2/gt24_duplicate_interval_review_20261020/source_comparison.json",
+      "output_evidence": "converted_datasets/reconversion_v2/gt24_unique_intervals_pilot_20261020/source_comparison.json"
+    },
+    {
+      "id": "gt21-overground-speed",
+      "finding": "Overground filename categories were assigned cohort-average numerical speeds as if measured for each trial",
+      "scope": "converter_and_artifact",
+      "status": "code_fixed_native_pilot_verified_full_regeneration_running",
+      "evidence": "converted_datasets/reconversion_v2/gt21_metadata_pilot_audit_20261021/audit_status.json",
+      "required_followup": "Complete fresh reconstruction; retain speed_category and speed_source, never label cohort means as measured trial speeds."
+    },
+    {
+      "id": "gt21-label-fallback",
+      "finding": "Existing overground labels could be discarded when no labeled segment yielded a cycle",
+      "scope": "converter",
+      "status": "code_fixed_full_source_coverage_pending",
+      "required_followup": "Fallback now requires a missing label column. Reconcile recordings with no accepted cycles separately; live source comparisons check every exported labeled interval."
+    },
+    {
+      "id": "umich-stair-coverage",
+      "finding": "Stair cycles and walking transitions were absent from corrected staging exports",
+      "scope": "source_coverage",
+      "status": "full_annotation_audit_and_pilot_verified_full_reconstruction_queued",
+      "evidence": "converted_datasets/reconversion_v2/um21_stair_annotation_review_v2_20261021/source_comparison.json",
+      "required_followup": "Complete all 403 recordings and full signal readback. Keep 16 explicitly empty annotations in the exclusion ledger; do not invent legs or time intervals. Resolve canonical ankle/segment conventions and marker coverage separately."
+    },
+    {
+      "id": "umich-wtr-protocol-coverage",
+      "finding": "Wtr protocol intervals do not uniquely label every gait cycle, and legacy adapters misread or overlabel this source",
+      "scope": "converter_and_source_coverage",
+      "status": "source_companion_pilot_verified_full_reconstruction_queued_canonical_semantics_open",
+      "evidence": "converted_datasets/reconversion_v2/um21_wtr_coverage_20261021/source_coverage.json",
+      "required_followup": "Correct direct Wtr structure handling; remove invented endpoint speeds and whole-recording walk-to-run assumptions. Preserve 3,138 cycles with source protocol interval membership, including 137 crossing and 921 outside intervals. Resolve task semantics without inferred gait-switch frames; source velocity-profile clocks remain unverified.",
+      "companion_evidence": "converted_datasets/reconversion_v2/um21_wtr_pilot_20261021/source_comparison.json"
+    },
+    {
+      "id": "gt21-event-exclusion-policy",
+      "finding": "Source event pairs are omitted by single-reference-leg and task-window eligibility policies",
+      "scope": "source_coverage",
+      "status": "first_25_overground_recordings_accounted_policy_review_and_full_coverage_pending",
+      "evidence": "converted_datasets/reconversion_v2/gt21_event_coverage_20261021/source_coverage.json",
+      "required_followup": "Review 61 opposite-leg exclusions and 395 incomplete/ineligible-window pairs in this subset; preserve source coverage where phase task labels cannot be assigned. Extend accounting across all completed subjects/tasks; do not call policy-based omissions scientifically justified without evidence."
+    },
+    {
+      "id": "gt25-full-inventory-coverage",
+      "finding": "Full GT25 source inventory includes tasks omitted by the current phase adapter and inputs above admission limits",
+      "scope": "source_coverage",
+      "status": "inventory_and_batch_worker_verified_full_execution_pending",
+      "evidence": "converted_datasets/reconversion_v2/gt25_full_20261021/inventory.json",
+      "required_followup": "Preserve all 216 explicitly excluded recordings in an appropriate source/time representation. Resolve conservative admission deferrals without raising limits blindly. Run all supported records then independently check full source/output correspondence."
+    },
+    {
+      "id": "mblue-stable-source-identity",
+      "finding": "Resettable step numbers omitted source condition/task/column lineage",
+      "scope": "converter_and_artifact",
+      "status": "code_fixed_walking_and_transfer_pilots_verified_full_reconstruction_pending",
+      "evidence": "converted_datasets/reconversion_v2/mblue_identity_pilot_20261021/source_comparison.json",
+      "required_followup": "Regenerate all source blocks with stable identities and JSON metadata; verify collision-free full inventory."
+    },
+    {
+      "id": "mblue-bilateral-source-clocks",
+      "finding": "Transfer timing used an empty shared field and sample-index interpolation despite available nonuniform bilateral clocks",
+      "scope": "converter_and_artifact",
+      "status": "code_fixed_60_movement_source_pilot_verified_full_reconstruction_pending",
+      "evidence": "converted_datasets/reconversion_v2/mblue_transfer_clock_pilot_v2_20261021/source_comparison.json",
+      "required_followup": "Verify clock agreement across all subjects/tasks; reject unverified ordinal pairing. Independently check gait ipsilateral interpolation and all reconstructed channels."
+    },
+    {
+      "id": "mblue-gait-source-clocks",
+      "finding": "Reference-leg gait signals were interpolated by sample index while opposite-leg signals used actual timestamps",
+      "scope": "converter_and_artifact",
+      "status": "code_fixed_source_pilot_and_full_clock_inventory_verified_full_rebuild_pending",
+      "evidence": "converted_datasets/reconversion_v2/mblue_gait_clock_pilot_20261021/source_comparison.json",
+      "inventory_evidence": "converted_datasets/reconversion_v2/mblue_source_inventory_20261021/source_inventory.json",
+      "required_followup": "Regenerate all 335 normalized source blocks with consistent timestamp interpolation and verify full coverage; preserve phase-only values when timing is genuinely absent, without deriving velocities."
+    },
+    {
+      "id": "mblue-missing-center-derivative",
+      "finding": "Centered differences could produce finite derivatives at samples with missing source angle or velocity",
+      "scope": "converter_and_artifact",
+      "status": "code_fixed_live_source_readback_passing_full_reconstruction_running",
+      "evidence": "converted_datasets/reconversion_v2/mblue_full_source_audit_v2_20261021/source_comparison.json",
+      "required_followup": "Finish full rebuild and source readback. Keep superseded six-block output separate; verify no finite derived values are introduced at missing input centers."
+    }
+  ]
+}

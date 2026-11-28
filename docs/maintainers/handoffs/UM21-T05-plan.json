@@ -1,0 +1,80 @@
+{
+  "task_id": "UM21-T05",
+  "part": "plan and code only (no job launched, no test run, no research data read)",
+  "status": "code_written_awaiting_tests_and_pilot",
+  "scientific_approval": false,
+  "written_at_utc": "2026-11-25",
+  "goal": "UMich 2021 package v5 = phase (unchanged from v4) + time (44 continuous 100 Hz treadmill recordings with angles, velocities, moments, power, plate force in body weights and centre of pressure), full and filtered variants, built by the shared builder.",
+  "files_written": {
+    "contributor_tools/um21_time_export.py": "pure functions: column names, audited pelvis sign, velocity, power, plate force in BW (0 off the plate, missing if not finite), per-frame S02 geometry and CoP, hold rules, time L2 entry, readback comparison rules and tolerances",
+    "contributor_tools/run_um21_t05_time.py": "guarded-job runner (plan / run), stages pilot and full-b01..full-b09, writes parts/ABxx_cond.time.parquet and time_summary.json into a NEW root per job",
+    "contributor_tools/run_um21_t05_assessment.py": "time assessment (L2 only, structured entries) over the time roots, stages pilot and full; reports agreement with the v3 phase L2 failures, changes no phase status",
+    "contributor_tools/run_um21_r01_package_v5.py": "v5 adapter (subclass of the v4 adapter, v4 file untouched): tables phase + time, time assessment entries, limitations, evidence, README text, checks",
+    "contributor_tools/readback_um21_t05_time.py": "independent readback of package v5: phase equals v4, time structure, time samples at stride windows resampled to 150 points reproduce v4 phase values (stated tolerances), force sanity and independent recompute, clock, filtered = full minus failed, exclusions",
+    "tests/test_um21_t05_time.py": "SYNTHETIC tests (reuses the synthetic trial of tests/test_um21_s02_frame.py); not run yet",
+    "docs/maintainers/handoffs/UM21-T05-plan.json": "this file"
+  },
+  "inputs_reused_unchanged": [
+    "contributor_tools/run_um21_s02_frame.py (geometry, imported)",
+    "docs/quality/audits: S02 v7 full receipt and converted_datasets/reconversion_v2/um21_s02_frame_full_v7/s02_summary.json (plate registration and CoP verdict per recording and leg; nothing is re-fitted)",
+    "converted_datasets/reconversion_v2/um21_q01v3_full (identity, held columns per stride, task_info, receipt-checked)",
+    "contributor_tools/common/release_package.py and joint_power.py (shared builder; v5 passes time parts straight through, power for the time table is computed in the exporter)"
+  ],
+  "rules_applied": {
+    "clock": "time_s = (frame - 1) / 100; source rate kept; no resampling. One clock per table (as GT21 uses one 200 Hz clock): plate force and CoP are the 1 kHz plate samples that coincide with the frames (index 10 x frame), no averaging, no interpolation; the plate samples between frames are not in the table.",
+    "angles_velocity_power": "S02 v7 per-leg side-view plane geometry frame by frame; hip = thigh - pelvis, knee = thigh - shank, ankle = foot - shank; velocity = numpy.gradient(angle, 0.01, edge_order=1) (T04 method on the source clock); power = moment x joint speed, missing where either is missing.",
+    "pelvis_and_knee_markers": "pelvis = Vicon tilt with the audited sign (-1; AB04/i0 +1 by D-UM21-P01-1 = C), one column from the right-side channel; frames of strides whose pelvis/hip/moment the v4 phase table holds are missing in the time table; knee marker names reversed (KNEM lateral) as in S02 and checked per leg.",
+    "plane_glitch": "rule P1 applied per frame (leg plane > 60 degrees from the walking direction): leg-plane columns missing at that frame.",
+    "force": "plate force (N; README N/kg is contradicted by UM21-SLOPE) turned with the S02 registration (axis, sign, belt tilt), negated, divided by body mass x 9.81 (mass from ParticipantDetails, never invented); vertical up, anterior walking direction, lateral outward per leg. < 20 N on a finite plate sample = 0 BW; non-finite plate sample = missing. Held for a leg (all missing, reason in held_signals) when registration unknown, mass missing, plate loaded at < 95 percent of that leg's heel strikes (S02 gate item), or recording pending by ruling.",
+    "cop": "S02 rule per frame with the S02 fitted shift; published only where the S02 gate passed and the recording is not pending by ruling; unloaded < 20 N missing, never 0. Held list unchanged: AB01/i10, AB02/i10, AB03/i10, AB04/d10, AB10/d5.",
+    "assessment": "L2 (30 degrees between adjacent 100 Hz samples, finite samples only) is the only limit on the time table; L1 and L5 stay on the phase table; all other time columns 'unchecked'; missing/held = unchecked_all_missing. Phase statuses are NOT changed (v4 phase L2 already runs on the 100 Hz frames); agreement with the v3 phase L2 failures is reported as evidence."
+  },
+  "logged_decisions_conservative_option_chosen": [
+    {"id": "T05-A", "question": "Phase table gets no force columns", "chosen": "unchanged phase (acceptance: phase files unchanged from v4); force only in the time table", "why": "least change; phase GRF can be a later task", "reversible": true},
+    {"id": "T05-B", "question": "Force for the five held-back (pending) recordings", "chosen": "held (all missing) like their CoP", "why": "their plate registration was never investigated; nothing is invented", "reversible": true},
+    {"id": "T05-C", "question": "Force publication gate", "chosen": "registration known AND mass known AND plate loaded at >= 95 percent of the leg's heel strikes (existing S02 item); the other-plate fraction is stored, not gated", "why": "no new threshold invented", "reversible": true},
+    {"id": "T05-D", "question": "Time observation with an L2 jump", "chosen": "failed in full, absent from filtered (observation is the unit; GT21/GT23 precedent), listed in exclusions.csv", "why": "same rule as every other observation; rate is unknown until the pilot, reported in time_assessment.json", "reversible": true},
+    {"id": "T05-E", "question": "Time-table pelvis", "chosen": "single Vicon column (right-side channel); right-left difference recorded per recording and any difference shows in readback R4", "why": "mirrors the phase table's pelvis; no new estimate", "reversible": true},
+    {"id": "T05-F", "question": "Velocity and power tolerance in the readback", "chosen": "velocity NRMS <= 0.03 per stride in >= 99 percent of strides; power reported, not gated", "why": "written before any result; derived on different clocks so equality is not expected", "reversible": true},
+    {"id": "T05-G", "question": "No stance flag independent of the plate", "chosen": "a finite plate sample < 20 N is 0 BW (foot off its own belt plate); GT21's 'stance but unloaded = missing' cannot be reproduced without an independent stance event", "why": "each belt plate is that foot's own; accepted convention of 0 when off the plate", "reversible": true}
+  ],
+  "open_decisions_for_jose": [],
+  "preconditions_for_every_job": [
+    "stop any local http.server (it counts as a foreign worker)",
+    "one worker: confirm the launcher is free and the GT21-Q01 job holder has finished; check process ownership and MemAvailable >= 2 GiB",
+    "run the synthetic tests first, one worker: OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_um21_t05_time.py  (not run in this phase; fix before any job)",
+    "each runner: `plan --stage X` writes and validates the spec (dry run of the launcher first), then `python3 -m contributor_tools.guarded_launcher run SPEC.json`"
+  ],
+  "job_list": [
+    {"n": 1, "name": "time pilot", "command": "run_um21_t05_time.py plan --stage pilot", "recordings": ["AB01/i0", "AB03/i10", "AB04/i0", "AB07/d10", "AB08/i0", "AB10/d5"], "why_these": "the package pilot set: clean legs, CoP held both legs, reversed heading with the AB04/i0 pelvis exception, a plane-glitch stride, a plate-assignment hold, a held-back recording (AB03/i10, AB10/d5)", "output_root": "converted_datasets/reconversion_v2/um21_t05_time_pilot_v1", "receipt": "docs/quality/audits/um21-t05-time-pilot-launcher-receipt-v1.json", "peak_rss_estimate_mib": "about 250 (S02 five-recording job peaked at 260.8; one recording resident, about 17-19 thousand frames each); the runner stops at 300"},
+    {"n": 2, "name": "time assessment pilot", "command": "run_um21_t05_assessment.py plan --stage pilot", "output_root": "converted_datasets/reconversion_v2/um21_t05_assess_pilot_v1", "peak_rss_estimate_mib": "under 200 (one part resident)"},
+    {"n": 3, "name": "package v5 pilot", "command": "run_um21_r01_package_v5.py plan --stage pilot", "output_root": "converted_datasets/reconversion_v2/um21_r01_package_pilot_v5_a1", "peak_rss_estimate_mib": "about 205-260 (v4 package peaked at 204.9)", "disk_min_free_mib": 3072},
+    {"n": 4, "name": "readback pilot", "command": "readback_um21_t05_time.py plan --stage pilot", "output_root": "converted_datasets/reconversion_v2/um21_t05_readback_pilot", "peak_rss_estimate_mib": "under 250 (one recording of each table plus batches of 3,000 rows; R5b reads Streaming.mat for three recordings)"},
+    {"gate": "pilot review", "pass_when": "readback all_pass; time_assessment totals sane; R4 per-recording numbers read (pelvis R-L difference, AB04/i0 pelvis sign, clock R6, velocity NRMS, CoP mismatch); no unexplained held column. Any failure is fixed and the pilot is rerun: full batches need a clean pilot receipt of the same bound code."},
+    {"n": "5-13", "name": "time full batches", "command": "run_um21_t05_time.py plan --stage full-b01 ... full-b09 --pilot-receipt <pilot receipt>", "recordings": "the 44 recordings of the Q01 v3 job in sorted order, five per job (b09 has four)", "output_roots": "converted_datasets/reconversion_v2/um21_t05_time_full-bNN_v1", "peak_rss_estimate_mib": "same as the pilot; measured value from job 1 replaces this estimate", "note": "one job at a time, never in parallel (launcher census)"},
+    {"n": 14, "name": "time assessment full", "command": "run_um21_t05_assessment.py plan --stage full", "output_root": "converted_datasets/reconversion_v2/um21_t05_assess_full_v1", "reads": "the nine full time roots (each hash-checked against its clean receipt)"},
+    {"n": 15, "name": "package v5 full", "command": "run_um21_r01_package_v5.py plan --stage full --pilot-receipt <pilot package receipt>", "output_root": "converted_datasets/reconversion_v2/um21_r01_package_v5", "peak_rss_estimate_mib": "about 205-260", "disk_min_free_mib": 8192, "expected_files_mib": "phase 2 x 194 (as v4) plus time about 2 x 150-250 (estimate from 44 x ~18 thousand rows x 46 float columns, zstd)"},
+    {"n": 16, "name": "readback full", "command": "readback_um21_t05_time.py plan --stage full", "output_root": "converted_datasets/reconversion_v2/um21_t05_readback_full"},
+    {"n": 17, "name": "independent verifier (second agent, no launcher job needed unless it reruns the readback)", "checks": "acceptance criteria against the readback, test summary, exclusions accounting and limitation texts; moves the task to done or back with reasons"}
+  ],
+  "launcher_jobs_total": 16,
+  "never_overwritten": ["converted_datasets/reconversion_v2/um21_r01_package_v4", "um21_q01v3_full", "um21_s02_frame_full_v7", "every earlier root"],
+  "acceptance_mapping": {
+    "time samples at stride windows reproduce v4 phase values within tolerance": "readback R4 (angles 1e-9 rad, pelvis and hip 1e-6 rad, moments 1e-9 Nm/kg, velocity NRMS <= 0.03 in >= 99 percent of strides, CoP median 1 mm / p99 5 mm / finite mismatch <= 5 percent per leg); tolerances are constants in um21_time_export.TOLERANCES, written before any result",
+    "phase files unchanged from v4 except where documented": "readback R2 (every data column equal, full and filtered; only lineage_id and assessment_id may change because the time inputs enter the lineage hash) and package check U11 (phase failure causes equal the v3 causes)",
+    "every exclusion accounted for": "builder checks T4 to T6 plus U8 to U10 and V.*; exclusions.csv keeps the 17 upstream stride exclusions and adds one row per failed time observation; readback R7b"
+  },
+  "open_risks": [
+    "Tests were not run and no code was executed: expect fixes at first run (imports, schema, builder interplay with the new time parts).",
+    "Clock: the time clock (frame - 1) / 100 is assumed to equal the v2 stride clock (source_start_time_s = (a - 1) / 100). Readback R6 checks it; if v2 used another convention the time table or the check must follow the v2 definition.",
+    "AB04/i0 pelvis sign is +1 by composing the audited -1 with the P01 correction -1; the pilot's R4 pelvis comparison (AB04/i0 is in the pilot set) confirms or refutes it. Time pelvis is the right-side Vicon channel; any right/left difference is recorded and would surface in R4 for left strides.",
+    "Time-table frames outside every stride window are not checked against the markers for the pelvis (no phase evidence exists there).",
+    "A foot on the wrong belt would give 0 BW on its own plate for up to 5 percent of heel strikes the S02 gate tolerates; the other-plate fraction is stored in time_summary.json registrations but not gated (T05-C).",
+    "AB03 and AB10 plates carry 3 to 9 percent less than body weight (UM21-SLOPE); their force is published as recorded and the limitation text says so.",
+    "A time observation is a whole recording: one L2 jump removes it from the filtered time table. The rate is unknown until the pilot; time Vicon pelvis jumps can differ from the v3 marker-pelvis L2 (agreement table reports them).",
+    "Velocity and power in the time table and the phase table are derived on different clocks, so they agree only to finite-difference error (NRMS tolerance stated); this is documented in README, not hidden.",
+    "docs/reference, DATA_CONTRACT.md and the dataset page still say UM21 has no time table; update them after the package is reviewed (docs task, not part of this code).",
+    "backlog.json was not edited in this phase (task stays 'ready' with next_action to be updated by the agent that runs the pilot)."
+  ],
+  "next_action": "When the launcher is free: stop any http.server, run the synthetic tests (one worker), fix, then plan and run job 1 (pilot) only."
+}

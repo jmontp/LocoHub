@@ -1,0 +1,73 @@
+{
+  "task_id": "DOC-03",
+  "verifier_role": "independent second agent; docs review only; no research data read; worker files, detector files, backlog and AGENTS.md not edited",
+  "scope_of_this_verification": "Docs side of DOC-03 only: reference section (md and html), sign table, callout, SVG, DATA_CONTRACT.md, converter-doc notes, GA26/MB24/FU18 pages, community.md. The detector target rule, detector tests and the CORE-07 plan (DOC-03 acceptance item 2 and the matching deliverables) are verified separately by another agent. DOC-03 as a whole moves to done only when both parts pass.",
+  "verdict": "done",
+  "last_checked_at_utc": "2026-10-31T07:00:00Z",
+  "summary": "The docs side states rule B exactly and passes all three gate commands. Table rows, gait2392 equivalents, the composition (shank = thigh − knee) and the callout are correct against the physics. The knee arrow in the SVG is now clockwise (flexion) and legible at 390 and 1100 px. No active doc outside the detector owner's files states rule C as current. The converter and dataset notes describe mappings and do not claim that files were re-verified. CRLF endings are preserved. The 'Decided' list matches D-UM21-C03-1 = B and D-GT21-C01-1 = B.",
+  "ground_truth": {
+    "D-UM21-C03-1": "B, answered 2026-10-31T06:11:20Z. answer_history records C at 2026-10-30T18:14:41Z. answer_note: 'José prefers joint angles and moments positive in their named direction (knee flexion +) ... Segment angles stay counterclockwise.' Option B label: 'Segment angles counterclockwise, joint angles and moments positive in their named direction'.",
+    "D-GT21-C01-1": "B (unchanged): sideways GRF/CoP positive outward per leg, left mirrored"
+  },
+  "checks": [
+    {
+      "id": 1,
+      "area": "table rows, gait2392 equivalents, composition",
+      "result": "pass",
+      "evidence": "Frame: x right, y up, z = x × y out of the page, which is the person's right. Segments (CCW +): pelvis front rising + (anterior tilt −); trunk back +; thigh and shank distal end forward +; foot toes up +. These are unchanged from round 1 and correct. Joints, named direction: hip flexion is CCW, so thigh = pelvis + hip. Knee flexion rotates the shank backward (CW), so shank = thigh − knee. Dorsiflexion is CCW, so foot = shank + ankle. All three compositions are correct and stated 'up to zero offsets'. Knee row: 'Shank rotates backward relative to the thigh' is flexion and correct. gait2392: hip_flexion is flexion +; knee_angle is flexion − (model range [−2.0944, 0.1745] in gt21-c01-conventions.json), so LocoHub knee = −knee_angle, which is correct. ankle_angle is dorsiflexion +; pelvis_tilt is posterior +. Velocity and acceleration 'negated for the knee' is correct. Moments: hip_flexion_r_moment is flexor +; −knee_angle_r_moment is flexor + (gait2392 positive knee moment is extensor); ankle_angle_r_moment is dorsiflexor + and plantarflexor −. All correct. Power: negating both M and ω for the knee leaves M·ω unchanged, generation +. Shank row 'thigh + knee_angle_* (same sense)' is correct in gait2392's own sign. Callout: 60° = +1.047 rad, stated +1.05. GRF, CoP and frontal/transverse rows are unchanged from round 2."
+    },
+    {
+      "id": 2,
+      "area": "SVG",
+      "result": "pass",
+      "evidence": "sha256 6fa19406... matches the handoff. Knee arc 'M155.1,337.8 A38,38 0 0 1 120.9,321.1' is centred on the knee (152.4, 299.9). It starts on the shank axis and ends behind it, with sweep-flag 1 (visually clockwise) and the arrowhead at the end (119.8,319.5). That is the shank rotating backward = flexion. Label 'Knee + flexion' sits on the left. The legend reads 'Segment angle: counterclockwise +' (orange) and 'Joint angle: named direction +' (blue). All other arcs are unchanged and correct, with sweep 0 (CCW): hip flexion and ankle dorsiflexion happen to be CCW. Rendered a scratch copy with headless Chrome at 390 px and 1100 px. Legible at both, and the knee arrow visibly points backward. The figcaption explains why the knee arrow is clockwise."
+    },
+    {
+      "id": 3,
+      "area": "contradiction sweep (rule C as current)",
+      "result": "pass",
+      "evidence": "Patterns: knee flexion negative, flexor negative, counterclockwise for everything / every sagittal, −1.05, rule C, extension-positive, extensor positive. Scope: docs/ and contributor_tools/ .md/.html/.txt/.yaml, tracked and untracked, excluding legacy, handoffs, backlog, audits and review_sheets. Remaining hits: the dated change note in the reference (historical, correct); the gait2392 'flexion-negative' explanation; source-convention descriptions (GT24 publisher dataset_readme.txt, GT25 exo convention, Gait120/MBLUEAnkle/common source columns); and docs/maintainers/sign-offset-detector-design.md lines 166 and 385, which belong to the detector owner and are out of this check's scope. A separate sweep for pelvis tilt signs found no active page stating anterior tilt + as current. The reference states that earlier downloads may have anterior tilt +."
+    },
+    {
+      "id": 4,
+      "area": "converter-doc and dataset-page notes",
+      "result": "pass",
+      "evidence": "The five '(2026-10-31)' note blocks (common, Gait120, GaTech_2025, GaTech_2024 readme.md, StrokePiG) and the inline notes in MBLUEAnkle and UMich_2024 say the knee-flexion-positive mapping 'matches the current rule'. Each note limits itself to the converter's sign mapping and does not verify existing output files. The links resolve to #signs-and-frames at the right depth. The GT24 readme note defers the ankle to the erratum. GA26, MB24 and the FU18 angle row say the signs match and the 'current download / pilot files have not been re-verified'. The FU18 hip moment is still 'not checked'. None of the notes claims compliance for segment angles (pelvis). The round-2 'Pre-rule output' header wording was reverted, and the converter-doc diffs vs HEAD are 1-3 lines each."
+    },
+    {
+      "id": 5,
+      "area": "CRLF preservation",
+      "result": "pass",
+      "evidence": "docs/contributing/community.md: CRLF in both HEAD and the worktree; numstat 2/2 with and without --ignore-cr-at-eol. GaTech_2024_TaskAgnostic/readme.md (tracked name; README.md on the case-insensitive mount): CRLF in both HEAD and the worktree; numstat 2/0. The other changed tracked files are LF in both HEAD and the worktree, and their numstat is identical with and without --ignore-cr-at-eol."
+    },
+    {
+      "id": 6,
+      "area": "Decided vs LocoHub definitions",
+      "result": "pass",
+      "evidence": "The reference 'Decided (current rule, 31 October 2026; sideways force 30 October 2026)' contains: the frame; segment angles CCW (pelvis anterior tilt −, trunk back +); joint angles in their named direction; internal moments in their named direction (plantarflexor −); power M·ω with generation +; and sideways outward per leg. This is option B's label plus the frame and power in the coordinator's statement, and D-GT21-C01-1 = B. 'LocoHub definitions (not separate decisions)' contains composition, zero references and GRF on the person. DATA_CONTRACT.md attributes 'D-UM21-C03-1 = B (2026-10-31; changed from C ...) and D-GT21-C01-1 = B (2026-10-30)' with the same split. md and html agree in substance (token comparison; the only differences are alt text and figcaption)."
+    },
+    {
+      "id": 7,
+      "area": "gate commands",
+      "result": "pass",
+      "evidence": "docs/build.py --check: exit 0, 'Checked 40 HTML pages and 1655 referenced assets.' tests/test_data_documentation.py: 8 passed. build_backlog_page.py --check: 'Backlog valid; HTML current (88 tasks).'"
+    }
+  ],
+  "required_fixes": [],
+  "optional": [
+    "FU18 Moments row: add the same 'pilot files have not been re-verified' clause that the Angles row has. The row says the knee and ankle mappings match the rule, but unlike the adjacent row it does not repeat the file-verification caveat."
+  ],
+  "observations_not_blocking": [
+    "Gait120 knee source sign is still unverified (carried over from DOC-02 round 2). The converter docs say the source knee is extension-positive and negate it. The bundled rajagopal_gait120.osim, however, gives knee_angle_r a range of 0 to 2.094 rad, which suggests a flexion-positive model coordinate. If the source is flexion-positive, the negation would break rule B. Resolve this from source evidence when Gait120 is reconverted.",
+    "contributor_tools/validation_ranges/default_ranges.yaml: under B, the knee ranges are already flexion-positive and the pelvis_sagittal_angle ranges will need sign mirroring. The worker deferred this to the range task owner, which is correct.",
+    "Page-level horizontal overflow at 390 px is pre-existing (same on HEAD)."
+  ],
+  "questions_for_jose": [],
+  "test_runs": [
+    {"command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 docs/build.py --check", "result": "exit 0; 40 HTML pages, 1655 assets"},
+    {"command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_data_documentation.py", "result": "8 passed"},
+    {"command": "python3 contributor_tools/build_backlog_page.py --check", "result": "Backlog valid; HTML current (88 tasks)"},
+    {"command": "headless Chrome render of a scratch copy of docs/reference at 390 px and 1100 px", "result": "diagram legible; knee arrow clockwise (flexion)"}
+  ],
+  "next_action": "Coordinator combines this docs-side verdict with the detector/CORE-07 verification before moving DOC-03 to done."
+}

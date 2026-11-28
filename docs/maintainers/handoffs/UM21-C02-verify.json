@@ -1,0 +1,38 @@
+{
+ "task_id": "UM21-C02",
+ "verifier": "independent verification agent",
+ "verified_at_utc": "2026-11-03T01:00:00Z",
+ "verdict": "pass",
+ "scientific_approval": false,
+ "summary": "Pass. Receipt, hashes, acceptance criteria and an independent re-read all agree with the worker. Normalized and streaming pelvis describe the same stride.",
+ "checks": {
+  "receipt": "One launch, status completed, exit 0, clean_success true, all 8 receipt checks true; verify-cleanup re-run at 2026-11-03T00:39:44Z: proven true, no pgid members. Output report sha256 66999178... equals receipt output hash and handoff; probe, spec, receipt, log and audit hashes equal handoff; bindings_before equal bindings_after (probe, launcher, scopes, seven T03 receipts/specs, both .mat files).",
+  "acceptance": [
+   "Explicit binding: method uses StrideDetails side/first/last, duration=last-first, consecutive same-side LHS/RHS pairs, duplicates rejected; array order not used. 7224 bound, 0 unbound.",
+   "All three components with NaN masks on the same 150-point grid: reported per component; mask mismatch 0; no missing values occurred, so the gap path was not exercised (stated by worker).",
+   "H1 same side, H2 opposite side and sign-flipped diagnostic all reported, none auto-selected.",
+   "Clock/unit: duration=last-first for all rows, degrees, hip control equal to 1e-14.",
+   "No planar formula adopted; canonical 3D unapproved."
+  ],
+  "independent_reproduction": {
+   "method": "Own read-only probe (not importing worker code, np.interp resampling, own StrideDetails/heel-strike read). Scratch script in session scratchpad; wrote nothing under converted_datasets; nice 19 / ionice idle; one record at a time.",
+   "seed": 20261102,
+   "records": ["AB09/d10", "AB02/i0"],
+   "strides_checked": 44,
+   "result": "All 44 strides are consecutive same-side heel strikes; same-side pelvis error 0 on all three components; opposite side differs 4.9-24.7 deg on obliquity and rotation (tilt equal on both sides); hip control with 1-based frame base matches to <3e-14 deg, one-frame shift errs 0.9-2.4 deg.",
+   "peak_rss_mib": 47.1
+  },
+  "counts": {
+   "independent_recount": "6794 normalized strides are written in T03, 430 are in the T03 ledgers as excluded, none absent; 768 written observations have no normalized stride.",
+   "430": "All 430 are recorded in the T03 candidate ledgers as excluded with reason 'outside or ambiguous task interval' (checked on a sample ledger: 63 such lines in AB01/i0; recount over all 44 shows 430 normalized strides carry the excluded status). They are accounted for, not lost.",
+   "768": "Streaming-derived strides inside task intervals that Normalized does not contain. They are real released observations whose pelvis comes from Streaming, so they are not contradicted, but they are not cross-checked against a normalized twin (6794 of 7562, 89.8 percent, are). Why the authors omitted them was not examined. Not a release blocker for correspondence; Q01 should keep them visible as having no normalized cross-check.",
+   "needs_jose": false
+  },
+  "enumeration": "Records, ledgers and output roots come from the seven T03 receipts plus scope v1/v2 by explicit path in the probe plan(); no glob; invalid batch2 root is not in the plan or bindings. My recount used the same receipts and scopes.",
+  "caveats": [
+   "AB04/i0 and AB02/i0-type reversed-pelvis issue (UM21-P01) applies equally to both series, so correspondence there is not independent evidence of correctness.",
+   "Tilt is identical on left and right pelvis, so only obliquity and rotation discriminate sides."
+  ],
+  "backlog_changes": "UM21-C02 set to done; UM21-Q01 set to ready (all dependencies PM-01, UM21-T03, UM21-C02, CORE-01 done)."
+ }
+}

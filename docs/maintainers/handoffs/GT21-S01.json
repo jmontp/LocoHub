@@ -1,0 +1,91 @@
+{
+  "task_id": "GT21-S01",
+  "status": "review",
+  "last_checked_at_utc": "2026-10-31T07:30:10Z",
+  "summary": "Revised after verifier return (F1, F2, optional). The inventory is unchanged: 22 publisher version 1 archives, all rechecked today with unchanged id, size and SHA-256; 16 participants local with 2,301 recordings; AB17 holds the checksum-matched version 1 archive, not extracted or converted; AB12, AB15, AB19, AB23 and AB28 are unrecovered. F1: the earlier 'no José decision' is withdrawn. The current converter reads ik_offset for joint angles and prefers static markers for segment lengths, and version 1 has neither. Draft decision D-GT21-S01-1 (which source the six come from) is below with its review sheet. F2: the AB15 proposal is withdrawn. The next action is a plan-only AB14 version 1 download to test whether the 2024 update changed the shared trial files. It is not launched. Optional: the fresh Mendeley receipts are embedded in the audit.",
+  "checks": [
+    "Re-hashed every bound receipt and audit input: all hashes match their recorded values, including the README, SubjectInfo.mat, 8 repository receipts, subject_masses.csv, source_comparison.json, the coverage audit, all-source-phases and the 3 AB17 recovery receipts.",
+    "Publisher cohort: the version 1 manifests of parts 1, 2 and 3 list exactly 22 subject archives (AB06-AB30, with no AB22, AB26 or AB29). This matches the 22 adults in the paper abstract.",
+    "Local presence: the source root has exactly 16 AB folders and no unexpected subject. The missing set equals the six in the prior coverage audit.",
+    "Local recordings: counted conditions/*.mat files per subject and mode (levelground 506, ramp 1015, stair 665, treadmill 115; total 2,301). Twice these counts equals the prior census tables by mode (1012/2030/1330/230). All 16 local participants have static plus ik_offset folders in all four modes.",
+    "Version: a fresh Mendeley API query on 2026-10-31 shows only version 1 (2021-02-26) and version 2 (2021-10-18) for all three parts. Both predate the 2024-04-28 static/ik_offset additions. The local README (45282345...) differs from the publisher README (832677...).",
+    "AB17: the ZIP size on disk (953,425,349 bytes) equals the receipt and the publisher manifest. The receipt SHA-256 equals the publisher SHA-256; the archive was not re-hashed. There is no extraction root. The restoration plan has 133 recordings (levelground 22, ramp 61, stair 43, treadmill 7), each with 11 channels and none with ik_offset. Both watchers are stopped_incomplete.",
+    "Five unrecovered participants: a fresh part 2 version 1 manifest shows AB15, AB19 and AB23 with unchanged size and SHA-256. AB12 (part 1) and AB28 (part 3) rely on the 2026-10-21 manifest and HEAD receipts.",
+    "Metadata: local SubjectInfo.mat byte-equals the version 1 and version 2 publisher record. The prior native export holds 22 unique Subject/Weight rows. Units, height and other columns were not read.",
+    "Corrected a prior-evidence ambiguity: the archive inspector lists only a fixed set of channel folders, so its 5-channel list does not mean AB17 lacks conditions, emg, gon, imu, jp or markers. The restoration plan shows all 11 channels.",
+    "Fresh part 1 and part 3 version 1 manifests fetched (8.6 KB and 2.2 KB). All 22 subject archives now have the same file id, size and SHA-256 as on 2026-10-21; AB12 and AB28 no longer rely only on the older receipts.",
+    "Converter inputs read from source text: convert_gtech_2021_phase_to_parquet.m loads conditions (821), ik_offset (849), id (860), gcRight (871), gcLeft (884), fp (897) and markers (908). gtech_estimate_segment_lengths.m 75-80 prefers static/markers and silently falls back to walking-trial markers. So a version 1 participant has no joint-angle input and would get segment lengths from a different source than the 16.",
+    "Folder comparison from listings only: the AB17 version 1 ZIP directory (via the restoration plan) has 133 files in each of 11 trial folders and 3 osimxml files, with no ik_offset and no static folder. Local AB14 has 143 in each of 12 trial folders (including ik_offset), 1 each in static/ik, static/markers and static/ik_offset, and 3 osimxml files, for 1,722 files and 1,058,109,726 bytes.",
+    "Decision sheet built with review_sheet.py: 7 chips (3 pass, 1 failed, 3 not checked), 2 figures each 4.5 in wide at 10 pt, and options ordered by participants releasable with the current converter, then download size. The recommendation is only in the fold, and the prose budget passed. Rendered at 1100 and 390 px with headless Chrome: scrollWidth equals the viewport at both widths; figure 2 labels were clipped and fixed before the final render.",
+    "AB14 equivalence plan written (plan only): archive 10.17632/fcgm3chfff.1 AB14.zip, 957,109,717 bytes; it compares ZIP central-directory size and CRC32 with the local files without extraction or decoding. Not launched; no download.",
+    "No motion or force array opened; no archive downloaded or extracted; no job launched. tests/test_backlog_workflow.py and build_backlog_page.py --check were rerun after the revision."
+  ],
+  "remaining": [
+    "D-GT21-S01-1 needs José. The coordinator copies the decision below into backlog.json after verification.",
+    "AB14 equivalence job: needs the reviewed guarded launcher (UM21-T02), a reviewed reference mode in acquire_gt21_missing_participant.py (it currently refuses participants not in the missing ledger), a CRC comparison script, and a fresh disk and memory admission.",
+    "Byte identity of the 16 local trees to the publisher archives, and the author mirror contents for all six, are not checked.",
+    "Member lists of the version 2 combined archives and of the five unrecovered archives are not checked.",
+    "SubjectInfo Weight units and other columns are unresolved (GT21-A02); AB17 extraction is blocked (GT21-A01)."
+  ],
+  "next_action": "Verifier: rerun contributor_tools/review_gt21_s01_crosswalk.py, check the decision sheet at both widths, the draft decision fields and the AB14 plan. After verification, the coordinator copies D-GT21-S01-1 into backlog.json. Next bounded action (any decision outcome): once the guarded launcher is reviewed and the slot is free, review a reference mode for the acquisition tool plus a CRC comparison script, then launch the AB14 version 1 equivalence plan once. GT21-S02 recovery waits for D-GT21-S01-1.",
+  "changed_files": [
+    "contributor_tools/review_gt21_s01_crosswalk.py",
+    "docs/quality/audits/gt21-s01-cohort-crosswalk.json",
+    "docs/maintainers/handoffs/GT21-S01.json",
+    "review_sheets/D-GT21-S01-1/index.html",
+    "review_sheets/D-GT21-S01-1/fig1_participants.png",
+    "review_sheets/D-GT21-S01-1/fig2_folders.png",
+    "converted_datasets/reconversion_v2/gt21_s01_crosswalk_20261031/ (gitignored; 9 small Mendeley metadata receipts, embedded in the audit)",
+    "converted_datasets/reconversion_v2/gt21_ab14_v1_equivalence_20261031/plan.json (gitignored; embedded in the audit)"
+  ],
+  "evidence_paths": [
+    "docs/quality/audits/gt21-s01-cohort-crosswalk.json",
+    "contributor_tools/review_gt21_s01_crosswalk.py",
+    "review_sheets/D-GT21-S01-1/index.html",
+    "docs/maintainers/handoffs/GT21-S01-verify.json",
+    "docs/quality/audits/gt21-participant-source-coverage.json",
+    "docs/quality/audits/gt21-ab17-recovery.json"
+  ],
+  "output_sha256": {
+    "contributor_tools/review_gt21_s01_crosswalk.py": "fa0d0fd3310d145d5b1d7d5ee4e7ecb6e22535d9c64a1cb9bbe485f8212c3238",
+    "docs/quality/audits/gt21-s01-cohort-crosswalk.json": "2eabe1954f39cef642876c4d4dac85749607574eadab7afd3b1cda4c16986d04",
+    "converted_datasets/reconversion_v2/gt21_ab14_v1_equivalence_20261031/plan.json": "ecc3c2490fd9d2912523101e8c188c6ae7fee65321f83a2f156a989b54c3907e",
+    "review_sheets/D-GT21-S01-1/index.html": "346dba62b1bd91d31b2a208fa88216b05172b2de8dd67bf0a785dca161fcd000"
+  },
+  "decisions": [
+    {
+      "id": "D-GT21-S01-1",
+      "task_id": "GT21-S01",
+      "question": "Six of the 22 Georgia Tech 2021 participants are missing here. Their checksummed publisher archives (2021) lack the static-pose trials and static-relative joint angles that our converter reads; the authors' 2024 copy, which the other 16 came from, has them but no publisher checksums. Where should the six come from?",
+      "options": [
+        {
+          "key": "A",
+          "label": "Stop at 16 participants",
+          "consequence": "The six are documented as unavailable; GT21 is released with 16 of 22; no downloads. Reversible."
+        },
+        {
+          "key": "B",
+          "label": "Publisher version 1 archives (checksummed)",
+          "consequence": "Bytes verified against publisher checksums; the six need a second recipe (model-zero angles, segment lengths from walking markers) or are released without joint angles; about 5.4 GB more to download. Reversible."
+        },
+        {
+          "key": "C",
+          "label": "Authors' 2024 copy",
+          "consequence": "Same folders and recipe as the 16; LocoHub records its own hashes at download; trial files can be checked against version 1 checksums if the planned one-participant comparison shows them unchanged; whether the copy holds all six is not yet checked. Reversible."
+        }
+      ],
+      "options_order": "By participants releasable with the current converter (16, 16, up to 22); ties broken by download size (none, then about 5.4 GB).",
+      "recommended": "C",
+      "confidence": "medium",
+      "why": "The 16 local participants already come from the authors' 2024 update without publisher checksums, so C adds no new trust assumption and keeps one recipe and one angle reference across the cohort. B would mix two angle references in one dataset. C still depends on the copy holding all six, which is not yet checked.",
+      "check": "Sheet, second figure: the version 1 column is red in the ik_offset and static rows, and the 2024 column is green there.",
+      "cost_of_waiting": "The six stay unrecovered. Work on the 16, the AB17 checks and the one-participant comparison can continue; only recovery of the six waits.",
+      "decide_before_recommendation": true,
+      "status": "open"
+    }
+  ],
+  "withdrawn": [
+    "'No José decision is needed' (verifier F1).",
+    "AB15 as next recovery (verifier F2): another version 1 archive meets the same ik_offset/static gap."
+  ]
+}

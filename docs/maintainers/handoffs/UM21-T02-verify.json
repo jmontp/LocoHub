@@ -1,0 +1,38 @@
+{
+ "task_id": "UM21-T02",
+ "part": "independent verification of the AB04/d10 guarded pilot",
+ "verdict": "pass_done",
+ "scientific_approval": false,
+ "verified_at_utc": "2026-11-02T23:10:00Z",
+ "checks": {
+  "one_launch": "Receipt job UM21-T02-pilot-AB04-d10: completed, exit 0, clean_success, 8/8 checks true, 71.9 s, peak RSS 213.6 MiB (largest process 218748 KiB). Exactly one launch-ledger entry names the launching parent (pid 1947582, boot 1570e813); one receipt file, empty log, no fallback receipts. verify-cleanup re-run: proven true, no pgid members.",
+  "hashes": "All 16 output files re-hashed (sha256 and bytes) match the receipt. All 13 bindings match spec, bindings_before and bindings_after. Spec file sha256 d4183189... equals receipt spec_sha256. git diff HEAD shows no change to any bound producer/audit/census file (run_um21_t02_pilot.py is untracked and its hash matches the binding).",
+  "audit_report": "Read all 53 checks (status pass, flags empty, binding_complete true). Relevant ones evaluate real counts: events/side from ledger and source identity (identity_*, written_entry_matches_independent_rule 180, exclusion_reason_matches_independent_rule 77); clock (clock_forceplate_frames_equal_10x_joint_frames: joint 17584 frames, force plate 175840; clock_stride_time_equals_hs_difference_frames; clock_time_s_elapsed_frames_at_100hz 180); phase_150_contiguous_rows_per_observation 180 and phase_inclusive_0_to_100 180; component_mapping 84 and source_component_values_and_mask 15120 columns-obs with max abs error 7.2e-12 against tolerance 1e-9; prior_column_bitwise_equal_to_base 5400; ledger_accounts_for_every_source_pair (257 pairs = 180 written + 77 excluded). Belt-clock alignment passed (lag -2 frames).",
+  "independent_probe": "Read-only, one parquet (4 columns) plus the ledger, nice 19 / ionice idle, peak RSS 166.5 MiB, seed 20261102. 27000 rows = 180 observations x 150 rows. Phase starts 0, ends 100, strictly increasing for all 180. Seed sample of 3: left 10156-10257 (1.01 s), right 5801-5901 (1.00 s), left 2806-2932 (1.26 s); each stride time equals (end-start)/100 from the ledger and matches time_s max to 1e-9. First ledger entry right 763-814 (51 frames) is excluded with 'outside or ambiguous task interval' and has no observation in the parquet. Note: the ledger is the producer's own; the audit (not this probe) compares it with Streaming.mat.",
+  "scope": "No column name in the 114-column phase.parquet or source_columns.json contains 'sign' or 'rule'; run_summary states source-sign staging, no CORE-11 application; audit expectations state D-UM21-C03-1 rule C not applied."
+ },
+ "changed_files": [
+  "docs/maintainers/backlog.json (UM21-T02 -> done, handoff and next_action)",
+  "docs/maintainers/backlog.html (regenerated)",
+  "docs/maintainers/handoffs/UM21-T02-verify.json (new)",
+  "docs/maintainers/handoffs/UM21-T02-runner.json (status line)"
+ ],
+ "limits": [
+  "One aligned record only; misaligned (4) and no-cvel (2) records not exercised.",
+  "AB04/d10 was a purposive choice.",
+  "Not scientific approval of the dataset."
+ ],
+ "files_to_commit": [
+  "contributor_tools/run_um21_t02_pilot.py",
+  "tests/test_run_um21_t02_pilot.py",
+  "docs/quality/audits/um21-t02-pilot-spec.json",
+  "docs/quality/audits/um21-t02-pilot-launcher-receipt.json",
+  "docs/quality/audits/um21-t02-pilot-launcher-receipt.log",
+  "docs/maintainers/handoffs/UM21-T02-runner.json",
+  "docs/maintainers/handoffs/UM21-T02-runner-verify.json",
+  "docs/maintainers/handoffs/UM21-T02-verify.json",
+  "docs/maintainers/backlog.json",
+  "docs/maintainers/backlog.html"
+ ],
+ "next_action": "UM21-T03 (currently blocked, depends on PM-01 and UM21-T02): full 50-record treadmill conversion with the same bound producer and audit via a new reviewed spec, one guarded launch; pilot is passed for the same bound code. CORE-11 sign application is separate."
+}

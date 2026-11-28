@@ -1,0 +1,58 @@
+{
+  "job_id": "tc-gt21-j5",
+  "command": [
+    "python3",
+    "contributor_tools/compare_training_vs_locohub.py",
+    "run",
+    "--dataset",
+    "gt21",
+    "--partition",
+    "gate",
+    "--out-dir",
+    "docs/quality/audits/training-compare-gt21-j5",
+    "--his-file",
+    "/mnt/s/workspace_docs/energy shaping ml/esml_research/LocoHub/es_prepared/gate/gtech_2021_time.parquet",
+    "--cop-shift-m",
+    "0.1",
+    "--align-rms-tol",
+    "0.1",
+    "--subject",
+    "AB18",
+    "--subject",
+    "AB20"
+  ],
+  "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+  "output_root": "docs/quality/audits/training-compare-gt21-j5",
+  "receipt_path": "docs/quality/audits/training-compare-gt21-j5-receipt.json",
+  "bindings": {
+    "contributor_tools/compare_training_vs_locohub.py": "dea9a23f03370898ddf005f4643de4499b9933d79f9683b7313f89df3a5fd3d7",
+    "contributor_tools/guarded_launcher.py": "372519f9dd1f52510f747eed3779044765fdc158b08ca007deb8d6d8708c844f",
+    "/mnt/s/workspace_docs/energy shaping ml/esml_research/LocoHub/es_prepared/gate/gtech_2021_time.parquet": "35a5b6e92a2932713f1c58456b18fac6496898e3c5c668c2229fa1bb65cb41d5",
+    "converted_datasets/reconversion_v2/gt21_rb07_export_AB18/time.parquet": "08801b6d54c9b8e0b9d790e68a688e5d1dc86b3af37d702a79827bf3a856f503",
+    "converted_datasets/reconversion_v2/gt21_rb07_export_AB18/run_summary.json": "cf1f76cee0d172b28bd33666dea136a427c39152623c2d77dd73c3ac89f05abe",
+    "converted_datasets/reconversion_v2/gt21_rb07_export_AB20/time.parquet": "6d57b273c8d5c497654270dae7b123cd43dff143ffdc171b694d688b53968edd",
+    "converted_datasets/reconversion_v2/gt21_rb07_export_AB20/run_summary.json": "eb61f8871c6d59fa11a2f9d502849ebe2185ffed6080be79fefac3dd63cb00fa"
+  },
+  "timeout_seconds": 3600,
+  "kill_after_seconds": 30,
+  "poll_seconds": 15,
+  "startup_memory_mib": {
+    "linux": 3584,
+    "windows": 2816
+  },
+  "runtime_memory_mib": {
+    "linux": 2048,
+    "windows": 2048
+  },
+  "expected_output_names": [
+    "summary.json",
+    "comparison.csv"
+  ],
+  "address_space_mib": 768,
+  "disk_admission": [
+    {
+      "path": "/mnt/s/workspace/locomotion-data-standardization/docs",
+      "min_free_mib": 5120
+    }
+  ]
+}

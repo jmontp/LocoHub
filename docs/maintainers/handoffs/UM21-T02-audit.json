@@ -1,0 +1,407 @@
+{
+  "task_id": "UM21-T02",
+  "part": "independent audit script for the existing AB01/d10 pilot_v2 output",
+  "status": "audit_script_done_decisions_round4_ready_for_review",
+  "scientific_approval": false,
+  "last_checked_at_utc": "2026-10-31T06:40:00+00:00",
+  "repository_head": "569ee8f4d7cdf83d96d5f74aa6b65354b4a78da4",
+  "summary": "The audit script is accepted (b3278c87...) and unchanged. Round 3 asked for wording fixes only (R3-1 to R3-3). The changes are confined to builder strings, one figure's marks and labels, and this handoff. No new data was read: the builder re-reads the same figure records as before, and the census is unchanged.",
+  "changed_files": [
+    "contributor_tools/review_um21_t02_clock.py",
+    "docs/maintainers/handoffs/UM21-T02-audit.json"
+  ],
+  "not_changed": "backlog.json/html, AGENTS.md, guarded_launcher.py, producer modules, the reviewer's tests/test_audit_um21_tread_pilot_verify.py, converted_datasets/ and source folders.",
+  "deliverable_hashes_sha256": {
+    "contributor_tools/audit_um21_tread_pilot.py (accepted, unchanged)": "b3278c876824662838894aae5724661d6cde7a3a5c560e2b4ff57f0c07951c59",
+    "tests/test_audit_um21_tread_pilot.py (unchanged)": "7c9c6d8a2af3593c7bc5243050610e65831dd6b82077aff878a3ec6775674bc5",
+    "tests/test_audit_um21_tread_pilot_verify.py (reviewer, unchanged)": "57577fd4f0345d649e0ef5ef2a13fb26f0efa9b382e5151143a44cfb60deb9d0",
+    "contributor_tools/audit_probes/2026_10_30/census_um21_tread_clock.py": "afb4ac2b61ea1ab3f65fe7c9bb13173503890927e91f19240db8e8d631dab384",
+    "docs/quality/audits/um21-t02-clock-census.json": "661f9dd528b7e167aa5516e1fc44dbdd5aa982daaf57cacffbf2331f29d36dfd",
+    "contributor_tools/review_um21_t02_clock.py": "0d98fa4026ca065b0fa6ed8c08c346aff7e44129561bed7dcce654e22168b664",
+    "review_sheets/D-UM21-T02-1/index.html (gitignored)": "07e9fc0a50e330e9f73a8169e42fce76a3f4fb605741c53b2b04670240983183",
+    "review_sheets/D-UM21-T02-2/index.html (gitignored)": "1a5fdb7410bfe55f34a0fc2f858c16f4c5866dd7db982bd9ed99a7a206edab80",
+    "docs/quality/audits/um21-midstance-slope.json": "fb1895fb871c0581cf0b577e6e31fdeb9269b2246bc343feb100f72678160ca3"
+  },
+  "design": {
+    "independence": "No import of extend_umich_tread_source, reconvert_umich_*, reconvert_recording or any contributor_tools module. An AST test pins imports to the stdlib plus numpy/h5py/pyarrow. The script also lists sys.modules at exit and fails the report if a producer or contributor_tools module was loaded. Resampling evaluates the exact rational position k*(n-1)/149. A sample that lands on a source frame takes that frame's value. A sample between frames takes the linear blend of the two, and is NaN if either neighbour is non-finite. Velocities use their own finite difference: one-sided at the ends, central inside. Neither np.interp nor np.gradient is used.",
+    "side_and_events": "Pairs come from consecutive LHS (left) and RHS (right) heel strikes in the source. Parquet observations are matched by identity, not by row order. Ipsi and contra columns must equal the claimed leg's and the other leg's source channels. The report counts observations where the two legs' source windows differ, which is what makes the side check discriminating, and pairs whose frames occur on both sides.",
+    "clock": "Basis is the README (R01 Dataset README.pdf): joint channels at 100 Hz, forceplates at 1000 Hz, HS and StrideTime in 100 Hz frames. Checks: StrideTime == diff(HS) exactly; forceplate length == 10 x joint length; HS inside the joint frames; median exported stride within 0.7-2.0 s (a x10 clock error falls outside); source_start/end_time_s = (frame-1)/100; time_s[k] = k*(end-start)/(149*100); phase_ipsi has 0 and 100 exactly and 150 equal steps; exactly 150 contiguous rows per observation.",
+    "values": "Checks every source component in source_columns.json against the source (84 expected). Each column name must follow from its mapping entry, and each unit must match the README unit for its group. The prior columns are checked two ways: bit for bit against the base phase.parquet, and against the documented base recipe from source (pelvis = RPelvisAngles; thigh = pelvis + hip; shank = pelvis + hip - knee; ankle_dorsiflexion all NaN; source signs). NaN masks must match exactly.",
+    "exclusions": "Every source pair appears once in the ledger. Each pair is classified independently by the task-window rule (D-1 C: exactly one cutPoints interval with a <= start and end <= b). Every rejected pair needs a non-empty reason equal to that classification, and every written pair needs the same task, label and info.",
+    "receipts": "Checks the pilot summary hashes for phase, ledger and source_columns against the files. It checks the base phase hash in both summaries and that the ledger is byte-identical to the base ledger. The code snapshot in the pilot root must match the summary's code_sha256.",
+    "signs_and_ankle": "The pilot is a staging output in source signs. D-UM21-C03-1 rule C (pelvis, knee angle and knee moment x -1) is a downstream transform, and a column that already carries it fails; a test covers this. Ankle alternate-branch frames (|component 2| > 90 deg) and exact (0,0,0) joint-angle triples inside exported windows are reported as flags and do not fail the audit. The D-UM21-C03-2 rule is not applied here.",
+    "tolerances_stated_in_advance": {
+      "source_component_abs": 1e-09,
+      "angle_rad_abs": 1e-09,
+      "velocity_rad_s_abs": 1e-07,
+      "clock_s_abs": 1e-12,
+      "phase_percent_abs": 1e-12,
+      "nan_mask": "exact",
+      "prior_columns_vs_base": "bitwise"
+    },
+    "resources": "RLIMIT_AS = min(768 MiB, inherited hard limit). It sets single-thread environment variables before imports, plus pa.set_cpu_count(1) and set_io_thread_count(1), and calls nice 19 itself. Each joint dataset has an 8 MiB admission limit. Parquet is streamed in 150-row chunks. A --max-rss-mib self-guard (default 300) stops with exit 4.",
+    "cli": "--source --pilot-root --base-root --subject --condition --output-dir (must not exist; parent must exist), and exactly one of --expected-source-sha256 HEX (job) or --skip-source-hash (bounded probe only; the report sets binding_complete false). Exit 0 pass, 1 check failed, 2 usage/input error, 4 RSS guard."
+  },
+  "checks": [
+    "AGENTS.md env prefix: pytest tests/test_audit_um21_tread_pilot.py tests/test_audit_um21_tread_pilot_verify.py tests/test_backlog_workflow.py: 114 passed.",
+    "build_backlog_page.py --check: Backlog valid; HTML current (87 tasks).",
+    "Both sheets rendered with Playwright (Chrome) at 1100 and 390 px: scrollWidth equals the viewport, and every <details> element is closed. page() enforces the prose budget."
+  ],
+  "probe_run": {
+    "authority": "AGENTS.md bounded read-only probe exception. Each run read one recording at a time, wrote only to the session scratchpad (audit) or to docs/quality/audits (census JSON), and was not run through the launcher.",
+    "preconditions_checked": "Before the runs: MemAvailable 13.0 GiB. ps showed no repository python/MATLAB worker; the only python processes were the MCP servers under /mnt/s/workspace/mcp_servers. An earlier tasklist showed no Windows MATLAB, python or OpenSim.",
+    "runs": [
+      {
+        "what": "census rerun with all groups (round 3)",
+        "started_utc": "2026-10-30T23:07:22Z",
+        "exit_code": 0,
+        "peak_rss_mib": {
+          "self": 88.3,
+          "gnu_time": 88.3
+        },
+        "wall_seconds": 25.3,
+        "note": "One recording at a time; replaced the round-2 census JSON (own output)."
+      },
+      {
+        "what": "sheet builder, both sheets (reads AB01 d10, AB05 i0, AB01 i0/i5/i10)",
+        "exit_code": 0,
+        "peak_rss_mib": {
+          "gnu_time": 206.0
+        }
+      },
+      {
+        "what": "audit on AB01/d10 (final script b3278c87...)",
+        "started_utc": "2026-10-30T22:56:27Z",
+        "exit_code": 1,
+        "status": "fail",
+        "failed_checks": [
+          "clock_cut_points_aligned_with_joint_frames"
+        ],
+        "belt_clock": {
+          "best_lag": 169,
+          "err_lag0_m_s": 0.2216,
+          "err_best_m_s": 0.0467,
+          "comparisons_lag0": 51
+        },
+        "other_results": "Everything else is unchanged from round 1: 183 observations, 77 exclusions, 84 components, max errors 4.6e-12 / 1.1e-15 / 1.4e-13.",
+        "peak_rss_mib": {
+          "self": 182.2,
+          "gnu_time": 182.7
+        },
+        "wall_seconds": 11.5,
+        "report_scratch": "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/um21_t02_audit_probe3_ab01_d10/audit_report.json sha256 4e30ffaf505ceb79103cf19cbab164c96fe3d24adf589d8cfe3267792b7983e2",
+        "command": "<env prefix> /usr/bin/time -v nice -n 19 ionice -c 3 python3 contributor_tools/audit_um21_tread_pilot.py --source contributor_tools/conversion_scripts/Umich_2021/Streaming.mat --pilot-root converted_datasets/reconversion_v2/um21_tread_components_pilot_v2_20261021 --base-root converted_datasets/reconversion_v2/um21_tread_corrected_20261020 --subject AB01 --condition d10 --output-dir <scratchpad>/um21_t02_audit_probe3_ab01_d10 --skip-source-hash --max-rss-mib 300"
+      },
+      {
+        "what": "clock and duplicate census, 50 recordings in sequence",
+        "started_utc": "2026-10-30T22:56:15Z",
+        "exit_code": 0,
+        "peak_rss_mib": {
+          "self": 75.6,
+          "gnu_time": 75.6
+        },
+        "wall_seconds": 11.2,
+        "command": "<env prefix> /usr/bin/time -v nice -n 19 ionice -c 3 python3 contributor_tools/audit_probes/2026_10_30/census_um21_tread_clock.py --output docs/quality/audits/um21-t02-clock-census.json --max-rss-mib 300"
+      },
+      {
+        "what": "sheet builder (reads AB01/d10 and AB05/i0)",
+        "exit_code": 0,
+        "peak_rss_mib": {
+          "gnu_time": 194.2
+        }
+      },
+      {
+        "what": "metadata check of AB08/i10 and AB10/i0 (key names only)",
+        "peak_rss_mib": 39.7,
+        "finding": "Neither has events/VelProf, so there is no cvel; markers are present."
+      },
+      {
+        "what": "earlier runs, superseded",
+        "note": "An intermediate audit run (script d125ad2e..., exit 1, lag +169) and an earlier census run were made with the script before with_series was added. That census JSON was deleted and regenerated, so the census binds the final audit hash. Round-1 probe: see round1_probe_run."
+      }
+    ]
+  },
+  "hash_binding": {
+    "rule": "The launcher receipt binds the audit script by sha256 before and after the run (bindings). The report records the sha256 of every input it read, its own script hash and, in the job, the full source sha256 compared against --expected-source-sha256. The launcher hashes audit_report.json as an output.",
+    "current_bound_code_matches_pm01": true,
+    "note": "The audit binding is b3278c87...; any later edit needs a new hash and a new review."
+  },
+  "job_spec_draft": {
+    "status": "Draft; not saved as a spec file, not dry-run, not launched. Under the current source the job is expected to exit 1 for AB01/d10 on the clock check. It should not run until D-UM21-T02-1 is answered and UM21-T01 confirms the pilot record; an aligned record would need a new pilot output (PM-01 option B).",
+    "spec": {
+      "job_id": "UM21-T02-audit-AB01-d10",
+      "command": [
+        "python3",
+        "contributor_tools/audit_um21_tread_pilot.py",
+        "--source",
+        "contributor_tools/conversion_scripts/Umich_2021/Streaming.mat",
+        "--pilot-root",
+        "converted_datasets/reconversion_v2/um21_tread_components_pilot_v2_20261021",
+        "--base-root",
+        "converted_datasets/reconversion_v2/um21_tread_corrected_20261020",
+        "--subject",
+        "AB01",
+        "--condition",
+        "d10",
+        "--output-dir",
+        "converted_datasets/reconversion_v2/um21_t02_audit_ab01_d10_<YYYYMMDD>",
+        "--expected-source-sha256",
+        "df8b3e31d2fe6869b95b4776a8f77639da476685b4c0ccb86c985bee3f01b531",
+        "--max-rss-mib",
+        "300"
+      ],
+      "output_root": "converted_datasets/reconversion_v2/um21_t02_audit_ab01_d10_<YYYYMMDD>",
+      "receipt_path": "converted_datasets/reconversion_v2/um21_t02_audit_ab01_d10_<YYYYMMDD>.receipt.json",
+      "timeout_seconds": 3600,
+      "kill_after_seconds": 30,
+      "poll_seconds": 15,
+      "startup_memory_mib": {
+        "linux": 3584,
+        "windows": 2816
+      },
+      "runtime_memory_mib": {
+        "linux": 2048,
+        "windows": 2048
+      },
+      "address_space_mib": 768,
+      "expected_output_names": [
+        "audit_report.json"
+      ],
+      "bindings": {
+        "contributor_tools/conversion_scripts/Umich_2021/Streaming.mat": "df8b3e31d2fe6869b95b4776a8f77639da476685b4c0ccb86c985bee3f01b531",
+        "contributor_tools/audit_um21_tread_pilot.py": "b3278c876824662838894aae5724661d6cde7a3a5c560e2b4ff57f0c07951c59",
+        "contributor_tools/extend_umich_tread_source.py": "a7c565ebe25d00effd81403b295638ba82b049632555bf154c404eb524367075",
+        "contributor_tools/reconvert_umich_running.py": "c3ef8f722ada6916474e630bbc333eea7a01d727c15c53509df4bff2adad419b",
+        "contributor_tools/reconvert_umich_streaming.py": "87484583032660fb020816fdcc51916de07305694f5a38e2998b7756509ee42e",
+        "contributor_tools/reconvert_recording.py": "5e2ee7dc6ff586d726b0444c4d66bbaeebaf37856b63cde0f0a5b3874b18bc6f",
+        "converted_datasets/reconversion_v2/um21_tread_components_pilot_v2_20261021/conversion_summary.json": "034e94a6896f3fedd3fe7d1d0dbff56992e77d1b0c74a88c817ac4f2984d6f49",
+        "converted_datasets/reconversion_v2/um21_tread_components_pilot_v2_20261021/AB01/d10/phase.parquet": "c6045fb90e2581f55a4d1eabea65319b621e10addb8d8e3c9344884f04581092",
+        "converted_datasets/reconversion_v2/um21_tread_components_pilot_v2_20261021/AB01/d10/candidate_ledger.jsonl": "4c15745a29d504e150ee02bcc87bc0f340243b533e22a1c86c55997e06931048",
+        "converted_datasets/reconversion_v2/um21_tread_components_pilot_v2_20261021/AB01/d10/source_columns.json": "0a49fd52750665d96d9cd93edc26cfbfae7b9b1f2611c4f6c7c2567b75702b9f",
+        "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/conversion_summary.json": "349b896e7daa28589d1af705a7be6fbbb1af32f7b09f092d289e63869554172d",
+        "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB01/d10/phase.parquet": "da06be57d17dce9330c0b2b42a4c16eace6392e28eb3528f3e48c54da786ff0b",
+        "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/AB01/d10/candidate_ledger.jsonl": "4c15745a29d504e150ee02bcc87bc0f340243b533e22a1c86c55997e06931048",
+        "contributor_tools/audit_probes/2026_10_20/check_um21_tread_source.py": "f340d4866a6d7c91b77be9bf5f3b526f780e59f31e7cf274c8f125357fa27d87",
+        "converted_datasets/reconversion_v2/um21_tread_full_readback_20261021/source_comparison.json": "958a2b2cb8bddab8822d3db1d737136bf354b60fa04ccb79716cdb481b02ea51"
+      }
+    },
+    "notes": [
+      "The receipt path sits outside output_root, as the launcher requires. The audit creates output_root itself (mkdir, parents=False), so the launcher's check that it is absent before Popen holds.",
+      "The source sha256 is computed twice by the launcher (bindings before/after) and once by the audit. At idle I/O that is about 6.6 GB of reads. Its time is not measured, and the 3600 s timeout bounds it.",
+      "A python3 started from the repository root counts as a worker in the launcher census. The audit itself is the only worker the job adds."
+    ]
+  },
+  "dry_run": "Not run (instruction: launch nothing through the launcher).",
+  "pilot": "Not run under the launcher. Only the bounded direct probe above was run.",
+  "not_checked": [
+    "Full source sha256 (skipped in every probe; the launcher job computes it).",
+    "AB08/i10 and AB10/i0: no cvel, so no clock evidence either way.",
+    "The marker estimator's own small lag (aligned records show -10 to +20 frames) is not calibrated against a published method.",
+    "Drift within a recording: one offset per recording is assumed in the re-alignment counts.",
+    "Which of AB01 i5 or i10 owns the duplicated motion.",
+    "The base recipe and event correctness, as in round 1."
+  ],
+  "remaining": [
+    "Round-4 review of the wording fixes (R3-1 to R3-3).",
+    "Coordinator: after that review, copy decisions_for_backlog into backlog.json, and bind audit b3278c87... in the job spec.",
+    "After Jos\u00e9 answers: UM21-T01 re-selects or confirms the pilot record; an aligned record needs a reviewed producer selection (PM-01 option B). Then dry run, census and a single launcher job."
+  ],
+  "next_action": "Independent round-4 review of the D-UM21-T02-1 and D-UM21-T02-2 wording.",
+  "evidence_paths": [
+    "contributor_tools/audit_probes/2026_10_30/census_um21_tread_clock.py",
+    "contributor_tools/audit_um21_tread_pilot.py",
+    "contributor_tools/review_um21_t02_clock.py",
+    "docs/maintainers/handoffs/UM21-T02-audit-verify.json",
+    "docs/quality/audits/pm01-um21-tread-pilot-handoff.json",
+    "docs/quality/audits/um21-t02-clock-census.json",
+    "review_sheets/D-UM21-T02-1/index.html (gitignored)",
+    "review_sheets/D-UM21-T02-2/index.html (gitignored)",
+    "tests/test_audit_um21_tread_pilot.py",
+    "tests/test_audit_um21_tread_pilot_verify.py"
+  ],
+  "decisions": [
+    "D-UM21-T02-1",
+    "D-UM21-T02-2 (both drafted here; not yet in backlog.json)"
+  ],
+  "round2_fixes": {
+    "R1": "New failing check clock_cut_points_aligned_with_joint_frames, with the rule stated in advance in TOLERANCES. For each source HS h, take the mean of that side's HEE and TOE central-difference velocities over frames h+15..h+29; belt speed is the absolute AP component, where AP is the axis with the largest median |window velocity|. Marker frames h+14..h+30 must be finite, not (0,0,0) and not flagged 0. Compare with cvel[h+22+lag-1] for HS within transition intervals (labels a*/d*) +-300 frames, over lags -1000..1000, using the median absolute error. A lag is considered only with at least max(8, ceil(half the lag-0 comparisons)) comparisons. Pass only if |best lag| <= 50 AND err(0) - err(best) <= 0.02 m/s. If not evaluable (no cvel, a missing marker, no transition) the check fails. It is never shifted, never a flag; the cutPoints flag stays informational. Synthetic tests use exact closed forms (a linear belt ramp of 0.001 m/s per frame; a quadratic marker path whose central difference equals the ramp): lag 0 passes; cvel shifted by 150 frames fails with best lag 150 and lag-0 error 0.150; a 40-frame shift fails on the error criterion; a 10-frame shift passes; a missing LTOE fails as not evaluable.",
+    "R2": "The job spec bindings now include check_um21_tread_source.py (f340d486...7d87) and source_comparison.json (958a2b2c...ea51), as PM-01 binds them.",
+    "R3": "json.dumps(allow_nan=False) runs before open(..., 'x'). On TypeError or ValueError the script writes nothing, prints to stderr and exits 2. Test: a NaN cutPoint reaching clock.cut_points_max gives exit 2 and no audit_report.json.",
+    "R4": "Handled, not just noted. finite_difference sets d[i] = NaN wherever values[i] is non-finite, which matches np.gradient's centre term on a near-uniform grid. On the linspace-versus-rational positions: the positions differ only by rounding at non-integer points. A rational position k(n-1)/149 that is not an integer is at least 1/149 from any integer, and when 149 divides k(n-1) linspace's step (n-1)/149 is an exact integer, so the two rules never disagree on whether a sample lands on a source frame. The NaN masks cannot diverge from that cause."
+  },
+  "round1_probe_run": {
+    "audit_script_sha256": "447e23050e85832d219f92c246b6e7e23121a026ac7e33f1c362cc5c3ae4a35d",
+    "exit_code": 0,
+    "note": "Passed before R1 existed; superseded."
+  },
+  "census": {
+    "path": "docs/quality/audits/um21-t02-clock-census.json",
+    "totals": {
+      "recordings": 50,
+      "aligned": 44,
+      "misaligned": 6,
+      "strides_as_published_all": 8626,
+      "strides_as_published_aligned_only": 7562,
+      "strides_misaligned_realigned_aligned_as_published": 8648,
+      "decisions_changed_in_misaligned_by_realignment": 294,
+      "pairs_in_misaligned": 1473,
+      "all_counts_match_t01": true
+    },
+    "misaligned": [
+      {
+        "record": "AB01/d10",
+        "best_lag": 169,
+        "err_lag0_m_s": 0.22161834130781488,
+        "err_best_m_s": 0.04669666666666639,
+        "reason": null,
+        "decisions_changed": 42,
+        "pairs": 260
+      },
+      {
+        "record": "AB01/d5",
+        "best_lag": 695,
+        "err_lag0_m_s": 0.8186849275362318,
+        "err_best_m_s": 0.04954000000000003,
+        "reason": null,
+        "decisions_changed": 85,
+        "pairs": 234
+      },
+      {
+        "record": "AB01/i5",
+        "best_lag": -413,
+        "err_lag0_m_s": 0.6152013110403396,
+        "err_best_m_s": 0.05577583333333336,
+        "reason": null,
+        "decisions_changed": 65,
+        "pairs": 224
+      },
+      {
+        "record": "AB08/i10",
+        "best_lag": null,
+        "err_lag0_m_s": null,
+        "err_best_m_s": null,
+        "reason": "not evaluable: cvel or a heel/toe marker is missing",
+        "decisions_changed": 0,
+        "pairs": 270
+      },
+      {
+        "record": "AB09/i10",
+        "best_lag": 685,
+        "err_lag0_m_s": 0.6656173661800485,
+        "err_best_m_s": 0.07142333333333428,
+        "reason": null,
+        "decisions_changed": 102,
+        "pairs": 260
+      },
+      {
+        "record": "AB10/i0",
+        "best_lag": null,
+        "err_lag0_m_s": null,
+        "err_best_m_s": null,
+        "reason": "not evaluable: cvel or a heel/toe marker is missing",
+        "decisions_changed": 0,
+        "pairs": 225
+      }
+    ],
+    "aligned_lag_range_frames": [
+      -10,
+      20
+    ],
+    "cross_check_with_reviewer": "AB01/d10 best lag +169 (reviewer: +165). 42 decisions change at that lag (reviewer: 39 at +165, 44 at +190). AB01 d5 +695 (reviewer +684), AB01 i5 -413 (reviewer -404). Controls agree within a few frames.",
+    "duplicates": "Only AB01 i5 and AB01 i10 share data: 62 of 62 signal datasets are identical (joint angles 10, forces 6, moments 6, powers 6, markers 28, force plates 6), as are LHS, RHS, LStrideTime, RStrideTime and the decoded task labels. cutPoints and newID differ. No other pair among the 50 recordings shares any signal dataset.",
+    "not_evaluable": "AB08/i10 and AB10/i0: no cvel (events/VelProf absent); all four heel/toe markers are present."
+  },
+  "review_sheet": {
+    "D-UM21-T02-1": {
+      "path": "review_sheets/D-UM21-T02-1/index.html",
+      "comparison_record": "AB05/i0 (seed 20261031)",
+      "option_order": "By strides released without AB01 i5: 7,562 / 8,101 / 8,478."
+    },
+    "D-UM21-T02-2": {
+      "path": "review_sheets/D-UM21-T02-2/index.html",
+      "contrast_record": "AB01/i0 (seed 20261031, from aligned AB01 recordings other than i5/i10)",
+      "option_order": "By strides released from the two recordings: 0 / 154 / 302."
+    },
+    "builder": "contributor_tools/review_um21_t02_clock.py (writes both sheets and each decision.json)"
+  },
+  "decision_note": "Copy both into backlog.json verbatim after review; the letters match the sheets. The letters are independent, but the counts are not. D-UM21-T02-1's released counts include AB01 i10 (154 strides) and are 154 lower if D-UM21-T02-2 is A, as each option and table cell states. With D-CORE-04-1 open there would be three open decisions, the maximum. Suggested order, hardest first: D-UM21-T02-1, then D-UM21-T02-2.",
+  "round3_fixes": {
+    "R2-1": "The builder holds AB01 i5 out of the D-UM21-T02-1 scope (HELD_OUT) and recounts from the census: A 7,562 (5 recordings, 916 strides left out); B 8,101 (re-aligns AB01 d10, AB01 d5 and AB09 i10, with 229 of 754 decisions changed; leaves out AB08 i10 and AB10 i0, 392 strides); C 8,478. The order is unchanged. Each option's consequence carries the hold-out note. The duplicate is removed from B's cells, from 'why' and from the chips. The footnote reads 'AB01 i5 held out (D-UM21-T02-2)'. The 'failed' chip and the offsets figure still list AB01 i5 as a measured offset, labelled '(held out)', because that is a clock fact.",
+    "R2-2": "New sheet review_sheets/D-UM21-T02-2/. Options are ordered by strides released from the two recordings: A drop both (0), B drop i5 only (154), C keep both (302). Figures: right-hip traces of i5 and i10 coincide, against a seeded other AB01 recording (AB01 i0); percent of byte-identical datasets per group for i5 vs i10 against the contrast pair; the shared marker belt speed against the i10 and i5 belt commands. Recommendation B is folded, decide_before_recommendation is true, and confidence is medium. The census now records that the copy covers 62 of 62 signal datasets (joint angles, forces, moments, powers, markers, force plates). LHS, RHS, both stride times and the decoded task labels are also identical; cutPoints and newID differ.",
+    "R2-3": "The offsets-figure labels now sit below the band with leader lines and say 'no cvel'. The reason split is done in the census (alignment.not_evaluable_detail: 'no cvel' / 'missing heel/toe marker'), not in the audit script. Editing the audit would change its accepted hash b3278c87... and force another review. AB08 i10 and AB10 i0 both lack cvel and have all four markers. If the split is also wanted in the audit's own reason string, do it in the next audit revision."
+  },
+  "decisions_for_backlog": [
+    {
+      "id": "D-UM21-T02-1",
+      "task_id": "UM21-T02",
+      "question": "The UMich 2021 treadmill task intervals run on the belt-speed clock, which is 1.7 to 7 seconds off the motion data in some recordings. How should treadmill strides get task labels?",
+      "options": [
+        {
+          "key": "A",
+          "label": "Exclude recordings that fail the clock check",
+          "consequence": "5 recordings (AB01 d10, AB01 d5, AB08 i10, AB09 i10, AB10 i0) leave the treadmill release: 916 strides; nothing is estimated. AB01 i5 is held out of every option pending its own decision; its motion is a copy of AB01 i10. If D-UM21-T02-2 is A, AB01 i10 also leaves and this count is 7,408 (154 fewer). Reversible."
+        },
+        {
+          "key": "B",
+          "label": "Re-align the measured recordings by their offset",
+          "consequence": "Task intervals of AB01 d10, AB01 d5, AB09 i10 are shifted by the marker-measured offset (229 of 754 decisions change); AB08 i10, AB10 i0 are left out (392 strides). Adds a derived step that needs its own review. AB01 i5 is held out of every option pending its own decision; its motion is a copy of AB01 i10. If D-UM21-T02-2 is A, AB01 i10 also leaves and this count is 7,947 (154 fewer). Reversible."
+        },
+        {
+          "key": "C",
+          "label": "Keep the source task intervals as published",
+          "consequence": "No change; 229 of 754 stride decisions in AB01 d10, AB01 d5, AB09 i10 stay mislabelled, and AB08 i10, AB10 i0 stay unchecked. AB01 i5 is held out of every option pending its own decision; its motion is a copy of AB01 i10. If D-UM21-T02-2 is A, AB01 i10 also leaves and this count is 8,324 (154 fewer). Reversible."
+        }
+      ],
+      "options_order": "By strides released in the 50-recording treadmill scope without AB01 i5: 7,562, 8,101, 8,478 (each 154 lower if D-UM21-T02-2 is A; the order is the same).",
+      "recommended": "A",
+      "confidence": "medium",
+      "why": "The offsets are large and clearly measured (1.7\u20137 s), while the other recordings line up within 0.2 s. Excluding invents nothing; re-aligning would add a new estimate (median error 0.05\u20130.07 m/s) that needs its own review.",
+      "check": "review_sheets/D-UM21-T02-1/index.html, first figure: in AB01 d10 the red marker dots reach 1.2 m/s well before the blue belt-command line does; in the second figure they sit on the line.",
+      "cost_of_waiting": "The UMich 2021 treadmill pilot and the 50-recording treadmill release stay blocked; other datasets are unaffected.",
+      "decide_before_recommendation": true,
+      "status": "open"
+    },
+    {
+      "id": "D-UM21-T02-2",
+      "task_id": "UM21-T02",
+      "question": "In the UMich 2021 treadmill data, participant AB01's 5-degree incline recording is a byte-for-byte copy of the same participant's 10-degree incline recording, except for its task intervals. Which of the two should be released?",
+      "options": [
+        {
+          "key": "A",
+          "label": "Drop both AB01 i5 and AB01 i10",
+          "consequence": "Neither recording is released (148 + 154 strides left out). Reversible."
+        },
+        {
+          "key": "B",
+          "label": "Drop AB01 i5 only",
+          "consequence": "AB01 i5 is left out (148 strides); the motion is released once as AB01 i10 (154 strides). AB01 then has no 5-degree incline recording, and assigning the motion to AB01 i10 rests on the measured slope (9.8-11.0 degrees by three methods) and the marker belt-speed fit (-7 vs -413 frames). Reversible."
+        },
+        {
+          "key": "C",
+          "label": "Keep both as published",
+          "consequence": "Both are released; the same motion appears twice, once labelled as a 5-degree incline whose task clock is 4.1 s off it (AB01 i5 then falls under D-UM21-T02-1). Reversible before release."
+        }
+      ],
+      "options_order": "By strides released from the two recordings: 0, 154, 302.",
+      "recommended": "B",
+      "confidence": "medium",
+      "why": "Every signal and the heel strikes of AB01 i5 equal AB01 i10 byte for byte. The shared motion was walked on a 9.8-11.0 degree slope (midstance foot path, heel-toe pitch and plate force), and only AB01 i10's task clock fits it (-7 vs -413 frames), so the motion belongs to AB01 i10. Releasing both publishes the same strides twice; dropping both discards data whose labels check out.",
+      "check": "review_sheets/D-UM21-T02-2/index.html, second figure: the red AB01 i5 dot sits at 10 on the vertical axis, while every other dot above the 5-degree label sits near 5.",
+      "cost_of_waiting": "AB01 i5 and AB01 i10 stay out of the treadmill release (302 strides); nothing else waits.",
+      "decide_before_recommendation": true,
+      "status": "open"
+    }
+  ],
+  "round4_fixes": {
+    "R3-1": "D-UM21-T02-1 counts include AB01 i10 (154). Each 'Strides released' cell now reads e.g. '7,562 (7,408 if D-UM21-T02-2 is A)', giving 7,408 / 7,947 / 8,324. Each backlog consequence states the lower count, and options_order notes that the order is unchanged. The decision note no longer calls the decisions independent.",
+    "R3-2": "D-UM21-T02-2 option A is neutral: 'Neither recording is released (148 + 154 strides left out). Reversible.' Its Effect cell reads 'Neither recording is released'. Option B now states its cost: AB01 has no 5-degree incline recording, and assigning the motion to AB01 i10 rests on the marker belt-speed fit (-7 vs -413 frames).",
+    "R3-3": "The chip now reads 'Only this pair, of all 50 recordings, shares any dataset'. Fig 1's y-label is shortened to 'right hip flexion (deg)' and is no longer clipped. Fig 2 marks each 0 % bar with a square at 0. The check text reads 'every blue contrast mark sits at 0 %'. The contrast caption reads 'the only other aligned AB01 recording'; the builder picks that wording whenever the pool has one record."
+  },
+  "round5_slope_evidence": {
+    "source": "UM21-SLOPE (docs/maintainers/handoffs/UM21-SLOPE.json): walking-surface slope from midstance, all 50 treadmill recordings.",
+    "finding": "The motion shared by AB01 i5 and AB01 i10 was walked on a 10-degree incline: midstance foot path 10.09 deg, heel-toe pitch minus level offset 11.00 deg, plate force tilt 9.76 deg. AB01 i10 is correctly labelled; AB01 i5 is the mislabelled copy. Which recording is the copy is unchanged.",
+    "sheet_changes": "D-UM21-T02-2: the hip-trace figure is replaced by a slope figure (labelled vs midstance slope, AB01 i5/i10 marked, blind tolerance band); figure order is now identity, slope, clock. Two chips added (7 of 8). Option letters, labels and neutral order unchanged. Option B consequence and why now cite the slope; check now points at the slope figure. D-UM21-T02-1 output is byte-identical in decision.json.",
+    "decisions_for_backlog": "D-UM21-T02-2 re-copied from review_sheets/D-UM21-T02-2/decision.json; D-UM21-T02-1 unchanged. backlog.json not edited (coordinator copies).",
+    "rendered": "Playwright (Chrome) at 1100 and 390 px: scrollWidth equals viewport, all details closed, 3 images load, recommendation text not visible."
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "task_id": "GT24-C02",
+  "status": "review",
+  "last_checked_at_utc": "2026-10-30T18:48:38Z",
+  "summary": "The README is wrong for the ankle; the data are dorsiflexion-positive and the prior audits' negation proposal is withdrawn. Seed 20261030 drew 6 subjects across both data phases (Phase1And2 BT10 decline 10, BT07 level 1.2 m/s off, BT11 decline 5; Phase3 BT02 level 2.0, BT24 incline 5, BT20 incline 5), 12 legs, 231 stances. (1) Foot frame from the publisher calcn-frame insole table (force norm equals the plate force to 6e-12 N): stance force up, CoP moves heel to toe in 231/231 stances, so +z rotation lifts the toes. (2) Lever-arm ankle moment (generic gait2392 talus offset): source ankle_angle_<side>_moment / dorsiflexion-positive internal estimate = 0.96-1.11 in 12/12 legs (correlation 0.987-0.999), same sign in 231/231 stance means, positive for every one of 9 ankle positions (0.77-1.49). (3) Level/uphill push-off net work positive in 154/154 stances (publisher power and own moment x d(angle)/dt identical); since sign(work) = moment sign x angle sign, the angle is dorsiflexion-positive too. Declines are not diagnostic (32/77 positive) and are excluded from that test. (4) Angle falls from 70 % stance to plate toe-off in 154/154 level/uphill stances; toe walking (measured CoP 12-17 cm further forward than heel walking) gives a lower ankle angle in 12/12 legs (BT02 L by 0.08 deg, BT11 R by 0.53 deg). (5) moment_filt_bio equals moment_filt for the ankle exactly and ankle power_exo is 0 (no ankle actuator). Exo encoder knee angle correlates +0.93 to +0.99 with OpenSim knee_angle and exo hip -0.90 to -0.99 with hip_flexion: the README hip/knee and exo statements are right; only its ankle statement is wrong. Moment/mass slope about 1 with README \"w/ exo\" masses is consistent with N*m/kg.",
+  "verdict": {
+    "readme": "wrong for the ankle (lines 90-91 \"ankle plantarflexion is positive\")",
+    "data": "ankle angle, velocity and moment (net and bio) dorsiflexion-positive; moments internal (plantarflexor negative); not mislabeled relative to OpenSim gait2354",
+    "prior_audits": "gt24-ankle-evidence-ranking.json and gt24-ankle-convention-review.json are wrong on the ankle; their negation proposal is withdrawn. gt24-native-parsed-ankle-pilot.json and gt24-ankle-converter-pilot.json verified provenance and the mechanics of a negation, not its direction.",
+    "adapter": "the committed convert_gtech_2024_phase_to_parquet.py (no ankle flip) has the correct sign. prepare_gt24_ankle_fix.py, adopt_gt24_phase_ankle_sign.py and run_gt24_ankle_converter_pilot.py implement the wrong sign and must not be adopted."
+  },
+  "checks": [
+    "Read AGENTS.md, the GT24-C02 backlog entry, sign-conventions-source-survey.json, gt24-ankle-evidence-ranking.json, gt24-ankle-convention-review.json, gt24-native-parsed-ankle-pilot.json, gt24-ankle-converter-pilot.json, gt24-ankle-convention.json, and README lines 1-140.",
+    "`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 contributor_tools/review_gt24_c02_ankle_sign.py probe`: 6 subjects, 0 redraws, 7.3 s, peak RSS 176.3 MiB (ru_maxrss; /usr/bin/time 180.5 MB). 78 Parsed zip members read one at a time, each sha256-hashed in the audit; zip size/mtime unchanged before/after; nothing extracted.",
+    "`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 contributor_tools/review_gt24_c02_ankle_sign.py sheet` (no source read). Sheet rendered with headless Chrome at 1100 px and inside a 390 px iframe and inspected: fixed a legend overlapping the moment curve and region labels overlapping dots/clipped x-label in figure 2; re-rendered; nothing clips. Renders in the session scratchpad (rv_wide_GT24-C02.png, rv_phone_GT24-C02.png), not committed.",
+    "The probe JSON was written by run_probe before later edits to the summary/figure/verdict code only; run_probe itself was not changed after the run.",
+    "`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 docs/build.py --check`: \"Checked 40 HTML pages and 1635 referenced assets.\"",
+    "`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_data_documentation.py tests/test_backlog_workflow.py`: 79 passed.",
+    "`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 contributor_tools/build_backlog_page.py --check`: \"Backlog valid; HTML current (82 tasks).\" This handoff did not edit backlog.json or backlog.html.",
+    "Resource rule: AGENTS.md says numerical jobs go through the guarded launcher (UM21-T02, not yet built). These were bounded read-only probes (one task file set at a time, RLIMIT_AS 1.5 GiB, nice 19 / ionice idle, single-threaded BLAS), scheduled by the coordinating agent as the only numerical worker; no converter, MATLAB or full-dataset job was launched. Recorded here so a verifier can judge the interpretation.",
+    "Revision 2 (verifier return, sheet/handoff fixes only; no source data read): figures now saved on a fixed 4.5 in canvas (layout constrained, no tight bbox) and the builder raises if any PNG is wider than 4.5 in; all PNGs are 765 px at 170 dpi = 4.50 in. Every figure text is at least 10 pt (legends, tick labels and annotations that were 9.5 pt raised to 10). The reply line (\"ankle sign: ok | what looks wrong\") no longer shows a task ID.",
+    "Revision 2: re-rendered with headless Chrome at 1100 px and inside a 390 px iframe and inspected: nothing clips; the shortened figure 1 title fits.",
+    "Revision 2: `OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 contributor_tools/review_gt24_c02_ankle_sign.py sheet` (reads only the audit JSON).",
+    "Revision 2: GT24 erratum (gt24.md, gt24/index.html) now says the 12 of 12 toe-walking legs include two that differ by under 1 deg.",
+    "Revision 2: `OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 docs/build.py --check`: \"Checked 40 HTML pages and 1635 referenced assets.\"; `OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 contributor_tools/build_backlog_page.py --check`: \"Backlog valid; HTML current (82 tasks).\"",
+    "Revision 2: last_checked_at_utc corrected. The round-1 value 2026-10-30T21:40:00Z was wrong (written about 18:30Z, a future time); it is now the actual UTC write time."
+  ],
+  "changed_files": [
+    "contributor_tools/review_gt24_c02_ankle_sign.py (new)",
+    "docs/quality/audits/gt24-c02-ankle-sign.json (new)",
+    "docs/datasets/gt24/index.html (dated erratum note in the header)",
+    "docs/datasets/gt24.md (same erratum as an admonition)",
+    "docs/maintainers/handoffs/GT24-C02.json (new)",
+    "review_sheets/GT24-C02/ (gitignored: index.html, fig1_moment.png, fig2_slopes.png, fig3_heeltoe.png)"
+  ],
+  "evidence_paths": [
+    "docs/quality/audits/gt24-c02-ankle-sign.json",
+    "review_sheets/GT24-C02/index.html"
+  ],
+  "output_sha256": {
+    "contributor_tools/review_gt24_c02_ankle_sign.py": "59885e18ef00b0d86afb6f2a2c6d34d5b3a80fd2563f61483675c32ba1ae130b",
+    "docs/quality/audits/gt24-c02-ankle-sign.json": "9607250fe4cf40da13f14b667114f9b0d8765387b13b6c70269011959539597c"
+  },
+  "resources": {
+    "peak_rss_mib": {
+      "probe": 176.3,
+      "sheet": "about 200 (matplotlib), not separately measured"
+    },
+    "workers": 1
+  },
+  "remaining": [
+    "GT24-C01 (\"supported ankle policy\") should record: no ankle negation; source ankle channels are dorsiflexion-positive. Its inputs still cite the withdrawn proposal.",
+    "Not tested: stairs, running, jumps, backward walking, sit-stand; subject models (generic ankle offset used, sign robust over a 3 x 3 grid).",
+    "Moment normalization mass (w/ vs w/o exo, day 2) is not resolved here; slope about 1 with \"w/ exo\" mass only (gt24-unknown-normalization-mass-review.json).",
+    "Optional: an author note to the publisher about README line 91 (outward-facing; José decides).",
+    "Verifier note (not re-checked here): the GT24 lab GRF frame has its fore-aft axis along z, with a sign that differs between trials; relevant to any lab-frame grf.csv use, not to the ankle conclusion."
+  ],
+  "decisions": [],
+  "decision_note": "No José decision proposed: the source sign is a measured fact and the LocoHub column name (dorsiflexion positive) already sets the convention; withdrawing an unapproved proposal is logged, not asked. José validates by the sheet.",
+  "next_action": "Verifier re-checks image widths, font sizes, the reply line and the timestamp, then moves GT24-C02 to done; GT24-C01 drops the ankle negation."
+}

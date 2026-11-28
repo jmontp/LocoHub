@@ -1,3 +1,5 @@
+> **Historical assessment — unreviewed release.** These preserved results predate the observation contract and may contain inconsistent counts. They are not a current quality certification. Use the dataset limitations and versioned release evidence when available.
+
 **Report generated:** 2026-01-09 10:12
 
 ## Status Summary
@@ -30,7 +32,7 @@
 
 _Validation ranges snapshot embedded below._
 
-⚠️ **Note**: Validation ranges represent established biomechanical norms from literature. Pass rates indicate conformance to these norms—lower rates may reflect special populations, non-standard protocols, or task-specific differences. See the [validation interpretation guide](../../contributor_tools/CLAUDE.md#interpreting-pass-rates) for details.
+⚠️ **Note**: These legacy ranges are curated reference envelopes; their literature provenance has not been established by this artifact. Pass rates indicate conformance to these norms—lower rates may reflect special populations, non-standard protocols, or task-specific differences. See the [data quality reference](../reference/index.md) for details.
 
 ## Validation Ranges Snapshot
 

@@ -1,0 +1,322 @@
+{
+  "recorded_at": "2026-10-21T04:21:48.299237+00:00",
+  "status": "source_model_semantics_review_unresolved",
+  "scientific_approval": false,
+  "scope": "Text and XML inspection only; no MAT/Parquet reads or numerical jobs. This is not a per-subject scaled-model validation.",
+  "evidence": [
+    {
+      "id": "model_selection",
+      "path": "/mnt/s/workspace/MBLUEAnkleOpenSimProcessing/O5_main_OpenSimProcessing.m",
+      "line_spans": [
+        [
+          49,
+          51
+        ]
+      ],
+      "sha256": "f4ff0df4f798d130323a317f4450c9747d89547d5f2edf3db0dfdbe1c5cdd27d"
+    },
+    {
+      "id": "source_model",
+      "path": "/mnt/s/workspace/MBLUEAnkleOpenSimProcessing/Utility_OpenSim/Template_XML/gait2392_simbody.osim",
+      "line_spans": [
+        [
+          619,
+          778
+        ],
+        [
+          810,
+          927
+        ],
+        [
+          1082,
+          1152
+        ],
+        [
+          1717,
+          1787
+        ]
+      ],
+      "sha256": "2ba8969fd80ec85f8f9061fc398d4efe9128fad2877aa09037ed916d2439a576"
+    },
+    {
+      "id": "adapter",
+      "path": "/mnt/s/workspace/locomotion-data-standardization/contributor_tools/conversion_scripts/MBLUEAnkle/convert_mblue_ankle_to_parquet.py",
+      "line_spans": [
+        [
+          635,
+          665
+        ],
+        [
+          955,
+          975
+        ]
+      ],
+      "sha256": "faf161c5312607ab1cc74dfac5cff21fb8657bc65ea03910a4a2d47a6191305a"
+    },
+    {
+      "id": "numerical_audit",
+      "path": "/mnt/s/workspace/locomotion-data-standardization/contributor_tools/audit_mblue_normalized.py",
+      "line_spans": [
+        [
+          100,
+          111
+        ]
+      ],
+      "sha256": "280c4ad81526a3bdaa2ad3f181d689ea062bd2fb03394beb0917d1a58302957c"
+    },
+    {
+      "id": "canonical_meaning",
+      "path": "/mnt/s/workspace/locomotion-data-standardization/contributor_tools/common/feature_constants.py",
+      "line_spans": [
+        [
+          176,
+          188
+        ]
+      ],
+      "sha256": "024509411d3874fccbb2ff5d5daad893362a32cb74b32c6d9513fe129981ad52"
+    },
+    {
+      "id": "plate_assignment",
+      "path": "/mnt/s/workspace/MBLUEAnkleOpenSimProcessing/Utility_OpenSim/defineExternalLoadPrefixes.m",
+      "line_spans": [
+        [
+          5,
+          34
+        ]
+      ],
+      "sha256": "9aa63f585a87c79cfd5431005688c0a464883d080e54a8bac4b2bea763fd501b"
+    },
+    {
+      "id": "treadmill_parser",
+      "path": "/mnt/s/workspace/MBLUEAnkleOpenSimProcessing/Utility_TrialParsing/Parsing_Functions/parseNormalizeDataTreadmill.m",
+      "line_spans": [
+        [
+          19,
+          38
+        ]
+      ],
+      "sha256": "707113eb7b2c383ca3078603f5b0299e3e66c3082612440e249b5c671b7a0524"
+    },
+    {
+      "id": "stair_parser",
+      "path": "/mnt/s/workspace/MBLUEAnkleOpenSimProcessing/Utility_TrialParsing/Parsing_Functions/parseNormalizeDataStairs.m",
+      "line_spans": [
+        [
+          37,
+          45
+        ]
+      ],
+      "sha256": "5008c962fae6642e94dc061daeee68ab7361042e30b98457352fde9b6ac4d1d6"
+    },
+    {
+      "id": "sts_parser",
+      "path": "/mnt/s/workspace/MBLUEAnkleOpenSimProcessing/Utility_TrialParsing/Parsing_Functions/parseNormalizeDataSTS.m",
+      "line_spans": [
+        [
+          20,
+          31
+        ]
+      ],
+      "sha256": "38d82c238f72479dd371d88dc6a18113eec2acdebeb049b155885fcfba0c642a"
+    },
+    {
+      "id": "crouch_parser",
+      "path": "/mnt/s/workspace/MBLUEAnkleOpenSimProcessing/Utility_TrialParsing/Parsing_Functions/parseNormalizeDataCrouch.m",
+      "line_spans": [
+        [
+          18,
+          19
+        ]
+      ],
+      "sha256": "ca719eb202b4f01bcebd866f4613ac379bfa315954618208b74ee4097d232231"
+    },
+    {
+      "id": "event_cleanup",
+      "path": "/mnt/s/workspace/MBLUEAnkleOpenSimProcessing/Utility_TrialParsing/Cleaning_Functions/cleanHeelstrikesTreadmillRaw.m",
+      "line_spans": [
+        [
+          1,
+          8
+        ]
+      ],
+      "sha256": "6c0f2255a295b1283d609391f40bc57fef66e6f0faeaf7cf27cb15858cd2975b"
+    },
+    {
+      "id": "cycle_cleanup",
+      "path": "/mnt/s/workspace/MBLUEAnkleOpenSimProcessing/Utility_TrialParsing/Cleaning_Functions/cleanHeelstrikesTreadmill.m",
+      "line_spans": [
+        [
+          1,
+          17
+        ]
+      ],
+      "sha256": "29dfc957d7552d62130c7142cd1e5080c5dc08088d7c81e83ce73fd53d6dc6a8"
+    }
+  ],
+  "findings": [
+    {
+      "id": "segment_orientation",
+      "evidence_ids": [
+        "model_selection",
+        "source_model",
+        "adapter",
+        "numerical_audit",
+        "canonical_meaning"
+      ],
+      "observed": "Processing selects gait2392_simbody.osim. The model includes pelvis and hip rotations about multiple axes and ankle rotation axes right[-0.10501355,-0.17402245,0.97912632], left[0.10501355,0.17402245,0.97912632]. Adapter publishes thigh=pelvis+hip, shank=thigh-knee, foot=shank+ankle; the numerical audit repeats these expressions. Canonical definitions describe segment orientations in space.",
+      "inference": "Scalar sums are planar approximations, not demonstrated true segment orientations in this 3D model. Matching those expressions only establishes arithmetic/source-clock consistency.",
+      "limitations": [
+        "No exact anatomical sign or neutral orientation is inferred solely from coordinate names",
+        "Template selection does not establish every actual scaled model or exported coordinate state",
+        "No numerical error magnitude estimated"
+      ]
+    },
+    {
+      "id": "force_provenance",
+      "evidence_ids": [
+        "plate_assignment",
+        "treadmill_parser",
+        "stair_parser",
+        "sts_parser",
+        "crouch_parser"
+      ],
+      "observed": "All four parsers take ForceN from the external-load prefix plus y, so ForceN is source Y force, not force-vector magnitude.",
+      "plate_mapping": {
+        "level_incline_stairs": {
+          "right": 1,
+          "left": 2
+        },
+        "decline": {
+          "right": 2,
+          "left": 1
+        },
+        "sit_stand": {
+          "right": 4,
+          "left": 5,
+          "seat": 3
+        },
+        "crouch": {
+          "right": 4,
+          "left": 5
+        }
+      },
+      "limitations": [
+        "Configuration rules do not by themselves bind each normalized block to the actual source force file",
+        "Stair force reassignment and coordinate calibration still require file-level lineage review"
+      ]
+    },
+    {
+      "id": "raw_event_exclusions",
+      "evidence_ids": [
+        "treadmill_parser",
+        "event_cleanup",
+        "cycle_cleanup"
+      ],
+      "observed": "Treadmill contact threshold uses 3% of maximum right force for both sides, and strfind returns the pre-crossing index. Raw detections within 20 samples of previous kept event are removed. Adjacent cycles are then filtered by force peak and late-cycle loading criteria.",
+      "limitations": [
+        "Normalized-block completeness does not independently reconcile all original detections and excluded cycles",
+        "Force criteria are source processing rules, not independently validated physical heel-contact ground truth"
+      ]
+    }
+  ],
+  "next_actions": [
+    {
+      "priority": "P0 before release",
+      "action": "Implement isolated planar-estimate preservation/unsupported-orientation withholding proposal after current frozen jobs finish",
+      "proposal": "See isolated_correction_proposal below"
+    },
+    {
+      "priority": "P1",
+      "action": "Audit actual scaled models, coordinate definitions and source IK lineage before claiming physical segment orientation"
+    },
+    {
+      "priority": "P1",
+      "action": "Bind ForceN values to task-specific source force files, plate mappings and stair correction evidence"
+    },
+    {
+      "priority": "P1",
+      "action": "Build bounded raw treadmill event/exclusion ledger and reconcile all retained normalized windows"
+    }
+  ],
+  "isolated_correction_proposal": {
+    "status": "isolated_proposal_not_implemented_or_executed",
+    "purpose": "Preserve reproducible scalar estimates without representing them as verified segment orientations",
+    "field_mapping": [
+      {
+        "canonical": "thigh_sagittal_angle_ipsi_rad",
+        "preserved_estimate": "derived_planar_thigh_sagittal_angle_ipsi_rad",
+        "canonical_action": "withhold as missing until physical orientation definition and source-model reconstruction are verified"
+      },
+      {
+        "canonical": "thigh_sagittal_velocity_ipsi_rad_s",
+        "preserved_estimate": "derived_planar_thigh_sagittal_velocity_ipsi_rad_s",
+        "canonical_action": "withhold as missing until physical orientation definition and source-model reconstruction are verified"
+      },
+      {
+        "canonical": "thigh_sagittal_angle_contra_rad",
+        "preserved_estimate": "derived_planar_thigh_sagittal_angle_contra_rad",
+        "canonical_action": "withhold as missing until physical orientation definition and source-model reconstruction are verified"
+      },
+      {
+        "canonical": "thigh_sagittal_velocity_contra_rad_s",
+        "preserved_estimate": "derived_planar_thigh_sagittal_velocity_contra_rad_s",
+        "canonical_action": "withhold as missing until physical orientation definition and source-model reconstruction are verified"
+      },
+      {
+        "canonical": "shank_sagittal_angle_ipsi_rad",
+        "preserved_estimate": "derived_planar_shank_sagittal_angle_ipsi_rad",
+        "canonical_action": "withhold as missing until physical orientation definition and source-model reconstruction are verified"
+      },
+      {
+        "canonical": "shank_sagittal_velocity_ipsi_rad_s",
+        "preserved_estimate": "derived_planar_shank_sagittal_velocity_ipsi_rad_s",
+        "canonical_action": "withhold as missing until physical orientation definition and source-model reconstruction are verified"
+      },
+      {
+        "canonical": "shank_sagittal_angle_contra_rad",
+        "preserved_estimate": "derived_planar_shank_sagittal_angle_contra_rad",
+        "canonical_action": "withhold as missing until physical orientation definition and source-model reconstruction are verified"
+      },
+      {
+        "canonical": "shank_sagittal_velocity_contra_rad_s",
+        "preserved_estimate": "derived_planar_shank_sagittal_velocity_contra_rad_s",
+        "canonical_action": "withhold as missing until physical orientation definition and source-model reconstruction are verified"
+      },
+      {
+        "canonical": "foot_sagittal_angle_ipsi_rad",
+        "preserved_estimate": "derived_planar_foot_sagittal_angle_ipsi_rad",
+        "canonical_action": "withhold as missing until physical orientation definition and source-model reconstruction are verified"
+      },
+      {
+        "canonical": "foot_sagittal_velocity_ipsi_rad_s",
+        "preserved_estimate": "derived_planar_foot_sagittal_velocity_ipsi_rad_s",
+        "canonical_action": "withhold as missing until physical orientation definition and source-model reconstruction are verified"
+      },
+      {
+        "canonical": "foot_sagittal_angle_contra_rad",
+        "preserved_estimate": "derived_planar_foot_sagittal_angle_contra_rad",
+        "canonical_action": "withhold as missing until physical orientation definition and source-model reconstruction are verified"
+      },
+      {
+        "canonical": "foot_sagittal_velocity_contra_rad_s",
+        "preserved_estimate": "derived_planar_foot_sagittal_velocity_contra_rad_s",
+        "canonical_action": "withhold as missing until physical orientation definition and source-model reconstruction are verified"
+      }
+    ],
+    "method": "For each final reconstructed output shard, copy these twelve values unchanged into explicit derived_planar_* columns, then make unsupported canonical columns missing. Preserve original artifacts and use a new immutable output root. Preserve all other columns, observation identities, source lineage, missing-value masks and row order exactly.",
+    "scope_note": "Pelvis tilt is an original generalized coordinate, not itself proof of a chosen spatial projection. Preserve its source meaning explicitly; decide any separate rename/withholding only after coordinate-definition review.",
+    "acceptance": [
+      "Known synthetic 3D-axis fixture demonstrates scalar ankle addition differs from projected segment rotation",
+      "All twelve estimate columns exactly equal their prior values, including missingness",
+      "All twelve unsupported canonical fields missing and marked unassessed, never passing",
+      "Every unrelated value and identity exactly preserved with manifest hashes",
+      "Docs/previews distinguish planar estimates from canonical orientations",
+      "Separate model-based reconstruction must specify body axis, laboratory frame, projection, neutral offsets, full required coordinates and scaled-model lineage before restoring canonical values"
+    ],
+    "dependencies": [
+      "Finish existing MBLUE detour and final-scope gate",
+      "Coordinate isolated new correction job through single-worker queue",
+      "Review schema acceptance and researcher-facing field descriptions before implementation"
+    ]
+  }
+}

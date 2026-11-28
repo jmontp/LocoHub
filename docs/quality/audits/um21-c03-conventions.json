@@ -1,0 +1,3380 @@
+{
+ "task_id": "UM21-C03",
+ "status": "review",
+ "scientific_approval": false,
+ "question": "Find the convention that matches the UMich 2021 treadmill data best and is consistent with the right-hand rule with the person facing right.",
+ "scope": "Streaming/Tread (50 recordings): sagittal angle, moment and power channels. Fits on 8 recordings (two disjoint seeds); joint-angle and kinetic-layout census on all 50.",
+ "source": {
+  "path": "contributor_tools/conversion_scripts/Umich_2021/Streaming.mat",
+  "bytes": 2195168300,
+  "mtime_ns": 1754319622540475200,
+  "sha256_recorded": "df8b3e31d2fe6869b95b4776a8f77639da476685b4c0ccb86c985bee3f01b531",
+  "sha256_note": "Recorded by the treadmill conversion receipt; size and mtime re-checked before and after, bytes not rehashed."
+ },
+ "inputs_sha256": {
+  "docs/quality/audits/um21-c01-tread-conventions.json": "061cca001b81edd355e8f881e24e8d5a5f80724416c969153e79f4c2af24d801",
+  "docs/quality/audits/um21-c01-source-probe.json": "15379327aca6b42c1947147ff5507ac54d1ef84d0227a52ace53c8373285cc75",
+  "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/conversion_summary.json": "349b896e7daa28589d1af705a7be6fbbb1af32f7b09f092d289e63869554172d"
+ },
+ "outputs_sha256": {
+  "docs/quality/audits/um21-c03-source-probe.json": "887fb33bc1adf663bec6e79fb04e90179e7e1a74aa074231ab1daf09202cae1a",
+  "docs/quality/audits/um21-c03-episode-census.json": "2a53c360b4c35efdc739694c7e83baa7f8c947f02871868dfcb5adf3d4d7c5c9",
+  "contributor_tools/review_um21_c03_conventions.py": "3298ebd9c535e82789538d1f60b45aeb77c7e01cecfdef043d4f3d709edbad53"
+ },
+ "convention_proposal": {
+  "frame": "x = walking direction, y = up (gravity opposite), z = x cross y = the person's right side, out of the page when the person faces right. Rotations counterclockwise about +z are positive (right-hand rule). Both legs use the same frame.",
+  "derivations": {
+   "segment angles": "Thigh/shank: long axis from straight down, distal end forward = counterclockwise = +. Foot: heel-to-toe from forward horizontal, toes up = +. Pelvis: PSIS-to-ASIS from forward horizontal; anterior tilt lowers the front = clockwise = negative.",
+   "joint angles": "Distal minus proximal segment angle. Hip = thigh - pelvis: flexion +. Knee = shank - thigh: flexion swings the shank back = clockwise = negative. Ankle = foot - shank: dorsiflexion +.",
+   "moments": "Internal (net muscle and tissue) moment on the distal segment, from inverse dynamics; external = minus internal in the quasi-static sense. Counterclockwise on the distal segment is +: hip flexor +, knee extensor + (knee flexor negative), ankle dorsiflexor + (plantarflexor negative).",
+   "power": "Joint power = internal moment x joint angular velocity, both in the same convention; flipping both leaves power unchanged. Generation is positive under every option."
+  },
+  "conflicts_with_clinical_names": [
+   "pelvis anterior tilt (negative under pure RHR)",
+   "knee flexion angle (negative)",
+   "knee flexion moment (negative)"
+  ],
+  "sign_table": [
+   {
+    "signal": "Pelvis tilt",
+    "positive_event": "front tips down",
+    "pure_rhr": -1,
+    "clinical": 1,
+    "um21_source": 1
+   },
+   {
+    "signal": "Thigh angle",
+    "positive_event": "knee ahead of hip",
+    "pure_rhr": 1,
+    "clinical": 1,
+    "um21_source": 1
+   },
+   {
+    "signal": "Shank angle",
+    "positive_event": "ankle ahead of knee",
+    "pure_rhr": 1,
+    "clinical": 1,
+    "um21_source": 1
+   },
+   {
+    "signal": "Foot angle",
+    "positive_event": "toes up",
+    "pure_rhr": 1,
+    "clinical": 1,
+    "um21_source": 1
+   },
+   {
+    "signal": "Hip angle",
+    "positive_event": "flexion",
+    "pure_rhr": 1,
+    "clinical": 1,
+    "um21_source": 1
+   },
+   {
+    "signal": "Knee angle",
+    "positive_event": "flexion",
+    "pure_rhr": -1,
+    "clinical": 1,
+    "um21_source": 1
+   },
+   {
+    "signal": "Ankle angle",
+    "positive_event": "dorsiflexion",
+    "pure_rhr": 1,
+    "clinical": 1,
+    "um21_source": 1
+   },
+   {
+    "signal": "Hip moment (internal)",
+    "positive_event": "flexor",
+    "pure_rhr": 1,
+    "clinical": 1,
+    "um21_source": 1
+   },
+   {
+    "signal": "Knee moment (internal)",
+    "positive_event": "flexor",
+    "pure_rhr": -1,
+    "clinical": 1,
+    "um21_source": 1
+   },
+   {
+    "signal": "Ankle moment (internal)",
+    "positive_event": "dorsiflexor",
+    "pure_rhr": 1,
+    "clinical": 1,
+    "um21_source": 1
+   },
+   {
+    "signal": "Joint power",
+    "positive_event": "generation",
+    "pure_rhr": 1,
+    "clinical": 1,
+    "um21_source": "mixed"
+   }
+  ],
+  "options": {
+   "A": {
+    "label": "Clinical names",
+    "signs": [
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1
+    ]
+   },
+   "B": {
+    "label": "Segments counterclockwise, joints by name",
+    "signs": [
+     -1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1
+    ]
+   },
+   "C": {
+    "label": "Counterclockwise for everything",
+    "signs": [
+     -1,
+     1,
+     1,
+     1,
+     1,
+     -1,
+     1,
+     1,
+     -1,
+     1,
+     1
+    ]
+   }
+  },
+  "historical_reference_note": "git 330789e docs/reference/index.md stated \"right-hand rule\" together with knee flexion + and pelvis anterior tilt +; these cannot all hold with a person facing right.",
+  "choice": "Jos\u00e9 (decision D-UM21-C03-1). Not picked here."
+ },
+ "vicon_evidence": {
+  "url": "https://vicon-help.atlassian.net/wiki/spaces/Nexus216/pages/11611411",
+  "retrieved": "2026-10-30",
+  "page": "Vicon Nexus 2.16, Plug-in Gait kinematic variables",
+  "quotes": [
+   "Hip: \"first flex the hip by the amount of the hip flexion, then adduct by the amount of hip adduction, then rotate the thigh about the (flexed and adducted) long axis of the thigh\" (knee and pelvis described the same way: flexion/tilt, then adduction/obliquity, then rotation).",
+   "Ankle: \"Foot rotation and foot progression ... are not expressed in terms of goniometric axes, since the ankle angles are not calculated as strict Cardan angles.\"",
+   "Pelvis: \"Absolute angles are measured relative to laboratory axes ... In Plug-in Gait, the laboratory axis closest to the subject's direction of progression\"."
+  ],
+  "limitation": "Nexus 2.16 text; the version used for UM21 is not stated (C01 Q1). The exact ankle sequence is therefore unverified."
+ },
+ "method": {
+  "seeds": {
+   "A": 20261030,
+   "B": 20261031,
+   "rule": "A = random.Random(A).sample(sorted 50 recordings, 4); B = random.Random(B).sample(the 46 others, 4)."
+  },
+  "samples": {
+   "A": [
+    "AB07/i5",
+    "AB03/i5",
+    "AB08/d10",
+    "AB05/d5"
+   ],
+   "B": [
+    "AB05/d10",
+    "AB04/d5",
+    "AB06/d5",
+    "AB01/i5"
+   ]
+  },
+  "angle_targets": "Marker sagittal angles in the frame above: pelvis PSIS->ASIS midpoints, thigh greater trochanter->knee centre (mid lateral/medial), shank knee->ankle centre (mid malleoli), foot heel->toe; joint angles as segment differences. Forward = mean horizontal PSIS->ASIS direction per recording.",
+  "moment_targets": "Internal moment = -(r x GRF)_z per joint, r = CoP - joint centre, GRF on the foot = -(plate force). Plate data block-averaged to 100 Hz and rotated by the README slope (sign from the heel path in the marker frame; marker frame is gravity-aligned, plates tilt with the belt). Mass = mean |R+L plate force| / g. One CoP shift (forward, up) per plate fitted jointly for hip, knee and ankle under each of the 8 sign combinations; the best combination sets the shift. Stance = own-plate vertical force > 20 % body weight. Ignores segment weight and inertia (worst for the hip); hip centre proxy = greater trochanter.",
+  "power_targets": "Independent: lever-arm moment x marker joint angular velocity (5-frame mean, central difference) in stance. Internal: source moment 1 x d(source angle 1)/dt.",
+  "candidates": "Every component (1-3) x sign (+/-); angles also a median offset. Ranked by median absolute residual (robust to marker glitch frames); RMS, p95, correlation and least-squares slope reported. Alternate-branch and (0,0,0) frames excluded.",
+  "conventions": "Each fit is run against pure-RHR targets and against clinical targets (pelvis, knee angle and knee moment sign-flipped)."
+ },
+ "per_channel": [
+  {
+   "channel": "PelvisAngles",
+   "evidence": "marker pelvis angle",
+   "convention": "rhr",
+   "unit": "deg -> rad (x pi/180)",
+   "transform": {
+    "component": 1,
+    "sign": -1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      0.066,
+      0.142
+     ],
+     "opposite_sign_median_abs_range": [
+      1.81,
+      3.994
+     ],
+     "best_other_candidate_median_abs_range": [
+      1.81,
+      2.41
+     ],
+     "offset_range": [
+      -0.07,
+      0.04
+     ],
+     "corr_range": [
+      -0.606,
+      0.993
+     ],
+     "slope_range": [
+      -2.484,
+      1.012
+     ]
+    },
+    "B": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      0.032,
+      0.117
+     ],
+     "opposite_sign_median_abs_range": [
+      2.345,
+      3.881
+     ],
+     "best_other_candidate_median_abs_range": [
+      1.176,
+      2.41
+     ],
+     "offset_range": [
+      -0.08,
+      -0.01
+     ],
+     "corr_range": [
+      -0.658,
+      0.992
+     ],
+     "slope_range": [
+      -2.937,
+      0.955
+     ]
+    }
+   }
+  },
+  {
+   "channel": "PelvisAngles",
+   "evidence": "marker pelvis angle",
+   "convention": "clinical",
+   "unit": "deg -> rad (x pi/180)",
+   "transform": {
+    "component": 1,
+    "sign": 1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      0.066,
+      0.142
+     ],
+     "opposite_sign_median_abs_range": [
+      1.81,
+      3.994
+     ],
+     "best_other_candidate_median_abs_range": [
+      1.81,
+      2.41
+     ],
+     "offset_range": [
+      -0.04,
+      0.07
+     ],
+     "corr_range": [
+      -0.606,
+      0.993
+     ],
+     "slope_range": [
+      -2.484,
+      1.012
+     ]
+    },
+    "B": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      0.032,
+      0.117
+     ],
+     "opposite_sign_median_abs_range": [
+      2.345,
+      3.881
+     ],
+     "best_other_candidate_median_abs_range": [
+      1.176,
+      2.41
+     ],
+     "offset_range": [
+      0.01,
+      0.08
+     ],
+     "corr_range": [
+      -0.658,
+      0.992
+     ],
+     "slope_range": [
+      -2.937,
+      0.955
+     ]
+    }
+   }
+  },
+  {
+   "channel": "HipAngles",
+   "evidence": "marker hip angle",
+   "convention": "rhr",
+   "unit": "deg -> rad (x pi/180)",
+   "transform": {
+    "component": 1,
+    "sign": 1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      0.934,
+      2.604
+     ],
+     "opposite_sign_median_abs_range": [
+      14.019,
+      28.905
+     ],
+     "best_other_candidate_median_abs_range": [
+      5.288,
+      11.21
+     ],
+     "offset_range": [
+      -5.7,
+      5.13
+     ],
+     "corr_range": [
+      0.466,
+      0.998
+     ],
+     "slope_range": [
+      0.753,
+      1.093
+     ]
+    },
+    "B": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      0.652,
+      2.179
+     ],
+     "opposite_sign_median_abs_range": [
+      14.407,
+      34.825
+     ],
+     "best_other_candidate_median_abs_range": [
+      6.543,
+      13.912
+     ],
+     "offset_range": [
+      -1.3,
+      6.03
+     ],
+     "corr_range": [
+      0.287,
+      0.999
+     ],
+     "slope_range": [
+      0.69,
+      1.055
+     ]
+    }
+   }
+  },
+  {
+   "channel": "HipAngles",
+   "evidence": "marker hip angle",
+   "convention": "clinical",
+   "unit": "deg -> rad (x pi/180)",
+   "transform": {
+    "component": 1,
+    "sign": 1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      0.934,
+      2.604
+     ],
+     "opposite_sign_median_abs_range": [
+      14.019,
+      28.905
+     ],
+     "best_other_candidate_median_abs_range": [
+      5.288,
+      11.21
+     ],
+     "offset_range": [
+      -5.7,
+      5.13
+     ],
+     "corr_range": [
+      0.466,
+      0.998
+     ],
+     "slope_range": [
+      0.753,
+      1.093
+     ]
+    },
+    "B": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      0.652,
+      2.179
+     ],
+     "opposite_sign_median_abs_range": [
+      14.407,
+      34.825
+     ],
+     "best_other_candidate_median_abs_range": [
+      6.543,
+      13.912
+     ],
+     "offset_range": [
+      -1.3,
+      6.03
+     ],
+     "corr_range": [
+      0.287,
+      0.999
+     ],
+     "slope_range": [
+      0.69,
+      1.055
+     ]
+    }
+   }
+  },
+  {
+   "channel": "KneeAngles",
+   "evidence": "marker knee angle",
+   "convention": "rhr",
+   "unit": "deg -> rad (x pi/180)",
+   "transform": {
+    "component": 1,
+    "sign": -1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      1.274,
+      3.342
+     ],
+     "opposite_sign_median_abs_range": [
+      16.991,
+      30.65
+     ],
+     "best_other_candidate_median_abs_range": [
+      4.129,
+      12.054
+     ],
+     "offset_range": [
+      -5.82,
+      12.77
+     ],
+     "corr_range": [
+      0.968,
+      0.988
+     ],
+     "slope_range": [
+      0.877,
+      1.002
+     ]
+    },
+    "B": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      0.973,
+      2.24
+     ],
+     "opposite_sign_median_abs_range": [
+      13.154,
+      29.208
+     ],
+     "best_other_candidate_median_abs_range": [
+      4.864,
+      13.005
+     ],
+     "offset_range": [
+      -5.14,
+      4.41
+     ],
+     "corr_range": [
+      0.92,
+      0.996
+     ],
+     "slope_range": [
+      0.917,
+      1.019
+     ]
+    }
+   }
+  },
+  {
+   "channel": "KneeAngles",
+   "evidence": "marker knee angle",
+   "convention": "clinical",
+   "unit": "deg -> rad (x pi/180)",
+   "transform": {
+    "component": 1,
+    "sign": 1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      1.274,
+      3.342
+     ],
+     "opposite_sign_median_abs_range": [
+      16.991,
+      30.65
+     ],
+     "best_other_candidate_median_abs_range": [
+      4.129,
+      12.054
+     ],
+     "offset_range": [
+      -12.77,
+      5.82
+     ],
+     "corr_range": [
+      0.968,
+      0.988
+     ],
+     "slope_range": [
+      0.877,
+      1.002
+     ]
+    },
+    "B": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      0.973,
+      2.24
+     ],
+     "opposite_sign_median_abs_range": [
+      13.154,
+      29.208
+     ],
+     "best_other_candidate_median_abs_range": [
+      4.864,
+      13.005
+     ],
+     "offset_range": [
+      -4.41,
+      5.14
+     ],
+     "corr_range": [
+      0.92,
+      0.996
+     ],
+     "slope_range": [
+      0.917,
+      1.019
+     ]
+    }
+   }
+  },
+  {
+   "channel": "AnkleAngles",
+   "evidence": "marker ankle angle",
+   "convention": "rhr",
+   "unit": "deg -> rad (x pi/180)",
+   "transform": {
+    "component": 1,
+    "sign": 1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      0.727,
+      1.506
+     ],
+     "opposite_sign_median_abs_range": [
+      6.154,
+      10.169
+     ],
+     "best_other_candidate_median_abs_range": [
+      2.686,
+      4.806
+     ],
+     "offset_range": [
+      -6.1,
+      2.11
+     ],
+     "corr_range": [
+      0.446,
+      0.987
+     ],
+     "slope_range": [
+      0.895,
+      1.236
+     ]
+    },
+    "B": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      0.408,
+      1.355
+     ],
+     "opposite_sign_median_abs_range": [
+      5.73,
+      13.396
+     ],
+     "best_other_candidate_median_abs_range": [
+      2.993,
+      6.654
+     ],
+     "offset_range": [
+      -7.07,
+      2.07
+     ],
+     "corr_range": [
+      0.378,
+      0.997
+     ],
+     "slope_range": [
+      0.746,
+      1.466
+     ]
+    }
+   }
+  },
+  {
+   "channel": "AnkleAngles",
+   "evidence": "marker ankle angle",
+   "convention": "clinical",
+   "unit": "deg -> rad (x pi/180)",
+   "transform": {
+    "component": 1,
+    "sign": 1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      0.727,
+      1.506
+     ],
+     "opposite_sign_median_abs_range": [
+      6.154,
+      10.169
+     ],
+     "best_other_candidate_median_abs_range": [
+      2.686,
+      4.806
+     ],
+     "offset_range": [
+      -6.1,
+      2.11
+     ],
+     "corr_range": [
+      0.446,
+      0.987
+     ],
+     "slope_range": [
+      0.895,
+      1.236
+     ]
+    },
+    "B": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      0.408,
+      1.355
+     ],
+     "opposite_sign_median_abs_range": [
+      5.73,
+      13.396
+     ],
+     "best_other_candidate_median_abs_range": [
+      2.993,
+      6.654
+     ],
+     "offset_range": [
+      -7.07,
+      2.07
+     ],
+     "corr_range": [
+      0.378,
+      0.997
+     ],
+     "slope_range": [
+      0.746,
+      1.466
+     ]
+    }
+   }
+  },
+  {
+   "channel": "FootProgressAngles",
+   "evidence": "marker foot angle",
+   "convention": "rhr",
+   "unit": "deg -> rad (x pi/180)",
+   "transform": {
+    "component": 1,
+    "sign": -1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 8,
+     "legs_where_best": 6,
+     "median_abs_residual_range": [
+      0.434,
+      13.013
+     ],
+     "opposite_sign_median_abs_range": [
+      5.223,
+      62.881
+     ],
+     "best_other_candidate_median_abs_range": [
+      2.168,
+      10.694
+     ],
+     "offset_range": [
+      -243.67,
+      82.91
+     ],
+     "corr_range": [
+      -0.767,
+      1.0
+     ],
+     "slope_range": [
+      -6.627,
+      1.017
+     ]
+    },
+    "B": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      0.265,
+      0.937
+     ],
+     "opposite_sign_median_abs_range": [
+      6.152,
+      12.029
+     ],
+     "best_other_candidate_median_abs_range": [
+      3.232,
+      6.542
+     ],
+     "offset_range": [
+      -94.58,
+      -87.47
+     ],
+     "corr_range": [
+      0.995,
+      1.0
+     ],
+     "slope_range": [
+      0.962,
+      1.014
+     ]
+    }
+   }
+  },
+  {
+   "channel": "FootProgressAngles",
+   "evidence": "marker foot angle",
+   "convention": "clinical",
+   "unit": "deg -> rad (x pi/180)",
+   "transform": {
+    "component": 1,
+    "sign": -1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 8,
+     "legs_where_best": 6,
+     "median_abs_residual_range": [
+      0.434,
+      13.013
+     ],
+     "opposite_sign_median_abs_range": [
+      5.223,
+      62.881
+     ],
+     "best_other_candidate_median_abs_range": [
+      2.168,
+      10.694
+     ],
+     "offset_range": [
+      -243.67,
+      82.91
+     ],
+     "corr_range": [
+      -0.767,
+      1.0
+     ],
+     "slope_range": [
+      -6.627,
+      1.017
+     ]
+    },
+    "B": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      0.265,
+      0.937
+     ],
+     "opposite_sign_median_abs_range": [
+      6.152,
+      12.029
+     ],
+     "best_other_candidate_median_abs_range": [
+      3.232,
+      6.542
+     ],
+     "offset_range": [
+      -94.58,
+      -87.47
+     ],
+     "corr_range": [
+      0.995,
+      1.0
+     ],
+     "slope_range": [
+      0.962,
+      1.014
+     ]
+    }
+   }
+  },
+  {
+   "channel": "recipe: thigh = hip - pelvis (component 1 of each, source signs)",
+   "evidence": "marker thigh angle",
+   "convention": "rhr",
+   "unit": "deg -> rad",
+   "transform": {
+    "component": 1,
+    "sign": 1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      0.888,
+      2.57
+     ],
+     "opposite_sign_median_abs_range": [
+      14.21,
+      30.843
+     ],
+     "best_other_candidate_median_abs_range": [
+      14.21,
+      30.843
+     ],
+     "offset_range": [
+      -5.87,
+      5.11
+     ],
+     "corr_range": [
+      0.847,
+      0.998
+     ],
+     "slope_range": [
+      0.684,
+      0.912
+     ]
+    },
+    "B": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      0.638,
+      2.117
+     ],
+     "opposite_sign_median_abs_range": [
+      17.003,
+      33.702
+     ],
+     "best_other_candidate_median_abs_range": [
+      17.003,
+      33.702
+     ],
+     "offset_range": [
+      -1.35,
+      6.02
+     ],
+     "corr_range": [
+      0.658,
+      0.999
+     ],
+     "slope_range": [
+      0.614,
+      0.94
+     ]
+    }
+   }
+  },
+  {
+   "channel": "recipe: thigh = hip - pelvis (component 1 of each, source signs)",
+   "evidence": "marker thigh angle",
+   "convention": "clinical",
+   "unit": "deg -> rad",
+   "transform": {
+    "component": 1,
+    "sign": 1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      0.888,
+      2.57
+     ],
+     "opposite_sign_median_abs_range": [
+      14.21,
+      30.843
+     ],
+     "best_other_candidate_median_abs_range": [
+      14.21,
+      30.843
+     ],
+     "offset_range": [
+      -5.87,
+      5.11
+     ],
+     "corr_range": [
+      0.847,
+      0.998
+     ],
+     "slope_range": [
+      0.684,
+      0.912
+     ]
+    },
+    "B": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      0.638,
+      2.117
+     ],
+     "opposite_sign_median_abs_range": [
+      17.003,
+      33.702
+     ],
+     "best_other_candidate_median_abs_range": [
+      17.003,
+      33.702
+     ],
+     "offset_range": [
+      -1.35,
+      6.02
+     ],
+     "corr_range": [
+      0.658,
+      0.999
+     ],
+     "slope_range": [
+      0.614,
+      0.94
+     ]
+    }
+   }
+  },
+  {
+   "channel": "recipe: thigh = pelvis + hip (current producer) (component 1 of each, source signs)",
+   "evidence": "marker thigh angle",
+   "convention": "rhr",
+   "unit": "deg -> rad",
+   "transform": {
+    "component": 1,
+    "sign": 1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      2.559,
+      4.326
+     ],
+     "opposite_sign_median_abs_range": [
+      13.389,
+      28.74
+     ],
+     "best_other_candidate_median_abs_range": [
+      13.389,
+      28.74
+     ],
+     "offset_range": [
+      -32.3,
+      -15.82
+     ],
+     "corr_range": [
+      0.825,
+      0.988
+     ],
+     "slope_range": [
+      0.647,
+      0.878
+     ]
+    },
+    "B": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      2.04,
+      4.262
+     ],
+     "opposite_sign_median_abs_range": [
+      14.14,
+      34.884
+     ],
+     "best_other_candidate_median_abs_range": [
+      14.14,
+      34.884
+     ],
+     "offset_range": [
+      -33.01,
+      -1.31
+     ],
+     "corr_range": [
+      0.728,
+      0.986
+     ],
+     "slope_range": [
+      0.692,
+      0.927
+     ]
+    }
+   }
+  },
+  {
+   "channel": "recipe: thigh = pelvis + hip (current producer) (component 1 of each, source signs)",
+   "evidence": "marker thigh angle",
+   "convention": "clinical",
+   "unit": "deg -> rad",
+   "transform": {
+    "component": 1,
+    "sign": 1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      2.559,
+      4.326
+     ],
+     "opposite_sign_median_abs_range": [
+      13.389,
+      28.74
+     ],
+     "best_other_candidate_median_abs_range": [
+      13.389,
+      28.74
+     ],
+     "offset_range": [
+      -32.3,
+      -15.82
+     ],
+     "corr_range": [
+      0.825,
+      0.988
+     ],
+     "slope_range": [
+      0.647,
+      0.878
+     ]
+    },
+    "B": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      2.04,
+      4.262
+     ],
+     "opposite_sign_median_abs_range": [
+      14.14,
+      34.884
+     ],
+     "best_other_candidate_median_abs_range": [
+      14.14,
+      34.884
+     ],
+     "offset_range": [
+      -33.01,
+      -1.31
+     ],
+     "corr_range": [
+      0.728,
+      0.986
+     ],
+     "slope_range": [
+      0.692,
+      0.927
+     ]
+    }
+   }
+  },
+  {
+   "channel": "recipe: shank = hip - pelvis - knee (component 1 of each, source signs)",
+   "evidence": "marker shank angle",
+   "convention": "rhr",
+   "unit": "deg -> rad",
+   "transform": {
+    "component": 1,
+    "sign": 1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      0.348,
+      0.946
+     ],
+     "opposite_sign_median_abs_range": [
+      14.695,
+      25.372
+     ],
+     "best_other_candidate_median_abs_range": [
+      14.695,
+      25.372
+     ],
+     "offset_range": [
+      -0.58,
+      7.33
+     ],
+     "corr_range": [
+      0.997,
+      0.999
+     ],
+     "slope_range": [
+      0.962,
+      1.029
+     ]
+    },
+    "B": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      0.348,
+      0.873
+     ],
+     "opposite_sign_median_abs_range": [
+      14.266,
+      27.394
+     ],
+     "best_other_candidate_median_abs_range": [
+      14.266,
+      27.394
+     ],
+     "offset_range": [
+      -0.41,
+      4.13
+     ],
+     "corr_range": [
+      0.974,
+      1.0
+     ],
+     "slope_range": [
+      0.914,
+      1.009
+     ]
+    }
+   }
+  },
+  {
+   "channel": "recipe: shank = hip - pelvis - knee (component 1 of each, source signs)",
+   "evidence": "marker shank angle",
+   "convention": "clinical",
+   "unit": "deg -> rad",
+   "transform": {
+    "component": 1,
+    "sign": 1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      0.348,
+      0.946
+     ],
+     "opposite_sign_median_abs_range": [
+      14.695,
+      25.372
+     ],
+     "best_other_candidate_median_abs_range": [
+      14.695,
+      25.372
+     ],
+     "offset_range": [
+      -0.58,
+      7.33
+     ],
+     "corr_range": [
+      0.997,
+      0.999
+     ],
+     "slope_range": [
+      0.962,
+      1.029
+     ]
+    },
+    "B": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      0.348,
+      0.873
+     ],
+     "opposite_sign_median_abs_range": [
+      14.266,
+      27.394
+     ],
+     "best_other_candidate_median_abs_range": [
+      14.266,
+      27.394
+     ],
+     "offset_range": [
+      -0.41,
+      4.13
+     ],
+     "corr_range": [
+      0.974,
+      1.0
+     ],
+     "slope_range": [
+      0.914,
+      1.009
+     ]
+    }
+   }
+  },
+  {
+   "channel": "recipe: foot = hip - pelvis - knee + ankle (component 1 of each, source signs)",
+   "evidence": "marker foot angle",
+   "convention": "rhr",
+   "unit": "deg -> rad",
+   "transform": {
+    "component": 1,
+    "sign": 1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      0.64,
+      1.691
+     ],
+     "opposite_sign_median_abs_range": [
+      5.219,
+      10.379
+     ],
+     "best_other_candidate_median_abs_range": [
+      5.219,
+      10.379
+     ],
+     "offset_range": [
+      -3.68,
+      2.27
+     ],
+     "corr_range": [
+      0.775,
+      0.999
+     ],
+     "slope_range": [
+      0.96,
+      1.09
+     ]
+    },
+    "B": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      0.327,
+      1.239
+     ],
+     "opposite_sign_median_abs_range": [
+      6.894,
+      11.595
+     ],
+     "best_other_candidate_median_abs_range": [
+      6.894,
+      11.595
+     ],
+     "offset_range": [
+      -4.4,
+      2.68
+     ],
+     "corr_range": [
+      0.587,
+      1.0
+     ],
+     "slope_range": [
+      0.9,
+      1.255
+     ]
+    }
+   }
+  },
+  {
+   "channel": "recipe: foot = hip - pelvis - knee + ankle (component 1 of each, source signs)",
+   "evidence": "marker foot angle",
+   "convention": "clinical",
+   "unit": "deg -> rad",
+   "transform": {
+    "component": 1,
+    "sign": 1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      0.64,
+      1.691
+     ],
+     "opposite_sign_median_abs_range": [
+      5.219,
+      10.379
+     ],
+     "best_other_candidate_median_abs_range": [
+      5.219,
+      10.379
+     ],
+     "offset_range": [
+      -3.68,
+      2.27
+     ],
+     "corr_range": [
+      0.775,
+      0.999
+     ],
+     "slope_range": [
+      0.96,
+      1.09
+     ]
+    },
+    "B": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      0.327,
+      1.239
+     ],
+     "opposite_sign_median_abs_range": [
+      6.894,
+      11.595
+     ],
+     "best_other_candidate_median_abs_range": [
+      6.894,
+      11.595
+     ],
+     "offset_range": [
+      -4.4,
+      2.68
+     ],
+     "corr_range": [
+      0.587,
+      1.0
+     ],
+     "slope_range": [
+      0.9,
+      1.255
+     ]
+    }
+   }
+  },
+  {
+   "channel": "HipMoment",
+   "evidence": "force-plate lever-arm internal moment, one fitted CoP shift per plate",
+   "convention": "rhr",
+   "unit": "N*m/kg as is (slope near 1)",
+   "transform": {
+    "component": 1,
+    "sign": 1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 8,
+     "legs_where_best": 5,
+     "median_abs_residual_range": [
+      0.069,
+      0.217
+     ],
+     "opposite_sign_median_abs_range": [
+      0.259,
+      0.59
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.089,
+      0.207
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.365,
+      0.923
+     ],
+     "slope_range": [
+      0.289,
+      0.724
+     ]
+    },
+    "B": {
+     "legs": 8,
+     "legs_where_best": 3,
+     "median_abs_residual_range": [
+      0.097,
+      0.478
+     ],
+     "opposite_sign_median_abs_range": [
+      0.208,
+      0.49
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.11,
+      0.224
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.152,
+      0.851
+     ],
+     "slope_range": [
+      0.087,
+      0.757
+     ]
+    }
+   },
+   "midpoint_registration_check": {
+    "transform": {
+     "component": 1,
+     "sign": 1
+    },
+    "by_sample": {
+     "A": {
+      "legs": 8,
+      "legs_where_best": 3,
+      "median_abs_residual_range": [
+       0.084,
+       0.43
+      ],
+      "opposite_sign_median_abs_range": [
+       0.361,
+       0.742
+      ],
+      "best_other_candidate_median_abs_range": [
+       0.106,
+       0.251
+      ],
+      "offset_range": [
+       0.0,
+       0.0
+      ],
+      "corr_range": [
+       0.102,
+       0.875
+      ],
+      "slope_range": [
+       0.09,
+       0.69
+      ]
+     },
+     "B": {
+      "legs": 8,
+      "legs_where_best": 2,
+      "median_abs_residual_range": [
+       0.091,
+       0.462
+      ],
+      "opposite_sign_median_abs_range": [
+       0.31,
+       0.705
+      ],
+      "best_other_candidate_median_abs_range": [
+       0.116,
+       0.199
+      ],
+      "offset_range": [
+       0.0,
+       0.0
+      ],
+      "corr_range": [
+       0.375,
+       0.836
+      ],
+      "slope_range": [
+       0.377,
+       0.685
+      ]
+     }
+    }
+   }
+  },
+  {
+   "channel": "HipMoment",
+   "evidence": "force-plate lever-arm internal moment, one fitted CoP shift per plate",
+   "convention": "clinical",
+   "unit": "N*m/kg as is (slope near 1)",
+   "transform": {
+    "component": 1,
+    "sign": 1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 8,
+     "legs_where_best": 5,
+     "median_abs_residual_range": [
+      0.069,
+      0.217
+     ],
+     "opposite_sign_median_abs_range": [
+      0.259,
+      0.59
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.089,
+      0.207
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.365,
+      0.923
+     ],
+     "slope_range": [
+      0.289,
+      0.724
+     ]
+    },
+    "B": {
+     "legs": 8,
+     "legs_where_best": 3,
+     "median_abs_residual_range": [
+      0.097,
+      0.478
+     ],
+     "opposite_sign_median_abs_range": [
+      0.208,
+      0.49
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.11,
+      0.224
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.152,
+      0.851
+     ],
+     "slope_range": [
+      0.087,
+      0.757
+     ]
+    }
+   },
+   "midpoint_registration_check": {
+    "transform": {
+     "component": 1,
+     "sign": 1
+    },
+    "by_sample": {
+     "A": {
+      "legs": 8,
+      "legs_where_best": 3,
+      "median_abs_residual_range": [
+       0.084,
+       0.43
+      ],
+      "opposite_sign_median_abs_range": [
+       0.361,
+       0.742
+      ],
+      "best_other_candidate_median_abs_range": [
+       0.106,
+       0.251
+      ],
+      "offset_range": [
+       0.0,
+       0.0
+      ],
+      "corr_range": [
+       0.102,
+       0.875
+      ],
+      "slope_range": [
+       0.09,
+       0.69
+      ]
+     },
+     "B": {
+      "legs": 8,
+      "legs_where_best": 2,
+      "median_abs_residual_range": [
+       0.091,
+       0.462
+      ],
+      "opposite_sign_median_abs_range": [
+       0.31,
+       0.705
+      ],
+      "best_other_candidate_median_abs_range": [
+       0.116,
+       0.199
+      ],
+      "offset_range": [
+       0.0,
+       0.0
+      ],
+      "corr_range": [
+       0.375,
+       0.836
+      ],
+      "slope_range": [
+       0.377,
+       0.685
+      ]
+     }
+    }
+   }
+  },
+  {
+   "channel": "KneeMoment",
+   "evidence": "force-plate lever-arm internal moment, one fitted CoP shift per plate",
+   "convention": "rhr",
+   "unit": "N*m/kg as is (slope near 1)",
+   "transform": {
+    "component": 1,
+    "sign": -1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 8,
+     "legs_where_best": 7,
+     "median_abs_residual_range": [
+      0.043,
+      0.202
+     ],
+     "opposite_sign_median_abs_range": [
+      0.202,
+      0.663
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.071,
+      0.176
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.89,
+      0.976
+     ],
+     "slope_range": [
+      0.752,
+      0.905
+     ]
+    },
+    "B": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      0.041,
+      0.092
+     ],
+     "opposite_sign_median_abs_range": [
+      0.29,
+      0.639
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.122,
+      0.232
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.767,
+      0.993
+     ],
+     "slope_range": [
+      0.775,
+      1.086
+     ]
+    }
+   },
+   "midpoint_registration_check": {
+    "transform": {
+     "component": 1,
+     "sign": -1
+    },
+    "by_sample": {
+     "A": {
+      "legs": 8,
+      "legs_where_best": 4,
+      "median_abs_residual_range": [
+       0.062,
+       0.32
+      ],
+      "opposite_sign_median_abs_range": [
+       0.234,
+       1.004
+      ],
+      "best_other_candidate_median_abs_range": [
+       0.1,
+       0.532
+      ],
+      "offset_range": [
+       0.0,
+       0.0
+      ],
+      "corr_range": [
+       0.872,
+       0.982
+      ],
+      "slope_range": [
+       0.764,
+       1.148
+      ]
+     },
+     "B": {
+      "legs": 8,
+      "legs_where_best": 4,
+      "median_abs_residual_range": [
+       0.067,
+       0.451
+      ],
+      "opposite_sign_median_abs_range": [
+       0.217,
+       0.824
+      ],
+      "best_other_candidate_median_abs_range": [
+       0.124,
+       0.442
+      ],
+      "offset_range": [
+       0.0,
+       0.0
+      ],
+      "corr_range": [
+       0.775,
+       0.995
+      ],
+      "slope_range": [
+       0.915,
+       1.351
+      ]
+     }
+    }
+   }
+  },
+  {
+   "channel": "KneeMoment",
+   "evidence": "force-plate lever-arm internal moment, one fitted CoP shift per plate",
+   "convention": "clinical",
+   "unit": "N*m/kg as is (slope near 1)",
+   "transform": {
+    "component": 1,
+    "sign": 1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 8,
+     "legs_where_best": 7,
+     "median_abs_residual_range": [
+      0.043,
+      0.202
+     ],
+     "opposite_sign_median_abs_range": [
+      0.202,
+      0.663
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.071,
+      0.176
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.89,
+      0.976
+     ],
+     "slope_range": [
+      0.752,
+      0.905
+     ]
+    },
+    "B": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      0.041,
+      0.092
+     ],
+     "opposite_sign_median_abs_range": [
+      0.29,
+      0.639
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.122,
+      0.232
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.767,
+      0.993
+     ],
+     "slope_range": [
+      0.775,
+      1.086
+     ]
+    }
+   },
+   "midpoint_registration_check": {
+    "transform": {
+     "component": 1,
+     "sign": 1
+    },
+    "by_sample": {
+     "A": {
+      "legs": 8,
+      "legs_where_best": 4,
+      "median_abs_residual_range": [
+       0.062,
+       0.32
+      ],
+      "opposite_sign_median_abs_range": [
+       0.234,
+       1.004
+      ],
+      "best_other_candidate_median_abs_range": [
+       0.1,
+       0.532
+      ],
+      "offset_range": [
+       0.0,
+       0.0
+      ],
+      "corr_range": [
+       0.872,
+       0.982
+      ],
+      "slope_range": [
+       0.764,
+       1.148
+      ]
+     },
+     "B": {
+      "legs": 8,
+      "legs_where_best": 4,
+      "median_abs_residual_range": [
+       0.067,
+       0.451
+      ],
+      "opposite_sign_median_abs_range": [
+       0.217,
+       0.824
+      ],
+      "best_other_candidate_median_abs_range": [
+       0.124,
+       0.442
+      ],
+      "offset_range": [
+       0.0,
+       0.0
+      ],
+      "corr_range": [
+       0.775,
+       0.995
+      ],
+      "slope_range": [
+       0.915,
+       1.351
+      ]
+     }
+    }
+   }
+  },
+  {
+   "channel": "AnkleMoment",
+   "evidence": "force-plate lever-arm internal moment, one fitted CoP shift per plate",
+   "convention": "rhr",
+   "unit": "N*m/kg as is (slope near 1)",
+   "transform": {
+    "component": 1,
+    "sign": 1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      0.034,
+      0.11
+     ],
+     "opposite_sign_median_abs_range": [
+      0.508,
+      1.282
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.132,
+      0.575
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.875,
+      0.996
+     ],
+     "slope_range": [
+      0.76,
+      0.9
+     ]
+    },
+    "B": {
+     "legs": 8,
+     "legs_where_best": 6,
+     "median_abs_residual_range": [
+      0.045,
+      0.468
+     ],
+     "opposite_sign_median_abs_range": [
+      0.864,
+      1.848
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.328,
+      0.855
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.746,
+      0.991
+     ],
+     "slope_range": [
+      0.78,
+      1.071
+     ]
+    }
+   },
+   "midpoint_registration_check": {
+    "transform": {
+     "component": 1,
+     "sign": 1
+    },
+    "by_sample": {
+     "A": {
+      "legs": 8,
+      "legs_where_best": 1,
+      "median_abs_residual_range": [
+       0.122,
+       0.464
+      ],
+      "opposite_sign_median_abs_range": [
+       0.449,
+       0.798
+      ],
+      "best_other_candidate_median_abs_range": [
+       0.093,
+       0.25
+      ],
+      "offset_range": [
+       0.0,
+       0.0
+      ],
+      "corr_range": [
+       0.815,
+       0.988
+      ],
+      "slope_range": [
+       0.697,
+       0.851
+      ]
+     },
+     "B": {
+      "legs": 8,
+      "legs_where_best": 0,
+      "median_abs_residual_range": [
+       0.292,
+       0.606
+      ],
+      "opposite_sign_median_abs_range": [
+       0.67,
+       1.345
+      ],
+      "best_other_candidate_median_abs_range": [
+       0.186,
+       0.393
+      ],
+      "offset_range": [
+       0.0,
+       0.0
+      ],
+      "corr_range": [
+       0.72,
+       0.979
+      ],
+      "slope_range": [
+       0.633,
+       0.853
+      ]
+     }
+    }
+   }
+  },
+  {
+   "channel": "AnkleMoment",
+   "evidence": "force-plate lever-arm internal moment, one fitted CoP shift per plate",
+   "convention": "clinical",
+   "unit": "N*m/kg as is (slope near 1)",
+   "transform": {
+    "component": 1,
+    "sign": 1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 8,
+     "legs_where_best": 8,
+     "median_abs_residual_range": [
+      0.034,
+      0.11
+     ],
+     "opposite_sign_median_abs_range": [
+      0.508,
+      1.282
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.132,
+      0.575
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.875,
+      0.996
+     ],
+     "slope_range": [
+      0.76,
+      0.9
+     ]
+    },
+    "B": {
+     "legs": 8,
+     "legs_where_best": 6,
+     "median_abs_residual_range": [
+      0.045,
+      0.468
+     ],
+     "opposite_sign_median_abs_range": [
+      0.864,
+      1.848
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.328,
+      0.855
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.746,
+      0.991
+     ],
+     "slope_range": [
+      0.78,
+      1.071
+     ]
+    }
+   },
+   "midpoint_registration_check": {
+    "transform": {
+     "component": 1,
+     "sign": 1
+    },
+    "by_sample": {
+     "A": {
+      "legs": 8,
+      "legs_where_best": 1,
+      "median_abs_residual_range": [
+       0.122,
+       0.464
+      ],
+      "opposite_sign_median_abs_range": [
+       0.449,
+       0.798
+      ],
+      "best_other_candidate_median_abs_range": [
+       0.093,
+       0.25
+      ],
+      "offset_range": [
+       0.0,
+       0.0
+      ],
+      "corr_range": [
+       0.815,
+       0.988
+      ],
+      "slope_range": [
+       0.697,
+       0.851
+      ]
+     },
+     "B": {
+      "legs": 8,
+      "legs_where_best": 0,
+      "median_abs_residual_range": [
+       0.292,
+       0.606
+      ],
+      "opposite_sign_median_abs_range": [
+       0.67,
+       1.345
+      ],
+      "best_other_candidate_median_abs_range": [
+       0.186,
+       0.393
+      ],
+      "offset_range": [
+       0.0,
+       0.0
+      ],
+      "corr_range": [
+       0.72,
+       0.979
+      ],
+      "slope_range": [
+       0.633,
+       0.853
+      ]
+     }
+    }
+   }
+  },
+  {
+   "channel": "HipPower, layout 1 (components 1-3 filled)",
+   "evidence": "force-plate moment x marker joint speed",
+   "convention": "both (power is the same under either option)",
+   "unit": "W/kg as is",
+   "transform": {
+    "component": 1,
+    "sign": -1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 6,
+     "legs_where_best": 3,
+     "median_abs_residual_range": [
+      0.049,
+      0.226
+     ],
+     "opposite_sign_median_abs_range": [
+      0.103,
+      0.45
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.039,
+      0.147
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.228,
+      0.894
+     ],
+     "slope_range": [
+      0.11,
+      0.724
+     ]
+    },
+    "B": {
+     "legs": 4,
+     "legs_where_best": 1,
+     "median_abs_residual_range": [
+      0.056,
+      0.434
+     ],
+     "opposite_sign_median_abs_range": [
+      0.138,
+      0.456
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.054,
+      0.454
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      -0.457,
+      0.756
+     ],
+     "slope_range": [
+      -0.344,
+      0.941
+     ]
+    }
+   }
+  },
+  {
+   "channel": "HipPower, layout 1 (components 1-3 filled)",
+   "evidence": "source moment x source joint speed",
+   "convention": "both (power is the same under either option)",
+   "unit": "W/kg as is",
+   "transform": {
+    "component": 1,
+    "sign": -1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 6,
+     "legs_where_best": 6,
+     "median_abs_residual_range": [
+      0.001,
+      0.019
+     ],
+     "opposite_sign_median_abs_range": [
+      0.145,
+      0.47
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.076,
+      0.232
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.897,
+      0.997
+     ],
+     "slope_range": [
+      0.96,
+      1.244
+     ]
+    },
+    "B": {
+     "legs": 4,
+     "legs_where_best": 4,
+     "median_abs_residual_range": [
+      0.002,
+      0.005
+     ],
+     "opposite_sign_median_abs_range": [
+      0.163,
+      0.463
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.081,
+      0.203
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.932,
+      1.0
+     ],
+     "slope_range": [
+      0.904,
+      1.03
+     ]
+    }
+   }
+  },
+  {
+   "channel": "HipPower, layout 2 (component 3 only)",
+   "evidence": "force-plate moment x marker joint speed",
+   "convention": "both (power is the same under either option)",
+   "unit": "W/kg as is",
+   "transform": {
+    "component": 3,
+    "sign": 1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 2,
+     "legs_where_best": 2,
+     "median_abs_residual_range": [
+      0.124,
+      0.136
+     ],
+     "opposite_sign_median_abs_range": [
+      0.263,
+      0.323
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.263,
+      0.323
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.314,
+      0.53
+     ],
+     "slope_range": [
+      0.247,
+      0.288
+     ]
+    },
+    "B": {
+     "legs": 4,
+     "legs_where_best": 4,
+     "median_abs_residual_range": [
+      0.115,
+      0.14
+     ],
+     "opposite_sign_median_abs_range": [
+      0.166,
+      0.242
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.166,
+      0.242
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.101,
+      0.585
+     ],
+     "slope_range": [
+      0.111,
+      0.258
+     ]
+    }
+   }
+  },
+  {
+   "channel": "HipPower, layout 2 (component 3 only)",
+   "evidence": "source moment x source joint speed",
+   "convention": "both (power is the same under either option)",
+   "unit": "W/kg as is",
+   "transform": {
+    "component": 3,
+    "sign": 1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 2,
+     "legs_where_best": 2,
+     "median_abs_residual_range": [
+      0.069,
+      0.073
+     ],
+     "opposite_sign_median_abs_range": [
+      0.316,
+      0.32
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.316,
+      0.32
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.788,
+      0.863
+     ],
+     "slope_range": [
+      0.841,
+      1.053
+     ]
+    },
+    "B": {
+     "legs": 4,
+     "legs_where_best": 4,
+     "median_abs_residual_range": [
+      0.029,
+      0.058
+     ],
+     "opposite_sign_median_abs_range": [
+      0.176,
+      0.297
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.176,
+      0.297
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.741,
+      0.88
+     ],
+     "slope_range": [
+      0.629,
+      0.837
+     ]
+    }
+   }
+  },
+  {
+   "channel": "KneePower, layout 1 (components 1-3 filled)",
+   "evidence": "force-plate moment x marker joint speed",
+   "convention": "both (power is the same under either option)",
+   "unit": "W/kg as is",
+   "transform": {
+    "component": 1,
+    "sign": -1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 6,
+     "legs_where_best": 5,
+     "median_abs_residual_range": [
+      0.067,
+      0.139
+     ],
+     "opposite_sign_median_abs_range": [
+      0.185,
+      0.424
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.064,
+      0.147
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.579,
+      0.94
+     ],
+     "slope_range": [
+      0.54,
+      0.757
+     ]
+    },
+    "B": {
+     "legs": 4,
+     "legs_where_best": 4,
+     "median_abs_residual_range": [
+      0.03,
+      0.076
+     ],
+     "opposite_sign_median_abs_range": [
+      0.149,
+      0.575
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.075,
+      0.217
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.676,
+      0.957
+     ],
+     "slope_range": [
+      0.573,
+      1.027
+     ]
+    }
+   }
+  },
+  {
+   "channel": "KneePower, layout 1 (components 1-3 filled)",
+   "evidence": "source moment x source joint speed",
+   "convention": "both (power is the same under either option)",
+   "unit": "W/kg as is",
+   "transform": {
+    "component": 1,
+    "sign": -1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 6,
+     "legs_where_best": 6,
+     "median_abs_residual_range": [
+      0.004,
+      0.008
+     ],
+     "opposite_sign_median_abs_range": [
+      0.231,
+      0.484
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.108,
+      0.242
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.986,
+      1.0
+     ],
+     "slope_range": [
+      0.979,
+      1.021
+     ]
+    },
+    "B": {
+     "legs": 4,
+     "legs_where_best": 4,
+     "median_abs_residual_range": [
+      0.004,
+      0.018
+     ],
+     "opposite_sign_median_abs_range": [
+      0.209,
+      0.575
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.101,
+      0.283
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.996,
+      1.0
+     ],
+     "slope_range": [
+      1.013,
+      1.096
+     ]
+    }
+   }
+  },
+  {
+   "channel": "KneePower, layout 2 (component 3 only)",
+   "evidence": "force-plate moment x marker joint speed",
+   "convention": "both (power is the same under either option)",
+   "unit": "W/kg as is",
+   "transform": {
+    "component": 3,
+    "sign": 1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 2,
+     "legs_where_best": 2,
+     "median_abs_residual_range": [
+      0.043,
+      0.095
+     ],
+     "opposite_sign_median_abs_range": [
+      0.133,
+      0.231
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.133,
+      0.231
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.837,
+      0.928
+     ],
+     "slope_range": [
+      1.119,
+      1.143
+     ]
+    },
+    "B": {
+     "legs": 4,
+     "legs_where_best": 4,
+     "median_abs_residual_range": [
+      0.079,
+      0.105
+     ],
+     "opposite_sign_median_abs_range": [
+      0.177,
+      0.307
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.177,
+      0.307
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.603,
+      0.953
+     ],
+     "slope_range": [
+      0.591,
+      0.981
+     ]
+    }
+   }
+  },
+  {
+   "channel": "KneePower, layout 2 (component 3 only)",
+   "evidence": "source moment x source joint speed",
+   "convention": "both (power is the same under either option)",
+   "unit": "W/kg as is",
+   "transform": {
+    "component": 3,
+    "sign": 1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 2,
+     "legs_where_best": 2,
+     "median_abs_residual_range": [
+      0.014,
+      0.022
+     ],
+     "opposite_sign_median_abs_range": [
+      0.171,
+      0.219
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.171,
+      0.219
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.991,
+      0.993
+     ],
+     "slope_range": [
+      0.979,
+      1.015
+     ]
+    },
+    "B": {
+     "legs": 4,
+     "legs_where_best": 4,
+     "median_abs_residual_range": [
+      0.017,
+      0.023
+     ],
+     "opposite_sign_median_abs_range": [
+      0.251,
+      0.346
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.251,
+      0.346
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.957,
+      0.993
+     ],
+     "slope_range": [
+      0.931,
+      1.013
+     ]
+    }
+   }
+  },
+  {
+   "channel": "AnklePower, layout 1 (components 1-3 filled)",
+   "evidence": "force-plate moment x marker joint speed",
+   "convention": "both (power is the same under either option)",
+   "unit": "W/kg as is",
+   "transform": {
+    "component": 1,
+    "sign": -1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 6,
+     "legs_where_best": 6,
+     "median_abs_residual_range": [
+      0.032,
+      0.067
+     ],
+     "opposite_sign_median_abs_range": [
+      0.166,
+      0.792
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.099,
+      0.421
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.341,
+      0.989
+     ],
+     "slope_range": [
+      0.697,
+      1.012
+     ]
+    },
+    "B": {
+     "legs": 4,
+     "legs_where_best": 2,
+     "median_abs_residual_range": [
+      0.031,
+      0.146
+     ],
+     "opposite_sign_median_abs_range": [
+      0.21,
+      0.593
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.102,
+      0.311
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.976,
+      0.993
+     ],
+     "slope_range": [
+      0.607,
+      1.149
+     ]
+    }
+   }
+  },
+  {
+   "channel": "AnklePower, layout 1 (components 1-3 filled)",
+   "evidence": "source moment x source joint speed",
+   "convention": "both (power is the same under either option)",
+   "unit": "W/kg as is",
+   "transform": {
+    "component": 1,
+    "sign": -1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 6,
+     "legs_where_best": 6,
+     "median_abs_residual_range": [
+      0.001,
+      0.012
+     ],
+     "opposite_sign_median_abs_range": [
+      0.078,
+      0.113
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.044,
+      0.057
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.997,
+      1.0
+     ],
+     "slope_range": [
+      1.013,
+      1.118
+     ]
+    },
+    "B": {
+     "legs": 4,
+     "legs_where_best": 4,
+     "median_abs_residual_range": [
+      0.002,
+      0.01
+     ],
+     "opposite_sign_median_abs_range": [
+      0.067,
+      0.137
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.037,
+      0.067
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.984,
+      1.0
+     ],
+     "slope_range": [
+      1.02,
+      1.256
+     ]
+    }
+   }
+  },
+  {
+   "channel": "AnklePower, layout 2 (component 3 only)",
+   "evidence": "force-plate moment x marker joint speed",
+   "convention": "both (power is the same under either option)",
+   "unit": "W/kg as is",
+   "transform": {
+    "component": 3,
+    "sign": 1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 2,
+     "legs_where_best": 2,
+     "median_abs_residual_range": [
+      0.031,
+      0.045
+     ],
+     "opposite_sign_median_abs_range": [
+      0.354,
+      0.484
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.354,
+      0.484
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.981,
+      0.982
+     ],
+     "slope_range": [
+      0.805,
+      0.823
+     ]
+    },
+    "B": {
+     "legs": 4,
+     "legs_where_best": 4,
+     "median_abs_residual_range": [
+      0.041,
+      0.112
+     ],
+     "opposite_sign_median_abs_range": [
+      0.454,
+      0.979
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.454,
+      0.979
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.058,
+      0.986
+     ],
+     "slope_range": [
+      0.407,
+      0.976
+     ]
+    }
+   }
+  },
+  {
+   "channel": "AnklePower, layout 2 (component 3 only)",
+   "evidence": "source moment x source joint speed",
+   "convention": "both (power is the same under either option)",
+   "unit": "W/kg as is",
+   "transform": {
+    "component": 3,
+    "sign": 1
+   },
+   "by_sample": {
+    "A": {
+     "legs": 2,
+     "legs_where_best": 2,
+     "median_abs_residual_range": [
+      0.004,
+      0.005
+     ],
+     "opposite_sign_median_abs_range": [
+      0.088,
+      0.099
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.088,
+      0.099
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.992,
+      0.998
+     ],
+     "slope_range": [
+      1.063,
+      1.068
+     ]
+    },
+    "B": {
+     "legs": 4,
+     "legs_where_best": 4,
+     "median_abs_residual_range": [
+      0.008,
+      0.011
+     ],
+     "opposite_sign_median_abs_range": [
+      0.085,
+      0.14
+     ],
+     "best_other_candidate_median_abs_range": [
+      0.085,
+      0.14
+     ],
+     "offset_range": [
+      0.0,
+      0.0
+     ],
+     "corr_range": [
+      0.783,
+      0.997
+     ],
+     "slope_range": [
+      0.654,
+      1.098
+     ]
+    }
+   }
+  }
+ ],
+ "registration": {
+  "best_sign_combination_counts": {
+   "[1, -1, 1]": 15,
+   "[-1, -1, 1]": 1
+  },
+  "fitted_cop_forward_shift_m_range": [
+   0.0056,
+   0.0616
+  ],
+  "fitted_cop_up_shift_m_range": [
+   -0.2099,
+   0.0575
+  ],
+  "hip_sign_margin_rms_Nm_per_kg": [
+   0.217,
+   0.239,
+   0.124,
+   0.286,
+   0.017,
+   0.052,
+   0.093,
+   0.175,
+   0.068,
+   0.118,
+   0.07,
+   0.069,
+   -0.01,
+   0.112,
+   0.171,
+   0.042
+  ],
+  "note": "Fitted from the source moments with 2 parameters shared by 3 joints, separately for every sign combination; not independent of the source for magnitude, but a single shared shift cannot turn one joint sign. One leg (AB06/d5 R) prefers hip negative with a 0.21 m vertical shift, physically implausible; it has 1208 zero-fill frames."
+ },
+ "kinetic_layout": {
+  "power_layout_2_recordings": [
+   "AB03/i10",
+   "AB04/d10",
+   "AB04/d5",
+   "AB04/i5",
+   "AB05/d10",
+   "AB05/d5",
+   "AB05/i0",
+   "AB05/i10"
+  ],
+  "power_layout_2_joint_sides": 48,
+  "joint_sides_scanned": 300,
+  "layout_1": "Power components 1-3 filled; component 1 = -(moment 1 x joint speed 1) (C01 finding).",
+  "layout_2": "Power components 1 and 2 are zero; component 3 = +(moment 1 x joint speed 1), as the paper defines power (the Plug-in Gait total-power slot).",
+  "moments": "All three moment components are filled in every recording-side; the moment sign does not change with the power layout (lever-arm fits agree in layout-2 recordings AB05/d5, AB05/d10 and AB04/d5)."
+ },
+ "ankle_episode_census": {
+  "criterion": "Alternate branch: |component 2| > 90 deg. A Cardan triple with the middle angle outside [-90, 90] is the second solution of the same rotation; standard extraction returns the middle angle inside it.",
+  "rule_proposed_not_applied": "(c1, c2, c3) -> (wrap(c1 + 180), wrap(180 - c2), wrap(c3 + 180)) for frames meeting the criterion; log recording, side, channel and frame runs. Identity holds for every Cardan order and for per-component sign flips.",
+  "joint_angle_channels_scanned": 500,
+  "channels_with_alternate_frames_by_type": {
+   "FootProgress": 21,
+   "Ankle": 3
+  },
+  "ankle_channels_with_alternate_frames": [
+   {
+    "recording": "AB05/d10",
+    "side": "L",
+    "alternate_frames": 5,
+    "runs": 1,
+    "strides_touched": 2,
+    "inside_raw_p1_p99_by_component": [
+     [
+      48.5,
+      113.7
+     ],
+     [
+      91.6,
+      95.6
+     ],
+     [
+      -78.9,
+      -78.8
+     ]
+    ],
+    "inside_reexpressed_p1_p99_by_component": [
+     [
+      -131.5,
+      -66.3
+     ],
+     [
+      84.4,
+      88.4
+     ],
+     [
+      101.1,
+      101.2
+     ]
+    ],
+    "outside_p1_p99_by_component": [
+     [
+      -13.4,
+      24.8
+     ],
+     [
+      -1.5,
+      14.5
+     ],
+     [
+      -52.5,
+      6.0
+     ]
+    ],
+    "max_matrix_difference_raw_vs_reexpressed_all_cardan_orders": 6.938893903907228e-16,
+    "max_matrix_difference_raw_vs_mirror_hypothesis": 1.9992318820214958,
+    "max_matrix_difference_raw_vs_offset_only_hypothesis": 1.9684011037816198,
+    "step_frames_over_screen": {
+     "10deg": 4,
+     "20deg": 2,
+     "45deg": 0,
+     "90deg": 0
+    },
+    "strides_touched_by_step_over_screen": {
+     "10deg": 2,
+     "20deg": 2,
+     "45deg": 0,
+     "90deg": 0
+    }
+   },
+   {
+    "recording": "AB06/d5",
+    "side": "R",
+    "alternate_frames": 8,
+    "runs": 1,
+    "strides_touched": 1,
+    "inside_raw_p1_p99_by_component": [
+     [
+      21.9,
+      36.4
+     ],
+     [
+      103.6,
+      164.9
+     ],
+     [
+      104.1,
+      132.9
+     ]
+    ],
+    "inside_reexpressed_p1_p99_by_component": [
+     [
+      -158.1,
+      -143.6
+     ],
+     [
+      15.1,
+      76.4
+     ],
+     [
+      -75.9,
+      -47.1
+     ]
+    ],
+    "outside_p1_p99_by_component": [
+     [
+      -5.1,
+      14.7
+     ],
+     [
+      2.7,
+      7.4
+     ],
+     [
+      -27.2,
+      -9.7
+     ]
+    ],
+    "max_matrix_difference_raw_vs_reexpressed_all_cardan_orders": 6.661338147750939e-16,
+    "max_matrix_difference_raw_vs_mirror_hypothesis": 1.9660118178729258,
+    "max_matrix_difference_raw_vs_offset_only_hypothesis": 1.929928608981482,
+    "step_frames_over_screen": {
+     "10deg": 7,
+     "20deg": 4,
+     "45deg": 1,
+     "90deg": 1
+    },
+    "strides_touched_by_step_over_screen": {
+     "10deg": 2,
+     "20deg": 2,
+     "45deg": 1,
+     "90deg": 1
+    }
+   },
+   {
+    "recording": "AB07/i10",
+    "side": "R",
+    "alternate_frames": 5429,
+    "runs": 2,
+    "strides_touched": 34,
+    "inside_raw_p1_p99_by_component": [
+     [
+      -196.2,
+      -153.0
+     ],
+     [
+      173.9,
+      178.9
+     ],
+     [
+      155.8,
+      176.6
+     ]
+    ],
+    "inside_reexpressed_p1_p99_by_component": [
+     [
+      -16.6,
+      27.0
+     ],
+     [
+      1.1,
+      6.1
+     ],
+     [
+      -24.2,
+      -3.4
+     ]
+    ],
+    "outside_p1_p99_by_component": [
+     [
+      -15.9,
+      27.8
+     ],
+     [
+      0.5,
+      6.3
+     ],
+     [
+      -24.9,
+      -0.5
+     ]
+    ],
+    "max_matrix_difference_raw_vs_reexpressed_all_cardan_orders": 1.27675647831893e-15,
+    "max_matrix_difference_raw_vs_mirror_hypothesis": 1.9679799668054179,
+    "max_matrix_difference_raw_vs_offset_only_hypothesis": 1.9996793244476083,
+    "step_frames_over_screen": {
+     "10deg": 17,
+     "20deg": 13,
+     "45deg": 12,
+     "90deg": 11
+    },
+    "strides_touched_by_step_over_screen": {
+     "10deg": 4,
+     "20deg": 3,
+     "45deg": 3,
+     "90deg": 3
+    }
+   }
+  ],
+  "branch_episode": {
+   "recording": "AB07/i10",
+   "side": "R",
+   "runs_1based": [
+    [
+     11704,
+     14988
+    ],
+    [
+     14991,
+     17134
+    ]
+   ],
+   "frames": 5429,
+   "strides_touched_all_heel_strike_pairs": 34,
+   "strides_inside_duration_screened": 31,
+   "strides_outside_duration_screened": 86,
+   "inside_strides_without_orientation_step_over_20deg": 29,
+   "orientation_step_over_20deg_frames_1based": [
+    11704,
+    11705,
+    11712,
+    11713,
+    12704,
+    12705,
+    14931,
+    14932,
+    14973,
+    14986,
+    14987,
+    14989,
+    14991
+   ],
+   "orientation_step_clusters_1based": "11704-11713, 12704-12705, 14931-14932, 14973, 14986-14991",
+   "inside_step_p50_p95_deg": [
+    0.51,
+    2.43
+   ],
+   "outside_step_p50_p95_deg": [
+    0.64,
+    2.77
+   ],
+   "interpretation": "Inside-run triples re-expressed by the rule span the same 1st-99th percentile ranges as the outside run in all three components, and orientation changes by 0.51 deg per frame (median; 95th percentile 2.43 deg) inside the run against 0.64 (2.77) outside. Frames 11704-11713, 12704-12705, 14931-14932, 14973, 14986-14991 (1-based clusters) contain one-frame orientation changes of 20-171 deg: those are not alternate solutions and the rule cannot fix them. The matrix identity (raw and re-expressed triples give the same rotation) holds for any triple and is a check of the rule, not evidence. The run ends where the recording turns to (0,0,0) zero fill."
+  },
+  "short_ankle_runs": "AB05/d10 left (5 frames) and AB06/d5 right (8 frames) meet the criterion but re-express to implausible values (middle component 15-88 deg) next to orientation jumps; glitches, not branch switches. The rule plus a stride-level orientation-step screen removes them; the screen value is reported at 10/20/45/90 deg and none is adopted.",
+  "foot_progress": "FootProgressAngles meet the criterion in 21 recording-sides, for nearly whole recordings in AB04/i0 L, AB06/d10 L, AB08/d10 R, AB08/d10 L. Vicon says these are not strict Cardan angles; they stay source-only and the rule is not proposed for them.",
+  "zero_fill": {
+   "channels_with_exact_zero_triples": 241,
+   "channels_scanned": 500,
+   "zero_frames_total": 125752,
+   "channels_with_zero_frames_between_first_and_last_heel_strike": 87,
+   "zero_frames_between_first_and_last_heel_strike": 23386,
+   "note": "Exact (0,0,0) triples coincide with marker dropout at the AB07/i10 end (all foot/shank markers flagged 0). Elsewhere the coincidence is not checked. A converter that reads them as 0 deg would invent data."
+  },
+  "peak_rss_mib": 83.5
+ },
+ "recommended_transforms_if_option_A": {
+  "PelvisAngles": "component 1 x pi/180",
+  "HipAngles": "component 1 x pi/180",
+  "KneeAngles": "component 1 x pi/180",
+  "AnkleAngles": "component 1 x pi/180 after the re-expression rule (if adopted)",
+  "HipMoment/KneeMoment/AnkleMoment": "component 1, N*m/kg as is",
+  "Power": "layout 1: -component 1; layout 2: +component 3 (W/kg); remains source-only until reviewed",
+  "foot segment (candidate, not proposed)": "FootProgressAngles: -(component 1) - 90 deg tracks marker foot pitch, but whole-recording alternate branches occur"
+ },
+ "sign_changes_by_option": {
+  "A": "none",
+  "B": "pelvis tilt x -1 (and every pelvis-based recipe uses + pelvis)",
+  "C": "pelvis tilt, knee angle and knee moment x -1"
+ },
+ "agent_actions_logged": [
+  "Ranked candidates by median absolute residual after finding marker-label glitches (pelvis marker tilt up to 160 deg) that dominated RMS in AB08/d10 and AB05/d10.",
+  "Treated exact (0,0,0) triples as missing in fits and census.",
+  "Kept power, FootProgressAngles and non-sagittal components source-only (no change from C01)."
+ ],
+ "limitations": [
+  "No scientific approval; the sign rule is a proposal (D-UM21-C03-1).",
+  "Fits cover 8 of 50 recordings (16 legs); none is level walking. The census covers all 50 for joint angles and kinetic layout only.",
+  "Lever-arm moments ignore segment weight and inertia and use a fitted CoP shift; they test sign and approximate scale, not exact values. Hip is weak.",
+  "Marker targets use the greater trochanter, not the hip joint centre, and Plug-in Gait static offsets are unknown; offsets are reported, not interpreted.",
+  "The Plug-in Gait ankle sequence is not documented (Vicon: not strict Cardan). The alternate-solution identity holds for every Cardan order, so the order is not identified by it.",
+  "The cause of the two power layouts and of the ankle episode jump frames is unknown; author question pending."
+ ],
+ "peak_rss_mib": {
+  "probe": 92.6,
+  "census": 83.5
+ },
+ "generated_by": "contributor_tools/review_um21_c03_conventions.py sheet"
+}

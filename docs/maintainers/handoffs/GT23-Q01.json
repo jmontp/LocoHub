@@ -1,0 +1,578 @@
+{
+  "task_id": "GT23-Q01",
+  "status": "ready_for_independent_review",
+  "scientific_approval": false,
+  "last_checked_at_utc": "2026-11-24T10:39:10+00:00",
+  "summary": "Structure and coarse physical limits (D-UM21-Q01-1 = B applied to GT23 as the least-change default; logged here) on all 19,573 E01 observations (8,831 cycles, 10,254 transfers, 488 continuous recordings). 18,758 have no failure found, 815 failed. Failures: L5 pressure point 590 observations, L2 jump 189, L1 angle range 40, S5 side check 10 (observations can fail more than one). Stairs pressure point confirmed, kept. Step-up pressure point fails in almost every observation. No scientific approval. Independent verifier not yet run.",
+  "decisions_applied": [
+    "D-UM21-Q01-1 = B (structure plus coarse physical limits, blatant errors only; no literature-fitted ranges; no tuning to a pass rate), applied to GT23 as the least-change default"
+  ],
+  "agent_defaults_logged": [
+    "L1, L2, L3, L4 ported unchanged from run_um21_q01_assessment.py (a test asserts the bounds are equal); angles are radians and converted to degrees; unit comes from the column suffix and an unknown suffix refuses to run.",
+    "L5 (new): foot-frame pressure point beyond 0.5 m anterior or 0.3 m vertical/lateral of the foot origin; written before any GT23 data were read, chosen so the old stairs error (0.4 to 0.9 m below the foot) would show.",
+    "S5 (new): side check on cycles, ipsilateral mean vertical force in the first 40 percent of the cycle must exceed that in the last 40 percent; applies only with all 150 samples finite and a peak of at least 20 N.",
+    "Stairs rule written before the data: hold only if more than 1 percent of finite stairs pressure-point samples fail L5, or the C06 outside-foot share of stairs is above that of normal walking.",
+    "Flight check for the run-label question: share and longest run of phase samples where both legs are under 20 N.",
+    "Pilot = AB07 and AB12 (right-foot offset; stairs), chosen before the run. Participants are assessed one per job.",
+    "Observations with failures are marked failed in observations.jsonl; the export is not changed, nothing is removed. Filtering belongs to R01 / the E01 relabel step."
+  ],
+  "code": {
+    "runner": "contributor_tools/run_gt23_q01_assessment.py",
+    "runner_sha256": "79482156c37bb5b825d7ffa0768d08097e776f1fb6d9d447468032dfaf28a8bf",
+    "jobs": "contributor_tools/run_gt23_q01_jobs.py",
+    "tests": "tests/test_gt23_q01_assessment.py (10 synthetic tests pass)",
+    "freeze": "pilot_v3 and all 12 batches bind the same runner hash; the summary binds it too"
+  },
+  "jobs": {
+    "pilot_history": "pilot (v1) exposed a bug: cycle ids use L/R as the side code, so 1,642 observations were wrongly reported as S2 failures; the launcher also marked the receipt not clean because the expected output name was a path. Both fixed (pilot_v2 still not clean for the output-name reason; pilot_v3 clean). v1 and v2 roots are superseded, kept as evidence.",
+    "final": [
+      "gt23-q01-pilot_v3",
+      "gt23-q01-batch_AB01",
+      "gt23-q01-batch_AB02",
+      "gt23-q01-batch_AB03",
+      "gt23-q01-batch_AB05",
+      "gt23-q01-batch_AB06",
+      "gt23-q01-batch_AB07",
+      "gt23-q01-batch_AB08",
+      "gt23-q01-batch_AB09",
+      "gt23-q01-batch_AB10",
+      "gt23-q01-batch_AB11",
+      "gt23-q01-batch_AB12",
+      "gt23-q01-batch_AB13",
+      "gt23-q01-summary"
+    ],
+    "per_job": "dry run, memory check before launch (Linux available about 8.1 GB, Windows free about 7.4 GB), one launch, verify-cleanup proven, one at a time",
+    "peak_rss_mib": {
+      "pilot_v3": 269.0,
+      "batch_AB01": 240.9,
+      "batch_AB02": 249.5,
+      "batch_AB03": 278.8,
+      "batch_AB05": 253.7,
+      "batch_AB06": 252.7,
+      "batch_AB07": 265.4,
+      "batch_AB08": 241.8,
+      "batch_AB09": 241.3,
+      "batch_AB10": 236.2,
+      "batch_AB11": 234.8,
+      "batch_AB12": 245.7,
+      "batch_AB13": 249.7,
+      "summary": 35.1
+    },
+    "rss_limit_mib": 300
+  },
+  "roots": {
+    "pilot": "converted_datasets/reconversion_v2/gt23_q01_pilot_v3",
+    "batches": "converted_datasets/reconversion_v2/gt23_q01_batch_<AB..>/<AB..>/(assessment.json, observations.jsonl, failures.jsonl)",
+    "summary": "converted_datasets/reconversion_v2/gt23_q01_summary/assessment_summary.json",
+    "receipts": "docs/quality/audits/gt23-q01-<job>-launcher-receipt.json"
+  },
+  "coverage": {
+    "assessed_with_a_limit": [
+      "ankle_dorsiflexion_angle_contra_rad",
+      "ankle_dorsiflexion_angle_ipsi_rad",
+      "ankle_dorsiflexion_angle_left_rad",
+      "ankle_dorsiflexion_angle_right_rad",
+      "cop_anterior_contra_m",
+      "cop_anterior_ipsi_m",
+      "cop_anterior_left_m",
+      "cop_anterior_right_m",
+      "cop_lateral_contra_m",
+      "cop_lateral_ipsi_m",
+      "cop_lateral_left_m",
+      "cop_lateral_right_m",
+      "cop_vertical_contra_m",
+      "cop_vertical_ipsi_m",
+      "cop_vertical_left_m",
+      "cop_vertical_right_m",
+      "foot_sagittal_angle_contra_rad",
+      "foot_sagittal_angle_ipsi_rad",
+      "foot_sagittal_angle_left_rad",
+      "foot_sagittal_angle_right_rad",
+      "hip_flexion_angle_contra_rad",
+      "hip_flexion_angle_ipsi_rad",
+      "hip_flexion_angle_left_rad",
+      "hip_flexion_angle_right_rad",
+      "knee_flexion_angle_contra_rad",
+      "knee_flexion_angle_ipsi_rad",
+      "knee_flexion_angle_left_rad",
+      "knee_flexion_angle_right_rad",
+      "pelvis_sagittal_angle_rad",
+      "shank_sagittal_angle_contra_rad",
+      "shank_sagittal_angle_ipsi_rad",
+      "shank_sagittal_angle_left_rad",
+      "shank_sagittal_angle_right_rad",
+      "thigh_sagittal_angle_contra_rad",
+      "thigh_sagittal_angle_ipsi_rad",
+      "thigh_sagittal_angle_left_rad",
+      "thigh_sagittal_angle_right_rad"
+    ],
+    "unchecked_no_limit": "120 of 157 signal columns: joint velocities, moments, powers, forces (N and BW), lab-axis pressure point, heading, subtalar and the frontal/transverse columns. Never reported as pass.",
+    "held_not_checked_no_column": "136 column names, 375347 observation-column cases, each with the E01 reason in held_signals; listed per column in the summary",
+    "ankle_angle": "passes are 'pass_offset_unverified' (AB07 offset about -9 to -13 degrees); a pass only means not blatantly impossible",
+    "source_fidelity": "bound to the E01 run summary hashes and the independent E01 readback reports (all 12 pass); not redone here"
+  },
+  "failures": {
+    "by_limit_observations": {
+      "L5": 590,
+      "L2": 189,
+      "L1": 40
+    },
+    "by_limit_failed_samples": {
+      "L5": 144997,
+      "L2": 15750,
+      "L1": 2839
+    },
+    "structural_S1_S4": "0 failures in all 19,573 observations (grid, ids, sides, identities, spans inside recordings, clocks, held columns equal all-missing, transfer pairs, lineage counts equal E01)",
+    "S5_side_check": "10 cycles fail: 9 of 298 side_shuffle and 1 of 630 dynamic_walk (AB06/dynamic_walk_1/L/0000426); all other tasks pass. Side shuffles move sideways so the stance order may differ; not decided here.",
+    "by_participant": {
+      "AB01": {
+        "failed": 51,
+        "by_limit": {
+          "L5": 48,
+          "L2": 2
+        },
+        "structural": {
+          "S5 side check: ipsilateral": 1
+        }
+      },
+      "AB02": {
+        "failed": 65,
+        "by_limit": {
+          "L5": 52,
+          "L2": 12
+        },
+        "structural": {
+          "S5 side check: ipsilateral": 1
+        }
+      },
+      "AB03": {
+        "failed": 116,
+        "by_limit": {
+          "L5": 98,
+          "L2": 16
+        },
+        "structural": {
+          "S5 side check: ipsilateral": 3
+        }
+      },
+      "AB05": {
+        "failed": 69,
+        "by_limit": {
+          "L5": 50,
+          "L1": 7,
+          "L2": 10
+        },
+        "structural": {
+          "S5 side check: ipsilateral": 2
+        }
+      },
+      "AB06": {
+        "failed": 53,
+        "by_limit": {
+          "L1": 2,
+          "L5": 41,
+          "L2": 8
+        },
+        "structural": {
+          "S5 side check: ipsilateral": 2
+        }
+      },
+      "AB07": {
+        "failed": 57,
+        "by_limit": {
+          "L1": 5,
+          "L5": 42,
+          "L2": 10
+        },
+        "structural": {}
+      },
+      "AB08": {
+        "failed": 56,
+        "by_limit": {
+          "L5": 46,
+          "L2": 10
+        },
+        "structural": {}
+      },
+      "AB09": {
+        "failed": 63,
+        "by_limit": {
+          "L1": 4,
+          "L5": 41,
+          "L2": 20
+        },
+        "structural": {}
+      },
+      "AB10": {
+        "failed": 68,
+        "by_limit": {
+          "L5": 45,
+          "L1": 2,
+          "L2": 23
+        },
+        "structural": {}
+      },
+      "AB11": {
+        "failed": 74,
+        "by_limit": {
+          "L1": 7,
+          "L2": 32,
+          "L5": 41
+        },
+        "structural": {}
+      },
+      "AB12": {
+        "failed": 67,
+        "by_limit": {
+          "L5": 41,
+          "L2": 26
+        },
+        "structural": {}
+      },
+      "AB13": {
+        "failed": 76,
+        "by_limit": {
+          "L5": 45,
+          "L1": 13,
+          "L2": 20
+        },
+        "structural": {
+          "S5 side check: ipsilateral": 1
+        }
+      }
+    },
+    "by_task_and_limit": {
+      "dynamic_walk_unlabelled": {
+        "L5": 4,
+        "L1": 2,
+        "L2": 2
+      },
+      "incline_walk_unlabelled": {
+        "L5": 16,
+        "L1": 5
+      },
+      "normal_walk_unlabelled": {
+        "L5": 14
+      },
+      "step_up_unlabelled": {
+        "L5": 134
+      },
+      "cutting_unlabelled": {
+        "L2": 48,
+        "L5": 5
+      },
+      "decline_10deg": {
+        "L5": 14
+      },
+      "level_1-2": {
+        "L5": 1
+      },
+      "step_up_right": {
+        "L5": 190
+      },
+      "step_up_left": {
+        "L5": 176
+      },
+      "curb_down": {
+        "L2": 60
+      },
+      "curb_up": {
+        "L2": 52,
+        "L1": 3
+      },
+      "side_shuffle": {
+        "L5": 14
+      },
+      "incline_10deg": {
+        "L5": 8
+      },
+      "run_2-0": {
+        "L5": 4
+      },
+      "run_2-5": {
+        "L5": 1
+      },
+      "jump_unlabelled": {
+        "L5": 5,
+        "L1": 6
+      },
+      "lift_unlabelled": {
+        "L1": 4
+      },
+      "obstacle_walk": {
+        "L5": 1
+      },
+      "poses": {
+        "L1": 2
+      },
+      "jump_vertical": {
+        "L5": 2
+      },
+      "lift_25lbs-r-r": {
+        "L1": 2
+      },
+      "lunge_unlabelled": {
+        "L1": 1
+      },
+      "meander": {
+        "L1": 3,
+        "L2": 1
+      },
+      "twister": {
+        "L1": 3
+      },
+      "cutting_right-fast": {
+        "L2": 10
+      },
+      "cutting_left-slow": {
+        "L2": 2
+      },
+      "cutting_left-fast": {
+        "L2": 4
+      },
+      "start_stop": {
+        "L1": 3,
+        "L5": 1,
+        "L2": 1
+      },
+      "turn_and_step_unlabelled": {
+        "L1": 5,
+        "L2": 5
+      },
+      "jump_lateral": {
+        "L2": 2
+      },
+      "cutting_right-slow": {
+        "L2": 2
+      },
+      "push": {
+        "L1": 1
+      }
+    },
+    "worst_examples": [
+      {
+        "observation_id": "AB13/dynamic_walk_1/continuous",
+        "reference_side": "none",
+        "table": "time",
+        "channel": "ankle_dorsiflexion_angle_right_rad",
+        "limit": "L2",
+        "sample_index": 19259,
+        "time_s": 96.295,
+        "value": -360.24409318282864,
+        "reason": "ankle_dorsiflexion_angle_right_rad changes -360.2 deg between adjacent samples (limit 30)"
+      },
+      {
+        "observation_id": "AB13/dynamic_walk_1/continuous",
+        "reference_side": "none",
+        "table": "time",
+        "channel": "foot_sagittal_angle_right_rad",
+        "limit": "L2",
+        "sample_index": 19259,
+        "time_s": 96.295,
+        "value": -359.92364057052293,
+        "reason": "foot_sagittal_angle_right_rad changes -359.9 deg between adjacent samples (limit 30)"
+      },
+      {
+        "observation_id": "AB13/dynamic_walk_1/continuous",
+        "reference_side": "none",
+        "table": "time",
+        "channel": "foot_sagittal_angle_right_rad",
+        "limit": "L2",
+        "sample_index": 19258,
+        "time_s": 96.29,
+        "value": 359.8124919407179,
+        "reason": "foot_sagittal_angle_right_rad changes 359.8 deg between adjacent samples (limit 30)"
+      },
+      {
+        "observation_id": "AB13/dynamic_walk_1/continuous",
+        "reference_side": "none",
+        "table": "time",
+        "channel": "ankle_dorsiflexion_angle_right_rad",
+        "limit": "L2",
+        "sample_index": 19258,
+        "time_s": 96.29,
+        "value": 359.70107683144585,
+        "reason": "ankle_dorsiflexion_angle_right_rad changes 359.7 deg between adjacent samples (limit 30)"
+      },
+      {
+        "observation_id": "AB10/meander_1/continuous",
+        "reference_side": "none",
+        "table": "time",
+        "channel": "foot_sagittal_angle_right_rad",
+        "limit": "L2",
+        "sample_index": 1960,
+        "time_s": 9.8,
+        "value": 356.8920874178957,
+        "reason": "foot_sagittal_angle_right_rad changes 356.9 deg between adjacent samples (limit 30)"
+      },
+      {
+        "observation_id": "AB10/meander_1/continuous",
+        "reference_side": "none",
+        "table": "time",
+        "channel": "ankle_dorsiflexion_angle_right_rad",
+        "limit": "L2",
+        "sample_index": 1960,
+        "time_s": 9.8,
+        "value": 356.832762874587,
+        "reason": "ankle_dorsiflexion_angle_right_rad changes 356.8 deg between adjacent samples (limit 30)"
+      }
+    ],
+    "step_up_pressure_point": "L5: 140,544 of 973,332 finite step_up pressure-point samples fail (vertical coordinate about -0.5 m, same pattern as the old stairs error: a raised surface under the foot). 500 of 506 step-up observations with a pressure point fail (step_up_left 176, step_up_right 190, step_up_unlabelled 134). C06 did not hold them (outside-foot share 12.5 percent). Recommend holding the foot-frame pressure point for step_up in the E01 relabel/hold step; not done here (export unchanged).",
+    "angle_wraps": "L2 jumps of about 360 degrees and L1 values near -180 degrees are branch wraps in the right foot and ankle angle (examples AB13 dynamic_walk_1 sample 19259, AB10 meander_1, AB07 twister_1); cutting and curb recordings carry many L2 jumps (89 degrees in AB12 cutting_1). 59 recordings carry L1 or L2 failures. Cause not investigated here."
+  },
+  "stairs_cop": {
+    "decision": "keep_published (not held)",
+    "stairs_cop_finite_samples": 242751,
+    "stairs_cop_failed_L5_samples": 0,
+    "outside_foot_share_stairs": {
+      "max": 0.8235294117647058,
+      "median": 0.006802721088435374,
+      "min": 0.0,
+      "n": 248
+    },
+    "outside_foot_share_normal_walk": {
+      "max": 0.36702568351284176,
+      "median": 0.11917268548916612,
+      "min": 0.03374072913402277,
+      "n": 19
+    },
+    "ankle_moment_ratio_stairs": {
+      "max": 1.7676602141004762,
+      "median": 1.084572511439883,
+      "min": 0.5855986619749134,
+      "n": 248
+    },
+    "ankle_moment_ratio_normal_walk": {
+      "max": 1.6089853128474898,
+      "median": 1.1187929180670653,
+      "min": 0.8302240118563279,
+      "n": 19
+    },
+    "reading": "0 of 242,751 finite stairs pressure-point samples fail L5; the C06 outside-foot share of stairs has median 0.7 percent (normal walk 11.9 percent); ankle moment ratio median 1.085 (normal walk 1.119). The C06 rework fixed the stairs plate-frame error."
+  },
+  "flag_resolutions": {
+    "shuffle_115": {
+      "count": 115,
+      "resolution": "recorded as limitation 'shuffle_not_steady_walking' on each observation; keep out of any walking profile. Export unchanged (family move is an E01 relabel/R01 question). Authors' README: shuffle = walking at 0.4 m/s."
+    },
+    "functional_task_2463": {
+      "count": 2463,
+      "resolution": "recorded as limitation; 1,716 normal_walk + 747 incline_walk cycles with no authors window; not invented as a label. 511 of the 1,716 normal_walk cycles show flight (both legs unloaded 21 percent median of the cycle) so they cannot be walking; for the other 1,205 neither plate pair is available (right plate NaN), so unknown. Keep out of walking profiles.",
+      "flight_normal_walk_unlabelled": {
+        "cycles_with_both_forces": 511,
+        "flight_cycles": 511,
+        "median_both_unloaded_share": 0.2067
+      }
+    },
+    "run_label_795": {
+      "count": 795,
+      "resolution": "Authors' README calls normal_walk 2-0 and 2-5 'walking at 2.0 / 2.5 m/s'. In the data every run-labelled cycle that has both plate forces shows a flight phase (2.0 m/s: 347 of 347, median 17 percent of the cycle with both legs under 20 N; 2.5 m/s: 359 of 359, median 25 percent). Both plates are available for 706 of the 795; 89 cannot be checked. Flight cannot occur in walking, so the 'run' label is supported by the data and NO relabel to walking is needed; the README wording disagrees with the data. No walking control exists (the right plate is NaN in the 1.2 and 1.8 m/s walking cycles), so the statistic is not calibrated against walking. E01-verify's remark that the authors label these run is not right: the README says walking.",
+      "flight": {
+        "run_2-0": {
+          "cycles_with_both_forces": 347,
+          "flight_cycles": 347,
+          "median_both_unloaded_share": 0.1667
+        },
+        "run_2-5": {
+          "cycles_with_both_forces": 359,
+          "flight_cycles": 359,
+          "median_both_unloaded_share": 0.2533
+        }
+      }
+    },
+    "mass_estimated_45": {
+      "observations": 3253,
+      "recordings": 45,
+      "by_participant": {
+        "AB03": {
+          "observations": 870,
+          "recordings": 10
+        },
+        "AB05": {
+          "observations": 424,
+          "recordings": 8
+        },
+        "AB07": {
+          "observations": 825,
+          "recordings": 7
+        },
+        "AB08": {
+          "observations": 518,
+          "recordings": 10
+        },
+        "AB09": {
+          "observations": 128,
+          "recordings": 2
+        },
+        "AB10": {
+          "observations": 449,
+          "recordings": 7
+        },
+        "AB12": {
+          "observations": 39,
+          "recordings": 1
+        }
+      },
+      "resolution": "limitation carried on each observation; factors estimated from force plates (up to about 5 percent for AB09)."
+    },
+    "ab09_divisor": {
+      "observations": 128,
+      "recordings": 2,
+      "resolution": "limitation: nearest listed mass 87.6 kg used, may be off by about 5 percent; dynamic_walk_1 and weighted_walk_1."
+    },
+    "ab07_right_foot": {
+      "observations": 1711,
+      "recordings": 40,
+      "resolution": "limitation carried on all AB07 observations; L5 finds only 42 AB07 observations failing (step-ups 25, agility 1, others); the roughly 30 percent outside-the-marker-foot share from C06 is below the blatant L5 limit and is not a failure here; cause unresolved."
+    },
+    "curb_up_cop_held": {
+      "observations": 268,
+      "recordings": 12,
+      "resolution": "foot-frame pressure point held (E01 held_signals, state not_checked_no_column); lab-axis force and plate pressure point kept."
+    },
+    "nm_rerun_limit": {
+      "observations": 1817,
+      "recordings": 7,
+      "resolution": "limitation: the 7 'exact' rescale recordings were confirmed against a local inverse-dynamics re-run to about 0.04 percent of the peak, not to 1e-3 N*m; moments are not checked here."
+    },
+    "window_span_both_legs": {
+      "observations": 10254,
+      "resolution": "limitation: each of 5,127 spans exported for left and right; all pairs complete (0 unpaired); keeping one leg per span is an R01 scope question."
+    }
+  },
+  "ab05_left_right_cycles": {
+    "observed": "AB05 436 left, 70 right cycles; every participant has more left than right (left 436 to 706, right 70 to 177, summary table).",
+    "cause": "Publisher README line 93: treadmill trials are missing one force plate (the right leg on treadmill trials except declines) due to broken equipment, and cycles come from 20 N heel strikes on the plates. AB05 treadmill recordings have plate_missing right = true (normal_walk 136 cycles, dynamic_walk 88, walk_backward 75 all left only) and the decline walking cycles (36) are right-leg only. Right-leg cycles survive only from overground and both-plate recordings. AB05 has no valid running trials (README) and fewer right-plate recordings than the others.",
+    "not_an_error": "a plate-coverage consequence, not a side swap: S5 passes for all 8,821 other cycles including AB05"
+  },
+  "limitations_source_vs_conversion": "Source limits (treadmill right plate, AB07 zero A/P force and right-foot offset, AB09 divisor, estimated masses, README units note) are recorded separately from conversion fidelity (E01 readback). Preserving them does not approve them.",
+  "profile_statements": "No phase or time profile is produced. The coarse limits apply to every task, protocol and observation type; no range was fitted, widened or tuned; failures are reported, not filtered.",
+  "not_checked": [
+    "moments, powers, forces, velocities, lab-axis pressure point, heading and frontal/transverse columns (no limit)",
+    "literature textbook ranges (never confirmed against a primary text; carried from UM21)",
+    "cause of the foot-angle branch wraps and of the cutting and curb jumps",
+    "whether side-shuffle S5 failures are real",
+    "release admission size limits (R01)",
+    "scientific approval of any family label"
+  ],
+  "remaining": [
+    "Independent verifier (second agent).",
+    "E01 relabel/hold step: hold step_up foot-frame pressure point; decide level_shuffle family, 2,463 functional_task cycles, 511 normal_walk_unlabelled cycles with flight, one leg per span; fix or hold the branch-wrapped angle samples.",
+    "README disagreement about run versus walking should be noted in the release page."
+  ],
+  "next_action": "Independent verifier checks GT23-Q01; then GT23-R01.",
+  "changed_files": [
+    "contributor_tools/run_gt23_q01_assessment.py",
+    "contributor_tools/run_gt23_q01_jobs.py",
+    "tests/test_gt23_q01_assessment.py",
+    "docs/maintainers/handoffs/GT23-Q01.json",
+    "docs/maintainers/backlog.json",
+    "docs/maintainers/backlog.html",
+    "docs/quality/audits/gt23-q01-*"
+  ],
+  "evidence_paths": [
+    "converted_datasets/reconversion_v2/gt23_q01_summary/assessment_summary.json",
+    "docs/quality/audits/gt23-q01-summary-launcher-receipt.json",
+    "converted_datasets/reconversion_v2/gt23_q01_batch_<AB..>/<AB..>/assessment.json"
+  ]
+}

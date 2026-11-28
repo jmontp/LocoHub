@@ -52,9 +52,11 @@ Identical to GaTech_2024_TaskAgnostic Parsed format:
 - Parsed naming: `{subject}_{task_name}_{data_type}.csv`
 - Same column names, sign conventions, and units
 - Exo sign convention: extension positive, flexion negative
-- OpenSim convention: hip flexion+, knee extension+, ankle plantarflexion+
+- Publisher README states the OpenSim convention as hip flexion+, knee extension+, ankle plantarflexion+. OpenSim gait2392 `ankle_angle` is dorsiflexion-positive, and the GT24 source data were found dorsiflexion-positive despite the same README statement (GT24 erratum, `docs/datasets/gt24.md`); the GT25 ankle source sign is under separate review.
 
 ## Sign Conventions Applied in Conversion
+
+> **Sign rule note (2026-10-31).** "Our flexion+" below matches the current rule. Sideways GRF under the rule is positive outward for each leg. The current LocoHub rule is [Signs and frames](../../../docs/reference/index.html#signs-and-frames): joint angles and moments positive in their named direction (knee flexion +), segment angles counterclockwise (pelvis anterior tilt −). This describes the converter's sign mapping; it does not verify existing output files.
 
 - Knee angles: negated (OpenSim extension+ -> our flexion+)
 - Knee moments: negated (same reason)

@@ -1,0 +1,113 @@
+{
+  "task_id": "CORE-06",
+  "title": "Close low-severity release builder gaps",
+  "status": "review",
+  "last_checked_at_utc": "2026-10-31T12:00:00Z",
+  "resource_class": "fixture",
+  "research_data_read": false,
+  "scientific_approval": false,
+  "authorizes_publication": false,
+  "summary": "V1, V2, G3, G4, G7 and G8 are fixed in the release builder with fixture tests. The four strict-xfail markers (V1, V2, G7, G8) became XPASS(strict) after their fixes and were then removed; no assertion was changed. G2 is not decided; a José decision is drafted below for the coordinator to copy into backlog.json.",
+  "fixes": {
+    "V1": "_publish_files_exclusively now unlinks every staged name after the hash check and before removing the marker. If an unlink fails, the existing rollback runs, so no staged hard link to a published file survives a completed publish. The stage directory is still removed best-effort afterwards.",
+    "V2": "The staged-file guard now also refuses symlinks (is_file() and not is_symlink()).",
+    "G3": "Labelled, not required. If review.scope is present it must be a nonempty string; otherwise ReleaseError. When it is absent, a limitation says the scope is not stated. The manifest gains declared_by_contributor: [converter, review]; the review stays verbatim. README now reads 'Source review declared by the contributor: X at T; scope: S|not declared. The builder did not verify this review.' and 'Converter (declared by the contributor): ...'. Requiring scope was not chosen: it would break existing contributor provenance files and fixtures, and making it required is closer to a policy choice (see G2).",
+    "G4": "New _read_admitted_input. It opens the input and requires the open file to be the file at the path (os.path.samestat). Its Parquet footer (rows, columns, uncompressed bytes) must equal the admitted values before any eager read. It reads through /proc/self/fd of that open file when /proc exists, then re-hashes the same handle against the pre-admission hash. A replaced input is therefore rejected unread. Without /proc (native Windows), the only unguarded window is between the identity check and the read. pq.read_table is still the read call, so existing monkeypatch-based tests keep working unchanged.",
+    "G7": "Round 1 refused the release cleanly (TypeError became ReleaseError). Round 2: CORE-08 fixed the root cause in data_contract.py, so the refusal branch is removed. Categorical identities, single- or multi-category, release like plain strings, and the filtered row order no longer depends on category order.",
+    "G8": "verified_local sources whose URI has a non-file scheme of two or more letters (e.g. https; a Windows drive letter is excluded) add a limitation: 'Remote source URIs were not downloaded; their checksums were verified only against local copies ...'. The status stays verified_local, and the source entry keys are unchanged."
+  },
+  "changed_files": [
+    "contributor_tools/build_dataset_release.py (V1, V2, G3, G4, G8; G7 branch removed in round 2; categorical-order-stable filtered sort; applicability enforcement; docstring)",
+    "contributor_tools/DATA_CONTRACT.md ('Release creation' section only)",
+    "tests/test_release_builder_gaps.py (new, synthetic)",
+    "tests/test_dataset_release.py (round 2: profile fixture gained a synthetic applicability block; no assertion changed)",
+    "tests/test_release_lineage_adversarial.py (round 2: profile fixture gained a synthetic applicability line; no assertion changed)",
+    "tests/test_release_publish_drvfs.py (round 2: profile fixture gained a synthetic applicability block)",
+    "tests/test_release_publish_drvfs_verify.py (round 1: only the V1 and V2 xfail decorators removed; the verifier made later edits)",
+    "tests/test_release_lineage_verify.py (round 1: only the G7 and G8 xfail decorators removed; the verifier made later edits)",
+    "docs/maintainers/handoffs/CORE-06.json (this file)"
+  ],
+  "unchanged_files_confirmed": [
+    "contributor_tools/common/data_contract.py",
+    "docs/maintainers/backlog.json",
+    "docs/maintainers/backlog.html",
+    "AGENTS.md"
+  ],
+  "failing_then_passing": [
+    {
+      "gap": "V1, V2",
+      "before": "After the fix, before marker removal: 4 XPASS(strict) in tests/test_release_publish_drvfs_verify.py (linux and drvfs each)",
+      "after": "markers removed; pass"
+    },
+    {
+      "gap": "G7, G8",
+      "before": "After the fix, before marker removal: 2 XPASS(strict) in tests/test_release_lineage_verify.py",
+      "after": "markers removed; pass"
+    },
+    {
+      "gap": "G3, G4, G7-CLI",
+      "before": "Run against the unfixed builder: 10 of 11 tests in tests/test_release_builder_gaps.py failed. The multi-category test passed, as expected for preserved behaviour.",
+      "after": "11 passed"
+    },
+    {
+      "gap": "G4 note",
+      "detail": "test_input_edited_during_the_read_is_rejected pins already-existing hash rejection under the new read path; it is a regression test, not a demonstration of G4. Its pre-fix failure in the 10-of-11 run came from an earlier version of the test that patched ParquetFile.read; it now patches pq.read_table."
+    }
+  ],
+  "checks": [
+    {
+      "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_release_builder_gaps.py tests/test_release_publish_drvfs.py tests/test_release_publish_drvfs_verify.py tests/test_release_lineage_adversarial.py tests/test_release_lineage_verify.py tests/test_dataset_release.py tests/test_backlog_workflow.py -rxXs",
+      "result": "226 passed, no warnings, nothing skipped (the drvfs cases ran)"
+    },
+    {
+      "command": "python3 contributor_tools/build_backlog_page.py --check",
+      "result": "Backlog valid; HTML current (89 tasks)."
+    }
+  ],
+  "file_sha256": {
+    "contributor_tools/build_dataset_release.py": "042113ac83c022f420eb5bde1e256e290dd331eedea32bcfd9c92f14f87bbd81",
+    "tests/test_release_builder_gaps.py": "f08dcbb623db375f4e4ed079c50f5832fb2ee82f8cecc745b3eaf13de637c400",
+    "tests/test_dataset_release.py": "5778614a82f196b377a05be32988a3637e715e6b6de3a653441b22706fd6c7bf",
+    "tests/test_release_lineage_adversarial.py": "a0454e133ca1a11accc301fe1f08e0fed2a69b35eb0bb90d227d1ccad4feb0e2",
+    "tests/test_release_publish_drvfs.py": "ccaa838c7769bafb89bb1e8d42d60c53ede2e855b7a82f33b63b9f8fcb7cd9e3"
+  },
+  "remaining": [
+    "G2 is handled by CORE-09 under the conventional default; D-CORE-06-1 is withdrawn.",
+    "G4 on native Windows (no /proc) keeps a small identity-check-to-read window, as documented.",
+    "Independent verification by a second agent."
+  ],
+  "next_action": "Verifier: rerun the check command. Confirm that the round-2 fixture edits only add applicability blocks, that the G7 refusal branch is gone, and that the filtered order is stable under reversed categories.",
+  "round_2": {
+    "trigger": "CORE-08 fixed the G7 root cause in data_contract.py and added profile_applicability_gaps().",
+    "changes": [
+      "G7: removed the builder's TypeError-to-ReleaseError refusal branch (now dead). My CLI refusal test became test_single_category_identity_releases_like_plain_strings: the same counts and an identical filtered table to the plain-string build.",
+      "Row order: with categories declared out of alphabetical order, the filtered export's row order differed. _filtered_rows sorted by category order, so a categorical build put b_in before a_in while the plain-string build put a_in first. Fixed by sorting categorical identity keys by value (cast to object); the output keeps the source column encoding. The new test test_filtered_row_order_ignores_categorical_category_order fails with the old _filtered_rows and passes now.",
+      "Applicability: build_release raises ReleaseError when the profile is marked reviewed or approved and profile_applicability_gaps(config) lists any task. This happens before any read. Legacy profiles without a status are unaffected (they keep their existing limitation). New tests: refusal for reviewed and approved (both fail with the check disabled), and a legacy profile without applicability still releases.",
+      "Fixtures: reviewed-profile fixtures gained the synthetic block 'applicability: {task: [level_walking]}', which restricts each profile only to its own task. They are in tests/test_dataset_release.py, tests/test_release_lineage_adversarial.py, tests/test_release_publish_drvfs.py and tests/test_release_builder_gaps.py. No assertion was changed. The verifier had already updated its two files (population: synthetic), and I did not edit them in this round.",
+      "DATA_CONTRACT.md release section: one sentence says release creation refuses reviewed/approved profiles with a task lacking applicability."
+    ],
+    "failing_then_passing": "A scratchpad pytest plugin restored the pre-change behaviour. With the applicability check removed, 2 tests failed; with the old _filtered_rows, 1 test failed. All pass with the current code.",
+    "checks": [
+      {
+        "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_release_builder_gaps.py tests/test_release_publish_drvfs.py tests/test_release_publish_drvfs_verify.py tests/test_release_lineage_adversarial.py tests/test_release_lineage_verify.py tests/test_dataset_release.py tests/test_backlog_workflow.py -rxXs",
+        "result": "226 passed, no warnings, nothing skipped (the drvfs cases ran)"
+      },
+      {
+        "command": "python3 contributor_tools/build_backlog_page.py --check",
+        "result": "Backlog valid; HTML current (89 tasks)."
+      }
+    ],
+    "file_sha256": {
+      "contributor_tools/build_dataset_release.py": "042113ac83c022f420eb5bde1e256e290dd331eedea32bcfd9c92f14f87bbd81",
+      "tests/test_release_builder_gaps.py": "f08dcbb623db375f4e4ed079c50f5832fb2ee82f8cecc745b3eaf13de637c400",
+      "tests/test_dataset_release.py": "5778614a82f196b377a05be32988a3637e715e6b6de3a653441b22706fd6c7bf",
+      "tests/test_release_lineage_adversarial.py": "a0454e133ca1a11accc301fe1f08e0fed2a69b35eb0bb90d227d1ccad4feb0e2",
+      "tests/test_release_publish_drvfs.py": "ccaa838c7769bafb89bb1e8d42d60c53ede2e855b7a82f33b63b9f8fcb7cd9e3"
+    }
+  },
+  "decision_draft_withdrawn": {
+    "id": "D-CORE-06-1",
+    "status": "withdrawn",
+    "reason": "The CORE-06 verifier ruled that G2 has a conventional default (reviewed/approved profiles record reviewer and a timezone-stamped date; scope optional but labelled), so José is not asked. That default is implemented in CORE-09. Do not copy this decision into backlog.json."
+  }
+}

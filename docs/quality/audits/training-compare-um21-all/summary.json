@@ -1,0 +1,336 @@
+{
+  "code_sha256": {
+    "contributor_tools/compare_training_vs_locohub.py": "dea9a23f03370898ddf005f4643de4499b9933d79f9683b7313f89df3a5fd3d7"
+  },
+  "counts": {
+    "alignment_rows_by_status": {
+      "alignment_failed": 19,
+      "matched": 264,
+      "no_candidate": 422,
+      "strides_not_in_a_matched_segment": 10
+    },
+    "unmatched_by_reason": {
+      "alignment failed (best moment RMS 0.106 Nm/kg)": 1,
+      "alignment failed (best moment RMS 0.113 Nm/kg)": 1,
+      "alignment failed (best moment RMS 0.123 Nm/kg)": 1,
+      "alignment failed (best moment RMS 0.128 Nm/kg)": 1,
+      "alignment failed (best moment RMS 0.132 Nm/kg)": 1,
+      "alignment failed (best moment RMS 0.133 Nm/kg)": 1,
+      "alignment failed (best moment RMS 0.137 Nm/kg)": 1,
+      "alignment failed (best moment RMS 0.139 Nm/kg)": 1,
+      "alignment failed (best moment RMS 0.147 Nm/kg)": 1,
+      "alignment failed (best moment RMS 0.149 Nm/kg)": 2,
+      "alignment failed (best moment RMS 0.159 Nm/kg)": 1,
+      "alignment failed (best moment RMS 0.173 Nm/kg)": 1,
+      "alignment failed (best moment RMS 0.176 Nm/kg)": 1,
+      "alignment failed (best moment RMS 0.181 Nm/kg)": 1,
+      "alignment failed (best moment RMS 0.192 Nm/kg)": 1,
+      "alignment failed (best moment RMS 0.196 Nm/kg)": 1,
+      "alignment failed (best moment RMS 0.201 Nm/kg)": 1,
+      "alignment failed (best moment RMS 0.252 Nm/kg)": 1,
+      "incline recording not in package v4": 31,
+      "no training segment for this incline": 3,
+      "not a treadmill collection (not in package v4)": 422
+    }
+  },
+  "dataset": "um21",
+  "error": null,
+  "locohub_inputs": {
+    "None": [
+      "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/um21_r01_package_v4/full_phase.parquet",
+      "um21_r01_package_v4"
+    ]
+  },
+  "mapping": {
+    "columns": [
+      {
+        "locohub_column": "ankle_dorsiflexion_angle_{R}_rad",
+        "locohub_offset_in_unit": 0.0,
+        "name": "ankle_angle",
+        "note": "",
+        "reporting_size": 2.0,
+        "scale_from_raw": 57.29577951308232,
+        "sign": 1.0,
+        "training_column": "ankle_dorsiflexion_angle_ipsi_rad",
+        "training_validity_flag": "",
+        "unit": "deg"
+      },
+      {
+        "locohub_column": "shank_sagittal_angle_{R}_rad",
+        "locohub_offset_in_unit": 0.0,
+        "name": "shank_angle",
+        "note": "training UM21 values include its own -2 x pelvis tilt correction; training GT21 values were built on the old pelvis tilt",
+        "reporting_size": 2.0,
+        "scale_from_raw": 57.29577951308232,
+        "sign": 1.0,
+        "training_column": "shank_sagittal_angle_ipsi_rad",
+        "training_validity_flag": "",
+        "unit": "deg"
+      },
+      {
+        "locohub_column": "foot_sagittal_angle_{R}_rad",
+        "locohub_offset_in_unit": 0.0,
+        "name": "foot_angle",
+        "note": "same note as shank_angle; angle zero differs (static pose vs gravity)",
+        "reporting_size": 2.0,
+        "scale_from_raw": 57.29577951308232,
+        "sign": 1.0,
+        "training_column": "foot_sagittal_angle_ipsi_rad",
+        "training_validity_flag": "",
+        "unit": "deg"
+      },
+      {
+        "locohub_column": "ankle_dorsiflexion_velocity_{R}_rad_s",
+        "locohub_offset_in_unit": 0.0,
+        "name": "ankle_velocity",
+        "note": "training value is its own backward difference of the sampled angle; LocoHub value is the source or stride slope; a method difference, not a data error",
+        "reporting_size": 20.0,
+        "scale_from_raw": 57.29577951308232,
+        "sign": 1.0,
+        "training_column": "dtheta_raw",
+        "training_validity_flag": "",
+        "unit": "deg/s"
+      },
+      {
+        "locohub_column": "ankle_dorsiflexion_moment_{R}_Nm_kg",
+        "locohub_offset_in_unit": 0.0,
+        "name": "ankle_moment",
+        "note": "",
+        "reporting_size": 0.05,
+        "scale_from_raw": 1.0,
+        "sign": 1.0,
+        "training_column": "ankle_dorsiflexion_moment_ipsi_Nm_kg",
+        "training_validity_flag": "",
+        "unit": "Nm/kg"
+      },
+      {
+        "locohub_column": "grf_vertical_{R}_BW",
+        "locohub_offset_in_unit": 0.0,
+        "name": "vertical_force",
+        "note": "training GT21 force is its own sidecar; LocoHub UM21 package has no force (reported as unavailable)",
+        "reporting_size": 0.05,
+        "scale_from_raw": 1.0,
+        "sign": 1.0,
+        "training_column": "grf_vertical_ipsi_BW",
+        "training_validity_flag": "fz_measured",
+        "unit": "BW"
+      },
+      {
+        "locohub_column": "cop_anterior_{R}_m",
+        "locohub_offset_in_unit": 0.1,
+        "name": "cop_anterior",
+        "note": "training: m from the ankle joint centre along the foot axis; LocoHub: origin 100 mm forward of the ankle joint centre; LocoHub + shift is compared, so bias also contains any difference between the two ankle-centre definitions",
+        "reporting_size": 0.02,
+        "scale_from_raw": 1.0,
+        "sign": 1.0,
+        "training_column": "cop_anterior_ipsi_m",
+        "training_validity_flag": "cop_ok",
+        "unit": "m"
+      }
+    ],
+    "locohub_unmapped": {
+      "ipsi": [
+        "ankle_dorsiflexion_power_ipsi_W_kg",
+        "assessment_id",
+        "cop_lateral_ipsi_m",
+        "cop_vertical_ipsi_m",
+        "failed_limits",
+        "foot_sagittal_velocity_ipsi_rad_s",
+        "held_signals",
+        "hip_flexion_angle_ipsi_rad",
+        "hip_flexion_moment_ipsi_Nm_kg",
+        "hip_flexion_power_ipsi_W_kg",
+        "knee_flexion_angle_ipsi_rad",
+        "knee_flexion_moment_ipsi_Nm_kg",
+        "knee_flexion_power_ipsi_W_kg",
+        "limitations",
+        "lineage_id",
+        "observation_id",
+        "observation_type",
+        "pelvis_sagittal_angle_rad",
+        "pelvis_sagittal_velocity_rad_s",
+        "phase_ipsi",
+        "quality_status",
+        "reference_side",
+        "shank_sagittal_velocity_ipsi_rad_s",
+        "source_end_time_s",
+        "source_export",
+        "source_recording_id",
+        "source_start_time_s",
+        "subject",
+        "task",
+        "task_id",
+        "task_info",
+        "thigh_sagittal_angle_ipsi_rad",
+        "thigh_sagittal_velocity_ipsi_rad_s"
+      ]
+    },
+    "reporting_sizes_note": "sizes decide which differences are counted in frac_exceed; they are reporting sizes, not quality limits",
+    "training_unmapped": [
+      {
+        "column": "recording_id",
+        "role": "key (subject | collection_id, joins marked +k)"
+      },
+      {
+        "column": "subject",
+        "role": "key"
+      },
+      {
+        "column": "dataset",
+        "role": "constant label"
+      },
+      {
+        "column": "task",
+        "role": "group label (reporting only)"
+      },
+      {
+        "column": "task_id",
+        "role": "label, not read"
+      },
+      {
+        "column": "task_info",
+        "role": "label text, not read"
+      },
+      {
+        "column": "step",
+        "role": "training step counter, not read"
+      },
+      {
+        "column": "time_s",
+        "role": "time key"
+      },
+      {
+        "column": "dt_s",
+        "role": "constant 0.005, not read"
+      },
+      {
+        "column": "dpsi_raw",
+        "role": "training backward difference of shank angle; LocoHub GT21 and UM21 have no shank speed column"
+      },
+      {
+        "column": "dphi_raw",
+        "role": "training backward difference of foot angle; LocoHub has no foot speed column"
+      },
+      {
+        "column": "dtheta_f15",
+        "role": "training 15 Hz low-pass of dtheta_raw (training-only derived signal)"
+      },
+      {
+        "column": "dpsi_f15",
+        "role": "training 15 Hz low-pass of dpsi_raw (training-only derived signal)"
+      },
+      {
+        "column": "swing",
+        "role": "training mask"
+      },
+      {
+        "column": "wc_weight",
+        "role": "training weight"
+      },
+      {
+        "column": "window_ok",
+        "role": "training mask"
+      },
+      {
+        "column": "loss_mask",
+        "role": "training mask"
+      }
+    ]
+  },
+  "partition": "gate",
+  "peak_rss_mib": 208.7,
+  "per_subject": {
+    "AB01": {
+      "locohub_file": "converted_datasets/reconversion_v2/um21_r01_package_v4/full_phase.parquet",
+      "peak_rss_mib": 181.3,
+      "seconds": 4.5
+    },
+    "AB02": {
+      "locohub_file": "converted_datasets/reconversion_v2/um21_r01_package_v4/full_phase.parquet",
+      "peak_rss_mib": 194.2,
+      "seconds": 4.7
+    },
+    "AB03": {
+      "locohub_file": "converted_datasets/reconversion_v2/um21_r01_package_v4/full_phase.parquet",
+      "peak_rss_mib": 198.7,
+      "seconds": 4.7
+    },
+    "AB04": {
+      "locohub_file": "converted_datasets/reconversion_v2/um21_r01_package_v4/full_phase.parquet",
+      "peak_rss_mib": 200.6,
+      "seconds": 4.7
+    },
+    "AB05": {
+      "locohub_file": "converted_datasets/reconversion_v2/um21_r01_package_v4/full_phase.parquet",
+      "peak_rss_mib": 201.6,
+      "seconds": 4.7
+    },
+    "AB06": {
+      "locohub_file": "converted_datasets/reconversion_v2/um21_r01_package_v4/full_phase.parquet",
+      "peak_rss_mib": 208.7,
+      "seconds": 8.8
+    },
+    "AB07": {
+      "locohub_file": "converted_datasets/reconversion_v2/um21_r01_package_v4/full_phase.parquet",
+      "peak_rss_mib": 208.7,
+      "seconds": 3.9
+    },
+    "AB08": {
+      "locohub_file": "converted_datasets/reconversion_v2/um21_r01_package_v4/full_phase.parquet",
+      "peak_rss_mib": 208.7,
+      "seconds": 3.8
+    },
+    "AB09": {
+      "locohub_file": "converted_datasets/reconversion_v2/um21_r01_package_v4/full_phase.parquet",
+      "peak_rss_mib": 208.7,
+      "seconds": 3.8
+    },
+    "AB10": {
+      "locohub_file": "converted_datasets/reconversion_v2/um21_r01_package_v4/full_phase.parquet",
+      "peak_rss_mib": 208.7,
+      "seconds": 3.8
+    }
+  },
+  "schema": "locohub.training_compare/1",
+  "scientific_approval": false,
+  "seconds": 47.5,
+  "settings": {
+    "align_rms_tol_Nm_kg": 0.1,
+    "cop_origin_shift_m": 0.1,
+    "hist_bin_width_rule": "reporting size / 200, 10000 bins",
+    "min_overlap_fraction": 0.3,
+    "min_overlap_n": 100,
+    "um21_side": "right"
+  },
+  "status": "complete",
+  "subjects_run": [
+    "AB01",
+    "AB02",
+    "AB03",
+    "AB04",
+    "AB05",
+    "AB06",
+    "AB07",
+    "AB08",
+    "AB09",
+    "AB10"
+  ],
+  "training_file": "/mnt/s/workspace_docs/energy shaping ml/esml_research/LocoHub/es_prepared/gate/umich_2021_time.parquet",
+  "training_file_bytes": 80968332,
+  "training_subjects": [
+    "AB01",
+    "AB02",
+    "AB03",
+    "AB04",
+    "AB05",
+    "AB06",
+    "AB07",
+    "AB08",
+    "AB09",
+    "AB10"
+  ],
+  "unavailable_in_locohub": {
+    "ankle_velocity": "column absent from the LocoHub phase table",
+    "vertical_force": "column absent from the LocoHub phase table"
+  }
+}

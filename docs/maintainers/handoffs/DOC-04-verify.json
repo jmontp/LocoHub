@@ -1,0 +1,73 @@
+{
+  "task_id": "DOC-04",
+  "verifier_role": "independent second agent; read only the snapshot YAML range values, page HTML and generator code; no research data opened; worker files, backlog and AGENTS.md not edited",
+  "verdict": "done",
+  "last_checked_at_utc": "2026-10-31T12:30:00Z",
+  "summary": "Both acceptance items hold: the 20 snapshots are byte-identical to 569ee8f and docs/build.py --check passes. The label text agrees with the snapshot values and with the CORE-07 verifier's finding. All 40 snapshot links on the 20 dataset pages carry the label linked to the reference's #signs-and-frames section. The hash gate in manage_dataset_documentation.py cannot attach the label to a changed or fresh snapshot. The pages render cleanly at true 390 and 1100 px. One optional wording refinement: 9 of the 20 snapshots have no walking or stair pelvis entries.",
+  "checks": [
+    {
+      "id": 1,
+      "area": "snapshot identity",
+      "result": "pass",
+      "evidence": "git diff --quiet 569ee8f -- docs/datasets/*_validation_ranges.yaml exits 0. There are 20 files in 4 byte-identical families: 85db… ×11 (generated 2025-11-25: ca23 fa16 fr12 ha13 ha23 mo15 ta21 ta22 ti19 vz22 wa23), fc02… ×5 (gt21 gt23 gt24 mb24 um21), f21f… ×3 (ga26 gt25d sp50) and 6abe… ×1 (um24k). These are exactly the four hashes in LEGACY_PELVIS_SIGN_SNAPSHOT_SHA256."
+    },
+    {
+      "id": 2,
+      "area": "label accuracy against the YAML values",
+      "result": "pass (optional wording note)",
+      "evidence": [
+        "Run pelvis_sagittal_angle_rad is identical in all four families: [-0.05,0.67] / [-0.05,0.63] / [-0.05,0.68] / [-0.05,0.63] at 0/25/50/75%, centred about +0.30 rad. Under rule B that is about 17° posterior tilt while running, so it reads anterior-positive (old sign). This agrees with CORE-07-verify round 1 check 2.",
+        "Walking and stair (85db family only, checked in ca23): incline centres are +0.07…+0.24, stair_ascent +0.25/+0.19 and decline −0.32…−0.17. Incline and stair ascent sit above level, and level above decline, so they read anterior-positive. This agrees with CORE-07-verify round 2 ('they read anterior-positive, not mixed').",
+        "Sit/stand: sit_to_stand centres go from +0.33 seated to −0.22 mid-rise, and stand_to_sit goes negative while lowering. Forward tilt while rising and lowering is negative, so these already read as rule B. The label correctly makes no claim about them. Transition bands are near-symmetric and are not mentioned.",
+        "Optional note: the fc02, f21f and 6abe families (9 snapshots) contain pelvis entries only for run, sit/stand and transition, with no walking or stair pelvis entries. On those pages the 'walking and stair' part of the label refers to entries that do not exist. That is harmless (no current-sign entry is mislabelled), but 'run (and, where present, walking and stair) pelvis entries' would be exact."
+      ]
+    },
+    {
+      "id": 3,
+      "area": "every snapshot link labelled",
+      "result": "pass",
+      "evidence": "I parsed every docs/datasets/*/index.html. 20 pages link a snapshot, each twice (40 links), and each link is followed within its list item or paragraph by <small class=\"legacy-sign-label\">. That makes 40 labels, each with the single href ../../reference/index.html#signs-and-frames and the stated text. The anchor id='signs-and-frames' exists once in docs/reference/index.html. No other HTML, JS or JSON file under docs/ (excluding maintainers and audits) links a *_validation_ranges.yaml."
+    },
+    {
+      "id": 4,
+      "area": "hash-gated template logic",
+      "result": "pass",
+      "evidence": [
+        "_legacy_snapshot_label reads DOCS_DATASETS_DIR/<basename> and returns the label only if its SHA-256 is one of the four legacy hashes. It returns '' for None, a missing file or an OSError.",
+        "Scratchpad probe with DOCS_DATASETS_DIR redirected to a scratch folder: a byte copy of the gt21 snapshot gets the label; current default_ranges.yaml (a fresh snapshot) gets ''; a legacy copy with one appended comment line gets ''; a missing name and a traversal name ('../../etc/passwd', reduced to its basename) both get ''. The real gt21 snapshot path gets the label.",
+        "Ordering: in the add/update-validation flows, _snapshot_validation_ranges copies the new snapshot (shutil.copyfile) before generate_dataset_page and generate_validation_page compute the label. A regenerated snapshot is therefore hashed after it is written, so a page cannot keep a stale label. update-documentation does not rewrite the snapshot and hashes the existing file.",
+        "Residual by design: a re-snapshot of old-sign ranges whose bytes differ (e.g. a new 'generated' timestamp) would get no label, so the gate can miss a label but cannot attach a wrong one. The CORE-07 tests pin the 20 snapshots' bytes, which bounds this."
+      ]
+    },
+    {
+      "id": 5,
+      "area": "rendering",
+      "result": "pass",
+      "evidence": "Playwright with system Chrome at true 390x900 and 1100x900 viewports on um21, ca23 and gt24: document overflow 0 px, both labels visible on each page. Inspected um21 at 390 and gt24 at 1100. The small label wraps under the Validation Ranges link and is legible, and it is an underlined link."
+    },
+    {
+      "id": 6,
+      "area": "gates and tests",
+      "result": "pass",
+      "evidence": "Under the AGENTS.md prefix: docs/build.py --check → 'Checked 40 HTML pages and 1681 referenced assets.' (exit 0); tests/test_data_documentation.py, test_quality_page.py, test_data_preview.py and test_static_aggregate_preview.py → 21 passed; tests/test_validation_ranges_rule_b.py and test_validation_ranges_rule_b_verify.py (snapshot pins) → 120 passed; build_backlog_page.py --check → 'Backlog valid; HTML current (93 tasks).'"
+    }
+  ],
+  "required_fixes": [],
+  "optional": [
+    "Narrow the label to 'run (and, where present, walking and stair) pelvis entries use the old anterior-positive sign', so it is exact for the 9 snapshots that have no walking or stair pelvis entries. Apply it in LEGACY_PELVIS_SIGN_LABEL and the 40 HTML labels together."
+  ],
+  "questions_for_jose": [],
+  "artifact_hashes": {
+    "contributor_tools/manage_dataset_documentation.py": "9c65c03fcbfed5af..."
+  },
+  "test_runs": [
+    {"command": "git diff --quiet 569ee8f -- docs/datasets/*_validation_ranges.yaml", "result": "identical"},
+    {"command": "scratchpad doc04 probe of _legacy_snapshot_label with DOCS_DATASETS_DIR redirected", "result": "label only for the byte-identical legacy copy"},
+    {"command": "scratchpad doc04/shoot.py (Playwright, 390 and 1100 px)", "result": "overflow 0; 2 visible labels per page"},
+    {"command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 docs/build.py --check", "result": "exit 0; 40 HTML pages, 1681 assets"},
+    {"command": "same prefix: pytest -q -p no:cacheprovider tests/test_data_documentation.py tests/test_quality_page.py tests/test_data_preview.py tests/test_static_aggregate_preview.py", "result": "21 passed"},
+    {"command": "same prefix: pytest -q -p no:cacheprovider tests/test_validation_ranges_rule_b.py tests/test_validation_ranges_rule_b_verify.py", "result": "120 passed"},
+    {"command": "python3 contributor_tools/build_backlog_page.py --check", "result": "Backlog valid; HTML current (93 tasks)"}
+  ],
+  "next_action": "Coordinator moves DOC-04 to done. The optional wording narrowing can be applied in any later docs edit."
+}

@@ -1,0 +1,215 @@
+{
+  "task_id": "GT21-RB01",
+  "status": "review_all_parts_done",
+  "scientific_approval": false,
+  "last_checked_at_utc": "2026-11-24T02:10:00+00:00",
+  "summary": "All of GT21-RB01 ran: six extractions, inventory of 22 (3,147 recordings), SubjectInfo copy beside the extracted six, and the label and subject export for all 22 (AB06 re-run first as the pilot, then 21 one at a time, all with the approved bound code). Labels and weights compared with the inventory, the crosswalk and the earlier 1,680-recording terrain check.",
+  "code": {
+    "runner": {
+      "path": "contributor_tools/run_gt21_rb01.py",
+      "sha256": "ce3d2db4d122ae3933612228cbf3ceea80542d853f91d51ce10c27cf975516a8",
+      "subcommands": [
+        "extract --subject ABxx --out-root R --ledger L",
+        "inventory --out-root R"
+      ]
+    },
+    "spec_builder": "contributor_tools/build_gt21_rb01_specs.py (writes docs/quality/audits/gt21-rb01-extract-<ID>-spec.json; inventory spec is written only after the six extraction ledgers exist, because it binds them)",
+    "specs_written": [
+      "AB17",
+      "AB12",
+      "AB15",
+      "AB19",
+      "AB23",
+      "AB28 (extract specs, not yet dry-run)"
+    ],
+    "tests": [
+      "tests/test_run_gt21_rb01.py (7, synthetic zip and trees)",
+      "tests/test_guarded_launcher_native.py (7, fake host)"
+    ],
+    "test_command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_run_gt21_rb01.py tests/test_guarded_launcher_native.py -> 14 passed"
+  },
+  "extraction_design": {
+    "inputs": "/mnt/s/locomotion_data/gt21_author_mirror_2024/<ID>/<ID>.zip (AB23: AB23_attempt2/AB23.zip; the first AB23 download is .rejected and unused) with its acquisition manifest, result and the bound expected 2024 listing.",
+    "new_root": "/mnt/s/locomotion_data/gt21_author_mirror_2024_extracted/<ID>/<session>/... (same layout as the local 16); per-member ledger outside the participant folder at .../_ledgers/<ID>_extraction.json",
+    "checks_before_any_write": "zip sha256 and size equal the acquisition; every member name, size and CRC32 in the zip directory equal the manifest; every size equals the bound listing; no unsafe name, symlink, encryption or duplicate; disk free >= member bytes + 5 GiB.",
+    "checks_while_writing": "1 MiB streaming, exclusive create, fsync, recomputed size, CRC32 and sha256 equal the directory and the manifest.",
+    "deviation_from_acceptance": "The acceptance line says the 2024 listing is re-read before each extraction. That is a network read of the live folder. The zips are already on disk and were verified by sha256 after the acquisition job re-listed the folder before and after download, so the runner re-hashes the zip instead and binds the listing. If José wants a fresh live re-listing of AB28 it is a separate network step.",
+    "ab17_2021_vs_2024": "Already measured by GT21-S02 from central directories (converted_datasets/reconversion_v2/gt21_s02_author_mirror_20261031/AB17_v1_vs_2024_crc.json): 1464 identical, 136 only in 2024 (133 ik_offset + 3 static), 2 ramp id files differ in size. No separate comparison job is planned; the report should bind that file."
+  },
+  "inventory_design": "One stat-only job over the 16 local and 6 extracted participants; writes recording_ledger.jsonl (3,147 rows: subject, source, session, mode, recording, size of each of the 12 channel files) and inventory_summary.json with the per-mode count checks. This ledger is the index the merged plate/force plus model-fit pass can read once per recording. It does not open any MAT file.",
+  "native_extension": {
+    "status": "AB06 pilot run (r5 completed, clean); changes after the re-review need a short re-review; the other 21 not run",
+    "module": "contributor_tools/guarded_launcher_native.py",
+    "module_sha256": "fc40e59247241948df8269840eb730bcafe68270fb88d04bd91eaea67c68bb98",
+    "export_script": "contributor_tools/conversion_scripts/Gtech_2021/gt21_rb01_label_export.m",
+    "export_script_sha256": "452fe6687226edeb94a77c96d0ec7194ca918dd53c84a942abac59a6769339a2",
+    "exactly_what_it_will_run": "One MATLAB R2023b start per participant, via PowerShell Start-Process (hidden, stdout and stderr to a log on S:): C:\\Program Files\\MATLAB\\R2023b\\bin\\matlab.exe -batch \"addpath('<repo script dir>'); gt21_rb01_label_export('<source root>','<new output folder>','AB##','<run nonce>')\" -singleCompThread. The script reads SubjectInfo.mat and <source>/<ID>/<session>/<mode>/conditions/*.mat only, and writes labels_<ID>.jsonl (one line per recording: Label run windows with Header start/end, rampIncline, stairHeight, Speed range, column names) and subject_info_<ID>.json (all columns, VariableUnits, Weight literal to 17 digits) into the new folder, exclusively. It converts, filters and infers nothing. 22 starts, AB06 first (includes stair_1_l_01_02), local participants read from the repo source folder, the six from the extracted root.",
+    "limits_enforced": "timeout <= 1800 s; poll 15 s; Windows working set of the process tree <= 2048 MiB (polled); Windows free >= 2816 MiB at start and >= 2048 MiB while running; Linux available >= 3584 / 2048 MiB; output volume >= 5 GiB; envelope sha, bindings, no Linux or Windows worker (any running MATLAB refuses), one launch per ancestor via the existing ledger. No existing limit is changed.",
+    "stop_and_cleanup": "Only the recorded Windows PID tree, only after its creation time and the run nonce in its command line still match; taskkill /T, 30 s grace, then /F /T; afterwards the tree must be proven gone and the Windows census must show no new worker. Never stops by image name.",
+    "known_gaps_for_reviewer": [
+      "Working-set cap is polled every 15 s, not enforced.",
+      "Whether bin\\matlab.exe stays alive as parent for -batch is unverified (B2 covers both); the supervised AB06 pilot settles it.",
+      "After-run Windows census flags any new matlab* helper process; the pilot lists them before any exemption.",
+      "Earlier receipts record the pre-B1 launcher hash 8df6f115...; the launcher changed after those jobs only by the is_launcher_cli line."
+    ],
+    "next_for_review": "Independent reviewer checks the module and script against this list, runs tests, and records pass or changes. Only then the AB06 pilot (preflight dry run first), then the other 21 one at a time.",
+    "launcher_sha256_after_b1": "372519f9dd1f52510f747eed3779044765fdc158b08ca007deb8d6d8708c844f",
+    "review_fixes": {
+      "B1": "guarded_launcher.is_launcher_cli now also accepts python -m contributor_tools.guarded_launcher_native (only through -m; -c, other modules and look-alike names stay counted). Census not overridden. Tests: real Host.linux_census over a fake /proc shows the native CLI exempt, the look-alikes counted, an unrelated python -c process counted; full launcher suites rerun (148 passed with the RB01 runner tests).",
+      "B2": "When the recorded root PID has no row, find_matlab_by_nonce looks for matlab* processes whose command line carries the run nonce (3 tries, 2 s apart), adopts the earliest root, records from/to PID and creation time in receipt field adoptions, and keeps watching and stopping the adopted identity. A start_matlab exception triggers the same search; none found = launcher_error. Root gone with no orphan and outputs missing = failed_outputs_missing (never completed). Fake-host tests for each.",
+      "table_names": "gt21_rb01_label_export.m reads SubjectInfo via info.data, else the single variable, else errors.",
+      "hardening": "source_root restricted to the repo CAMARGO folder and the extracted-six root; output_root to converted_datasets/reconversion_v2; per-recording jsonencode wrapped in try/catch (an error line instead of aborting the participant).",
+      "tests": "tests/test_guarded_launcher_native.py 16 passed; tests/test_guarded_launcher.py + tests/test_guarded_launcher_verify.py + tests/test_run_gt21_rb01.py 148 passed (nice 19, one at a time)"
+    },
+    "pilot_AB06": {
+      "attempts": {
+        "r1": "receipt docs/quality/audits/gt21-rb01-labels-AB06-launcher-receipt.json: script bug (MATLAB fopen has no exclusive mode \"wx\"); no data written",
+        "r2": "script fixed (explicit isfile check); completed with outputs but the launcher could not watch it: Start-Process -Redirect* kept powershell and the WSL pipe open until MATLAB exited, so the first tree query came after MATLAB had finished (polls 0). Output kept as evidence only.",
+        "r3": "start rewritten: MATLAB now runs under cmd.exe /c with cmd doing the redirection (cmd.exe is the recorded root, nonce in its command line). Watched (polls 1), but the label table was empty because the script looked for variable \"conditions\"; the source variable is \"labels\".",
+        "r4": "refused_precondition: my own neutral process sampler had \"MATLAB.exe\" in its arguments and tripped the census; receipt kept.",
+        "r5": "script reads \"labels\" (falls back to \"conditions\") and records trialStarts, trialEnds, transLegAscent, transLegDescent. Completed, clean_success true."
+      },
+      "result_r5": {
+        "receipt": "docs/quality/audits/gt21-rb01-labels-AB06-launcher-receipt-r5.json",
+        "wall_time_s": 25.3,
+        "adoptions": [],
+        "polls": 1,
+        "peak_tree_working_set_polled_mib": 216.1,
+        "peak_working_set_independent_sampler_mib": 960,
+        "sampler_note": "a separate neutral PowerShell sampler (1 Hz, MATLAB.exe plus matlab.exe stub, helpers excluded) saw 960 MiB at peak; the 15 s poll sampled once, early. Cap 2048 MiB not approached. Consider POLL_S = 5 before the other 21.",
+        "min_windows_free_mib": 4872.1,
+        "min_linux_available_mib": 8265.1,
+        "stop_actions": [],
+        "windows_new_workers": [],
+        "process_tree_observed": "matlab.exe stub stays alive as parent of the real MATLAB.exe for the whole run (B2 premise settled: no orphan); MathWorksServiceHost and CrashReporter are MathWorks helpers that outlive the job and are not flagged"
+      },
+      "verify_cleanup_note": "guarded_launcher verify-cleanup reports proven false for native receipts (it needs a Linux pgid identity). Cleanup evidence for native receipts is tree_gone and the Windows census in the receipt."
+    },
+    "outputs_AB06": {
+      "folder": "converted_datasets/reconversion_v2/gt21_rb01_labels_20261124_r5/AB06",
+      "files": [
+        "labels_AB06.jsonl",
+        "subject_info_AB06.json"
+      ],
+      "checks": {
+        "recordings": "143 (levelground 30, ramp 63, stair 42, treadmill 8) equal the inventory ledger for AB06, same (mode, recording) set; all read_ok",
+        "weight": "Weight 74.84; 17-digit literal 74.840000000000003; equals the crosswalk literal 74.84; VariableUnits for Weight is \"kg\" (new direct evidence of the mass unit); other columns Age 20, Gender M, Height 1.8 m",
+        "labels": "label table present in 135 recordings (variable \"labels\", columns Header and Label); the 8 treadmill recordings have none. levelground 9 or 10 label windows, every ramp and stair recording 9 windows",
+        "terrain": "every ramp recording has a top-level rampIncline and every stair recording a stairHeight (inches, e.g. 4,5,6,7); none missing",
+        "stair_1_l_01_02": "9 windows: idle, walk-stairascent, stairascent, stairascent-walk, idle, walk-stairdescent, stairdescent, stairdescent-walk, idle; stairHeight 4; trialStarts 40.915, trialEnds 55.445; transLeg l and r",
+        "not_compared": "the 1,680 earlier-checked ramp and stair terrain labels (their evidence file was not opened in this pilot)"
+      }
+    }
+  },
+  "mass_unit_evidence_to_bind": "Weight literals for all 22 are in the cohort crosswalk (participants[].metadata.Weight_literal); the inventory binds that file. Re-reading them from SubjectInfo.mat needs the MATLAB export (pending). STRIDES.m evidence and plate-implied mass are in GT21-rebuild-plan.json probes.",
+  "run_order_when_unblocked": [
+    "dry run then launch then verify-cleanup for each of AB17 (pilot), AB12, AB15, AB19, AB23, AB28, one launch per shell call",
+    "build and dry-run the inventory spec, run it",
+    "evidence report",
+    "MATLAB: after review AB06 pilot, then 21 others"
+  ],
+  "resource_checks_done": "Disk S: 116 GB free (limit 30). Linux available 8.3 GB, Windows free 6.7 GB at last check. Nothing running from this worker.",
+  "jobs_run": 7,
+  "remaining": [
+    "Independent verification of the label export (counts, weights, terrain comparison) against the evidence report",
+    "Optional nit for a later re-review: add the .err path to the existing-file refusal in guarded_launcher_native.py"
+  ],
+  "changed_files": [
+    "contributor_tools/run_gt21_rb01.py",
+    "contributor_tools/build_gt21_rb01_specs.py",
+    "contributor_tools/guarded_launcher_native.py",
+    "contributor_tools/conversion_scripts/Gtech_2021/gt21_rb01_label_export.m",
+    "tests/test_run_gt21_rb01.py",
+    "tests/test_guarded_launcher_native.py",
+    "docs/quality/audits/gt21-rb01-extract-AB17-spec.json (and AB12, AB15, AB19, AB23, AB28)",
+    "docs/maintainers/handoffs/GT21-RB01.json",
+    "docs/maintainers/backlog.json",
+    "docs/maintainers/backlog.html",
+    "docs/quality/audits/gt21-rb01-evidence.json",
+    "docs/quality/audits/gt21-rb01-inventory-spec.json",
+    "docs/quality/audits/gt21-rb01-extract-AB17-spec-r2.json",
+    "converted_datasets/reconversion_v2/gt21_rb01_inventory_20261123/",
+    "/mnt/s/locomotion_data/gt21_author_mirror_2024_extracted/ (new, outside repo)",
+    "docs/quality/audits/gt21-rb01-extract-AB17-launcher-receipt-r2.json",
+    "docs/quality/audits/gt21-rb01-extract-AB12-launcher-receipt.json",
+    "docs/quality/audits/gt21-rb01-extract-AB15-launcher-receipt.json",
+    "docs/quality/audits/gt21-rb01-extract-AB19-launcher-receipt.json",
+    "docs/quality/audits/gt21-rb01-extract-AB23-launcher-receipt.json",
+    "docs/quality/audits/gt21-rb01-extract-AB28-launcher-receipt.json",
+    "docs/quality/audits/gt21-rb01-inventory-launcher-receipt.json",
+    "contributor_tools/guarded_launcher.py",
+    "docs/quality/audits/gt21-rb01-labels-AB06-spec.json (r1)",
+    "docs/quality/audits/gt21-rb01-labels-AB06-spec-r2.json",
+    "docs/quality/audits/gt21-rb01-labels-AB06-spec-r3.json",
+    "docs/quality/audits/gt21-rb01-labels-AB06-spec-r4.json",
+    "docs/quality/audits/gt21-rb01-labels-AB06-spec-r5.json",
+    "docs/quality/audits/gt21-rb01-labels-AB06-launcher-receipt*.json",
+    "converted_datasets/reconversion_v2/gt21_rb01_labels_20261124_r2/, _r3/ (kept, not final), _r5/ (final AB06)",
+    "contributor_tools/build_gt21_rb01_label_spec.py",
+    "contributor_tools/run_gt21_rb01.py (subjectinfo subcommand)",
+    "tests/test_run_gt21_rb01.py",
+    "docs/quality/audits/gt21-rb01-labels-final-*-spec.json and -launcher-receipt.json (22)",
+    "docs/quality/audits/gt21-rb01-subjectinfo-copy-spec.json and -launcher-receipt.json",
+    "converted_datasets/reconversion_v2/gt21_rb01_labels_final_20261124/",
+    "/mnt/s/locomotion_data/gt21_author_mirror_2024_extracted/SubjectInfo.mat and _subjectinfo_copy/"
+  ],
+  "evidence_report": "docs/quality/audits/gt21-rb01-evidence.json",
+  "receipts": [
+    "docs/quality/audits/gt21-rb01-extract-AB17-launcher-receipt-r2.json",
+    "docs/quality/audits/gt21-rb01-extract-AB12-launcher-receipt.json",
+    "docs/quality/audits/gt21-rb01-extract-AB15-launcher-receipt.json",
+    "docs/quality/audits/gt21-rb01-extract-AB19-launcher-receipt.json",
+    "docs/quality/audits/gt21-rb01-extract-AB23-launcher-receipt.json",
+    "docs/quality/audits/gt21-rb01-extract-AB28-launcher-receipt.json",
+    "docs/quality/audits/gt21-rb01-inventory-launcher-receipt.json",
+    "docs/quality/audits/gt21-rb01-extract-AB17-launcher-receipt.json"
+  ],
+  "refused_attempt": {
+    "receipt": "docs/quality/audits/gt21-rb01-extract-AB17-launcher-receipt.json",
+    "spec": "docs/quality/audits/gt21-rb01-extract-AB17-spec.json",
+    "why": "refused_precondition foreign_worker_linux (another process on the host); a refusal burns the receipt path, so the run used docs/quality/audits/gt21-rb01-extract-AB17-spec-r2.json with receipt ...-r2.json. Same bound code."
+  },
+  "decisions_logged": {
+    "rehash_instead_of_relisting": "Accepted by the coordinator 2026-11-23: each zip is re-hashed (sha256 equals the acquisition, which re-listed the live folder before and after download) and the expected 2024 listing is bound, instead of re-listing the live folder (AB28 is a live folder; a fresh live re-listing would be a separate network step)."
+  },
+  "esml_items_added_to": [
+    "GT21-RB02",
+    "GT21-RB04",
+    "GT21-Q01"
+  ],
+  "review_note": "docs/maintainers/handoffs/GT21-RB01-verify.json Part B addressed; first MATLAB run waits for a re-review of these changes.",
+  "label_export_final": {
+    "folder": "converted_datasets/reconversion_v2/gt21_rb01_labels_final_20261124/",
+    "receipts": [
+      "docs/quality/audits/gt21-rb01-labels-final-AB06-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB07-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB08-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB09-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB10-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB11-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB12-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB13-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB14-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB15-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB16-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB17-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB18-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB19-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB20-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB21-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB23-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB24-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB25-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB27-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB28-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB30-launcher-receipt.json"
+    ],
+    "evidence": "docs/quality/audits/gt21-rb01-evidence.json",
+    "specs": "docs/quality/audits/gt21-rb01-labels-final-<ID>-spec.json (built by contributor_tools/build_gt21_rb01_label_spec.py)",
+    "subjectinfo_copy": {
+      "receipt": "docs/quality/audits/gt21-rb01-subjectinfo-copy-launcher-receipt.json",
+      "why": "the export reads SubjectInfo.mat from its source root and the extracted six had none; copied (sha256 equals the publisher record) by a guarded job running run_gt21_rb01.py subjectinfo, which changed the runner hash after the earlier extraction receipts",
+      "target": "/mnt/s/locomotion_data/gt21_author_mirror_2024_extracted/SubjectInfo.mat"
+    }
+  }
+}

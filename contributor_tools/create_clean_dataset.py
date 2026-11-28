@@ -23,7 +23,7 @@ try:
 except ImportError as exc:
     raise ImportError("pyarrow is required to write parquet files. Install pyarrow before running this script.") from exc
 
-# Ensure repository root and src/ are importable so `import locohub` works
+# Ensure internal contributor tools are importable from a direct script invocation
 project_root = Path(__file__).parent.parent
 src_dir = project_root / "src"
 if str(project_root) not in sys.path:
@@ -32,7 +32,7 @@ if src_dir.exists() and str(src_dir) not in sys.path:
     sys.path.insert(0, str(src_dir))
 
 from contributor_tools.common.validation import Validator
-from locohub import LocomotionData
+from contributor_tools.common.dataset_table import DatasetTable
 
 
 class DatasetCleaner:
@@ -60,77 +60,61 @@ class DatasetCleaner:
         Returns:
             Dictionary with cleaning statistics
         """
-        if exclude_cols is None:
-            exclude_cols = []
-            
-        print(f"Loading dataset...")
-        
-        # Load raw dataset
-        locomotion_data = LocomotionData(raw_path)
-        df = locomotion_data.df
-        
-        print(f"Processing {len(locomotion_data.get_tasks())} tasks...")
-        
-        # Process each task independently, streaming output to parquet to limit memory usage
-        total_original = 0
-        total_clean = 0
-        writer: Optional[ParquetWriter] = None
-        writer_schema = None
-
-        for task in locomotion_data.get_tasks():
-            task_df = df[df['task'] == task].copy()
-            task_df.reset_index(drop=True, inplace=True)
-
-            failures = self.validator._validate_task_with_failing_features(
-                locomotion_data, task, ignore_features=exclude_cols)
-
-            n_strides = len(task_df) // 150
-            total_original += n_strides
-
-            passing_strides = set(range(n_strides)) - set(failures.keys())
-            total_clean += len(passing_strides)
-
-            keep_rows: List[int] = []
-            for stride_idx in passing_strides:
-                start_row = stride_idx * 150
-                end_row = (stride_idx + 1) * 150
-                keep_rows.extend(range(start_row, end_row))
-
-            task_df_clean = task_df.iloc[keep_rows]
-
-            if exclude_cols and not task_df_clean.empty:
-                cols_to_drop = [col for col in exclude_cols if col in task_df_clean.columns]
-                if cols_to_drop:
-                    task_df_clean = task_df_clean.drop(columns=cols_to_drop)
-
-            pass_rate = len(passing_strides)/n_strides*100 if n_strides > 0 else 0
-            print(f"  {task}: {len(passing_strides)}/{n_strides} strides passed ({pass_rate:.1f}%)")
-
-            if task_df_clean.empty:
-                continue
-
-            table = pa.Table.from_pandas(task_df_clean, preserve_index=False)
-
-            if writer is None:
-                writer_schema = table.schema
-                writer = ParquetWriter(str(output_path), writer_schema, compression='snappy')
-            else:
-                table = table.select(writer_schema.names)
-
-            writer.write_table(table)
-
-        print("\nSaving clean dataset...")
-        if writer is None:
-            pd.DataFrame().to_parquet(output_path)
-        else:
-            writer.close()
-
+        # All selection decisions come from the release engine. Publish bundles
+        # with build_dataset_release.py; this compatibility command emits a
+        # derivative plus its exact assessment, without changing the input.
+        import json
+        import os
+        import tempfile
+        from contributor_tools.common.data_contract import assess_observations, IDENTITY_COLUMNS
+        if exclude_cols:
+            raise ValueError("Column exclusion is no longer supported. Declare optional signals in the profile.")
+        output = Path(output_path)
+        sidecar = output.with_suffix(output.suffix + '.quality.json')
+        if output.exists() or sidecar.exists():
+            raise FileExistsError("Choose a new output filename; filtered artifacts are immutable")
+        table = DatasetTable(raw_path)
+        assessment = assess_observations(table.df, self.validator.config_manager)
+        if not assessment['publishable']:
+            raise ValueError("Dataset does not satisfy the release contract: " +
+                             str(assessment['contract']['issues']))
+        eligible = {
+            tuple(item['identity'][column] for column in IDENTITY_COLUMNS)
+            for item in assessment['observations'] if item['eligible']
+        }
+        rows = pd.MultiIndex.from_frame(table.df[list(IDENTITY_COLUMNS)])
+        selected = table.df.loc[rows.isin(eligible)]
+        total = len(assessment['observations'])
+        assessment['input_path'] = str(Path(raw_path).resolve())
+        assessment['profile_path'] = str(self.validator.config_path.resolve())
+        import hashlib
+        def digest(path):
+            h = hashlib.sha256()
+            with open(path, 'rb') as source:
+                for block in iter(lambda: source.read(1024 * 1024), b''):
+                    h.update(block)
+            return h.hexdigest()
+        assessment['input_sha256'] = digest(raw_path)
+        assessment['profile_sha256'] = digest(self.validator.config_path)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=output.parent, prefix='.filter-') as temp:
+            staged = Path(temp) / output.name
+            selected.to_parquet(staged, index=False, row_group_size=16384)
+            assessment['output_sha256'] = digest(staged)
+            staged_report = Path(temp) / sidecar.name
+            staged_report.write_text(json.dumps(assessment, indent=2, allow_nan=False) + '\n')
+            # Hard-link promotion refuses an existing destination, including races.
+            os.link(staged_report, sidecar)
+            try:
+                os.link(staged, output)
+            except BaseException:
+                sidecar.unlink()
+                raise
         return {
-            'original_strides': total_original,
-            'clean_strides': total_clean,
-            'pass_rate': total_clean / total_original if total_original > 0 else 0,
-            'excluded_columns': exclude_cols,
-            'output_path': output_path
+            'original_strides': total, 'clean_strides': len(eligible),
+            'pass_rate': len(eligible) / total if total else 0.0,
+            'excluded_columns': [], 'output_path': str(output),
+            'quality_path': str(sidecar),
         }
 
 
@@ -225,57 +209,12 @@ Examples:
         print(f"🚫 Excluding columns: {', '.join(exclude_cols)}")
     print()
     
-    # Load dataset to validate exclude columns
-    print("Loading dataset to validate columns...")
-    try:
-        temp_locomotion_data = LocomotionData(str(input_path))
-    except Exception as e:
-        print(f"❌ Error loading dataset: {e}")
-        return 1
-    
-    # Validate exclude columns exist in dataset
     if exclude_cols:
-        available_columns = temp_locomotion_data.df.columns.tolist()
-        invalid_cols = [col for col in exclude_cols if col not in available_columns]
-        
-        if invalid_cols:
-            print(f"\n❌ Error: The following columns do not exist in the dataset:")
-            for col in invalid_cols:
-                print(f"    - {col}")
-            
-            # Get biomechanical features (most likely candidates for exclusion)
-            biomech_features = temp_locomotion_data.features
-            
-            print(f"\n📊 Available biomechanical features ({len(biomech_features)}):")
-            for feature in sorted(biomech_features):
-                print(f"    {feature}")
-            
-            # Also show metadata columns
-            metadata_cols = [col for col in available_columns 
-                           if col not in biomech_features]
-            print(f"\n📋 Available metadata columns ({len(metadata_cols)}):")
-            for col in sorted(metadata_cols)[:10]:  # Show first 10
-                print(f"    {col}")
-            if len(metadata_cols) > 10:
-                print(f"    ... and {len(metadata_cols) - 10} more")
-            
-            return 1
-    
-    print()  # Add blank line for clarity
-    
-    # Check if output already exists
-    if output_path.exists() and sys.stdin.isatty():
-        response = input(f"⚠️  Output file exists: {output_path.name}\n   Overwrite? (y/N): ")
-        if response.lower() != 'y':
-            print("Cancelled.")
-            return 0
-    elif output_path.exists():
-        print(f"⚠️  Output file exists: {output_path.name} (no TTY, overwriting)")
-
-    # Release temporary dataset before heavy processing
-    del temp_locomotion_data
-    from gc import collect as gc_collect
-    gc_collect()
+        print("Use profile optional_features instead of excluding columns.")
+        return 1
+    if output_path.exists():
+        print("Output exists; choose a new versioned output filename.")
+        return 1
 
     validator = Validator(config_path=ranges_path)
 

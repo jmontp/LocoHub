@@ -1,0 +1,47 @@
+{
+  "job_id": "gt21-static-analysis",
+  "command": [
+    "python3",
+    "contributor_tools/analyze_gt21_static_pose.py",
+    "compute",
+    "--out-root",
+    "converted_datasets/reconversion_v2/gt21_static_analysis_v1"
+  ],
+  "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+  "output_root": "converted_datasets/reconversion_v2/gt21_static_analysis_v1",
+  "receipt_path": "docs/quality/audits/gt21-static-analysis-launcher-receipt.json",
+  "bindings": {
+    "contributor_tools/analyze_gt21_static_pose.py": "38ac573d93c8f980dee17c40c99f9e8ce0cfd9956d1d05919fd07b8174fd8f05",
+    "contributor_tools/gt21_rb_pass.py": "b199962c508e05c12fdd376175a15acd5d8ad92c622ce74196044d1857db39eb",
+    "contributor_tools/build_review_sheet_cross_dataset.py": "76a4bd52b59ef170357d56197a44f7e56b9a5e2ab689623b5b4125cbe53119a4",
+    "contributor_tools/common/review_sheet.py": "c82327addbe46146f45ed325cd26eaa2d73c25df5bb2191813164a78634b9140",
+    "contributor_tools/guarded_launcher.py": "372519f9dd1f52510f747eed3779044765fdc158b08ca007deb8d6d8708c844f",
+    "converted_datasets/reconversion_v2/gt21_r01_package_v1/filtered_phase.parquet": "86cfbd6efbec8e1b9c08b402ca54fb1c650849fffc3f5072e1f24face5a5a7a5",
+    "converted_datasets/reconversion_v2/gt23_r01_review_v11/filtered_phase.parquet": "470b9b3a762be2640b85417ad6a4dd9f80ec1568c77fc7aee9e6be1f92ab5c27",
+    "converted_datasets/reconversion_v2/um21_r01_package_v5/filtered_phase.parquet": "304e3bcccdebe9856c06d0b5374e3b7f0ad5d0b4b09fb4c63007158a14723fc0"
+  },
+  "timeout_seconds": 3600,
+  "kill_after_seconds": 30,
+  "poll_seconds": 15,
+  "startup_memory_mib": {
+    "linux": 3584,
+    "windows": 2816
+  },
+  "runtime_memory_mib": {
+    "linux": 2048,
+    "windows": 2048
+  },
+  "expected_output_names": [
+    "run_summary.json",
+    "per_participant.csv",
+    "comparison.json",
+    "static_trials.csv"
+  ],
+  "address_space_mib": 768,
+  "disk_admission": [
+    {
+      "path": "/mnt/s/workspace/locomotion-data-standardization/converted_datasets",
+      "min_free_mib": 5120
+    }
+  ]
+}

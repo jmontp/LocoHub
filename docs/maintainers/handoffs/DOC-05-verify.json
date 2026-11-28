@@ -1,0 +1,323 @@
+{
+  "task_id": "DOC-05",
+  "verifier_role": "independent second agent; read only committed audit JSON, handoffs, backlog, page/builder source and figures; no research data arrays; worker files, backlog and AGENTS.md not edited; own tests in tests/test_fixes_page_verify.py",
+  "verdict": "done",
+  "last_checked_at_utc": "2026-10-31T22:30:00Z",
+  "round_5": {
+    "verdict": "done",
+    "last_checked_at_utc": "2026-10-31T22:30:00Z",
+    "summary": "F4-1, F4-2 and F4-3 are fixed. Every round-4 leak form is redacted, the username no longer appears outside public URLs, GitHub URLs are preserved, published HTML has no raw placeholder tags, every published JSON parses, committed docs are unchanged, and the integration build test passes. DOC-05 is done for the documentation page and the build-time redaction. José publishes; this approves no dataset.",
+    "file_checks": [
+      {
+        "item": "redact_paths probes",
+        "result": "pass",
+        "evidence": "Each form maps to a bracketed token: 'C:\\Users\\jmontp\\x' → '[home]\\x'; 'S:\\locomotion_data\\Gtech' → '[source-root]\\Gtech'; JSON-escaped 'S:\\\\workspace\\\\locomotion-data-standardization\\\\x.m' → '[repo]\\\\x.m'; 'file:///C:/Users/jmontp/a' → '[home]/a'; 'file:///mnt/s/x' → '[local]/x'; '/home/jmontp/x' → '[home]/x'; '/mnt/c/Users/jmontp/Desktop/f' → '[home]/Desktop/f' (user dropped); '\\\\wsl$\\Ubuntu\\home\\jmontp\\f' → '[home]\\f'; '\\\\wsl.localhost\\Ubuntu\\x' → '[local]\\x'; '/tmp/claude-1000/…' → '[scratch]/…'; '/Users/jose/Desktop' → '[home]/Desktop'; 'D:\\data\\x' → '[local]\\data\\x'. These are left unchanged: 'https://github.com/jmontp/LocoHub', 'github.com/jmontp/LocoHub/issues', 'https://data.mendeley.com/x', DOIs, '12:30:00', 'a/b:c', '/tmp/other/file'."
+      },
+      {
+        "item": "built site scan",
+        "result": "pass",
+        "evidence": "Full build into the scratchpad (41 pages, 1,720 assets). Across all published text files there are 0 hits for /mnt/, /home/<name>, /Users/<name>, Windows drive paths (raw or escaped, not '//'), wsl$ or wsl.localhost, /tmp/claude, file:///<drive>, and 'jmontp' outside github.com/github.io URLs and the contact e-mail. github.com/jmontp still appears 70 times in the HTML. The round-4 leaks (/home/jmontp in backlog.html/json, the HIST-01 audit and handoff; S:\\\\workspace… in 7 GT21 audits; /tmp/claude-1000 in 5 handoffs) are gone."
+      },
+      {
+        "item": "HTML safety",
+        "result": "pass",
+        "evidence": "0 raw '<repo>', '<source-root>', '<local>', '<home>' or '<scratch>' tags in the published .html and .svg files. The tokens are now bracketed ([repo] etc.), which is inert in HTML, JSON and SVG."
+      },
+      {
+        "item": "JSON and committed files",
+        "result": "pass",
+        "evidence": "All 1,560 published .json files parse. The sha256 of every .json and .html under docs/ is identical before and after the build."
+      },
+      {
+        "item": "integration test",
+        "result": "pass",
+        "evidence": "pytest --run-integration tests/test_docs_path_redaction.py → 4 passed in 99 s, including test_real_site_build_publishes_no_local_path_user_name_or_raw_token, which builds the real site into a temp directory, scans every published text file for local paths, the user name and raw tokens, then removes the about 0.5 GB copy."
+      },
+      {
+        "item": "default-test scope ruling",
+        "result": "acceptable, with a publish-time rule",
+        "evidence": [
+          "The light default test checks only docs files that are changed or untracked against HEAD. That is acceptable because (a) redaction runs at build time on every published file, so a committed file is never published unredacted, and (b) the synthetic test exercises every path form on every run, so a regression in redact_paths is caught by default.",
+          "A committed file can only enter HEAD after being changed or untracked, when the default test saw it, and today's integration run shows the whole committed site is clean.",
+          "The remaining gap is a new path form inside already-committed content, which the default test cannot see. It is closed by running the integration test before each publication. Recommendation: add 'pytest --run-integration tests/test_docs_path_redaction.py' to José's publish checklist."
+        ]
+      },
+      {
+        "item": "gates",
+        "result": "pass",
+        "evidence": "Under the AGENTS.md prefix: build_fixes_page.py --check → 'Current: 8 cards, 13 figures.'; docs/build.py --check → 41 pages, 1,720 assets, exit 0; pytest tests/test_fixes_page.py tests/test_fixes_page_verify.py tests/test_docs_path_redaction.py tests/test_data_documentation.py tests/test_quality_page.py → 27 passed, 1 skipped (the integration test, run separately and passing); build_backlog_page.py --check → Backlog valid; HTML current (100 tasks)."
+      }
+    ],
+    "optional": [
+      "Add the integration redaction test to the publish checklist."
+    ],
+    "artifact_hashes": {
+      "docs/build.py": "3e44ab731654a7c8...",
+      "tests/test_docs_path_redaction.py": "8c3f19b81339a18a..."
+    },
+    "questions_for_jose": []
+  },
+  "round_4_verdict": "back_to_worker",
+  "round_4": {
+    "verdict": "back_to_worker",
+    "last_checked_at_utc": "2026-10-31T21:30:00Z",
+    "summary": "Both card fixes are in and accurate. The duplicate card's resolution citation matches the backlog text exactly, and the plate-shortfall caption is present. The new build-time path redaction keeps every published JSON valid and changes no committed file. It still leaks local paths and a username, and it inserts raw <token> tags into published HTML. Three fixes are required, all in docs/build.py and its test.",
+    "file_checks": [
+      {
+        "item": "R3-1 duplicate card citation",
+        "result": "pass",
+        "evidence": "backlog.json UM21-T02 handoff.remaining contains: 'Coordinator resolution (2026-10-31): D-UM21-T02-2 withdrawn. With D-UM21-T02-1 = A, AB01 i5 already leaves (clock check fails, -413 frames) … AB01 i10 passes the clock and slope checks and stays, with a provenance note … José can still ask for it.' The card matches this: label 'Copy removed from release scope (coordinator resolution under D-UM21-T02-1 = A) · not yet released'; text 'This handling is the coordinator's logged resolution; José can still ask to drop the 10° recording too'; legend 'AB01 i10 (kept; resolution logged)'. A link to backlog.html#UM21-T02 is present and the anchor exists once. The builder gate requires that the remaining text is present (rule['backlog_remaining']). D-UM21-T02-2 is not in the decisions list, consistent with 'withdrawn'."
+      },
+      {
+        "item": "R3-2 plate disclosure",
+        "result": "pass",
+        "evidence": "Caption: 'The force plates read low in AB03 and AB10 (a separate shortfall documented in the slope audit), so the figure uses the foot-path slope.'"
+      },
+      {
+        "item": "redaction: committed files and JSON escaping",
+        "result": "pass",
+        "evidence": "I hashed every .json and .html under docs/ before and after a full build into the scratchpad (docs/build.py --output <scratch>/site): identical. All 1,560 published .json files parse with json.loads after redaction. The tokens contain no quote or backslash, so JSON escaping is unaffected."
+      },
+      {
+        "item": "redaction: coverage of path variants",
+        "result": "failed",
+        "evidence": [
+          "Scan of the built site: no '/mnt/' remains, but these local paths are published unredacted.",
+          "'/home/jmontp' (a username) in maintainers/backlog.html, backlog.json, quality/audits/hist01-source-dispositions.json and maintainers/handoffs/HIST-01.json, from the HIST-01 'find over … /home/jmontp (depth 4)' text.",
+          "Windows drive paths, JSON-escaped (e.g. 'S:\\\\workspace\\\\locomotion-data-standardization\\\\…'), in 7 GT21 audits: gt21-force-source-readback, gt21-levelground-force-review, gt21-measured-force-direction, gt21-ramp-source-review, gt21-plate-assignment-fix and others.",
+          "'/tmp/claude-1000/…' scratch paths in 5 handoffs (UM21-T02-audit, UM21-SLOPE-verify, CORE-04-verify, GT21-C01-verify and others).",
+          "Direct probes of redact_paths: 'C:\\Users\\jmontp\\x', 'S:\\locomotion_data\\Gtech', 'file:///C:/Users/jmontp/a', '/home/jmontp/x', '\\\\wsl$\\Ubuntu\\home\\jmontp' and '/tmp/claude-1000/abc' are all unchanged. '/mnt/c/Users/jmontp/Desktop' becomes '<local>/Users/jmontp/Desktop', which keeps the username. tests/test_docs_path_redaction.py asserts that last behaviour ('<local>/Users/someone/b.csv').",
+          "Synthetic file:/// URIs in test names (CORE-09 'file:///raw.bin') are not local paths and are fine. 'jmontp' inside github.com/jmontp URLs is the public repository owner and is fine."
+        ]
+      },
+      {
+        "item": "redaction: HTML corruption",
+        "result": "failed",
+        "evidence": "In .html files the tokens are inserted raw. The built maintainers/backlog.html contains 15 literal '<source-root>', '<local>' and '<repo>' tags (e.g. 'find over <source-root>, <local>/scratch_data, <local>/Downloads'). Browsers parse these as unknown elements: the token text disappears, and an unclosed custom element wraps the following content. The quality page's own explanatory line correctly uses &lt;source-root&gt; etc., so published text would contradict what readers see."
+      },
+      {
+        "item": "gates",
+        "result": "pass",
+        "evidence": "Under the AGENTS.md prefix: build_fixes_page.py --check → 'Current: 8 cards, 13 figures.'; docs/build.py --check → 41 pages, 1720 assets, exit 0; pytest tests/test_fixes_page.py tests/test_fixes_page_verify.py tests/test_docs_path_redaction.py tests/test_data_documentation.py tests/test_quality_page.py → 27 passed; build_backlog_page.py --check → Backlog valid; HTML current (100 tasks)."
+      }
+    ],
+    "required_fixes": [
+      "F4-1 (coverage): redact every local absolute root, not only '/mnt/'. Cover /mnt/<drive>/…, including /mnt/c/Users/<name>/ with the user segment dropped; /home/<name>/…; /Users/<name>/…; Windows drive paths in raw and JSON-escaped form (S:\\…, S:\\\\…, C:/…, including C:\\Users\\<name>); \\\\wsl$\\… and \\\\wsl.localhost\\…; file:/// URLs pointing at any of these; and /tmp/claude-<uid>/… scratch paths. Leave public URLs such as github.com/jmontp alone. Map them to the existing tokens, e.g. <local>.",
+      "F4-2 (HTML safety): in .html (and .svg) outputs insert the tokens HTML-escaped (&lt;repo&gt;, &lt;source-root&gt;, &lt;local&gt;), or use bracketed tokens such as [repo] everywhere. Keep JSON/JS as they are.",
+      "F4-3 (test): replace the assertion that keeps '<local>/Users/someone' with one that the username is gone. Add a test that builds the real site into a temporary directory and scans every published text file for all of the patterns above, plus the absence of raw '<repo>', '<source-root>' and '<local>' tags in .html."
+    ],
+    "optional": [],
+    "artifact_hashes": {
+      "docs/build.py": "a3ee15bfef037a47...",
+      "contributor_tools/build_fixes_page.py": "1e78650faba5ad1f...",
+      "docs/quality/fixes.html": "12b68c6fa05073fc...",
+      "tests/test_docs_path_redaction.py": "ac65d9dc6214a582..."
+    },
+    "questions_for_jose": []
+  },
+  "round_3_verdict": "back_to_worker",
+  "round_3": {
+    "verdict": "back_to_worker",
+    "last_checked_at_utc": "2026-10-31T20:30:00Z",
+    "summary": "Both new cards' numbers reproduce, and the exception gate admits exactly these two card ids. The figures follow the rules and render at both widths, and all gates pass. It goes back for two wording fixes. (1) The AB01 duplicate card pre-empts an open decision. It says AB01 i10 'stays, with a note', its legend says 'AB01 i10 (kept)', and its label says 'Copy removed from release scope'. But D-UM21-T02-2, which decides how the duplicate is handled, is not answered, and D-UM21-T02-1 option A says 'If D-UM21-T02-2 is A, AB01 i10 also leaves'. (2) The card cites the force plates for AB01 i5 (9.8°) but omits that the plate method also flags six other recordings (AB03 and AB10, a known plate shortfall), so it implies plates agree everywhere.",
+    "file_checks": [
+      {
+        "item": "clock card numbers (um21-t02-clock-census.json)",
+        "result": "pass",
+        "evidence": "totals: 50 recordings, 44 aligned, 6 misaligned. 4 have a best lag (AB01 d10 169, AB01 d5 695, AB01 i5 −413, AB09 i10 685 frames; at 100 Hz that is 1.69, 6.95, 4.13 and 6.85 s), so '4 of 50 … 1.7 to 7.0 s' is right. AB08 i10 and AB10 i0 are not evaluable because there is no cvel, so '2 … no belt-speed record' is right. The largest aligned |best_lag| is 20 frames, which matches 'agree within 0.2 s'. The ±0.5 s band equals the audit's belt_clock_best_lag_frames_abs_max of 50 frames. The figure places each recording correctly (AB01 i5 below zero; crosses for the two not evaluable). 'Correction decided' matches D-UM21-T02-1 = A (exclude, nothing estimated). 'Those six leave the release' holds because A excludes five and holds AB01 i5 out of every option."
+      },
+      {
+        "item": "duplicate card numbers (um21-midstance-slope.json, clock census duplicates)",
+        "result": "pass",
+        "evidence": "AB01/i5 and AB01/i10 are identical in every method (belt_path 10.088°, plate_force 9.758°, foot_pitch 11.004°), giving '10.1° from the foot path and 9.8° from the force plates'. The census lists [AB01/i10, AB01/i5] as whole-group duplicates for joint angles, forces, moments, powers, markers and forceplates, but not events, which matches 'only its task timing differs'. Excluding the two AB01 recordings, the other 48 belt_path residuals have a maximum of 1.24° against the audit's fixed tolerance tol_deg 2.5, so 'within the foot-path tolerance' is right. 'Foot path' corresponds to the audit's belt_path method (pitch of the flat-foot path)."
+      },
+      {
+        "item": "exception gate exclusivity",
+        "result": "pass",
+        "evidence": "APPROVED_EXCEPTIONS has exactly two keys, um21-belt-clock and um21-ab01-copy. add() routes only those ids to exception_gate; every other card goes through gate(task done + verify done). A probe call exception_gate('um21-something-else') returns None, and both real ids return 2026-10-31. The clock rule needs UM21-T02-audit-verify verdict 'done_for_audit_script', exactly one round_2 check '3. Independent lag spot-check' with a pass result, and the current census sha256 (661f9dd5…) in a reviewer's reviewed_sha256. That hash is listed under round_3, whose reviewer re-checked the counts on that file, although round_3's verdict was back_to_worker for decision wording. The duplicate rule needs UM21-SLOPE-verify 'done' and the round_2 '4. Duplicate claim' check, which passed as 'pass_understated'. Note: the gate accepts any 'pass…' result prefix and a hash from any round, regardless of that round's verdict. This is acceptable here because both reviews confirmed the specific facts shown."
+      },
+      {
+        "item": "foot path versus plate slope",
+        "result": "failed (disclosure)",
+        "evidence": "Choosing the foot path for the figure is defensible: its tolerance (2.5°) flags only AB01 i5 among 50, while the plate method's 1.0° tolerance also flags AB03 d10, d5, i0 and AB10 d10, d5, i10. UM21-SLOPE-verify confirms 'The AB03/AB10 plate shortfall is real' (for example, AB03/d10 plate −6.06° against a −10° label). The card, however, cites the plate value for AB01 i5 as corroboration and says nothing about the plate flags. A reader would infer that plates match the labels everywhere."
+      },
+      {
+        "item": "open decision pre-empted",
+        "result": "failed",
+        "evidence": "D-UM21-T02-2, on the duplicate's handling, is not in backlog decisions (the UM21-SLOPE and T02 verifiers said it was not ready to re-copy). D-UM21-T02-1 option A says 'AB01 i5 is held out of every option pending its own decision … If D-UM21-T02-2 is A, AB01 i10 also leaves'. On the duplicate card: the label 'Copy removed from release scope', the line 'The 10° recording … stays, with a note' and the legend 'AB01 i10 (kept)' state an undecided outcome. The clock figure's legend 'Passes (kept)' also implies AB01 i10 is kept."
+      },
+      {
+        "item": "figures",
+        "result": "pass",
+        "evidence": "um21-clock.svg and um21-slope.svg are one panel each, 324 pt (4.5 in), 10 pt fonts (shared rcParams), and show the full population (all 50 recordings, no sampling). Playwright at true 390 and 1100 px: overflow 0, 8 cards, both images load (naturalWidth 432). In the clock plot, 4 orange squares sit far outside the thin ±0.5 s band and 2 crosses sit at the bottom. In the slope plot, the i5 square sits 5° off the diagonal band, on top of i10. Each is readable in about 5 seconds; the clock plot's labels are small but legible at 390 px."
+      },
+      {
+        "item": "published audit JSON with local paths",
+        "result": "noted (José's publish-time call; recommendation given)",
+        "evidence": "No linked audit contains a username ('jmontp', /home/…, C:\\Users, /Users/). 19 of the 52 audit JSONs linked from the quality and fixes pages contain absolute local paths under /mnt/. Of the files linked from the fixes page: gt23-c03-normalizing-mass.json (317 occurrences, /mnt/s/locomotion_data/Gtech_2023/…), gt23-c02-moment-units.json (26), gt24-c02-ankle-sign.json (3, /mnt/s/locomotion_data/GaTech_2024_TaskAgnostic/…) and um21-t02-clock-census.json (1, /mnt/s/workspace/locomotion-data-standardization/…). um21-c01-source-probe, um21-c01-tread-conventions, um21-c03-conventions, um21-c03-episode-census, um21-midstance-slope and um21-p01-pelvis-heading have none. Recommendation: do not edit the committed audits, because their hashes are bound by verifies and by this page's census gate. Instead, redact in the published copy at docs build time: map /mnt/s/locomotion_data/ to <source-root>/ and the repo root to <repo>/, and add a one-line note that published audit copies have local roots replaced and that hashes refer to the repository originals. The paths reveal only machine directory layout, so leaving them is low risk. Since this is outward-facing, José decides."
+      },
+      {
+        "item": "gates",
+        "result": "pass",
+        "evidence": "Under the AGENTS.md prefix: build_fixes_page.py --check → 'Current: 8 cards, 13 figures.'; docs/build.py --check → 41 pages, 1720 assets, exit 0; pytest tests/test_fixes_page.py tests/test_fixes_page_verify.py tests/test_data_documentation.py tests/test_quality_page.py → 24 passed; build_backlog_page.py --check → Backlog valid; HTML current (100 tasks)."
+      }
+    ],
+    "required_fixes": [
+      "R3-1 (duplicate card, open decision): state only what is decided. For example, label 'Found · handling not yet decided · not yet released'; LocoHub line 'AB01 i5 is held out of the treadmill release (it also fails the clock check). Whether AB01 i10 stays, with a note, is a pending decision.'; slope legend 'AB01 i10 (decision pending)'. In the clock figure, change the legend 'Passes (kept)' to 'Passes'.",
+      "R3-2 (duplicate card, plate disclosure): add one sentence to the figure caption or cause, e.g. 'Force plates read low in AB03 and AB10 (a separate, verified plate shortfall), so the figure uses the foot path; its fixed ±2.5° tolerance flags only AB01 i5.'"
+    ],
+    "optional": [
+      "Tighten exception_gate to require the round whose hash is used to have reviewed the specific facts, and to reject a 'pass_with…' or 'pass_understated' result unless listed explicitly. Not needed for the current two cards.",
+      "Apply build-time path redaction for published audit copies if José agrees (see the local-paths check)."
+    ],
+    "artifact_hashes": {
+      "contributor_tools/build_fixes_page.py": "45190ecc9e5b4040...",
+      "docs/quality/fixes.html": "11b6da4263851902...",
+      "docs/quality/fixes/um21-clock.svg": "ce60537ea5dbad04...",
+      "docs/quality/fixes/um21-slope.svg": "c2f0e097bccdb966..."
+    },
+    "questions_for_jose": [
+      "Publish-time: redact local /mnt/ paths in published audit JSON copies at build time (recommended), or leave them?"
+    ]
+  },
+  "round_2_verdict": "done",
+  "round_2": {
+    "verdict": "done",
+    "last_checked_at_utc": "2026-10-31T19:40:00Z",
+    "summary": "F1 and F2 are in the files. No remaining overclaim was found. The page states no corrected release, and every gate passes. Done covers the documentation page only; José publishes the site, and the page approves no dataset.",
+    "file_checks": [
+      {
+        "item": "F1 UM21 thigh card",
+        "result": "pass",
+        "evidence": "Cause: 'LocoHub's treadmill rebuild code (not released) adds pelvis tilt to hip flexion using the source's pelvis sign … so the rebuild's values are off by about twice the pelvic tilt. The legacy UMich download used a different recipe and is not shown here.' The Before caption reads 'LocoHub rebuild code (unreleased)', and the figure legend reads 'LocoHub rebuild code (unreleased): pelvis + hip'. The fix line says 'to be released as planar estimates'. All of this matches reconvert_umich_streaming.py lines 91-92 and the legacy converter's shank + knee recipe. 'Under LocoHub's sign rule … thigh = pelvis + hip' is correct under rule B."
+      },
+      {
+        "item": "F1 intro",
+        "result": "pass",
+        "evidence": "'…found in a source dataset or in LocoHub's own unreleased rebuild code. The Before figure shows the data as published, or as LocoHub's unreleased build computed it; the After figure shows what LocoHub will release.'"
+      },
+      {
+        "item": "F2 labels and tense",
+        "result": "pass",
+        "evidence": "The GT23-C03 label now reads 'Correction decided · per-trial check planned · not yet released'. The quality-page sentence now reads '… shown as published and as LocoHub will release it.' A case-insensitive search of the rendered page text finds 0 hits for 'earlier converter', 'releases or', 'under way', 'released files', 'now released', 'is released', 'fixed in' and 'LocoHub releases'."
+      },
+      {
+        "item": "thigh card at 390 px",
+        "result": "pass",
+        "evidence": "Playwright with system Chrome at a true 390x900 viewport: page overflow 0 (also 0 at 1100), with all 6 cards present. In the thigh card, the Before and After figures stack. The new legend 'LocoHub rebuild code (unreleased): pelvis + hip' fits on one line under the plot, and the roughly 38° offset versus the close match is clear."
+      },
+      {
+        "item": "gates",
+        "result": "pass",
+        "evidence": "Under the AGENTS.md prefix: build_fixes_page.py --check → 'Current: 6 cards, 11 figures.'; docs/build.py --check → 'Checked 40/41 HTML pages' (41 pages, 1715 assets), exit 0; pytest tests/test_fixes_page.py tests/test_fixes_page_verify.py tests/test_data_documentation.py tests/test_quality_page.py → 23 passed, including my 7 independent number checks, unchanged; build_backlog_page.py --check → Backlog valid; HTML current (100 tasks)."
+      }
+    ],
+    "optional": [
+      "The quality-page sentence 'shown as published and as LocoHub will release it' is a summary. For the thigh card, Before is LocoHub's unreleased build rather than published data. The fixes page itself states this exactly, so no change is required."
+    ],
+    "artifact_hashes": {
+      "contributor_tools/build_fixes_page.py": "c0d99c27c3b6d56f...",
+      "docs/quality/fixes.html": "adce42343d1f56d3...",
+      "docs/quality/fixes/um21-thigh-before.svg": "bddd4bb11937c1fe..."
+    },
+    "questions_for_jose": []
+  },
+  "round_1_verdict": "back_to_worker",
+  "summary": "Every card number reproduces from its audit, the seeded examples redraw exactly, and the figures follow the AGENTS.md rules and show their failure at a glance. The page and the --check, docs, tests and backlog gates pass. It goes back for two small wording fixes. (1) The UM21 thigh card calls the pelvis + hip values 'LocoHub's earlier converter' and the page intro says Before shows 'the data as published'. In fact pelvis + hip is still what LocoHub's unreleased treadmill rebuild code computes (reconvert_umich_streaming.py lines 91-92; UM21-C01-verify: 'The producer still computes pelvis + hip'), and the legacy UM21 download used a different recipe. (2) The GT23-C03 label says 'per-trial check under way' while GT23-C04 is 'ready' and nothing is running. The intro and index sentence 'what LocoHub releases or will release' also implies a corrected release exists; it should say 'will release'.",
+  "checks": [
+    {
+      "id": 1,
+      "area": "card numbers against audits (independent recomputation)",
+      "result": "pass",
+      "evidence": [
+        "GT23-C03: 9 of 12 participants have readme_consistent false. Computing own mass ÷ divisor_kg_best myself for those 9 gives 0.803 (AB10, 67.5/84.1) to 1.406 (AB08, 87.6/62.3), so '0.80 to 1.41' is right. All divisors come from calibration_trial normal_walk_1, so 'level walking' is right. 'In most of them the divisor is exactly another participant's listed mass' holds: AB05→AB01, AB06→AB05, AB08→AB07, AB09≈AB08, AB10→AB09, AB12→AB11, AB13→AB12. AB02 and AB11 are within precision.",
+        "UM21-C03: branch_episode frames 5,429. There are 31 duration-screened inside strides. Excluding the 2 that contain an orientation_step_over_20deg frame leaves 29, which equals inside_strides_without_orientation_step_over_20deg. So '2 of the 31' and '29 of 31 kept' are right. 86 outside strides.",
+        "GT24-C02: the pool of legs with ≥5 finite-moment stances and stored curves has 12 legs, equal to summary.legs_with_moment, with slopes 0.957-1.107. random.Random(20261031).choice draws BT07 normal_walk_1_2_1-2_off, left, with 18 stances, as captioned. Push-off work 154/154 and toe-walking 12/12 support 'agree too'.",
+        "GT23-C02: implied_mass_range_kg [64.18, 89.98] over summary.legs = 8, which matches '1/64 to 1/90 in all 8 sampled legs'. The seeded pool is restricted to the own-mass participants (AB01, AB02; 4 legs); the restriction is stated, and the draw is AB01 incline_walk_2 left.",
+        "UM21-P01: AB04/i0 right side has strides 114, tilt_votes flipped_sign 114 of strides_voting 114, and pelvis-obliquity correlation negative in 114/114, so '114 of 114' holds. Hip-flexion correlation is positive in 114/114.",
+        "UM21-C01: (pelvis + hip) − (hip − pelvis) = 2 × pelvis exactly at every sample, so 'about twice the pelvic tilt' is right. The stride's median pelvis tilt rounds to 19°."
+      ]
+    },
+    {
+      "id": 2,
+      "area": "status labels",
+      "result": "failed (one label; intro wording)",
+      "evidence": [
+        "Correct: GT24 'Documented · values unchanged · no new GT24 release yet'. GT23-C02 'Documented · corrected files not yet released'. UM21-C03 'Correction decided · not yet released' (D-UM21-C03-2 = C). UM21-P01 'Correction decided · not yet applied or released' (D-UM21-P01-1 = C, answered today; UM21-P02's sign-table change is in review and its verify went back, so no data file is corrected). UM21-C01 'Recipe decided · not yet released' (D-UM21-C01-1 = C). Sign-rule context 'Adopted 31 October 2026 · current downloads are legacy'.",
+        "Wrong: GT23-C03 'Correction decided · per-trial check under way · not yet released'. D-GT23-C03-1 = B was answered today and GT23-C04 (the per-trial census) is 'ready' with no work recorded, so nothing is under way.",
+        "Implied release: the intro ('the After figure shows what LocoHub releases or will release') and the quality-page sentence ('as LocoHub releases or will release it') use the present tense 'releases'. No card has a corrected release.",
+        "D-HIST-01-1 = B (answered today) is not on this page and needs no card."
+      ]
+    },
+    {
+      "id": 3,
+      "area": "figures: 5-second legibility and AGENTS.md rules",
+      "result": "pass",
+      "evidence": "All 11 SVGs are one panel, width 324 pt (4.5 in), rcParams 10 pt for every text element, fonts as paths, byte-deterministic (--check). Examples: GT24 and GT23 units use seed 20261031 over a stated pool; UM21-P01 uses the census's seed 20261101 for the stride plus seed 20261031 for the side; UM21-C01 uses the audit's seed 20261028. UM21-C03 and GT23-C03 show the full population. Viewed at 1100 and 390 px: the GT24 mirror versus overlap, the GT23 flat line versus force plates, the GT23 per-participant divisor versus own-mass dumbbells, the UM21 ankle −160° band versus the outside strides (the different After scale is stated), the UM21 pelvis mirror versus overlap, and the UM21 thigh offset of about 38° versus within a few degrees. Each failure is visible in about 5 seconds, with orange for disagreement, blue for agreement and grey for context."
+    },
+    {
+      "id": 4,
+      "area": "inclusion rule; clock misalignment and AB01 duplicate",
+      "result": "pass (rule applied correctly); ruling below",
+      "evidence": [
+        "gate() publishes a card only if the backlog task is done and <task>-verify.json has verdict or status 'done'. All six cards meet this: GT24-C02, GT23-C02, GT23-C03, UM21-C03, UM21-P01 and UM21-C01 are done with done verifies. UM21-T02 is 'ready', so the two findings are correctly excluded under the rule.",
+        "Ruling: the evidence would support showing both findings, but widening the inclusion rule changes what a publishable page says, so it is José's call at publish time, not a DOC-05 fix.",
+        "The clock card would cite docs/quality/audits/um21-t02-clock-census.json. Its census lags were independently confirmed in UM21-T02-audit-verify.json round 2 ('done_for_audit_script'). Its fix is decided: D-UM21-T02-1 = A. Label: 'Correction decided · not yet released'.",
+        "The AB01 i5 = i10 duplicate card would cite docs/quality/audits/um21-midstance-slope.json, verified done in UM21-SLOPE-verify.json (the shared motion is the 10° recording), plus the byte-copy confirmation in UM21-T02-audit-verify.json round 2. Its handling (D-UM21-T02-2) is still open, so its label would be 'Found · handling not yet decided'.",
+        "The builder would need a gate keyed to a verified evidence file rather than the task status."
+      ]
+    },
+    {
+      "id": 5,
+      "area": "plain, publishable wording; no overclaims",
+      "result": "failed (UM21-C01 card and intro)",
+      "evidence": [
+        "UM21-C01 card: 'LocoHub's earlier converter added pelvis tilt to hip flexion … the earlier values were off'. contributor_tools/reconvert_umich_streaming.py lines 91-92 still set thigh = pelvis + hip and shank = pelvis + hip − knee, and UM21-C01-verify.json notes 'The producer still computes pelvis + hip (UM21-T02/T03)'. These values exist only in LocoHub's unreleased local treadmill rebuild. The legacy UM21 MATLAB converter computes thigh = shank + knee (convert_umich_phase_to_parquet.m line 1089), so it is not this recipe either.",
+        "'Earlier' wrongly implies the code has been replaced, and the page intro's 'Before … shows the data as published' does not hold for this card.",
+        "Other cards: the plain-language cause and fix sentences match their audits and verifies. Hedges are present where needed (GT23 'cannot be matched … not rescaled by guesswork'; UM21 thigh 'planar estimates'; 'it is not scientific approval')."
+      ]
+    },
+    {
+      "id": 6,
+      "area": "render and gates",
+      "result": "pass",
+      "evidence": "Playwright with system Chrome at true 390x900 and 1100x900 viewports: overflow 0 px; 6 cards (gt24-ankle-sign, gt23-moment-units, gt23-normalizing-mass, um21-ankle-branch, um21-reversed-pelvis, um21-thigh-recipe). Images are loading='lazy'. Element screenshots of 4 cards at both widths show every figure loaded; figures stack on phone and pair at 1100. Gates under the AGENTS.md prefix: build_fixes_page.py --check → 'Current: 6 cards, 11 figures.'; docs/build.py --check → 41 pages, 1713 assets, exit 0; pytest tests/test_fixes_page.py tests/test_data_documentation.py tests/test_quality_page.py → 16 passed; my tests/test_fixes_page_verify.py → 7 passed; build_backlog_page.py --check → Backlog valid; HTML current (99 tasks). Builder, page and test hashes match the handoff (521d7a3f…, b38b8380…, d4644bde…)."
+    }
+  ],
+  "required_fixes": [
+    "F1 (UM21-C01 card and intro): describe the Before values as LocoHub's unreleased treadmill rebuild code, which still computes pelvis + hip until the decided recipe is applied. For example, Cause: 'LocoHub's treadmill rebuild code (not released) adds pelvis tilt to hip flexion …'; Before caption: 'LocoHub rebuild code (unreleased)'. Do not say 'earlier converter'. Adjust the page intro so Before is 'the data as published, or as LocoHub's own unreleased build computed it'.",
+    "F2 (labels and tense): change the GT23-C03 label 'per-trial check under way' to something true, e.g. 'per-trial check planned'. Replace 'releases or will release' with 'will release' in the fixes-page intro and the quality-page sentence."
+  ],
+  "optional": [
+    "At publish time, offer José the two UM21-T02 findings as cards, with the citations and labels in check 4.",
+    "UM21-P01 label could read 'Correction decided · sign-table change in review · not yet released' once UM21-P02 passes review."
+  ],
+  "questions_for_jose": [],
+  "test_runs": [
+    {
+      "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 contributor_tools/build_fixes_page.py --check",
+      "result": "Current: 6 cards, 11 figures."
+    },
+    {
+      "command": "same prefix: python3 docs/build.py --check",
+      "result": "exit 0; 41 HTML pages, 1713 assets"
+    },
+    {
+      "command": "same prefix: python3 -m pytest -q -p no:cacheprovider tests/test_fixes_page.py tests/test_data_documentation.py tests/test_quality_page.py",
+      "result": "16 passed"
+    },
+    {
+      "command": "same prefix: python3 -m pytest -q -p no:cacheprovider tests/test_fixes_page_verify.py",
+      "result": "7 passed"
+    },
+    {
+      "command": "python3 contributor_tools/build_backlog_page.py --check",
+      "result": "Backlog valid; HTML current (99 tasks)"
+    },
+    {
+      "command": "Playwright render of docs/quality/fixes.html at 390 and 1100 px (scratchpad doc05/shoot.py)",
+      "result": "overflow 0; figures load"
+    }
+  ],
+  "next_action": "Worker applies F1 and F2 (wording only; figures unchanged) and returns DOC-05 to review. The verifier then rechecks only the changed sentences and the gates."
+}

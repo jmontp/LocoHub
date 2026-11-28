@@ -1,0 +1,29 @@
+{
+  "task_id": "UM21-T01",
+  "status": "done",
+  "last_checked_at_utc": "2026-10-27T23:21:05+00:00",
+  "summary": "Re-verification after the author's fixes: all three acceptance criteria are now evidenced. Criterion 1: the 50 recording identities equal the Streaming/Tread HDF5 inventory, and the Streaming, Normalized and both probe sha256 values are bound directly and agree with every receipt. Criterion 2: ledger and membership agree at identity level, and original-curated, new-export, excluded and transition counts are kept distinct. Criterion 3: all 30 Parquet columns are declared with their check status, unexported source groups are named, and ankle and segment columns stay pending UM21-C01. Sheet figures and chips are faithful to the data. The hip offset question is deferred to UM21-C01 and is not a T01 criterion. This does not approve the dataset scientifically.",
+  "checks": [
+    "First pass (unchanged inputs): re-hashed all 50 phase.parquet and candidate_ledger.jsonl files; each equals the summary, readback, curation and manifest hashes. Per-recording exported/excluded/pair counts equal the summary, readback and manifest. The identity sets (side, start, end, observation_id) are equal across ledger, membership and Parquet ids, with 150 rows per observation (0 problems in 50/50). The 2x2 totals are 7,773/853/479/3,195 = 12,300, and the authors' set is 8,252 with 0 unmatched. The other-leg lag for AB02/i5 (seed 20261027) has a per-stride median of 49.7% (IQR 49.0-51.0), consistent with 50.3%.",
+    "Re-hashed the 4 manifest inputs: all match. The manifest's source.streaming_sha256_recorded equals the summary, readback and curation audit values. normalized_sha256_recorded equals the curation audit. readback_probe_sha256 equals the readback receipt and the current probe file. curation_probe_sha256 equals the curation audit.",
+    "The 30 declared columns (7 identity checked by the probe, 6 identity unchecked, 7 angles identical to source, 4 derived velocities, 6 pending) have no duplicates and equal the phase.parquet schema exactly. The identity_checked list matches what check_um21_tread_source.py asserts (observation_id, reference_side, task_id, source_start/end_time_s, time_s, phase_ipsi).",
+    "HDF5 key names across all 50 Tread trials (no arrays, no hash) show one channel layout. The declared not_exported_source_groups equal it exactly (forceplates, jointAngles, jointForces, jointMoments, jointPowers, markers).",
+    "Duration screen recomputed independently from the membership frames (exported cycles outside 0.5-1.5x the recording median): 58 exported, 47 rule-only. This equals the manifest totals and every per-record count.",
+    "Within-slope unusual counts recomputed (population SD, |z| > 2.5): only AB08/i10 is flagged (z = 2.76). There is no left/right imbalance above 10% (maximum 6.4%).",
+    "all_receipts_agree and identity_agreement_ledger_membership are true for 50/50 recordings.",
+    "Read both sheets' text and the regenerated fig1a_grid.png and fig3a_table.png. Earlier review: the PNGs fig1b, fig2a-c and fig3b. The chips match the recomputed values: 12,300 heel-strike pairs, 'angles identical; velocities match', 58 odd-duration strides, 1 unusual count, and 47 rule-only odd strides on D-1. The 2x2 axes read 'in / not in authors' set'. D-1 options are ordered by stride count (7,773 < 8,252 < 8,626), and the option arithmetic is correct.",
+    "Ran python3 contributor_tools/build_backlog_page.py --check: valid. One thread under nice 19 / ionice 3. The builder was not rerun. Data loads were bounded, one Parquet file at a time."
+  ],
+  "remaining": [
+    "Minor wording, not blocking: not_exported_source_groups lists whole jointAngles groups (L/R Hip, Knee, Ankle, Pelvis) whose sagittal component 0 is exported. Read it as 'other components not exported', as not_exported_owner implies.",
+    "Minor, not blocking: the manifest limitation 'Counts and receipts only' predates the identity-level check that is now in receipts_agree.",
+    "D-1 (not a T01 criterion): the recommendation text says 'nothing is discarded', but option C leaves out 479 author strides and keeps the 47 rule-only odd-duration strides. José should see this before answering.",
+    "The 58 odd-duration exported strides remain unexplained. They go to the stride-timing check, not to T01.",
+    "The condition aliases d5/d10 -> in5/in10 and the hip offset belong to UM21-C01."
+  ],
+  "next_action": "The main session merges this handoff and moves UM21-T01 to done. The odd-duration strides and the D-1 recommendation wording go to UM21-R01 and the timing task.",
+  "changed_files": [
+    "docs/maintainers/handoffs/UM21-T01.json"
+  ],
+  "decisions": []
+}

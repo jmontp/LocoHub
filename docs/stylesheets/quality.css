@@ -1,0 +1,48 @@
+/* File evidence comes first; software results and reference ranges are secondary. */
+.quality-nav { display:flex; flex-wrap:wrap; gap:.7rem 1.4rem; margin:1.5rem 0 2rem; }
+.audit-table { margin:1rem 0 1.5rem; }
+.audit-table table { width:100%; font-size:.88rem; }
+.audit-table th, .audit-table td { vertical-align:top; }
+.audit-table th:first-child { min-width:14rem; max-width:22rem; overflow-wrap:anywhere; }
+.audit-dataset-name { display:block; font-size:.78rem; font-weight:400; margin-bottom:.25rem; }
+.audit-state { font-weight:650; white-space:nowrap; }
+.audit-problem { text-decoration:underline; text-decoration-color:#b66b56; text-underline-offset:.3em; }
+.audit-review { text-decoration:underline dotted; text-underline-offset:.3em; }
+.audit-evidence, .quality-disclosure { border-top:1px solid var(--border, #aaa6); padding:1rem 0; }
+.audit-evidence summary, .quality-disclosure summary { cursor:pointer; font-weight:600; overflow-wrap:anywhere; }
+.audit-evidence p, #quality-test-results p { overflow-wrap:anywhere; }
+.audit-evidence[open] { border-left:3px solid var(--border, #aaa6); padding-left:1rem; }
+.audit-finding { margin:1.5rem 0; }
+.audit-finding h3 { font-size:1rem; }
+.audit-limitation { padding-left:.8rem; border-left:2px solid var(--border, #aaa6); }
+#quality-test-results pre { overflow:auto; }
+#quality-phase .phase-range-box { fill:none; stroke:currentColor; stroke-dasharray:3 2; opacity:.55; }
+#file-status [hidden] { display:none !important; }
+#audit-dataset-filter { max-width:100%; margin:.5rem; padding:.4rem; }
+.table-scroll:focus-visible, summary:focus-visible { outline:2px solid currentColor; outline-offset:3px; }
+@media(max-width:600px) { .audit-table table { min-width:660px; } .audit-evidence[open] { padding-left:.6rem; } }
+
+.audit-file-location { display:block; font-weight:400; font-size:.72rem; margin-top:.3rem; overflow-wrap:anywhere; }
+
+/* DOC-01: per-dataset evidence status; one column on phones, two from 760px. */
+.status-grid { display:grid; grid-template-columns:minmax(0,1fr); gap:1rem; margin:1rem 0; }
+@media(min-width:760px) { .status-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+.status-card { padding:.8rem 1rem; border:1px solid var(--line); border-radius:4px; background:var(--surface); scroll-margin-top:1rem; }
+.status-card:target { border-color:var(--accent); box-shadow:inset 3px 0 0 var(--accent); }
+.status-card h3 { margin:0 0 .5rem; font-size:1rem; }
+.status-label { display:inline-block; margin-left:.35rem; color:var(--muted); font-size:.78rem; font-weight:500; white-space:nowrap; }
+.status-label::before { content:""; display:inline-block; width:.6rem; height:.6rem; margin-right:.3rem; border:1.5px solid var(--control); border-radius:50%; vertical-align:-.02em; }
+.status-label[data-status="pilot"]::before { background:linear-gradient(90deg,var(--control) 30%,transparent 30%); }
+.status-label[data-status="partial"]::before { background:linear-gradient(90deg,var(--control) 50%,transparent 50%); }
+.status-label[data-status="rebuilt"]::before { background:var(--control); }
+.status-card dl { display:grid; grid-template-columns:minmax(0,1fr); gap:.1rem; margin:0; font-size:.86rem; line-height:1.45; }
+.status-card dt { margin-top:.35rem; color:var(--muted); font-size:.75rem; font-weight:600; }
+.status-card dd { margin:0; overflow-wrap:anywhere; }
+@media(min-width:420px) { .status-card dl { grid-template-columns:8.5rem minmax(0,1fr); column-gap:.8rem; } .status-card dt { margin-top:.3rem; } .status-card dd { margin-top:.3rem; } }
+.test-summary table { width:100%; font-size:.86rem; }
+.test-summary th[scope="row"] { font-weight:500; text-align:left; }
+.test-summary td.num { text-align:right; font-variant-numeric:tabular-nums; }
+.test-purpose { margin:1rem 0 .3rem; font-size:.9rem; }
+.test-scope { display:block; color:var(--muted); font-size:.75rem; font-weight:400; }
+.status-label[data-status="rebuilding"]::before { background:repeating-linear-gradient(90deg,var(--control) 0 2px,transparent 2px 4px); }
+.status-label[data-status="review"]::before { background:var(--control); }

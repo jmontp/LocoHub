@@ -1,0 +1,89 @@
+{
+  "task_id": "MB24-F01",
+  "title": "Reconcile MBLUE full source and preservation receipts",
+  "status": "review",
+  "scientific_approval": false,
+  "last_checked_at_utc": "2026-10-31T16:00:00Z",
+  "repository_head": "569ee8f4d7cdf83d96d5f74aa6b65354b4a78da4",
+  "summary": "The MBLUE rebuild receipts agree with each other and with the source inventory. Coverage: 335 blocks (140 treadmill, 136 stairs, 40 sit-stand, 19 crouch); 15,825 source views; 764 stair windows. Each window keeps its reference view (426 right, 338 left; 652 force-event endpoints, 112 marker endpoints). The 764 non-reference views are listed one by one, so 15,825 - 764 = 15,061. 50 recorded hash references to 17 receipts all equal the current receipt bytes. 36 code bindings match, except contributor_tools/common/data_contract.py, which has uncommitted edits; its bound version equals git HEAD. The pelvis fix changed 6,842 right treadmill views and only 14 pelvis/segment columns. All 8,215 left views and all stair, sit-stand and crouch views are unchanged. Gap against acceptance: the full source readback is bound to the rebuild hashes. 199 final outputs are byte-identical to the rebuild by recorded hash. The 136 rewritten stair outputs are bound only by the producer's own exact comparison, not by an independent readback. No large file was rehashed, so byte currency is unverified. A two-stage full-byte job is specified, not written or run. Nothing was launched or modified under converted_datasets/.",
+  "changed_files": [
+    "contributor_tools/review_mb24_f01_receipts.py (new, read-only builder)",
+    "docs/quality/audits/mb24-f01-receipt-reconciliation.json (new)",
+    "docs/maintainers/handoffs/MB24-F01.json (new)"
+  ],
+  "deliverable_hashes_sha256": {
+    "contributor_tools/review_mb24_f01_receipts.py": "861945e64e06194ef3b427c2b2fe6984a3e8f4834b0e108bf1742a6bfeed817b",
+    "docs/quality/audits/mb24-f01-receipt-reconciliation.json": "f6c3cb7abfa0a88afa081285dd1c6037ba5338f359b062b00d472682abfb80dc"
+  },
+  "checks": [
+    "Read AGENTS.md, the MB24-F01 backlog entry, every docs/quality/audits/mblue-* receipt it cites, the PM-02 dispositions (50 MBLUE rows; MB24-F01 owns 16 completed_unreviewed, 15 superseded, 6 needs_fresh_reviewed_plan) and the producer and checker code (reconvert, audit_mblue_normalized, audit_mblue_pelvis_preservation, correct_mblue_stair_reference, check_mblue_final_scope).",
+    "Ran `OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 contributor_tools/review_mb24_f01_receipts.py`: 34 checks, 0 failed, peak RSS 25 MiB, 10 s, RLIMIT_AS 512 MiB. It reads JSON receipts (largest 489 KB) and hashes only those receipts and code files; large source and output files are stat-only.",
+    "The checks are reimplemented from receipt fields, not delegated to check_mblue_final_scope.py. They parse observation IDs independently against the recovered windows, decompose preservation counts by block kind, compare record sums to reported totals and check the downstream planar binding.",
+    "Hash reconciliation: 50 recorded references (scope gate, detour status, PM-02 recheck, docs audits, inter-receipt bindings) to 17 receipts. All 50 match the current bytes.",
+    "Code: 36 bindings. 35 match current files, including the archived inventory, recovery and marker-endpoint probes under contributor_tools/audit_probes/2026_10_20/. data_contract.py differs only in the working tree (recorded 553ced... equals HEAD).",
+    "On disk (stat only): all 335 final and 335 rebuild outputs exist (1.07 GB and 1.12 GB). The final directory holds only those files plus its summary, and no final file is newer than its summary. The 10 source MAT files match the inventory byte sizes. All 10 FileInfo files and all 40 matched stair force/IK .mot files (0.86 GB) exist.",
+    "`... python3 -m pytest -q tests/test_backlog_workflow.py` and `... python3 contributor_tools/build_backlog_page.py --check`: 71 passed; \"Backlog valid; HTML current (93 tasks).\". backlog.json and backlog.html were not edited.",
+    "Round 2: reran `... python3 contributor_tools/review_mb24_f01_receipts.py`: 36 checks, 0 failed, 1 not_checked (the 4 unchanged views); 27 MiB RSS, 10 s. Only small JSON receipts and code were hashed; nothing launched.",
+    "Round 2: tests/test_backlog_workflow.py -> 71 passed in 3.23s; build_backlog_page.py --check -> Backlog valid; HTML current (93 tasks)."
+  ],
+  "check_results": {
+    "tests/test_backlog_workflow.py": "71 passed in 3.23s",
+    "build_backlog_page.py --check": "Backlog valid; HTML current (93 tasks)."
+  },
+  "acceptance_assessment": [
+    {
+      "criterion": "All 335 blocks accounted for; corrected right pelvis uses left source clock with missing overlap preserved",
+      "result": "met by receipts; byte currency not rechecked"
+    },
+    {
+      "criterion": "Every unrelated column exactly preserved; no synthetic timing",
+      "result": "met for the rebuild (preservation and readback receipts); the 136 stair files rest on the producer self-check"
+    },
+    {
+      "criterion": "Each of 764 stair windows exports exactly its recovered reference view, retaining both legs; dropped views have explicit lineage",
+      "result": "identities fully reconciled; values as above"
+    },
+    {
+      "criterion": "Final source readback bound to final corrected hashes",
+      "result": "partly met: 199/335 by identical hash; 136 stair outputs not independently read back"
+    },
+    {
+      "criterion": "Do not rerun verified full work merely because old queues stopped",
+      "result": "met: no rerun; only byte currency and the stair-file comparison are proposed"
+    },
+    {
+      "criterion": "Scope-specific handoff for profile/limitations review and release reconciliation",
+      "result": "this handoff; those gates remain open"
+    }
+  ],
+  "remaining": [
+    "Full-byte verification is specified in the audit (full_byte_verification_job), not written or run. Stage 1 streams SHA256 of the 335 final outputs, the 136 rebuild stair outputs, 10 source MAT, 10 FileInfo and 40 stair .mot files (about 2.2 GB) against the recorded hashes. Stage 2 is an independent exact comparison of the 764 kept stair views with the rebuild, checks that the 764 omitted views are absent and checks the event columns against recovery. One Linux Python worker, 768 MiB address space, timeout 3600 s, PM-01 reserves; pilot on one treadmill and one stair block first.",
+    "Source inventory run has no terminal status record (PM-02: needs_fresh_reviewed_plan). Its source hashes were re-established by the full readback, which re-hashed each source MAT; the inventory run itself remains unreviewed.",
+    "Not checked: 4 right treadmill views (AB04/exo/decline_10deg, AB05/bare/decline_5deg, AB11/bare/incline_10deg) were unchanged by the pelvis fix. They occur only where right exceeds left by at least 2 cycles, which is consistent with no left-clock overlap but not established by the receipts. The stage 2 overlap target addresses it.",
+    "Stale docs receipts: mblue-pelvis-clock-fix.json and mblue-stair-reference.json still say queued; mblue-complete-source-readback.json covers the pre-fix baseline (two partial readbacks). Not edited here; the docs owner should mark them superseded.",
+    "data_contract.py working-tree edits: any rerun or verifier must bind the current file or avoid importing it.",
+    "Open gates not covered: anatomical/model orientation, force/COP source lineage, raw event exclusions, planar relabel review, profile/limitations review, release reconciliation."
+  ],
+  "evidence_paths": [
+    "docs/quality/audits/mb24-f01-receipt-reconciliation.json",
+    "contributor_tools/review_mb24_f01_receipts.py",
+    "converted_datasets/reconversion_v2/mblue_final_acceptance_20261021/scope_evidence.json",
+    "converted_datasets/reconversion_v2/mblue_reference_corrected_full_20261021/correction_summary.json",
+    "converted_datasets/reconversion_v2/mblue_pelvis_full_readback_20261021/source_comparison.json",
+    "converted_datasets/reconversion_v2/mblue_pelvis_full_preservation_20261021/preservation.json",
+    "converted_datasets/reconversion_v2/mblue_stair_reference_review_v3_20261021/reference_recovery.json",
+    "docs/quality/audits/pm02-job-dispositions.json"
+  ],
+  "next_action": "Reviewer: verify this reconciliation against the cited receipts. Then, under PM-01 and after the UM21-T02 launcher is reviewed, write and review contributor_tools/verify_mblue_final_bytes.py to the spec, pilot it on one treadmill and one stair block, and run the full job through the guarded launcher. No decision is needed from José for this step.",
+  "revision": {
+    "round": 2,
+    "responding_to": "docs/maintainers/handoffs/MB24-F01-verify.json (back_to_worker)",
+    "required_fix": "Full-byte job spec: the four receipt binding keys now carry the converted_datasets/reconversion_v2/ prefix. The audit note now says keys are repository-root relative. guarded_launcher.validate_spec passes in-process with a dummy verifier hash (launcher sha256 8df6f115...). All four receipt bindings exist from the repository root and equal the current files. The spec still holds TO_BIND_AFTER_REVIEW for the unwritten verifier, so it cannot launch as written. Result recorded in full_byte_verification_job.spec_validation.",
+    "recommendations_done": [
+      "Right-surplus pattern recorded (scope_counts.right_unchanged_decomposition.right_surplus_pattern): unchanged right views occur only in treadmill blocks with right-left >= 2 cycles (3 of 7 such blocks; 0 of the other 133). This is consistent with no left-clock overlap. Status not_checked; the receipts cannot establish it.",
+      "Stage 2 gains a per-view overlap target: list right treadmill views with no left-clock overlap from the source clocks, check that pelvis/segment values are missing exactly there, and compare the list with the 4 unchanged views.",
+      "Spec note: stage 2 (pyarrow) needs the launcher thread_env (single-thread settings) under the 768 MiB cap; the pilot must confirm it.",
+      "Lineage clarified: 16,418 inventory side-cycles - 593 right sit-stand/crouch cycles (contra columns in 59 blocks with exactly equal bilateral clocks) = 15,825 views. Added as a check."
+    ]
+  }
+}

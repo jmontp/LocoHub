@@ -1,0 +1,89 @@
+{
+  "task_id": "UM21-T02",
+  "part": "guarded single-job launcher only",
+  "status": "launcher_round4_ready_for_independent_review",
+  "scientific_approval": false,
+  "last_checked_at_utc": "2026-10-30T22:21:59+00:00",
+  "summary": "Round 4. Required fix D from round 3 of UM21-T02-launcher-verify.json is applied, along with R3-1 to R3-4. The 3 round-3 strict-xfail cases pass, and their single decorator is removed with the assertions unchanged. The reviewer accepted the round-3 shell-exemption rule. No real job was launched and no research data was read. Only dummy processes that these tests started were signalled. The real ledger directory was not written: the tests use temporary ledgers, and the CLI smoke was a dry run, which never claims. The launcher remains unreviewed: launch nothing.",
+  "changed_files": [
+    "contributor_tools/guarded_launcher.py",
+    "tests/test_guarded_launcher.py (new round-4 tests)",
+    "tests/test_guarded_launcher_verify.py (round-3 xfail decorator removed only)",
+    "docs/maintainers/handoffs/UM21-T02.json"
+  ],
+  "deliverable_hashes_sha256": {
+    "contributor_tools/guarded_launcher.py": "8df6f11529b0c5280a95259e73caeeb41c1a9db5b757f189bafde109c6321b7b",
+    "tests/test_guarded_launcher.py": "99f0f26f5a49eed23175028e199075adda3b8810abeb2173f26f473993eef3c3",
+    "tests/test_guarded_launcher_verify.py": "bc9af2d506364f20c766d3e323e3aa32a06d6098062483d802301e2674d8474a",
+    "docs/quality/audits/pm01-um21-tread-pilot-handoff.json (bound envelope)": "9f204cfd9ba6b2beb256e4d962778183ec2dd4895fd5009591680cb479a8dee9"
+  },
+  "repository_head": "569ee8f4d7cdf83d96d5f74aa6b65354b4a78da4",
+  "fixes": {
+    "1_envelope_floors": "The PM-01 values are held in ENVELOPE_LIMITS, and ENVELOPE_REVIEWED_SHA256 binds the envelope file. If the envelope hash differs, the launch is refused with envelope_changed_since_review. The receipt records envelope path, reviewed and actual sha256, and limits; after the run, checks.envelope_unchanged re-hashes it. A spec may only be stricter. Startup reserves must be >= 3584/2816 MiB and runtime reserves >= 2048/2048 MiB. poll_seconds must be <= 15, kill_after_seconds <= 30, timeout_seconds <= 3600, and address_space_mib <= 768. Each spec disk item must be >= 1024 MiB. The launcher always adds output volume >= 5120 MiB and /mnt/c >= 1024 MiB, so a spec cannot omit C:. disk_admission is now optional. validate_spec has a limits parameter as a test-only override; no test uses it.",
+    "2_exception_wrap": "The span from Popen to reap is wrapped in try/except BaseException. While the leader is unreaped, the error path stops the verified group (TERM, grace, KILL), falling back to SIGKILL. It then reaps, proves cleanup and writes a terminal receipt: status launcher_error, with the error and traceback in launcher_errors. An unreadable startup reading (Linux MemAvailable, disk free) writes a refusal receipt and then raises PreconditionUnreadable, a RuntimeError subclass. The CLI returns 3.",
+    "3_stop_before_launch": "stop_requested is checked immediately before Popen; if set, the launcher refuses with stopped_by_request_before_launch and launches nothing. The CLI installs its signal handlers before lowering its own priority and hashing.",
+    "4_escape_gates_success": "checks.linux_no_new_worker is false if the post-run Linux census is unavailable or lists any worker. That covers a descendant that escaped the group through setsid, and any new foreign worker. checks.no_orphans_at_leader_exit is also added. clean_success requires every check to be true.",
+    "5_group_verified": "Right after Popen, the launcher records pgid and sid and requires pgid == sid == leader PID (own_session_verified). If they differ, no group is ever signalled: only the unreaped leader PID gets SIGKILL, it is reaped, and status is launcher_error. stop_group itself refuses when pgid != pid.",
+    "6_ancestors": "Only the launcher's own PID is exempt unconditionally. An ancestor is exempt only if it is not an interpreter running code: a shell with -c, an interactive shell, tmux, timeout, init or the agent host. Python, MATLAB and OpenSim ancestors, and a shell running a script file, are counted as workers (refusal foreign_worker_linux_ancestor). A python driver that calls the launcher repeatedly is therefore refused.",
+    "7_census_gaps": "A python process is a worker if any path argument resolves inside the repository, whatever its cwd. With the cwd inside the repository, the pytest/py.test console script and the ipykernel, ipykernel_launcher, ipython and jupyter* entry points also count. The real MCP servers, as they run on this host, remain unflagged.",
+    "8_documentation": "The module docstring documents four limits. (a) A SIGKILLed or OOM-killed launcher leaves the receipt 'running' with no memory polling; the job is bounded by PDEATHSIG and the timeout, and recovery is via verify-cleanup. (b) The stop path is Linux-only, so no MATLAB or native job may use the launcher until a reviewed native extension exists. (c) A D-state member can block the final wait. (d) The census false positives are conservative."
+  },
+  "recommendations_applied": {
+    "R1": "The envelope sha256 is bound in every receipt and checked before launch.",
+    "R2": "PR_SET_PDEATHSIG=SIGTERM is set on the timeout leader in preexec, with a getppid re-check (os._exit(125) if the launcher is already gone). This also covers the window between Popen and the first receipt write.",
+    "R3": "The output root is re-checked as absent immediately before Popen, after the long hash.",
+    "R4": "Refusal receipts and the first running receipt are created exclusively (open 'x'). If the running receipt cannot be created exclusively, the terminal receipt goes to <receipt>.conflict-<pid>.json instead of replacing another launcher's receipt.",
+    "R5": "An optional address_space_mib (<= 768) is applied with setrlimit(RLIMIT_AS) in the child. The observed 'Max address space' of group members is recorded at launch and at each poll (runtime_guard.observed_address_space_limits).",
+    "R6": "The 137 branch is removed and its comment corrected: timeout re-raises a child's fatal signal, so only 124, or -9 after the timeout, means timed_out. linux_no_new_worker and no_orphans_at_leader_exit checks are added."
+  },
+  "reviewer_test_edit": "tests/test_guarded_launcher_verify.py::test_unexpected_error_mid_run_stops_group_and_finalises_receipt. All of its assertions passed with the fix, but its finally block called os.waitid on the leader without a guard. The launcher had correctly reaped that leader, so the call raised ChildProcessError. The waitid call is now wrapped to treat ChildProcessError as already reaped. No assertion or test intent changed. The second reviewer should confirm this edit is acceptable.",
+  "checks": [
+    "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_guarded_launcher.py tests/test_guarded_launcher_verify.py tests/test_backlog_workflow.py: 205 passed in 19.0 s. Before the marker was removed, a --runxfail run showed the 3 round-3 cases passing; they use real sh, bash and xargs loops with a temporary ledger.",
+    "New worker tests, all with a synthetic ancestor tree: the walk claims the shell ancestors, skips the python driver (a census worker anyway) and stops at claude; the walk stops at an interactive terminal; an ancestor that vanishes mid-lookup gives launch_ledger_unavailable and nothing runs; a second loop iteration with a fresh sh -c under the same outer bash is refused; a failed final write gives a launcher_error fallback that verify-cleanup lists, with cleanup proven; a huge JSON integer gives SpecError.",
+    "pgrep afterwards found no leftover test processes.",
+    "Real host, nothing launched: CLI 'run --dry-run' gave preflight_passed and wrote nothing. A read-only ledger walk from a tool-shell child gave launching parent 'zsh -c' and ancestors [timeout wrapper naming the launcher, zsh -c], stopping at claude.",
+    "python3 contributor_tools/build_backlog_page.py --check: Backlog valid; HTML current (87 tasks)."
+  ],
+  "not_checked": [
+    "No real producer or audit job has run through the launcher, and the 2.2 GB source hash and a real 45 s record are untested.",
+    "Windows census under slow or degraded powershell interop.",
+    "Native Windows (MATLAB.exe) stop and cleanup. This is unsupported by design and documented.",
+    "Full repository test suite (only the two launcher test files).",
+    "The ledger lives in the system temp dir; if /tmp is not cleared at reboot, the boot_id keying still separates boots."
+  ],
+  "remaining": [
+    "Round-4 independent review of contributor_tools/guarded_launcher.py and both test files (AGENTS.md: launch nothing until reviewed).",
+    "Write the independent T02 audit script for the existing AB01/d10 pilot_v2 output, then have it reviewed and bound. It must not reuse source_components() or the producer interpolation, and it must set RLIMIT_AS <= 768 MiB itself or run with address_space_mib <= 768.",
+    "After UM21-T01 confirms the pilot record, both reviews pass and PM-01 authorizes the slot: write the job spec (timeout 3600, kill_after 30, poll 15, startup 3584/2816, runtime 2048/2048, bindings from the PM-01 handoff plus the audit script), run --dry-run, then run the single pilot once."
+  ],
+  "next_action": "Round-4 independent review against round-3 required fix D.",
+  "evidence_paths": [
+    "contributor_tools/guarded_launcher.py",
+    "tests/test_guarded_launcher.py",
+    "tests/test_guarded_launcher_verify.py",
+    "docs/maintainers/handoffs/UM21-T02-launcher-verify.json",
+    "docs/quality/audits/pm01-um21-tread-pilot-handoff.json"
+  ],
+  "decisions": [],
+  "round_3_fixes": {
+    "A_non_finite": "_positive() requires math.isfinite, and > 0, for every numeric spec field: timeout, grace, poll, reserves, disk floors and address space. The envelope limits are checked the same way. Every admission and guard comparison uses _at_least(v, floor), which is false for None, NaN or inf. A NaN or unreadable reading is therefore a refusal at startup and a breach at runtime. A NaN poll or timeout cannot reach the loop.",
+    "B_post_reap": "Right after wait4, exit_code, wall time, peak RSS, the guard and the stop actions are written into the receipt dict, along with job_outcome, which is the job's own result. _finalise() then isolates each step: cleanup proof, censuses, Windows compare, bindings, envelope, outputs and log hash. A failure is appended to finalisation_errors and sets status launcher_error with clean_success false; it is never raised. hash_outputs records per-file errors, and a new check, outputs_hashed, covers them. If the terminal receipt write fails, the receipt goes exclusively to <receipt>.final-<pid>.json; if that also fails, stderr is the last resort.",
+    "C_chaining": "(1) The census exempts the launcher's own PID only when is_launcher_cli(argv) holds: '-m contributor_tools.guarded_launcher' or a script named guarded_launcher.py. Any other process that runs the census is a worker ('library caller of run_job'). (2) A shell ancestor is exempt only when its first argument after short options is -c (clusters such as -ec allowed), or when it has no arguments. 'bash queue.sh -c x' is a script, so it is not exempt. (3) The CLI passes launch_ledger=LEDGER_ROOT (/tmp/locohub_guarded_launcher_uid<uid>/<boot_id>/). Just before Popen, and never on a dry run, it exclusively creates an entry keyed by the PID and start ticks of the nearest ancestor that is not a pure exec wrapper (timeout, nice, ionice, env, setsid, nohup, ...). A second launch from that parent is refused with parent_already_launched; this covers shell -c loops, xargs, make, and a script piped into bash. (4) Documented in the docstring as still possible: an interactive terminal shell (no arguments and a tty on stdin) is exempt from the ledger, so commands typed at a prompt, and loops typed there, are not blocked; separate parents each get one launch."
+  },
+  "round_3_recommendations": {
+    "R2-1": "getpgid/getsid are read before boot_id and start ticks.",
+    "R2-2": "The preexec hook raises if prctl returns non-zero. Popen then fails before exec and the launcher refuses with launch_failed, so parent_death_signal_set true records the outcome. If libc prctl is unavailable, the launcher refuses with parent_death_signal_unavailable.",
+    "R2-3": "runtime_guard.observed_address_space_by_process lists PID, start ticks, limit and trimmed argv per member. The distinct-value list is kept because the reviewer test asserts membership in it.",
+    "R2-4": "converted_datasets is added to LINUX_PATTERNS.",
+    "R2-5": "The docstring documents the neutral setsid-escapee blind spot; only cgroup containment would close it."
+  },
+  "round_4_fixes": {
+    "D_ancestor_ledger": "Host.ledger_ancestors() walks up from the launcher's parent, bounded to 64 steps. It stops at the first interactive terminal shell, agent host (claude, codex, or node running claude), tmux, screen, init/systemd, or PID 1. It collects every ancestor that is a shell (sh, bash, zsh, dash, ksh, fish), a driver (xargs, find, make, gmake, parallel, env, nohup, watch), or whose argv contains 'guarded_launcher'. claim_launch_slot() de-duplicates these together with the launching parent. It refuses with parent_already_launched if any entry already exists, then creates each entry exclusively, refusing on a race. A fresh 'sh -c' per loop iteration therefore shares the outer loop shell's entry. The agent tool shell is a fresh 'zsh -c' per call, so it still gets one launch per call. On this host the real walk yields the tool shell and stops at claude.",
+    "R3-4_fail_closed": "launching_parent() and ledger_ancestors() raise LauncherError if an ancestor's /proc entry disappears mid-walk, or if the bound is exceeded. run_job turns that into the refusal launch_ledger_unavailable. Neither ever keys on a dead PID.",
+    "R3-1": "OverflowError from huge JSON integers is turned into SpecError.",
+    "R3-2": "The docstring documents <receipt>.conflict-<leader_pid>.json and <receipt>.final-<leader_pid>.json. verify-cleanup reports the primary status, the cleanup proof (when the primary receipt has a process identity) and every sibling fallback receipt with its status.",
+    "R3-3": "A failed final receipt write sets status launcher_error in the fallback receipt.",
+    "testability": "Host._parent_pid() is the single hook for the ancestor walk. Tests override it instead of patching os.getppid. Patching os.getppid globally makes the child's PDEATHSIG parent check exit 125, which is correct behaviour."
+  },
+  "residual_after_fix_D": "From the reviewer's round-3 list, each of these takes deliberate circumvention: deleting the per-uid ledger directory or changing TMPDIR; a hand-driven or deliberately built pseudo-terminal, so the parent counts as interactive; runtime indirection of the launcher text combined with a non-shell driver; one cron entry or systemd unit per job; and a setsid escapee with a neutral argv and cwd. All of these are documented in the module docstring."
+}

@@ -1,0 +1,5719 @@
+{
+ "task_id": "CORE-04",
+ "pilot": "UM21",
+ "run": "v2",
+ "status": "review",
+ "scientific_approval": false,
+ "applies_to_dataset": "nothing",
+ "question": "Does the detector (rule B, phase-3 cross-family tests) reproduce the verified UMich 2021 treadmill signs, and abstain rather than err?",
+ "target_rule": "B (D-UM21-C03-1 = B, task DOC-03)",
+ "source": {
+  "path": "contributor_tools/conversion_scripts/Umich_2021/Streaming.mat",
+  "bytes": 2195168300,
+  "mtime_ns": 1754319622540475200,
+  "sha256_recorded": "df8b3e31d2fe6869b95b4776a8f77639da476685b4c0ccb86c985bee3f01b531",
+  "note": "size and mtime checked against the UM21-C03 record before and after; bytes not rehashed"
+ },
+ "seeds": {
+  "A": 20261030,
+  "B": 20261031,
+  "rule": "A = random.Random(A).sample(sorted 50 recordings, 4); B = random.Random(B).sample(the 46 others, 4) (UM21-C03)."
+ },
+ "samples": {
+  "A": [
+   "AB07/i5",
+   "AB03/i5",
+   "AB08/d10",
+   "AB05/d5"
+  ],
+  "B": [
+   "AB05/d10",
+   "AB04/d5",
+   "AB06/d5",
+   "AB01/i5"
+  ],
+  "extra": [
+   "AB01/i0: level walking",
+   "AB07/i10: right-ankle branch episode (UM21-C03)"
+  ]
+ },
+ "inputs_sha256": {
+  "docs/quality/audits/core04-um21-pilot-probe-v2.json": "0f84f80aa4f0387ac1a3cbe2be5a53f2ef9b0e2db6dd2333c3668c6c25b5d072",
+  "docs/quality/audits/core04-um21-pilot-probe.json": "21675be2d41d0b06ce5e6b38a4c5d52d82d1d9d489e4888fa81d7113782b306f",
+  "docs/quality/audits/um21-c03-conventions.json": "244e3c354b6439edf1181aceee735e51b536b017593a982f27d318b256c1f4c3"
+ },
+ "code_sha256": {
+  "contributor_tools/review_core04_um21_pilot.py": "e0bf7d46d916857c479f1775061ee477f283b1aa12d1f162d9aed0b88563dfb7",
+  "contributor_tools/common/sign_offset_detector.py": "fb174cf25b8c5607bca9788787933cee9b6250dfb1779e78d23896bc5def6642",
+  "contributor_tools/review_core04_um21_pilot.py (sheet)": "78dcbbb1150fb363aff11768c9d112bb16714395aabf8872a71840f197ff3351"
+ },
+ "builder_history": [
+  {
+   "probe_file": "e0f7a5c408f16bcf...",
+   "builder": "4392164738429dfd...",
+   "detector": "9fc3e878bdf3a3f3...",
+   "note": "First recorded pilot. The builder then changed only in the sheet step (build_sheet, figure functions, chip and label text); probe_recording, run_probe, resample, strides and summarize were not edited."
+  },
+  {
+   "probe_file": "520149f3878f6216...",
+   "builder": "41a009ef6eed4c99...",
+   "detector": "9fc3e878bdf3a3f3...",
+   "note": "Probe re-run with the changed builder and the same detector: identical to e0f7a5c4 except the code hashes and memory figures (compared field by field), so the probe step was unchanged."
+  },
+  {
+   "probe_file": "this record",
+   "builder": "current",
+   "detector": "current",
+   "note": "Re-run after the verifier fixes: detector adds the CoP-within-foot check and the vertical-order visible-frame count; builder declares the CoP registration rule and drops the task ID from the sheet reply line. Probe file 21675be2...; detector still targeted rule C."
+  },
+  {
+   "probe_file": "21675be2... (unchanged)",
+   "builder": "current",
+   "detector": "current (rule B)",
+   "note": "Sign rule changed to B (D-UM21-C03-1, task DOC-03). The probe was not re-run: the sheet step re-scores it with to_rule_b(); the probe step now also records target_rule for future runs."
+  },
+  {
+   "probe_file": "core04-um21-pilot-probe-v2.json (0f84f80a...)",
+   "builder": "e0bf7d46d916857c... (probe)",
+   "detector": "fb174cf25b8c5607...",
+   "note": "v2 probe (rule B, phase-3 tests): the adapter added stride durations and body mass from ParticipantDetails. The sheet was then built with builder 2126c434...: only the sheet step changed (build_sheet rewritten for v2, new compare_runs and fig_half_cycle, fig_tests height, TEST_LABEL entries for the new tests). Proof that the probe step is unchanged, without re-reading data: builder e0bf7d46 was reconstructed exactly (sha256 matches the hash recorded in the v2 probe) by reverting those sheet-step edits; an AST comparison shows every probe-step function (digest, peak_rss_mib, mem_available, rot_x, strides, resample, summarize, participant_mass, probe_recording, run_probe, main) and every module constant except TEST_LABEL identical."
+  },
+  {
+   "probe_file": "v2 (unchanged)",
+   "builder": "current",
+   "detector": "current (after fb174cf2)",
+   "note": "Record fixes after verification: per-recording pelvis truth note (AB04/i0), builder history entry above. Detector after the probe: gate-failure message reworded (no threshold or scope change) and hip H3 power timing limited to level walking (a scope change made after seeing UM21 data). The v2 probe was not re-run; the predicted effect on its stored evidence is recorded in the summary (after_scope_change_prediction)."
+  },
+  {
+   "probe_file": "v2 (unchanged)",
+   "builder": "split on 2026-10-31",
+   "note": "Probe and sheet steps split into contributor_tools/probe_core04_um21.py and contributor_tools/review_core04_um21_pilot.py so that sheet edits never change a recorded probe hash. Mapping: combined builder e0bf7d46... (v2 probe) -> probe file 17846c4660219d14... ; all 29 probe-step functions and constants AST-identical (only the CLI dispatcher main differs)."
+  }
+ ],
+ "ground_truth": {
+  "source": "UM21-C03 and sign-conventions-source-survey.json mapped to rule B (the UMich clinical source matches B except pelvis tilt)",
+  "per_recording_caveat": "The UMich pelvis truth varies per recording. In AB04/i0 (verifier run; not in this pilot) Plug-in Gait computed the pelvis with the walking direction reversed (median pelvis rotation 180.2 deg vs about 0 elsewhere), so the stored tilt there is flipped and the detector's +1 pelvis suggestion is correct for that recording. Checked for the pilot's 10 recordings: none is affected (pelvis marker test agreed with -1 in every leg, offset within 0.2 deg).",
+  "signs": {
+   "pelvis_tilt": -1,
+   "hip_angle": 1,
+   "knee_angle": 1,
+   "ankle_angle": 1,
+   "hip_moment": 1,
+   "knee_moment": 1,
+   "ankle_moment": 1
+  },
+  "power_by_slot": {
+   "slot 1 (layout 1)": -1,
+   "slot 3 (layout 2)": 1
+  },
+  "hip_moment_status": "partly verified in UM21-C03 (weak lever-arm evidence)"
+ },
+ "adapter": {
+  "angles": "component 1 of {side}{Pelvis,Hip,Knee,Ankle}Angles, deg -> rad; exact (0,0,0) triples -> missing",
+  "moments": "component 1 of {side}{Hip,Knee,Ankle}Moment (N*m/kg as stored)",
+  "power": "first non-zero slot of {side}{Joint}Power (slot recorded; no sign change)",
+  "units": "one stride per unit (heel strike to heel strike, 50-250 frames), resampled to 150 samples; unit_durations_s = (frames - 1) / 100 Hz",
+  "markers": "sagittal projection on the median heel-to-toe forward axis, lab +z up",
+  "plates": "block mean to 100 Hz, README belt tilt, GRF on foot = -(plate force), declared unit N with body_mass_kg from ParticipantDetails Bodymass; CoP by the moment-independent midpoint rule",
+  "body_mass_kg": {
+   "AB07": 53.70000076293945,
+   "AB03": 61.400001525878906,
+   "AB08": 85.0999984741211,
+   "AB05": 77.4000015258789,
+   "AB04": 77.5,
+   "AB06": 73.30000305175781,
+   "AB01": 87.0
+  },
+  "not_supplied": "documentation statements and templates"
+ },
+ "counts": {
+  "applied_right": 86,
+  "suggested_right": 85,
+  "abstained": 29,
+  "conflict": 0,
+  "wrong": 0
+ },
+ "after_scope_change_prediction": {
+  "method": "recombine stored v2 evidence without out-of-scope hip power-timing votes (not a probe run)",
+  "changes": [
+   {
+    "leg": "AB07/i5 R",
+    "channel": "hip_power",
+    "before": "suggested_correct",
+    "after": "abstain"
+   },
+   {
+    "leg": "AB07/i5 L",
+    "channel": "hip_power",
+    "before": "suggested_correct",
+    "after": "abstain"
+   },
+   {
+    "leg": "AB03/i5 R",
+    "channel": "hip_power",
+    "before": "suggested_correct",
+    "after": "abstain"
+   },
+   {
+    "leg": "AB03/i5 L",
+    "channel": "hip_power",
+    "before": "suggested_correct",
+    "after": "abstain"
+   },
+   {
+    "leg": "AB01/i5 R",
+    "channel": "hip_power",
+    "before": "suggested_correct",
+    "after": "abstain"
+   },
+   {
+    "leg": "AB01/i5 L",
+    "channel": "hip_power",
+    "before": "applied_correct",
+    "after": "suggested_correct"
+   }
+  ],
+  "counts": {
+   "suggested": 81,
+   "applied": 85,
+   "abstain": 34
+  }
+ },
+ "per_channel_outcomes": {
+  "pelvis_tilt": {
+   "suggested_correct": 20
+  },
+  "hip_angle": {
+   "suggested_correct": 7,
+   "applied_correct": 13
+  },
+  "knee_angle": {
+   "applied_correct": 16,
+   "suggested_correct": 4
+  },
+  "ankle_angle": {
+   "applied_correct": 18,
+   "suggested_correct": 2
+  },
+  "hip_moment": {
+   "suggested_correct": 10,
+   "applied_correct": 10
+  },
+  "knee_moment": {
+   "suggested_correct": 20
+  },
+  "ankle_moment": {
+   "applied_correct": 18,
+   "suggested_correct": 2
+  },
+  "hip_power": {
+   "suggested_correct": 10,
+   "abstain": 7,
+   "applied_correct": 3
+  },
+  "knee_power": {
+   "abstain": 20
+  },
+  "ankle_power": {
+   "applied_correct": 8,
+   "suggested_correct": 10,
+   "abstain": 2
+  }
+ },
+ "per_test": {
+  "markers: pelvis tilt": {
+   "right": 20
+  },
+  "markers: hip angle": {
+   "right": 20
+  },
+  "stance extension: hip angle": {
+   "right": 18,
+   "no decision": 2
+  },
+  "markers: knee angle": {
+   "right": 20
+  },
+  "knee range: knee angle": {
+   "right": 16,
+   "no decision": 4
+  },
+  "markers: ankle angle": {
+   "right": 20
+  },
+  "push-off: ankle angle": {
+   "right": 18,
+   "no decision": 2
+  },
+  "lever arm: hip moment": {
+   "right": 16,
+   "no decision": 4
+  },
+  "stance timing: hip moment": {
+   "right": 18,
+   "no decision": 2
+  },
+  "ID-light: hip moment": {
+   "right": 20
+  },
+  "lever arm: knee moment": {
+   "right": 20
+  },
+  "lever arm: ankle moment": {
+   "right": 20
+  },
+  "late stance: ankle moment": {
+   "right": 18,
+   "no decision": 2
+  },
+  "power timing: hip power": {
+   "right": 8,
+   "no decision": 12
+  },
+  "power timing: ankle power": {
+   "right": 8,
+   "no decision": 12
+  },
+  "power identity: hip": {
+   "right": 20
+  },
+  "power identity: knee": {
+   "right": 20
+  },
+  "power identity: ankle": {
+   "right": 20
+  }
+ },
+ "new_tests": {
+  "stance extension: hip angle": {
+   "right": 18,
+   "no decision": 2
+  },
+  "push-off: ankle angle": {
+   "right": 18,
+   "no decision": 2
+  },
+  "stance timing: hip moment": {
+   "right": 18,
+   "no decision": 2
+  },
+  "ID-light: hip moment": {
+   "right": 20
+  },
+  "power timing: hip power": {
+   "right": 8,
+   "no decision": 12
+  },
+  "power timing: ankle power": {
+   "right": 8,
+   "no decision": 12
+  }
+ },
+ "half_cycle": {
+  "pelvis_tilt / reference_angle": {
+   "lag0": 20
+  },
+  "hip_angle / reference_angle": {
+   "ambiguous": 7,
+   "lag0": 13
+  },
+  "knee_angle / reference_angle": {
+   "lag0": 20
+  },
+  "ankle_angle / reference_angle": {
+   "lag0": 20
+  },
+  "hip_moment / lever_arm": {
+   "lag0": 6,
+   "ambiguous": 11,
+   "half": 3
+  },
+  "hip_moment / inverse_dynamics_light": {
+   "ambiguous": 9,
+   "lag0": 11
+  },
+  "knee_moment / lever_arm": {
+   "lag0": 20
+  },
+  "ankle_moment / lever_arm": {
+   "lag0": 20
+  }
+ },
+ "comparison_with_rule_B_rescore_of_v1": {
+  "sign_changes_among_decided": [],
+  "old_test_vote_changes": [
+   {
+    "leg": "AB08/d10 R",
+    "channel": "hip_moment",
+    "test": "lever_arm",
+    "before": 1,
+    "after": null,
+    "reason": "channel fits the reference better half a cycle late (column from the other leg?)"
+   },
+   {
+    "leg": "AB04/d5 L",
+    "channel": "hip_moment",
+    "test": "lever_arm",
+    "before": 1,
+    "after": null,
+    "reason": "channel fits the reference better half a cycle late (column from the other leg?)"
+   },
+   {
+    "leg": "AB06/d5 L",
+    "channel": "hip_moment",
+    "test": "lever_arm",
+    "before": 1,
+    "after": null,
+    "reason": "channel fits the reference better half a cycle late (column from the other leg?)"
+   },
+   {
+    "leg": "AB07/i10 R",
+    "channel": "ankle_moment",
+    "test": "late_stance_plantarflexor",
+    "before": 1,
+    "after": null,
+    "reason": "plate-to-leg check failed: the knee's largest excursion falls inside this plate's stance (plate belongs to the other leg?)"
+   },
+   {
+    "leg": "AB07/i10 L",
+    "channel": "ankle_moment",
+    "test": "late_stance_plantarflexor",
+    "before": 1,
+    "after": null,
+    "reason": "plate-to-leg check failed: the knee's largest excursion falls inside this plate's stance (plate belongs to the other leg?)"
+   }
+  ],
+  "offset_max_abs_diff_rad": 0.0,
+  "unchanged_channels": 116,
+  "verdict_changes_count": 84,
+  "gained_verdict": 82,
+  "lost_apply": [
+   {
+    "leg": "AB07/i10 R",
+    "channel": "ankle_moment",
+    "before": [
+     "apply",
+     1
+    ],
+    "after": [
+     "suggest",
+     1
+    ],
+    "reason_after": "1 agreeing test(s) from 1 family (plate_geometry); apply needs 2; flagged for review"
+   },
+   {
+    "leg": "AB07/i10 L",
+    "channel": "ankle_moment",
+    "before": [
+     "apply",
+     1
+    ],
+    "after": [
+     "suggest",
+     1
+    ],
+    "reason_after": "1 agreeing test(s) from 1 family (plate_geometry); apply needs 2; flagged for review"
+   }
+  ],
+  "verdict_changes": [
+   {
+    "leg": "AB07/i5 R",
+    "channel": "ankle_angle",
+    "before": [
+     "suggest",
+     1
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 3 from families marker_geometry, plate_timing"
+   },
+   {
+    "leg": "AB07/i5 R",
+    "channel": "hip_moment",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "suggest",
+     1
+    ],
+    "reason_after": "2 agreeing test(s) from 1 family (fixed_timing_shape); apply needs 2; flagged for review; half-cycle ambiguous: a column from the other leg would look the same"
+   },
+   {
+    "leg": "AB07/i5 R",
+    "channel": "hip_power",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "suggest",
+     -1
+    ],
+    "reason_after": "1 agreeing test(s) from 1 family (plate_timing); apply needs 2; flagged for review"
+   },
+   {
+    "leg": "AB07/i5 R",
+    "channel": "ankle_power",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "apply",
+     -1
+    ],
+    "reason_after": "score 3 from families plate_timing, power_identity"
+   },
+   {
+    "leg": "AB07/i5 L",
+    "channel": "ankle_angle",
+    "before": [
+     "suggest",
+     1
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 3 from families marker_geometry, plate_timing"
+   },
+   {
+    "leg": "AB07/i5 L",
+    "channel": "hip_moment",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 2 from families plate_geometry, plate_timing"
+   },
+   {
+    "leg": "AB07/i5 L",
+    "channel": "hip_power",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "suggest",
+     -1
+    ],
+    "reason_after": "1 agreeing test(s) from 1 family (plate_timing); apply needs 2; flagged for review"
+   },
+   {
+    "leg": "AB07/i5 L",
+    "channel": "ankle_power",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "apply",
+     -1
+    ],
+    "reason_after": "score 3 from families plate_timing, power_identity"
+   },
+   {
+    "leg": "AB03/i5 R",
+    "channel": "ankle_angle",
+    "before": [
+     "suggest",
+     1
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 3 from families marker_geometry, plate_timing"
+   },
+   {
+    "leg": "AB03/i5 R",
+    "channel": "hip_moment",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 2 from families plate_geometry, plate_timing"
+   },
+   {
+    "leg": "AB03/i5 R",
+    "channel": "hip_power",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "suggest",
+     -1
+    ],
+    "reason_after": "1 agreeing test(s) from 1 family (plate_timing); apply needs 2; flagged for review"
+   },
+   {
+    "leg": "AB03/i5 R",
+    "channel": "ankle_power",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "apply",
+     -1
+    ],
+    "reason_after": "score 3 from families plate_timing, power_identity"
+   },
+   {
+    "leg": "AB03/i5 L",
+    "channel": "ankle_angle",
+    "before": [
+     "suggest",
+     1
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 3 from families marker_geometry, plate_timing"
+   },
+   {
+    "leg": "AB03/i5 L",
+    "channel": "hip_moment",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "suggest",
+     1
+    ],
+    "reason_after": "2 agreeing test(s) from 1 family (fixed_timing_shape); apply needs 2; flagged for review; half-cycle ambiguous: a column from the other leg would look the same"
+   },
+   {
+    "leg": "AB03/i5 L",
+    "channel": "hip_power",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "suggest",
+     -1
+    ],
+    "reason_after": "1 agreeing test(s) from 1 family (plate_timing); apply needs 2; flagged for review"
+   },
+   {
+    "leg": "AB03/i5 L",
+    "channel": "ankle_power",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "apply",
+     -1
+    ],
+    "reason_after": "score 3 from families plate_timing, power_identity"
+   },
+   {
+    "leg": "AB08/d10 R",
+    "channel": "hip_angle",
+    "before": [
+     "suggest",
+     1
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 3 from families marker_geometry, plate_timing"
+   },
+   {
+    "leg": "AB08/d10 R",
+    "channel": "ankle_angle",
+    "before": [
+     "suggest",
+     1
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 3 from families marker_geometry, plate_timing"
+   },
+   {
+    "leg": "AB08/d10 R",
+    "channel": "hip_moment",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "suggest",
+     1
+    ],
+    "reason_after": "2 agreeing test(s) from 1 family (fixed_timing_shape); apply needs 2; flagged for review; half-cycle ambiguous: a column from the other leg would look the same"
+   },
+   {
+    "leg": "AB08/d10 R",
+    "channel": "ankle_power",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "suggest",
+     -1
+    ],
+    "reason_after": "1 agreeing test(s) from 1 family (power_identity); apply needs 2; flagged for review"
+   },
+   {
+    "leg": "AB08/d10 L",
+    "channel": "hip_angle",
+    "before": [
+     "suggest",
+     1
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 3 from families marker_geometry, plate_timing"
+   },
+   {
+    "leg": "AB08/d10 L",
+    "channel": "ankle_angle",
+    "before": [
+     "suggest",
+     1
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 3 from families marker_geometry, plate_timing"
+   },
+   {
+    "leg": "AB08/d10 L",
+    "channel": "hip_moment",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "suggest",
+     1
+    ],
+    "reason_after": "2 agreeing test(s) from 1 family (fixed_timing_shape); apply needs 2; flagged for review; half-cycle ambiguous: a column from the other leg would look the same"
+   },
+   {
+    "leg": "AB08/d10 L",
+    "channel": "ankle_power",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "suggest",
+     -1
+    ],
+    "reason_after": "1 agreeing test(s) from 1 family (power_identity); apply needs 2; flagged for review"
+   },
+   {
+    "leg": "AB05/d5 R",
+    "channel": "hip_angle",
+    "before": [
+     "suggest",
+     1
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 3 from families marker_geometry, plate_timing"
+   },
+   {
+    "leg": "AB05/d5 R",
+    "channel": "ankle_angle",
+    "before": [
+     "suggest",
+     1
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 3 from families marker_geometry, plate_timing"
+   },
+   {
+    "leg": "AB05/d5 R",
+    "channel": "hip_moment",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 2 from families plate_geometry, plate_timing"
+   },
+   {
+    "leg": "AB05/d5 R",
+    "channel": "hip_power",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "suggest",
+     1
+    ],
+    "reason_after": "1 agreeing test(s) from 1 family (power_identity); apply needs 2; flagged for review"
+   },
+   {
+    "leg": "AB05/d5 R",
+    "channel": "ankle_power",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "suggest",
+     1
+    ],
+    "reason_after": "1 agreeing test(s) from 1 family (power_identity); apply needs 2; flagged for review"
+   },
+   {
+    "leg": "AB05/d5 L",
+    "channel": "hip_angle",
+    "before": [
+     "suggest",
+     1
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 3 from families marker_geometry, plate_timing"
+   },
+   {
+    "leg": "AB05/d5 L",
+    "channel": "ankle_angle",
+    "before": [
+     "suggest",
+     1
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 3 from families marker_geometry, plate_timing"
+   },
+   {
+    "leg": "AB05/d5 L",
+    "channel": "hip_moment",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "suggest",
+     1
+    ],
+    "reason_after": "2 agreeing test(s) from 1 family (fixed_timing_shape); apply needs 2; flagged for review; half-cycle ambiguous: a column from the other leg would look the same"
+   },
+   {
+    "leg": "AB05/d5 L",
+    "channel": "ankle_power",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "suggest",
+     1
+    ],
+    "reason_after": "1 agreeing test(s) from 1 family (power_identity); apply needs 2; flagged for review"
+   },
+   {
+    "leg": "AB05/d10 R",
+    "channel": "hip_angle",
+    "before": [
+     "suggest",
+     1
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 3 from families marker_geometry, plate_timing"
+   },
+   {
+    "leg": "AB05/d10 R",
+    "channel": "ankle_angle",
+    "before": [
+     "suggest",
+     1
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 3 from families marker_geometry, plate_timing"
+   },
+   {
+    "leg": "AB05/d10 R",
+    "channel": "hip_moment",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 2 from families plate_geometry, plate_timing"
+   },
+   {
+    "leg": "AB05/d10 R",
+    "channel": "hip_power",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "suggest",
+     1
+    ],
+    "reason_after": "1 agreeing test(s) from 1 family (power_identity); apply needs 2; flagged for review"
+   },
+   {
+    "leg": "AB05/d10 R",
+    "channel": "ankle_power",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "suggest",
+     1
+    ],
+    "reason_after": "1 agreeing test(s) from 1 family (power_identity); apply needs 2; flagged for review"
+   },
+   {
+    "leg": "AB05/d10 L",
+    "channel": "hip_angle",
+    "before": [
+     "suggest",
+     1
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 3 from families marker_geometry, plate_timing"
+   },
+   {
+    "leg": "AB05/d10 L",
+    "channel": "ankle_angle",
+    "before": [
+     "suggest",
+     1
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 3 from families marker_geometry, plate_timing"
+   },
+   {
+    "leg": "AB05/d10 L",
+    "channel": "hip_moment",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 2 from families plate_geometry, plate_timing"
+   },
+   {
+    "leg": "AB05/d10 L",
+    "channel": "hip_power",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "suggest",
+     1
+    ],
+    "reason_after": "1 agreeing test(s) from 1 family (power_identity); apply needs 2; flagged for review"
+   },
+   {
+    "leg": "AB05/d10 L",
+    "channel": "ankle_power",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "suggest",
+     1
+    ],
+    "reason_after": "1 agreeing test(s) from 1 family (power_identity); apply needs 2; flagged for review"
+   },
+   {
+    "leg": "AB04/d5 R",
+    "channel": "ankle_angle",
+    "before": [
+     "suggest",
+     1
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 3 from families marker_geometry, plate_timing"
+   },
+   {
+    "leg": "AB04/d5 R",
+    "channel": "hip_moment",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "suggest",
+     1
+    ],
+    "reason_after": "2 agreeing test(s) from 1 family (fixed_timing_shape); apply needs 2; flagged for review; half-cycle ambiguous: a column from the other leg would look the same"
+   },
+   {
+    "leg": "AB04/d5 R",
+    "channel": "ankle_power",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "suggest",
+     1
+    ],
+    "reason_after": "1 agreeing test(s) from 1 family (power_identity); apply needs 2; flagged for review"
+   },
+   {
+    "leg": "AB04/d5 L",
+    "channel": "hip_angle",
+    "before": [
+     "suggest",
+     1
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 3 from families marker_geometry, plate_timing"
+   },
+   {
+    "leg": "AB04/d5 L",
+    "channel": "ankle_angle",
+    "before": [
+     "suggest",
+     1
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 3 from families marker_geometry, plate_timing"
+   },
+   {
+    "leg": "AB04/d5 L",
+    "channel": "hip_moment",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "suggest",
+     1
+    ],
+    "reason_after": "2 agreeing test(s) from 1 family (fixed_timing_shape); apply needs 2; flagged for review; half-cycle ambiguous: a column from the other leg would look the same"
+   },
+   {
+    "leg": "AB04/d5 L",
+    "channel": "ankle_power",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "suggest",
+     1
+    ],
+    "reason_after": "1 agreeing test(s) from 1 family (power_identity); apply needs 2; flagged for review"
+   },
+   {
+    "leg": "AB06/d5 R",
+    "channel": "hip_angle",
+    "before": [
+     "suggest",
+     1
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 3 from families marker_geometry, plate_timing"
+   },
+   {
+    "leg": "AB06/d5 R",
+    "channel": "ankle_angle",
+    "before": [
+     "suggest",
+     1
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 3 from families marker_geometry, plate_timing"
+   },
+   {
+    "leg": "AB06/d5 R",
+    "channel": "hip_moment",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 2 from families plate_geometry, plate_timing"
+   },
+   {
+    "leg": "AB06/d5 R",
+    "channel": "hip_power",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "suggest",
+     -1
+    ],
+    "reason_after": "1 agreeing test(s) from 1 family (power_identity); apply needs 2; flagged for review"
+   },
+   {
+    "leg": "AB06/d5 R",
+    "channel": "ankle_power",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "suggest",
+     -1
+    ],
+    "reason_after": "1 agreeing test(s) from 1 family (power_identity); apply needs 2; flagged for review"
+   },
+   {
+    "leg": "AB06/d5 L",
+    "channel": "hip_angle",
+    "before": [
+     "suggest",
+     1
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 3 from families marker_geometry, plate_timing"
+   },
+   {
+    "leg": "AB06/d5 L",
+    "channel": "ankle_angle",
+    "before": [
+     "suggest",
+     1
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 3 from families marker_geometry, plate_timing"
+   },
+   {
+    "leg": "AB06/d5 L",
+    "channel": "hip_moment",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 2 from families plate_geometry, plate_timing"
+   },
+   {
+    "leg": "AB06/d5 L",
+    "channel": "hip_power",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "suggest",
+     -1
+    ],
+    "reason_after": "1 agreeing test(s) from 1 family (power_identity); apply needs 2; flagged for review"
+   },
+   {
+    "leg": "AB06/d5 L",
+    "channel": "ankle_power",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "suggest",
+     -1
+    ],
+    "reason_after": "1 agreeing test(s) from 1 family (power_identity); apply needs 2; flagged for review"
+   },
+   {
+    "leg": "AB01/i5 R",
+    "channel": "hip_angle",
+    "before": [
+     "suggest",
+     1
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 3 from families marker_geometry, plate_timing"
+   },
+   {
+    "leg": "AB01/i5 R",
+    "channel": "ankle_angle",
+    "before": [
+     "suggest",
+     1
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 3 from families marker_geometry, plate_timing"
+   },
+   {
+    "leg": "AB01/i5 R",
+    "channel": "hip_moment",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "suggest",
+     1
+    ],
+    "reason_after": "2 agreeing test(s) from 1 family (fixed_timing_shape); apply needs 2; flagged for review; half-cycle ambiguous: a column from the other leg would look the same"
+   },
+   {
+    "leg": "AB01/i5 R",
+    "channel": "hip_power",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "suggest",
+     -1
+    ],
+    "reason_after": "1 agreeing test(s) from 1 family (plate_timing); apply needs 2; flagged for review"
+   },
+   {
+    "leg": "AB01/i5 R",
+    "channel": "ankle_power",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "apply",
+     -1
+    ],
+    "reason_after": "score 3 from families plate_timing, power_identity"
+   },
+   {
+    "leg": "AB01/i5 L",
+    "channel": "hip_angle",
+    "before": [
+     "suggest",
+     1
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 3 from families marker_geometry, plate_timing"
+   },
+   {
+    "leg": "AB01/i5 L",
+    "channel": "ankle_angle",
+    "before": [
+     "suggest",
+     1
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 3 from families marker_geometry, plate_timing"
+   },
+   {
+    "leg": "AB01/i5 L",
+    "channel": "hip_moment",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 2 from families plate_geometry, plate_timing"
+   },
+   {
+    "leg": "AB01/i5 L",
+    "channel": "hip_power",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "apply",
+     -1
+    ],
+    "reason_after": "score 3 from families plate_timing, power_identity"
+   },
+   {
+    "leg": "AB01/i5 L",
+    "channel": "ankle_power",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "apply",
+     -1
+    ],
+    "reason_after": "score 3 from families plate_timing, power_identity"
+   },
+   {
+    "leg": "AB01/i0 R",
+    "channel": "hip_angle",
+    "before": [
+     "suggest",
+     1
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 3 from families marker_geometry, plate_timing"
+   },
+   {
+    "leg": "AB01/i0 R",
+    "channel": "ankle_angle",
+    "before": [
+     "suggest",
+     1
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 3 from families marker_geometry, plate_timing"
+   },
+   {
+    "leg": "AB01/i0 R",
+    "channel": "hip_moment",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 2 from families plate_geometry, plate_timing"
+   },
+   {
+    "leg": "AB01/i0 R",
+    "channel": "hip_power",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "apply",
+     -1
+    ],
+    "reason_after": "score 3 from families plate_timing, power_identity"
+   },
+   {
+    "leg": "AB01/i0 R",
+    "channel": "ankle_power",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "apply",
+     -1
+    ],
+    "reason_after": "score 3 from families plate_timing, power_identity"
+   },
+   {
+    "leg": "AB01/i0 L",
+    "channel": "hip_angle",
+    "before": [
+     "suggest",
+     1
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 3 from families marker_geometry, plate_timing"
+   },
+   {
+    "leg": "AB01/i0 L",
+    "channel": "ankle_angle",
+    "before": [
+     "suggest",
+     1
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 3 from families marker_geometry, plate_timing"
+   },
+   {
+    "leg": "AB01/i0 L",
+    "channel": "hip_moment",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "apply",
+     1
+    ],
+    "reason_after": "score 2 from families plate_geometry, plate_timing"
+   },
+   {
+    "leg": "AB01/i0 L",
+    "channel": "hip_power",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "apply",
+     -1
+    ],
+    "reason_after": "score 3 from families plate_timing, power_identity"
+   },
+   {
+    "leg": "AB01/i0 L",
+    "channel": "ankle_power",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "apply",
+     -1
+    ],
+    "reason_after": "score 3 from families plate_timing, power_identity"
+   },
+   {
+    "leg": "AB07/i10 R",
+    "channel": "hip_moment",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "suggest",
+     1
+    ],
+    "reason_after": "1 agreeing test(s) from 1 family (fixed_timing_shape); apply needs 2; flagged for review; half-cycle ambiguous: a column from the other leg would look the same"
+   },
+   {
+    "leg": "AB07/i10 R",
+    "channel": "ankle_moment",
+    "before": [
+     "apply",
+     1
+    ],
+    "after": [
+     "suggest",
+     1
+    ],
+    "reason_after": "1 agreeing test(s) from 1 family (plate_geometry); apply needs 2; flagged for review"
+   },
+   {
+    "leg": "AB07/i10 L",
+    "channel": "hip_moment",
+    "before": [
+     "abstain",
+     null
+    ],
+    "after": [
+     "suggest",
+     1
+    ],
+    "reason_after": "1 agreeing test(s) from 1 family (plate_geometry); apply needs 2; flagged for review"
+   },
+   {
+    "leg": "AB07/i10 L",
+    "channel": "ankle_moment",
+    "before": [
+     "apply",
+     1
+    ],
+    "after": [
+     "suggest",
+     1
+    ],
+    "reason_after": "1 agreeing test(s) from 1 family (plate_geometry); apply needs 2; flagged for review"
+   }
+  ]
+ },
+ "explanations": {
+  "wrong_signs": "none: every applied or suggested sign equals the UM21-C03 sign under rule B",
+  "conflicts": 0,
+  "hip_angle_suggest": {
+   "legs": [
+    "AB07/i5 R",
+    "AB07/i5 L",
+    "AB03/i5 R",
+    "AB03/i5 L",
+    "AB04/d5 R",
+    "AB07/i10 R",
+    "AB07/i10 L"
+   ],
+   "half_cycle_ambiguous": [
+    "AB03/i5 L",
+    "AB03/i5 R",
+    "AB04/d5 R",
+    "AB07/i10 L",
+    "AB07/i10 R",
+    "AB07/i5 L",
+    "AB07/i5 R"
+   ],
+   "why": "Marker test half-cycle ambiguous (|r| at lag 0 within 0.05 of the half lag), so markers and hip stance extension count as one family; on AB07/i10 the leg gate also failed."
+  },
+  "knee_angle_suggest": {
+   "legs": [
+    "AB01/i5 R",
+    "AB01/i5 L",
+    "AB07/i10 R",
+    "AB07/i10 L"
+   ],
+   "why": "As in the first run: only the marker test decided; the knee-range test cast fewer than 5 votes or split on these incline legs."
+  },
+  "ankle_angle_and_moment_suggest": {
+   "legs": [
+    "AB07/i10 R",
+    "AB07/i10 L",
+    "AB07/i10 R",
+    "AB07/i10 L"
+   ],
+   "why": "AB07/i10: the leg gate failed, so push-off and late-stance tests abstained; each channel kept one family."
+  },
+  "hip_moment": {
+   "applied": [
+    "AB07/i5 L",
+    "AB03/i5 R",
+    "AB05/d5 R",
+    "AB05/d10 R",
+    "AB05/d10 L",
+    "AB06/d5 R",
+    "AB06/d5 L",
+    "AB01/i5 L",
+    "AB01/i0 R",
+    "AB01/i0 L"
+   ],
+   "suggest": [
+    "AB07/i5 R",
+    "AB03/i5 L",
+    "AB08/d10 R",
+    "AB08/d10 L",
+    "AB05/d5 L",
+    "AB04/d5 R",
+    "AB04/d5 L",
+    "AB01/i5 R",
+    "AB07/i10 R",
+    "AB07/i10 L"
+   ],
+   "id_light_ambiguous": [
+    "AB01/i5 R",
+    "AB03/i5 L",
+    "AB04/d5 L",
+    "AB04/d5 R",
+    "AB05/d5 L",
+    "AB07/i10 R",
+    "AB07/i5 R",
+    "AB08/d10 L",
+    "AB08/d10 R"
+   ],
+   "why": "Applied where ID-light (with the declared body mass) and stance timing agree and ID-light separates lag 0 from the half lag; suggest where ID-light is half-cycle ambiguous (families collapse) or the gate failed (AB07/i10)."
+  },
+  "hip_lever_arm_half": {
+   "legs": [
+    "AB04/d5 L",
+    "AB06/d5 L",
+    "AB08/d10 R"
+   ],
+   "why": "The quasi-static hip lever arm fits the moment column better half a cycle late in these legs although the column is this leg's (the same column agrees with ID-light). The test is weak (score 0) and the flag makes it abstain; no effect on verdicts. A false \"other leg?\" alarm, recorded."
+  },
+  "leg_gate_fail": {
+   "legs": [
+    "AB07/i10 R",
+    "AB07/i10 L"
+   ],
+   "knee_peak_in_swing_fraction": {
+    "AB07/i10 R": 0.068,
+    "AB07/i10 L": 0.069
+   },
+   "why": "In these 10 % incline legs the knee's largest excursion from its median falls in stance in about 93 % of strides, so the gate reads the plate as belonging to the other leg and all plate-timed tests abstain (conservative). Plates and units are this leg's (the lever arm and CoP checks pass). The knee-range test also cast few votes on these legs in the first run; the cause is not checked further."
+  },
+  "power": {
+   "ankle_applied": [
+    "AB07/i5 R",
+    "AB07/i5 L",
+    "AB03/i5 R",
+    "AB03/i5 L",
+    "AB01/i5 R",
+    "AB01/i5 L",
+    "AB01/i0 R",
+    "AB01/i0 L"
+   ],
+   "ankle_suggest": [
+    "AB08/d10 R",
+    "AB08/d10 L",
+    "AB05/d5 R",
+    "AB05/d5 L",
+    "AB05/d10 R",
+    "AB05/d10 L",
+    "AB04/d5 R",
+    "AB04/d5 L",
+    "AB06/d5 R",
+    "AB06/d5 L"
+   ],
+   "hip_applied": [
+    "AB01/i5 L",
+    "AB01/i0 R",
+    "AB01/i0 L"
+   ],
+   "hip_suggest": [
+    "AB07/i5 R",
+    "AB07/i5 L",
+    "AB03/i5 R",
+    "AB03/i5 L",
+    "AB05/d5 R",
+    "AB05/d10 R",
+    "AB05/d10 L",
+    "AB06/d5 R",
+    "AB06/d5 L",
+    "AB01/i5 R"
+   ],
+   "power_identity_right": "60/60",
+   "why": "Apply needs the power identity (moment and angle both applied) plus power timing. Power timing excludes decline walking (ankle and hip; 10 legs) and abstained where the leg gate failed (AB07/i10, 2 legs); on those legs only the identity decides (suggest or abstain). Hip power also needs an applied hip angle and moment. Knee power has the identity only."
+  },
+  "pelvis_and_knee_moment": "One family each (marker geometry; plate geometry): suggest only, all right.",
+  "offsets": {
+   "flagged": "43/80",
+   "others_max_deg": 13.5,
+   "max_abs_change_vs_first_run_rad": 0.0,
+   "why": "Reported only; zero-definition differences against marker zeros; never applied."
+  }
+ },
+ "per_leg": [
+  {
+   "leg": "AB07/i5 R",
+   "task": "incline_walking",
+   "power_slots": {
+    "hip": 1,
+    "knee": 1,
+    "ankle": 1
+   },
+   "body_mass_kg": 53.70000076293945,
+   "leg_assignment": {
+    "result": "pass",
+    "units": 119,
+    "knee_peak_in_swing_fraction": 0.992
+   },
+   "pelvis_tilt": {
+    "verdict": "suggest",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "suggested_correct",
+    "families": [
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      -1,
+      "119/119"
+     ]
+    }
+   },
+   "hip_angle": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "fixed_timing_shape"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "118/118"
+     ],
+     "hip_stance_extension": [
+      1,
+      "114/114"
+     ]
+    }
+   },
+   "knee_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "joint_anatomy",
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "106/106"
+     ],
+     "knee_hinge_asymmetry": [
+      1,
+      "10/10"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "marker_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "107/107"
+     ],
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "117/118"
+     ]
+    }
+   },
+   "hip_moment": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "fixed_timing_shape"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "113/113"
+     ],
+     "hip_moment_timing": [
+      1,
+      "114/114"
+     ],
+     "inverse_dynamics_light": [
+      1,
+      "99/100"
+     ]
+    }
+   },
+   "knee_moment": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "plate_geometry"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "114/114"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "105/105"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "117/117"
+     ]
+    }
+   },
+   "hip_power": {
+    "verdict": "suggest",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "suggested_correct",
+    "families": [
+     "plate_timing"
+    ],
+    "tests": {
+     "power_timing": [
+      -1,
+      "114/114"
+     ]
+    }
+   },
+   "knee_power": {
+    "verdict": "abstain",
+    "sign": null,
+    "truth": -1,
+    "outcome": "abstain",
+    "families": null,
+    "tests": {}
+   },
+   "ankle_power": {
+    "verdict": "apply",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_timing",
+     "power_identity"
+    ],
+    "tests": {
+     "power_timing": [
+      -1,
+      "114/114"
+     ],
+     "derived:power_identity": [
+      -1,
+      "119/119"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "AB07/i5 L",
+   "task": "incline_walking",
+   "power_slots": {
+    "hip": 1,
+    "knee": 1,
+    "ankle": 1
+   },
+   "body_mass_kg": 53.70000076293945,
+   "leg_assignment": {
+    "result": "pass",
+    "units": 120,
+    "knee_peak_in_swing_fraction": 0.967
+   },
+   "pelvis_tilt": {
+    "verdict": "suggest",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "suggested_correct",
+    "families": [
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      -1,
+      "119/119"
+     ]
+    }
+   },
+   "hip_angle": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "fixed_timing_shape"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "119/119"
+     ],
+     "hip_stance_extension": [
+      1,
+      "115/115"
+     ]
+    }
+   },
+   "knee_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "joint_anatomy",
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "120/120"
+     ],
+     "knee_hinge_asymmetry": [
+      1,
+      "30/30"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "marker_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "119/119"
+     ],
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "116/118"
+     ]
+    }
+   },
+   "hip_moment": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "116/116"
+     ],
+     "hip_moment_timing": [
+      1,
+      "116/117"
+     ],
+     "inverse_dynamics_light": [
+      1,
+      "116/116"
+     ]
+    }
+   },
+   "knee_moment": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "plate_geometry"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "118/118"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "120/120"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "120/120"
+     ]
+    }
+   },
+   "hip_power": {
+    "verdict": "suggest",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "suggested_correct",
+    "families": [
+     "plate_timing"
+    ],
+    "tests": {
+     "power_timing": [
+      -1,
+      "114/114"
+     ]
+    }
+   },
+   "knee_power": {
+    "verdict": "abstain",
+    "sign": null,
+    "truth": -1,
+    "outcome": "abstain",
+    "families": null,
+    "tests": {}
+   },
+   "ankle_power": {
+    "verdict": "apply",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_timing",
+     "power_identity"
+    ],
+    "tests": {
+     "power_timing": [
+      -1,
+      "117/118"
+     ],
+     "derived:power_identity": [
+      -1,
+      "120/120"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "AB03/i5 R",
+   "task": "incline_walking",
+   "power_slots": {
+    "hip": 1,
+    "knee": 1,
+    "ankle": 1
+   },
+   "body_mass_kg": 61.400001525878906,
+   "leg_assignment": {
+    "result": "pass",
+    "units": 108,
+    "knee_peak_in_swing_fraction": 1.0
+   },
+   "pelvis_tilt": {
+    "verdict": "suggest",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "suggested_correct",
+    "families": [
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      -1,
+      "107/107"
+     ]
+    }
+   },
+   "hip_angle": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "fixed_timing_shape"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "108/108"
+     ],
+     "hip_stance_extension": [
+      1,
+      "106/107"
+     ]
+    }
+   },
+   "knee_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "joint_anatomy",
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "108/108"
+     ],
+     "knee_hinge_asymmetry": [
+      1,
+      "46/46"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "marker_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "108/108"
+     ],
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "105/105"
+     ]
+    }
+   },
+   "hip_moment": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "80/81"
+     ],
+     "hip_moment_timing": [
+      1,
+      "105/105"
+     ],
+     "inverse_dynamics_light": [
+      1,
+      "52/52"
+     ]
+    }
+   },
+   "knee_moment": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "plate_geometry"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "108/108"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "106/106"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "108/108"
+     ]
+    }
+   },
+   "hip_power": {
+    "verdict": "suggest",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "suggested_correct",
+    "families": [
+     "plate_timing"
+    ],
+    "tests": {
+     "power_timing": [
+      -1,
+      "108/108"
+     ]
+    }
+   },
+   "knee_power": {
+    "verdict": "abstain",
+    "sign": null,
+    "truth": -1,
+    "outcome": "abstain",
+    "families": null,
+    "tests": {}
+   },
+   "ankle_power": {
+    "verdict": "apply",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_timing",
+     "power_identity"
+    ],
+    "tests": {
+     "power_timing": [
+      -1,
+      "105/108"
+     ],
+     "derived:power_identity": [
+      -1,
+      "108/108"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "AB03/i5 L",
+   "task": "incline_walking",
+   "power_slots": {
+    "hip": 1,
+    "knee": 1,
+    "ankle": 1
+   },
+   "body_mass_kg": 61.400001525878906,
+   "leg_assignment": {
+    "result": "pass",
+    "units": 110,
+    "knee_peak_in_swing_fraction": 0.973
+   },
+   "pelvis_tilt": {
+    "verdict": "suggest",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "suggested_correct",
+    "families": [
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      -1,
+      "110/110"
+     ]
+    }
+   },
+   "hip_angle": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "fixed_timing_shape"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "110/110"
+     ],
+     "hip_stance_extension": [
+      1,
+      "108/108"
+     ]
+    }
+   },
+   "knee_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "joint_anatomy",
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "110/110"
+     ],
+     "knee_hinge_asymmetry": [
+      1,
+      "35/35"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "marker_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "110/110"
+     ],
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "108/108"
+     ]
+    }
+   },
+   "hip_moment": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "fixed_timing_shape"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "105/105"
+     ],
+     "hip_moment_timing": [
+      1,
+      "107/108"
+     ],
+     "inverse_dynamics_light": [
+      1,
+      "106/106"
+     ]
+    }
+   },
+   "knee_moment": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "plate_geometry"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "110/110"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "108/109"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "110/110"
+     ]
+    }
+   },
+   "hip_power": {
+    "verdict": "suggest",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "suggested_correct",
+    "families": [
+     "plate_timing"
+    ],
+    "tests": {
+     "power_timing": [
+      -1,
+      "106/106"
+     ]
+    }
+   },
+   "knee_power": {
+    "verdict": "abstain",
+    "sign": null,
+    "truth": -1,
+    "outcome": "abstain",
+    "families": null,
+    "tests": {}
+   },
+   "ankle_power": {
+    "verdict": "apply",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_timing",
+     "power_identity"
+    ],
+    "tests": {
+     "power_timing": [
+      -1,
+      "108/109"
+     ],
+     "derived:power_identity": [
+      -1,
+      "110/110"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "AB08/d10 R",
+   "task": "decline_walking",
+   "power_slots": {
+    "hip": 1,
+    "knee": 1,
+    "ankle": 1
+   },
+   "body_mass_kg": 85.0999984741211,
+   "leg_assignment": {
+    "result": "pass",
+    "units": 128,
+    "knee_peak_in_swing_fraction": 0.977
+   },
+   "pelvis_tilt": {
+    "verdict": "suggest",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "suggested_correct",
+    "families": [
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      -1,
+      "126/127"
+     ]
+    }
+   },
+   "hip_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "marker_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "126/126"
+     ],
+     "hip_stance_extension": [
+      1,
+      "91/91"
+     ]
+    }
+   },
+   "knee_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "joint_anatomy",
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "125/125"
+     ],
+     "knee_hinge_asymmetry": [
+      1,
+      "25/25"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "marker_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "126/126"
+     ],
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "118/118"
+     ]
+    }
+   },
+   "hip_moment": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "fixed_timing_shape"
+    ],
+    "tests": {
+     "lever_arm": [
+      null,
+      "21/22"
+     ],
+     "hip_moment_timing": [
+      1,
+      "126/126"
+     ],
+     "inverse_dynamics_light": [
+      1,
+      "123/124"
+     ]
+    }
+   },
+   "knee_moment": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "plate_geometry"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "126/126"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "122/123"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "127/127"
+     ]
+    }
+   },
+   "hip_power": {
+    "verdict": "abstain",
+    "sign": null,
+    "truth": -1,
+    "outcome": "abstain",
+    "families": null,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_power": {
+    "verdict": "abstain",
+    "sign": null,
+    "truth": -1,
+    "outcome": "abstain",
+    "families": null,
+    "tests": {}
+   },
+   "ankle_power": {
+    "verdict": "suggest",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "suggested_correct",
+    "families": [
+     "power_identity"
+    ],
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ],
+     "derived:power_identity": [
+      -1,
+      "128/128"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "AB08/d10 L",
+   "task": "decline_walking",
+   "power_slots": {
+    "hip": 1,
+    "knee": 1,
+    "ankle": 1
+   },
+   "body_mass_kg": 85.0999984741211,
+   "leg_assignment": {
+    "result": "pass",
+    "units": 127,
+    "knee_peak_in_swing_fraction": 0.992
+   },
+   "pelvis_tilt": {
+    "verdict": "suggest",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "suggested_correct",
+    "families": [
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      -1,
+      "124/125"
+     ]
+    }
+   },
+   "hip_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "marker_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "125/125"
+     ],
+     "hip_stance_extension": [
+      1,
+      "96/96"
+     ]
+    }
+   },
+   "knee_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "joint_anatomy",
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "124/124"
+     ],
+     "knee_hinge_asymmetry": [
+      1,
+      "16/17"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "marker_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "125/125"
+     ],
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "121/121"
+     ]
+    }
+   },
+   "hip_moment": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "fixed_timing_shape"
+    ],
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "121/122"
+     ],
+     "inverse_dynamics_light": [
+      1,
+      "5/5"
+     ]
+    }
+   },
+   "knee_moment": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "plate_geometry"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "124/124"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "119/119"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "124/124"
+     ]
+    }
+   },
+   "hip_power": {
+    "verdict": "abstain",
+    "sign": null,
+    "truth": -1,
+    "outcome": "abstain",
+    "families": null,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_power": {
+    "verdict": "abstain",
+    "sign": null,
+    "truth": -1,
+    "outcome": "abstain",
+    "families": null,
+    "tests": {}
+   },
+   "ankle_power": {
+    "verdict": "suggest",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "suggested_correct",
+    "families": [
+     "power_identity"
+    ],
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ],
+     "derived:power_identity": [
+      -1,
+      "127/127"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "AB05/d5 R",
+   "task": "decline_walking",
+   "power_slots": {
+    "hip": 3,
+    "knee": 3,
+    "ankle": 3
+   },
+   "body_mass_kg": 77.4000015258789,
+   "leg_assignment": {
+    "result": "pass",
+    "units": 126,
+    "knee_peak_in_swing_fraction": 0.984
+   },
+   "pelvis_tilt": {
+    "verdict": "suggest",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "suggested_correct",
+    "families": [
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      -1,
+      "126/126"
+     ]
+    }
+   },
+   "hip_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "marker_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "126/126"
+     ],
+     "hip_stance_extension": [
+      1,
+      "122/123"
+     ]
+    }
+   },
+   "knee_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "joint_anatomy",
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "125/125"
+     ],
+     "knee_hinge_asymmetry": [
+      1,
+      "123/123"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "marker_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "125/125"
+     ],
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "114/115"
+     ]
+    }
+   },
+   "hip_moment": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "106/107"
+     ],
+     "hip_moment_timing": [
+      1,
+      "122/122"
+     ],
+     "inverse_dynamics_light": [
+      1,
+      "121/122"
+     ]
+    }
+   },
+   "knee_moment": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "plate_geometry"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "122/123"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "124/124"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "124/124"
+     ]
+    }
+   },
+   "hip_power": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "power_identity"
+    ],
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ],
+     "derived:power_identity": [
+      1,
+      "111/111"
+     ]
+    }
+   },
+   "knee_power": {
+    "verdict": "abstain",
+    "sign": null,
+    "truth": 1,
+    "outcome": "abstain",
+    "families": null,
+    "tests": {}
+   },
+   "ankle_power": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "power_identity"
+    ],
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ],
+     "derived:power_identity": [
+      1,
+      "125/125"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "AB05/d5 L",
+   "task": "decline_walking",
+   "power_slots": {
+    "hip": 3,
+    "knee": 3,
+    "ankle": 3
+   },
+   "body_mass_kg": 77.4000015258789,
+   "leg_assignment": {
+    "result": "pass",
+    "units": 126,
+    "knee_peak_in_swing_fraction": 0.984
+   },
+   "pelvis_tilt": {
+    "verdict": "suggest",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "suggested_correct",
+    "families": [
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      -1,
+      "126/126"
+     ]
+    }
+   },
+   "hip_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "marker_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "126/126"
+     ],
+     "hip_stance_extension": [
+      1,
+      "121/121"
+     ]
+    }
+   },
+   "knee_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "joint_anatomy",
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "126/126"
+     ],
+     "knee_hinge_asymmetry": [
+      1,
+      "123/123"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "marker_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "126/126"
+     ],
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "111/113"
+     ]
+    }
+   },
+   "hip_moment": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "fixed_timing_shape"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "125/125"
+     ],
+     "hip_moment_timing": [
+      1,
+      "121/122"
+     ],
+     "inverse_dynamics_light": [
+      1,
+      "125/125"
+     ]
+    }
+   },
+   "knee_moment": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "plate_geometry"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "119/119"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "125/125"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "126/126"
+     ]
+    }
+   },
+   "hip_power": {
+    "verdict": "abstain",
+    "sign": null,
+    "truth": 1,
+    "outcome": "abstain",
+    "families": null,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_power": {
+    "verdict": "abstain",
+    "sign": null,
+    "truth": 1,
+    "outcome": "abstain",
+    "families": null,
+    "tests": {}
+   },
+   "ankle_power": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "power_identity"
+    ],
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ],
+     "derived:power_identity": [
+      1,
+      "126/126"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "AB05/d10 R",
+   "task": "decline_walking",
+   "power_slots": {
+    "hip": 3,
+    "knee": 3,
+    "ankle": 3
+   },
+   "body_mass_kg": 77.4000015258789,
+   "leg_assignment": {
+    "result": "pass",
+    "units": 135,
+    "knee_peak_in_swing_fraction": 0.963
+   },
+   "pelvis_tilt": {
+    "verdict": "suggest",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "suggested_correct",
+    "families": [
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      -1,
+      "133/135"
+     ]
+    }
+   },
+   "hip_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "marker_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "130/130"
+     ],
+     "hip_stance_extension": [
+      1,
+      "114/114"
+     ]
+    }
+   },
+   "knee_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "joint_anatomy",
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "77/77"
+     ],
+     "knee_hinge_asymmetry": [
+      1,
+      "73/73"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "marker_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "78/78"
+     ],
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "118/120"
+     ]
+    }
+   },
+   "hip_moment": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "126/126"
+     ],
+     "hip_moment_timing": [
+      1,
+      "132/132"
+     ],
+     "inverse_dynamics_light": [
+      1,
+      "74/74"
+     ]
+    }
+   },
+   "knee_moment": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "plate_geometry"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "132/133"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "77/77"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "134/134"
+     ]
+    }
+   },
+   "hip_power": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "power_identity"
+    ],
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ],
+     "derived:power_identity": [
+      1,
+      "54/54"
+     ]
+    }
+   },
+   "knee_power": {
+    "verdict": "abstain",
+    "sign": null,
+    "truth": 1,
+    "outcome": "abstain",
+    "families": null,
+    "tests": {}
+   },
+   "ankle_power": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "power_identity"
+    ],
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ],
+     "derived:power_identity": [
+      1,
+      "133/133"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "AB05/d10 L",
+   "task": "decline_walking",
+   "power_slots": {
+    "hip": 3,
+    "knee": 3,
+    "ankle": 3
+   },
+   "body_mass_kg": 77.4000015258789,
+   "leg_assignment": {
+    "result": "pass",
+    "units": 138,
+    "knee_peak_in_swing_fraction": 0.978
+   },
+   "pelvis_tilt": {
+    "verdict": "suggest",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "suggested_correct",
+    "families": [
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      -1,
+      "135/136"
+     ]
+    }
+   },
+   "hip_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "marker_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "135/136"
+     ],
+     "hip_stance_extension": [
+      1,
+      "107/107"
+     ]
+    }
+   },
+   "knee_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "joint_anatomy",
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "136/137"
+     ],
+     "knee_hinge_asymmetry": [
+      1,
+      "51/53"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "marker_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "135/135"
+     ],
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "117/118"
+     ]
+    }
+   },
+   "hip_moment": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "119/119"
+     ],
+     "hip_moment_timing": [
+      1,
+      "132/133"
+     ],
+     "inverse_dynamics_light": [
+      1,
+      "135/135"
+     ]
+    }
+   },
+   "knee_moment": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "plate_geometry"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "131/132"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "132/132"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "135/135"
+     ]
+    }
+   },
+   "hip_power": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "power_identity"
+    ],
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ],
+     "derived:power_identity": [
+      1,
+      "48/48"
+     ]
+    }
+   },
+   "knee_power": {
+    "verdict": "abstain",
+    "sign": null,
+    "truth": 1,
+    "outcome": "abstain",
+    "families": null,
+    "tests": {}
+   },
+   "ankle_power": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "power_identity"
+    ],
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ],
+     "derived:power_identity": [
+      1,
+      "137/137"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "AB04/d5 R",
+   "task": "decline_walking",
+   "power_slots": {
+    "hip": 3,
+    "knee": 3,
+    "ankle": 3
+   },
+   "body_mass_kg": 77.5,
+   "leg_assignment": {
+    "result": "pass",
+    "units": 120,
+    "knee_peak_in_swing_fraction": 0.992
+   },
+   "pelvis_tilt": {
+    "verdict": "suggest",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "suggested_correct",
+    "families": [
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      -1,
+      "120/120"
+     ]
+    }
+   },
+   "hip_angle": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "fixed_timing_shape"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "120/120"
+     ],
+     "hip_stance_extension": [
+      1,
+      "116/116"
+     ]
+    }
+   },
+   "knee_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "joint_anatomy",
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "120/120"
+     ],
+     "knee_hinge_asymmetry": [
+      1,
+      "109/109"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "marker_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "120/120"
+     ],
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "106/106"
+     ]
+    }
+   },
+   "hip_moment": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "fixed_timing_shape"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "65/65"
+     ],
+     "hip_moment_timing": [
+      1,
+      "120/120"
+     ],
+     "inverse_dynamics_light": [
+      1,
+      "118/118"
+     ]
+    }
+   },
+   "knee_moment": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "plate_geometry"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "108/109"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "120/120"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "120/120"
+     ]
+    }
+   },
+   "hip_power": {
+    "verdict": "abstain",
+    "sign": null,
+    "truth": 1,
+    "outcome": "abstain",
+    "families": null,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_power": {
+    "verdict": "abstain",
+    "sign": null,
+    "truth": 1,
+    "outcome": "abstain",
+    "families": null,
+    "tests": {}
+   },
+   "ankle_power": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "power_identity"
+    ],
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ],
+     "derived:power_identity": [
+      1,
+      "120/120"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "AB04/d5 L",
+   "task": "decline_walking",
+   "power_slots": {
+    "hip": 3,
+    "knee": 3,
+    "ankle": 3
+   },
+   "body_mass_kg": 77.5,
+   "leg_assignment": {
+    "result": "pass",
+    "units": 119,
+    "knee_peak_in_swing_fraction": 1.0
+   },
+   "pelvis_tilt": {
+    "verdict": "suggest",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "suggested_correct",
+    "families": [
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      -1,
+      "119/119"
+     ]
+    }
+   },
+   "hip_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "marker_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "119/119"
+     ],
+     "hip_stance_extension": [
+      1,
+      "113/113"
+     ]
+    }
+   },
+   "knee_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "joint_anatomy",
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "119/119"
+     ],
+     "knee_hinge_asymmetry": [
+      1,
+      "116/116"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "marker_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "119/119"
+     ],
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "112/112"
+     ]
+    }
+   },
+   "hip_moment": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "fixed_timing_shape"
+    ],
+    "tests": {
+     "lever_arm": [
+      null,
+      "21/21"
+     ],
+     "hip_moment_timing": [
+      1,
+      "118/118"
+     ],
+     "inverse_dynamics_light": [
+      1,
+      "87/87"
+     ]
+    }
+   },
+   "knee_moment": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "plate_geometry"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "97/97"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "119/119"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "119/119"
+     ]
+    }
+   },
+   "hip_power": {
+    "verdict": "abstain",
+    "sign": null,
+    "truth": 1,
+    "outcome": "abstain",
+    "families": null,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_power": {
+    "verdict": "abstain",
+    "sign": null,
+    "truth": 1,
+    "outcome": "abstain",
+    "families": null,
+    "tests": {}
+   },
+   "ankle_power": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "power_identity"
+    ],
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ],
+     "derived:power_identity": [
+      1,
+      "118/118"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "AB06/d5 R",
+   "task": "decline_walking",
+   "power_slots": {
+    "hip": 1,
+    "knee": 1,
+    "ankle": 1
+   },
+   "body_mass_kg": 73.30000305175781,
+   "leg_assignment": {
+    "result": "pass",
+    "units": 125,
+    "knee_peak_in_swing_fraction": 0.96
+   },
+   "pelvis_tilt": {
+    "verdict": "suggest",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "suggested_correct",
+    "families": [
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      -1,
+      "123/124"
+     ]
+    }
+   },
+   "hip_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "marker_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "124/124"
+     ],
+     "hip_stance_extension": [
+      1,
+      "116/117"
+     ]
+    }
+   },
+   "knee_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "joint_anatomy",
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "122/122"
+     ],
+     "knee_hinge_asymmetry": [
+      1,
+      "87/87"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "marker_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "124/124"
+     ],
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "117/117"
+     ]
+    }
+   },
+   "hip_moment": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "122/122"
+     ],
+     "hip_moment_timing": [
+      1,
+      "122/122"
+     ],
+     "inverse_dynamics_light": [
+      1,
+      "120/120"
+     ]
+    }
+   },
+   "knee_moment": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "plate_geometry"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "118/118"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "123/123"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "124/124"
+     ]
+    }
+   },
+   "hip_power": {
+    "verdict": "suggest",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "suggested_correct",
+    "families": [
+     "power_identity"
+    ],
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ],
+     "derived:power_identity": [
+      -1,
+      "124/124"
+     ]
+    }
+   },
+   "knee_power": {
+    "verdict": "abstain",
+    "sign": null,
+    "truth": -1,
+    "outcome": "abstain",
+    "families": null,
+    "tests": {}
+   },
+   "ankle_power": {
+    "verdict": "suggest",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "suggested_correct",
+    "families": [
+     "power_identity"
+    ],
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ],
+     "derived:power_identity": [
+      -1,
+      "125/125"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "AB06/d5 L",
+   "task": "decline_walking",
+   "power_slots": {
+    "hip": 1,
+    "knee": 1,
+    "ankle": 1
+   },
+   "body_mass_kg": 73.30000305175781,
+   "leg_assignment": {
+    "result": "pass",
+    "units": 127,
+    "knee_peak_in_swing_fraction": 0.992
+   },
+   "pelvis_tilt": {
+    "verdict": "suggest",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "suggested_correct",
+    "families": [
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      -1,
+      "125/125"
+     ]
+    }
+   },
+   "hip_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "marker_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "126/126"
+     ],
+     "hip_stance_extension": [
+      1,
+      "114/114"
+     ]
+    }
+   },
+   "knee_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "joint_anatomy",
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "127/127"
+     ],
+     "knee_hinge_asymmetry": [
+      1,
+      "122/122"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "marker_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "125/125"
+     ],
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "120/120"
+     ]
+    }
+   },
+   "hip_moment": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "lever_arm": [
+      null,
+      "13/13"
+     ],
+     "hip_moment_timing": [
+      1,
+      "122/123"
+     ],
+     "inverse_dynamics_light": [
+      1,
+      "61/61"
+     ]
+    }
+   },
+   "knee_moment": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "plate_geometry"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "96/96"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "126/126"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "125/125"
+     ]
+    }
+   },
+   "hip_power": {
+    "verdict": "suggest",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "suggested_correct",
+    "families": [
+     "power_identity"
+    ],
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ],
+     "derived:power_identity": [
+      -1,
+      "127/127"
+     ]
+    }
+   },
+   "knee_power": {
+    "verdict": "abstain",
+    "sign": null,
+    "truth": -1,
+    "outcome": "abstain",
+    "families": null,
+    "tests": {}
+   },
+   "ankle_power": {
+    "verdict": "suggest",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "suggested_correct",
+    "families": [
+     "power_identity"
+    ],
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ],
+     "derived:power_identity": [
+      -1,
+      "127/127"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "AB01/i5 R",
+   "task": "incline_walking",
+   "power_slots": {
+    "hip": 1,
+    "knee": 1,
+    "ankle": 1
+   },
+   "body_mass_kg": 87.0,
+   "leg_assignment": {
+    "result": "pass",
+    "units": 110,
+    "knee_peak_in_swing_fraction": 0.936
+   },
+   "pelvis_tilt": {
+    "verdict": "suggest",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "suggested_correct",
+    "families": [
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      -1,
+      "108/108"
+     ]
+    }
+   },
+   "hip_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "marker_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "110/110"
+     ],
+     "hip_stance_extension": [
+      1,
+      "104/109"
+     ]
+    }
+   },
+   "knee_angle": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "110/110"
+     ],
+     "knee_hinge_asymmetry": [
+      null,
+      "0/1"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "marker_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "110/110"
+     ],
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "107/107"
+     ]
+    }
+   },
+   "hip_moment": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "fixed_timing_shape"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "100/100"
+     ],
+     "hip_moment_timing": [
+      1,
+      "104/107"
+     ],
+     "inverse_dynamics_light": [
+      1,
+      "87/87"
+     ]
+    }
+   },
+   "knee_moment": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "plate_geometry"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "110/110"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "110/110"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "110/110"
+     ]
+    }
+   },
+   "hip_power": {
+    "verdict": "suggest",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "suggested_correct",
+    "families": [
+     "plate_timing"
+    ],
+    "tests": {
+     "power_timing": [
+      -1,
+      "100/104"
+     ]
+    }
+   },
+   "knee_power": {
+    "verdict": "abstain",
+    "sign": null,
+    "truth": -1,
+    "outcome": "abstain",
+    "families": null,
+    "tests": {}
+   },
+   "ankle_power": {
+    "verdict": "apply",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_timing",
+     "power_identity"
+    ],
+    "tests": {
+     "power_timing": [
+      -1,
+      "107/110"
+     ],
+     "derived:power_identity": [
+      -1,
+      "110/110"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "AB01/i5 L",
+   "task": "incline_walking",
+   "power_slots": {
+    "hip": 1,
+    "knee": 1,
+    "ankle": 1
+   },
+   "body_mass_kg": 87.0,
+   "leg_assignment": {
+    "result": "pass",
+    "units": 109,
+    "knee_peak_in_swing_fraction": 0.945
+   },
+   "pelvis_tilt": {
+    "verdict": "suggest",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "suggested_correct",
+    "families": [
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      -1,
+      "108/108"
+     ]
+    }
+   },
+   "hip_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "marker_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "109/109"
+     ],
+     "hip_stance_extension": [
+      1,
+      "105/105"
+     ]
+    }
+   },
+   "knee_angle": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "109/109"
+     ],
+     "knee_hinge_asymmetry": [
+      null,
+      "0/4"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "marker_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "109/109"
+     ],
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "104/104"
+     ]
+    }
+   },
+   "hip_moment": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "101/101"
+     ],
+     "hip_moment_timing": [
+      1,
+      "104/107"
+     ],
+     "inverse_dynamics_light": [
+      1,
+      "83/83"
+     ]
+    }
+   },
+   "knee_moment": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "plate_geometry"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "109/109"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "108/108"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "108/109"
+     ]
+    }
+   },
+   "hip_power": {
+    "verdict": "apply",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_timing",
+     "power_identity"
+    ],
+    "tests": {
+     "power_timing": [
+      -1,
+      "103/104"
+     ],
+     "derived:power_identity": [
+      -1,
+      "109/109"
+     ]
+    }
+   },
+   "knee_power": {
+    "verdict": "abstain",
+    "sign": null,
+    "truth": -1,
+    "outcome": "abstain",
+    "families": null,
+    "tests": {}
+   },
+   "ankle_power": {
+    "verdict": "apply",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_timing",
+     "power_identity"
+    ],
+    "tests": {
+     "power_timing": [
+      -1,
+      "104/108"
+     ],
+     "derived:power_identity": [
+      -1,
+      "109/109"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "AB01/i0 R",
+   "task": "level_walking",
+   "power_slots": {
+    "hip": 1,
+    "knee": 1,
+    "ankle": 1
+   },
+   "body_mass_kg": 87.0,
+   "leg_assignment": {
+    "result": "pass",
+    "units": 108,
+    "knee_peak_in_swing_fraction": 0.991
+   },
+   "pelvis_tilt": {
+    "verdict": "suggest",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "suggested_correct",
+    "families": [
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      -1,
+      "108/108"
+     ]
+    }
+   },
+   "hip_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "marker_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "108/108"
+     ],
+     "hip_stance_extension": [
+      1,
+      "103/103"
+     ]
+    }
+   },
+   "knee_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "joint_anatomy",
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "108/108"
+     ],
+     "knee_hinge_asymmetry": [
+      1,
+      "106/106"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "marker_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "108/108"
+     ],
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "107/107"
+     ]
+    }
+   },
+   "hip_moment": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "108/108"
+     ],
+     "hip_moment_timing": [
+      1,
+      "108/108"
+     ],
+     "inverse_dynamics_light": [
+      1,
+      "108/108"
+     ]
+    }
+   },
+   "knee_moment": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "plate_geometry"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "100/100"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "108/108"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "108/108"
+     ]
+    }
+   },
+   "hip_power": {
+    "verdict": "apply",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_timing",
+     "power_identity"
+    ],
+    "tests": {
+     "power_timing": [
+      -1,
+      "107/108"
+     ],
+     "derived:power_identity": [
+      -1,
+      "108/108"
+     ]
+    }
+   },
+   "knee_power": {
+    "verdict": "abstain",
+    "sign": null,
+    "truth": -1,
+    "outcome": "abstain",
+    "families": null,
+    "tests": {}
+   },
+   "ankle_power": {
+    "verdict": "apply",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_timing",
+     "power_identity"
+    ],
+    "tests": {
+     "power_timing": [
+      -1,
+      "107/108"
+     ],
+     "derived:power_identity": [
+      -1,
+      "108/108"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "AB01/i0 L",
+   "task": "level_walking",
+   "power_slots": {
+    "hip": 1,
+    "knee": 1,
+    "ankle": 1
+   },
+   "body_mass_kg": 87.0,
+   "leg_assignment": {
+    "result": "pass",
+    "units": 108,
+    "knee_peak_in_swing_fraction": 1.0
+   },
+   "pelvis_tilt": {
+    "verdict": "suggest",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "suggested_correct",
+    "families": [
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      -1,
+      "108/108"
+     ]
+    }
+   },
+   "hip_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "marker_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "108/108"
+     ],
+     "hip_stance_extension": [
+      1,
+      "105/105"
+     ]
+    }
+   },
+   "knee_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "joint_anatomy",
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "108/108"
+     ],
+     "knee_hinge_asymmetry": [
+      1,
+      "108/108"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "marker_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "108/108"
+     ],
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "107/107"
+     ]
+    }
+   },
+   "hip_moment": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "105/105"
+     ],
+     "hip_moment_timing": [
+      1,
+      "106/106"
+     ],
+     "inverse_dynamics_light": [
+      1,
+      "107/107"
+     ]
+    }
+   },
+   "knee_moment": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "plate_geometry"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "101/101"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "verdict": "apply",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_geometry",
+     "plate_timing"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "108/108"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "108/108"
+     ]
+    }
+   },
+   "hip_power": {
+    "verdict": "apply",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_timing",
+     "power_identity"
+    ],
+    "tests": {
+     "power_timing": [
+      -1,
+      "108/108"
+     ],
+     "derived:power_identity": [
+      -1,
+      "108/108"
+     ]
+    }
+   },
+   "knee_power": {
+    "verdict": "abstain",
+    "sign": null,
+    "truth": -1,
+    "outcome": "abstain",
+    "families": null,
+    "tests": {}
+   },
+   "ankle_power": {
+    "verdict": "apply",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "applied_correct",
+    "families": [
+     "plate_timing",
+     "power_identity"
+    ],
+    "tests": {
+     "power_timing": [
+      -1,
+      "107/107"
+     ],
+     "derived:power_identity": [
+      -1,
+      "108/108"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "AB07/i10 R",
+   "task": "incline_walking",
+   "power_slots": {
+    "hip": 1,
+    "knee": 1,
+    "ankle": 1
+   },
+   "body_mass_kg": 53.70000076293945,
+   "leg_assignment": {
+    "result": "fail",
+    "units": 117,
+    "knee_peak_in_swing_fraction": 0.068
+   },
+   "pelvis_tilt": {
+    "verdict": "suggest",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "suggested_correct",
+    "families": [
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      -1,
+      "116/116"
+     ]
+    }
+   },
+   "hip_angle": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "fixed_timing_shape"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "117/117"
+     ],
+     "hip_stance_extension": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "117/117"
+     ],
+     "knee_hinge_asymmetry": [
+      null,
+      "5/8"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "86/86"
+     ],
+     "ankle_pushoff_plantarflexion": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "fixed_timing_shape"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "111/111"
+     ],
+     "hip_moment_timing": [
+      null,
+      "0/0"
+     ],
+     "inverse_dynamics_light": [
+      1,
+      "113/113"
+     ]
+    }
+   },
+   "knee_moment": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "plate_geometry"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "113/113"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "plate_geometry"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "112/112"
+     ],
+     "late_stance_plantarflexor": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "verdict": "abstain",
+    "sign": null,
+    "truth": -1,
+    "outcome": "abstain",
+    "families": null,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_power": {
+    "verdict": "abstain",
+    "sign": null,
+    "truth": -1,
+    "outcome": "abstain",
+    "families": null,
+    "tests": {}
+   },
+   "ankle_power": {
+    "verdict": "abstain",
+    "sign": null,
+    "truth": -1,
+    "outcome": "abstain",
+    "families": null,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "AB07/i10 L",
+   "task": "incline_walking",
+   "power_slots": {
+    "hip": 1,
+    "knee": 1,
+    "ankle": 1
+   },
+   "body_mass_kg": 53.70000076293945,
+   "leg_assignment": {
+    "result": "fail",
+    "units": 116,
+    "knee_peak_in_swing_fraction": 0.069
+   },
+   "pelvis_tilt": {
+    "verdict": "suggest",
+    "sign": -1,
+    "truth": -1,
+    "outcome": "suggested_correct",
+    "families": [
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      -1,
+      "116/116"
+     ]
+    }
+   },
+   "hip_angle": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "fixed_timing_shape"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "116/116"
+     ],
+     "hip_stance_extension": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "115/115"
+     ],
+     "knee_hinge_asymmetry": [
+      null,
+      "0/3"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "marker_geometry"
+    ],
+    "tests": {
+     "reference_angle:marker": [
+      1,
+      "116/116"
+     ],
+     "ankle_pushoff_plantarflexion": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "plate_geometry"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "112/112"
+     ],
+     "hip_moment_timing": [
+      null,
+      "0/0"
+     ],
+     "inverse_dynamics_light": [
+      1,
+      "113/113"
+     ]
+    }
+   },
+   "knee_moment": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "plate_geometry"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "112/112"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "verdict": "suggest",
+    "sign": 1,
+    "truth": 1,
+    "outcome": "suggested_correct",
+    "families": [
+     "plate_geometry"
+    ],
+    "tests": {
+     "lever_arm": [
+      1,
+      "113/113"
+     ],
+     "late_stance_plantarflexor": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "verdict": "abstain",
+    "sign": null,
+    "truth": -1,
+    "outcome": "abstain",
+    "families": null,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_power": {
+    "verdict": "abstain",
+    "sign": null,
+    "truth": -1,
+    "outcome": "abstain",
+    "families": null,
+    "tests": {}
+   },
+   "ankle_power": {
+    "verdict": "abstain",
+    "sign": null,
+    "truth": -1,
+    "outcome": "abstain",
+    "families": null,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   }
+  }
+ ],
+ "resources": {
+  "peak_rss_mib": 224.1,
+  "cap_mib": 300,
+  "mode": "read-only probe exception; one recording at a time; nice 19, ionice idle, 1 thread; RLIMIT_AS 1 GiB"
+ },
+ "history": [
+  {
+   "target_rule": "B (D-UM21-C03-1 = B, task DOC-03)",
+   "rescored_from": {
+    "rule": "C",
+    "method": "to_rule_b(): knee angle and knee moment signs, evidence signs and offsets negated; verdicts unchanged; no data re-read"
+   },
+   "inputs_sha256": {
+    "docs/quality/audits/core04-um21-pilot-probe.json": "21675be2d41d0b06ce5e6b38a4c5d52d82d1d9d489e4888fa81d7113782b306f",
+    "docs/quality/audits/um21-c03-conventions.json": "244e3c354b6439edf1181aceee735e51b536b017593a982f27d318b256c1f4c3"
+   },
+   "code_sha256": {
+    "contributor_tools/review_core04_um21_pilot.py": "d09216bea2b2b506ff7ecc5d32f98c96c74df45977adf70f4dd2a255cb449abe",
+    "contributor_tools/common/sign_offset_detector.py": "40a9d08cd5ba8f7601e0dfce0a5a1a61dc3fe9bca3f401ec1d3757e189498df9",
+    "contributor_tools/review_core04_um21_pilot.py (sheet)": "35c10368f1b1277d20f0b183b1a26a224d6bb1c69f41b13f71c96a17e3bcf357"
+   },
+   "per_channel_outcomes": {
+    "pelvis_tilt": {
+     "suggested_correct": 20
+    },
+    "hip_angle": {
+     "suggested_correct": 20
+    },
+    "knee_angle": {
+     "applied_correct": 16,
+     "suggested_correct": 4
+    },
+    "ankle_angle": {
+     "suggested_correct": 20
+    },
+    "hip_moment": {
+     "abstain": 20
+    },
+    "knee_moment": {
+     "suggested_correct": 20
+    },
+    "ankle_moment": {
+     "applied_correct": 20
+    },
+    "hip_power": {
+     "abstain": 20
+    },
+    "knee_power": {
+     "abstain": 20
+    },
+    "ankle_power": {
+     "abstain": 20
+    }
+   },
+   "per_test": {
+    "markers: pelvis tilt": {
+     "right": 20
+    },
+    "markers: hip angle": {
+     "right": 20
+    },
+    "markers: knee angle": {
+     "right": 20
+    },
+    "knee range: knee angle": {
+     "right": 16,
+     "no decision": 4
+    },
+    "markers: ankle angle": {
+     "right": 20
+    },
+    "lever arm: hip moment": {
+     "right": 19,
+     "no decision": 1
+    },
+    "lever arm: knee moment": {
+     "right": 20
+    },
+    "lever arm: ankle moment": {
+     "right": 20
+    },
+    "late stance: ankle moment": {
+     "right": 20
+    },
+    "power identity: hip": {
+     "right": 20
+    },
+    "power identity: knee": {
+     "right": 20
+    },
+    "power identity: ankle": {
+     "right": 20
+    }
+   },
+   "explanations": {
+    "wrong_signs": "none: every applied or suggested sign equals the UM21-C03 sign under rule B",
+    "knee_angle_suggest_not_apply": {
+     "legs": [
+      "AB01/i5 R",
+      "AB01/i5 L",
+      "AB07/i10 R",
+      "AB07/i10 L"
+     ],
+     "knee_hinge_votes": {
+      "AB01/i5 R": [
+       null,
+       "0/1"
+      ],
+      "AB01/i5 L": [
+       null,
+       "0/4"
+      ],
+      "AB07/i10 R": [
+       null,
+       "5/8"
+      ],
+      "AB07/i10 L": [
+       null,
+       "0/3"
+      ]
+     },
+     "why": "Only the marker test decided; the knee-hinge test cast fewer than 5 votes or split below 90 % (AB07/i10 R: 5 of 8), because in most strides of these incline legs neither excursion side was at least twice the other. The sign is still right (suggest)."
+    },
+    "single_family_channels": {
+     "channels": [
+      "pelvis_tilt",
+      "hip_angle",
+      "ankle_angle",
+      "knee_moment"
+     ],
+     "why": "Each has tests from one evidence family only (marker geometry, or plate geometry for the knee moment), so the two-family rule allows at most suggest. All suggestions are right."
+    },
+    "hip_moment_abstain": {
+     "lever_arm_votes": {
+      "right": 19,
+      "no decision": 1
+     },
+     "why": "The hip lever arm is weak by design (inertia and segment weight ignored; UM21-C03 found hip right in only 8/16 legs with its own method) and scores 0, so no hip verdict is possible. When it decided, it had the right sign."
+    },
+    "power_abstain": {
+     "power_identity_right": "60/60",
+     "why": "Derivation needs the moment and the angle of the same joint both applied; no joint has both (knee: angle applied, moment suggested; ankle: moment applied, angle suggested). The power identity itself matched the known slot and sign in every leg-joint, including the 8-recording layout-2 storage."
+    },
+    "branch_episode": {
+     "leg": "AB07/i10 R",
+     "strides_set_aside": 30,
+     "frames": [
+      11703,
+      16542
+     ],
+     "um21_c03": "31 inside strides (frames 11704-17134, duration-screened)",
+     "missing_stride": "frames 12608-12735 hold the UM21-C03 jump cluster 12704-12705 (a 106-degree one-frame step, not an alternate solution). Resampling 127 frames to 150 samples splits the step into two smaller steps under the 90-degree jump rule, and a few samples lie within 100 degrees of the centre, so neither the jump rule nor the whole-unit rule fires. The stride was not set aside, but its reference test did not vote (slope -13, |r| 0.74 < 0.8), so the ankle sign used 86 of 86 voting strides.",
+     "follow_up": "Adapters should run the branch screen on source-rate frames before resampling (not done in this pilot)."
+    },
+    "offsets": {
+     "flagged": "43/80",
+     "pelvis_max_deg": 0.16,
+     "others_max_deg": 13.5,
+     "why": "Reported only. Pelvis matches the marker pelvis (Plug-in Gait pelvis is marker-defined). Hip, knee and ankle offsets compare against marker zeros (greater trochanter proxy, unknown static offsets), so they are zero-definition differences, not errors. Never applied."
+    },
+    "frames_and_registration": {
+     "forward_axis_vs_pelvis_axis_deg": [
+      2.47,
+      1.38,
+      2.95,
+      1.12,
+      1.32,
+      2.27,
+      5.02,
+      4.35,
+      5.03,
+      2.21
+     ],
+     "cop_registration_forward_m_range": [
+      -1.0154,
+      0.9141
+     ],
+     "cop_registration_up_m_range": [
+      0.0425,
+      0.1526
+     ],
+     "cop_registration_rule": "midpoint rule (UM21-C03): over stance, mean CoP forward = mean heel-toe marker midpoint forward; median CoP height = median lowest foot marker height; one constant shift per leg and recording; independent of the moment channels",
+     "cop_within_foot_median_inside_fraction_range": [
+      0.8723404255319149,
+      1.0
+     ],
+     "why": "The CoP origin is a constant 0.8-1.0 m from the marker origin along the walking direction, whose sign in the lab differs between sessions; the moment-independent midpoint rule removes it. Plate frame checks, including the CoP-within-foot registration check added after the verifier found a registration-dependent lever-arm vote (AB04/d10, heel-at-contact rule, CoP about 11 cm back), passed in every leg."
+    }
+   },
+   "pair_evidence_for_D-CORE-04-1": {
+    "knee_angle (marker geometry + joint anatomy)": {
+     "applied": 16,
+     "wrong": 0,
+     "members_disagreed": 0
+    },
+    "ankle_moment (plate geometry + plate timing)": {
+     "applied": 20,
+     "wrong": 0,
+     "members_disagreed": 0
+    }
+   },
+   "resources": {
+    "peak_rss_mib": 203.4,
+    "cap_mib": 300,
+    "mode": "read-only probe exception; one recording at a time; nice 19, ionice idle, 1 thread; RLIMIT_AS 1 GiB"
+   },
+   "builder_history": [
+    {
+     "probe_file": "e0f7a5c408f16bcf...",
+     "builder": "4392164738429dfd...",
+     "detector": "9fc3e878bdf3a3f3...",
+     "note": "First recorded pilot. The builder then changed only in the sheet step (build_sheet, figure functions, chip and label text); probe_recording, run_probe, resample, strides and summarize were not edited."
+    },
+    {
+     "probe_file": "520149f3878f6216...",
+     "builder": "41a009ef6eed4c99...",
+     "detector": "9fc3e878bdf3a3f3...",
+     "note": "Probe re-run with the changed builder and the same detector: identical to e0f7a5c4 except the code hashes and memory figures (compared field by field), so the probe step was unchanged."
+    },
+    {
+     "probe_file": "this record",
+     "builder": "current",
+     "detector": "current",
+     "note": "Re-run after the verifier fixes: detector adds the CoP-within-foot check and the vertical-order visible-frame count; builder declares the CoP registration rule and drops the task ID from the sheet reply line. Probe file 21675be2...; detector still targeted rule C."
+    },
+    {
+     "probe_file": "21675be2... (unchanged)",
+     "builder": "current",
+     "detector": "current (rule B)",
+     "note": "Sign rule changed to B (D-UM21-C03-1, task DOC-03). The probe was not re-run: the sheet step re-scores it with to_rule_b(); the probe step now also records target_rule for future runs."
+    }
+   ],
+   "run": "v1 (rule-C detector, re-scored to rule B)"
+  }
+ ],
+ "limitations": [
+  "One dataset (Vicon Plug-in Gait, treadmill, 10 recordings, 20 legs); no running, stairs or overground.",
+  "Hip moment ground truth is weak (UM21-C03); hip power truth follows from it.",
+  "Strides are resampled before the branch screen (one AB07/i10 jump stride kept, no vote).",
+  "No threshold was changed for this run."
+ ],
+ "generated_by": "contributor_tools/review_core04_um21_pilot.py sheet"
+}

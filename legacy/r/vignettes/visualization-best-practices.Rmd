@@ -1,0 +1,975 @@
+---
+title: "Visualization Best Practices with LocomotionData"
+author: "José A. Montes Pérez"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Visualization Best Practices with LocomotionData}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 10,
+  fig.height = 7,
+  warning = FALSE,
+  message = FALSE,
+  dpi = 300
+)
+```
+
+# Introduction
+
+This vignette demonstrates best practices for visualizing biomechanical locomotion data using the LocomotionData package. We cover publication-quality static plots, interactive visualizations, dashboard creation, and accessibility considerations for biomechanics research.
+
+## Prerequisites
+
+```{r eval=FALSE}
+# Install required packages
+install.packages(c("ggplot2", "plotly", "viridis", "RColorBrewer", "patchwork", 
+                   "gganimate", "DT", "shiny", "shinydashboard", "flexdashboard",
+                   "corrplot", "pheatmap", "ggridges", "ggbeeswarm", "wesanderson"))
+```
+
+```{r eval=FALSE}
+library(LocomotionData)
+library(ggplot2)
+library(plotly)
+library(viridis)
+library(RColorBrewer)
+library(patchwork)
+library(gganimate)
+library(DT)
+library(corrplot)
+library(pheatmap)
+library(ggridges)
+library(ggbeeswarm)
+library(wesanderson)
+library(dplyr)
+library(tidyr)
+library(scales)
+```
+
+# Biomechanics Color Schemes and Themes
+
+## Defining Color Palettes
+
+```{r eval=FALSE}
+# Define biomechanics-specific color palettes
+biomech_colors <- list(
+  # Joint colors
+  joints = c(
+    "hip" = "#E31A1C",      # Red
+    "knee" = "#1F78B4",     # Blue  
+    "ankle" = "#33A02C"     # Green
+  ),
+  
+  # Side colors
+  sides = c(
+    "ipsi" = "#FF7F00",     # Orange
+    "contra" = "#6A3D9A"    # Purple
+  ),
+  
+  # Task colors
+  tasks = c(
+    "normal_walk" = "#1F78B4",
+    "fast_walk" = "#33A02C", 
+    "slow_walk" = "#E31A1C",
+    "incline_walk" = "#FF7F00",
+    "decline_walk" = "#6A3D9A",
+    "stair_ascent" = "#A6CEE3",
+    "stair_descent" = "#B2DF8A"
+  ),
+  
+  # Pathology colors
+  pathology = c(
+    "healthy" = "#2CA02C",
+    "osteoarthritis" = "#FF7F0E", 
+    "stroke" = "#D62728",
+    "amputation" = "#9467BD"
+  ),
+  
+  # Continuous scales
+  sequential = viridis(100),
+  diverging = RColorBrewer::brewer.pal(11, "RdBu")
+)
+
+# Create custom ggplot theme for biomechanics
+theme_biomech <- function(base_size = 12, base_family = "") {
+  theme_minimal(base_size = base_size, base_family = base_family) +
+    theme(
+      # Grid
+      panel.grid.major = element_line(color = "grey90", size = 0.5),
+      panel.grid.minor = element_line(color = "grey95", size = 0.25),
+      
+      # Axes
+      axis.line = element_line(color = "black", size = 0.5),
+      axis.ticks = element_line(color = "black", size = 0.5),
+      axis.text = element_text(color = "black"),
+      axis.title = element_text(color = "black", face = "bold"),
+      
+      # Legend
+      legend.position = "right",
+      legend.background = element_rect(fill = "white", color = "grey80"),
+      legend.key = element_rect(fill = "white", color = NA),
+      
+      # Plot
+      plot.title = element_text(face = "bold", hjust = 0.5, size = rel(1.2)),
+      plot.subtitle = element_text(hjust = 0.5, color = "grey30"),
+      plot.caption = element_text(color = "grey50", size = rel(0.8)),
+      
+      # Facets
+      strip.background = element_rect(fill = "grey90", color = "white"),
+      strip.text = element_text(face = "bold")
+    )
+}
+```
+
+## Phase Pattern Visualization
+
+```{r eval=FALSE}
+# Load example data
+loco <- loadLocomotionData("gait_study.parquet")
+
+# Extract phase patterns for visualization
+subjects <- getSubjects(loco)[1:5]
+tasks <- c("normal_walk", "fast_walk", "slow_walk")
+features <- c("knee_flexion_angle_contra_rad", "hip_flexion_angle_contra_rad", 
+              "ankle_flexion_angle_contra_rad")
+
+# Create comprehensive visualization dataset
+create_viz_data <- function(loco, subjects, tasks, features) {
+  viz_data <- data.frame()
+  
+  for (subj in subjects) {
+    for (task in tasks) {
+      for (feat in features) {
+        # Get mean pattern and confidence bands
+        mean_pattern <- getMeanPattern(loco, subj, task, feat)
+        cycles_data <- getCycles(loco, subj, task)
+        
+        if (!is.null(mean_pattern) && !is.null(cycles_data)) {
+          # Calculate confidence intervals
+          cycles_matrix <- cycles_data$data_3d[, , feat]
+          mean_vals <- apply(cycles_matrix, 2, mean, na.rm = TRUE)
+          sd_vals <- apply(cycles_matrix, 2, sd, na.rm = TRUE)
+          n_cycles <- nrow(cycles_matrix)
+          se_vals <- sd_vals / sqrt(n_cycles)
+          
+          # Create data frame
+          temp_df <- data.frame(
+            subject = subj,
+            task = task,
+            feature = feat,
+            phase = 1:150,
+            phase_percent = seq(0, 100, length.out = 150),
+            mean_value = mean_vals,
+            sd_value = sd_vals,
+            se_value = se_vals,
+            ci_lower = mean_vals - 1.96 * se_vals,
+            ci_upper = mean_vals + 1.96 * se_vals,
+            
+            # Feature metadata
+            joint = extract_joint(feat),
+            measurement = extract_measurement(feat),
+            side = extract_side(feat),
+            unit = extract_unit(feat)
+          )
+          
+          viz_data <- rbind(viz_data, temp_df)
+        }
+      }
+    }
+  }
+  
+  return(viz_data)
+}
+
+# Extract feature components
+extract_joint <- function(feature_name) {
+  strsplit(feature_name, "_")[[1]][1]
+}
+
+extract_measurement <- function(feature_name) {
+  parts <- strsplit(feature_name, "_")[[1]]
+  paste(parts[2:3], collapse = "_")
+}
+
+extract_side <- function(feature_name) {
+  if (grepl("_contra_", feature_name)) "contra"
+  else if (grepl("_ipsi_", feature_name)) "ipsi"
+  else "bilateral"
+}
+
+extract_unit <- function(feature_name) {
+  parts <- strsplit(feature_name, "_")[[1]]
+  parts[length(parts)]
+}
+
+viz_data <- create_viz_data(loco, subjects, tasks, features)
+```
+
+## Multi-Panel Phase Plots
+
+```{r eval=FALSE}
+# Create publication-quality multi-panel plot
+create_phase_plot <- function(data) {
+  p <- ggplot(data, aes(x = phase_percent, y = rad2deg(mean_value), 
+                       color = task, fill = task)) +
+    geom_ribbon(aes(ymin = rad2deg(ci_lower), ymax = rad2deg(ci_upper)), 
+                alpha = 0.2, color = NA) +
+    geom_line(size = 1.2) +
+    scale_color_manual(values = biomech_colors$tasks, name = "Task") +
+    scale_fill_manual(values = biomech_colors$tasks, name = "Task") +
+    scale_x_continuous(name = "Gait Cycle (%)", 
+                      breaks = seq(0, 100, 25),
+                      expand = c(0.02, 0)) +
+    facet_grid(joint ~ side, scales = "free_y", 
+               labeller = labeller(
+                 joint = c("ankle" = "Ankle", "hip" = "Hip", "knee" = "Knee"),
+                 side = c("contra" = "Contralateral", "ipsi" = "Ipsilateral")
+               )) +
+    labs(
+      title = "Joint Angle Patterns Across Gait Cycle",
+      subtitle = "Mean ± 95% Confidence Interval",
+      y = "Angle (degrees)",
+      caption = "Data from n=5 subjects per condition"
+    ) +
+    theme_biomech() +
+    theme(
+      legend.position = "bottom",
+      strip.text = element_text(size = 10, face = "bold")
+    )
+  
+  return(p)
+}
+
+# Generate the plot
+phase_plot <- create_phase_plot(viz_data)
+print(phase_plot)
+
+# Save high-resolution version
+ggsave("phase_patterns_publication.png", phase_plot, 
+       width = 12, height = 8, dpi = 300, bg = "white")
+```
+
+## Individual Cycle Visualization (Spaghetti Plot)
+
+```{r eval=FALSE}
+# Create spaghetti plot showing individual cycles
+create_spaghetti_plot <- function(loco, subject, task, feature, max_cycles = 20) {
+  # Get individual cycles
+  cycles_result <- getCycles(loco, subject, task)
+  
+  if (is.null(cycles_result)) return(NULL)
+  
+  # Extract cycles for specific feature
+  feature_idx <- which(cycles_result$feature_names == feature)
+  cycles_matrix <- cycles_result$data_3d[, , feature_idx]
+  
+  # Limit number of cycles for clarity
+  n_cycles <- min(nrow(cycles_matrix), max_cycles)
+  cycles_matrix <- cycles_matrix[1:n_cycles, ]
+  
+  # Convert to long format
+  cycles_long <- data.frame(
+    cycle = rep(1:n_cycles, each = 150),
+    phase_percent = rep(seq(0, 100, length.out = 150), n_cycles),
+    value = as.vector(t(cycles_matrix))
+  )
+  
+  # Create plot
+  p <- ggplot(cycles_long, aes(x = phase_percent, y = rad2deg(value), 
+                              group = cycle)) +
+    geom_line(alpha = 0.3, color = "steelblue", size = 0.5) +
+    stat_summary(aes(group = 1), fun = mean, geom = "line", 
+                color = "red", size = 2) +
+    scale_x_continuous(name = "Gait Cycle (%)", 
+                      breaks = seq(0, 100, 25)) +
+    labs(
+      title = paste("Individual Gait Cycles:", gsub("_", " ", feature)),
+      subtitle = paste("Subject:", subject, "| Task:", task, "| n =", n_cycles, "cycles"),
+      y = "Angle (degrees)",
+      caption = "Red line shows mean pattern"
+    ) +
+    theme_biomech()
+  
+  return(p)
+}
+
+# Example spaghetti plot
+spaghetti_plot <- create_spaghetti_plot(loco, subjects[1], "normal_walk", 
+                                       "knee_flexion_angle_contra_rad")
+print(spaghetti_plot)
+```
+
+# Interactive Visualizations
+
+## Interactive Phase Patterns
+
+```{r eval=FALSE}
+# Create interactive phase pattern plot
+create_interactive_phase_plot <- function(data) {
+  p <- ggplot(data, aes(x = phase_percent, y = rad2deg(mean_value), 
+                       color = task, fill = task)) +
+    geom_ribbon(aes(ymin = rad2deg(ci_lower), ymax = rad2deg(ci_upper),
+                   text = paste("Task:", task, 
+                               "<br>Phase:", round(phase_percent, 1), "%",
+                               "<br>Mean:", round(rad2deg(mean_value), 2), "°",
+                               "<br>95% CI: [", round(rad2deg(ci_lower), 2), 
+                               ",", round(rad2deg(ci_upper), 2), "]")), 
+                alpha = 0.2, color = NA) +
+    geom_line(aes(text = paste("Task:", task, 
+                              "<br>Phase:", round(phase_percent, 1), "%",
+                              "<br>Angle:", round(rad2deg(mean_value), 2), "°")), 
+              size = 1.2) +
+    scale_color_manual(values = biomech_colors$tasks) +
+    scale_fill_manual(values = biomech_colors$tasks) +
+    facet_grid(joint ~ side, scales = "free_y") +
+    labs(
+      title = "Interactive Joint Angle Patterns",
+      x = "Gait Cycle (%)",
+      y = "Angle (degrees)"
+    ) +
+    theme_biomech()
+  
+  # Convert to interactive plot
+  interactive_plot <- ggplotly(p, tooltip = "text") %>%
+    layout(
+      title = list(text = "Interactive Joint Angle Patterns", 
+                   font = list(size = 16)),
+      showlegend = TRUE,
+      legend = list(orientation = "h", x = 0.5, xanchor = "center", y = -0.1)
+    )
+  
+  return(interactive_plot)
+}
+
+# Generate interactive plot
+interactive_phase <- create_interactive_phase_plot(viz_data)
+interactive_phase
+```
+
+## 3D Trajectory Visualization
+
+```{r eval=FALSE}
+# Create 3D trajectory plot for hip-knee-ankle coordination
+create_3d_trajectory <- function(loco, subject, task) {
+  # Get joint angle data
+  hip_data <- getMeanPattern(loco, subject, task, "hip_flexion_angle_contra_rad")
+  knee_data <- getMeanPattern(loco, subject, task, "knee_flexion_angle_contra_rad")
+  ankle_data <- getMeanPattern(loco, subject, task, "ankle_flexion_angle_contra_rad")
+  
+  if (any(is.null(c(hip_data, knee_data, ankle_data)))) return(NULL)
+  
+  # Create 3D trajectory
+  trajectory_3d <- plot_ly(
+    x = rad2deg(hip_data), 
+    y = rad2deg(knee_data), 
+    z = rad2deg(ankle_data),
+    type = "scatter3d",
+    mode = "lines+markers",
+    line = list(color = seq_along(hip_data), colorscale = "Viridis", width = 4),
+    marker = list(size = 3, color = seq_along(hip_data), colorscale = "Viridis"),
+    text = paste("Phase:", seq(0, 100, length.out = length(hip_data)), "%"),
+    hovertemplate = "Hip: %{x:.1f}°<br>Knee: %{y:.1f}°<br>Ankle: %{z:.1f}°<br>%{text}<extra></extra>"
+  ) %>%
+    layout(
+      title = paste("3D Joint Coordination:", subject, "-", task),
+      scene = list(
+        xaxis = list(title = "Hip Flexion (°)"),
+        yaxis = list(title = "Knee Flexion (°)"),
+        zaxis = list(title = "Ankle Flexion (°)"),
+        camera = list(eye = list(x = 1.5, y = 1.5, z = 1.5))
+      )
+    )
+  
+  return(trajectory_3d)
+}
+
+# Generate 3D trajectory
+trajectory_3d <- create_3d_trajectory(loco, subjects[1], "normal_walk")
+trajectory_3d
+```
+
+# Statistical Visualization
+
+## Box Plots with Individual Points
+
+```{r eval=FALSE}
+# Create publication-quality box plots
+create_statistical_boxplot <- function(data, measure = "max") {
+  # Calculate summary measures
+  summary_data <- data %>%
+    group_by(subject, task, joint) %>%
+    summarise(
+      max_value = max(mean_value, na.rm = TRUE),
+      min_value = min(mean_value, na.rm = TRUE),
+      range_value = max_value - min_value,
+      mean_value = mean(mean_value, na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    pivot_longer(cols = ends_with("_value"), 
+                names_to = "measure_type", 
+                values_to = "value") %>%
+    filter(measure_type == paste0(measure, "_value"))
+  
+  p <- ggplot(summary_data, aes(x = task, y = rad2deg(value), fill = task)) +
+    geom_boxplot(alpha = 0.7, outlier.shape = NA) +
+    geom_beeswarm(aes(color = task), size = 2, alpha = 0.8) +
+    scale_fill_manual(values = biomech_colors$tasks) +
+    scale_color_manual(values = biomech_colors$tasks) +
+    scale_x_discrete(labels = function(x) gsub("_", " ", str_to_title(x))) +
+    facet_wrap(~joint, scales = "free_y", ncol = 3,
+               labeller = labeller(joint = str_to_title)) +
+    labs(
+      title = paste("Joint Angle", str_to_title(measure), "Values by Task"),
+      subtitle = "Individual subjects shown as points",
+      x = "Task",
+      y = "Angle (degrees)",
+      caption = paste("n =", length(unique(summary_data$subject)), "subjects")
+    ) +
+    theme_biomech() +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      legend.position = "none"
+    )
+  
+  return(p)
+}
+
+# Generate statistical plots
+box_plot_max <- create_statistical_boxplot(viz_data, "max")
+box_plot_range <- create_statistical_boxplot(viz_data, "range")
+
+# Combine plots
+combined_stats <- box_plot_max / box_plot_range
+combined_stats <- combined_stats + plot_annotation(
+  title = "Joint Angle Summary Statistics",
+  theme = theme(plot.title = element_text(size = 16, face = "bold"))
+)
+
+print(combined_stats)
+```
+
+## Correlation Heatmaps
+
+```{r eval=FALSE}
+# Create correlation matrix for biomechanical features
+create_correlation_heatmap <- function(loco, subjects, task) {
+  # Extract features for correlation analysis
+  features <- c(
+    "knee_flexion_angle_contra_rad", "hip_flexion_angle_contra_rad", 
+    "ankle_flexion_angle_contra_rad",
+    "knee_flexion_moment_contra_Nm", "hip_flexion_moment_contra_Nm",
+    "ankle_flexion_moment_contra_Nm"
+  )
+  
+  # Calculate summary measures for each subject
+  correlation_data <- data.frame()
+  
+  for (subj in subjects) {
+    subj_data <- data.frame(subject = subj)
+    
+    for (feat in features) {
+      mean_pattern <- getMeanPattern(loco, subj, task, feat)
+      if (!is.null(mean_pattern)) {
+        subj_data[[paste0(feat, "_max")]] <- max(mean_pattern, na.rm = TRUE)
+        subj_data[[paste0(feat, "_min")]] <- min(mean_pattern, na.rm = TRUE)
+        subj_data[[paste0(feat, "_range")]] <- max(mean_pattern, na.rm = TRUE) - min(mean_pattern, na.rm = TRUE)
+        subj_data[[paste0(feat, "_mean")]] <- mean(mean_pattern, na.rm = TRUE)
+      }
+    }
+    
+    correlation_data <- rbind(correlation_data, subj_data)
+  }
+  
+  # Calculate correlation matrix
+  numeric_cols <- sapply(correlation_data, is.numeric)
+  cor_matrix <- cor(correlation_data[, numeric_cols], use = "complete.obs")
+  
+  # Create heatmap
+  pheatmap(
+    cor_matrix,
+    color = colorRampPalette(c("blue", "white", "red"))(100),
+    breaks = seq(-1, 1, length.out = 101),
+    display_numbers = TRUE,
+    number_format = "%.2f",
+    fontsize_number = 8,
+    angle_col = 45,
+    main = paste("Feature Correlation Matrix -", task),
+    filename = paste0("correlation_heatmap_", task, ".png"),
+    width = 12,
+    height = 10
+  )
+  
+  return(cor_matrix)
+}
+
+# Generate correlation heatmap
+cor_matrix <- create_correlation_heatmap(loco, subjects, "normal_walk")
+```
+
+# Animated Visualizations
+
+## Gait Cycle Animation
+
+```{r eval=FALSE}
+# Create animated gait cycle visualization
+create_gait_animation <- function(loco, subject, task) {
+  # Get joint angle data
+  features <- c("hip_flexion_angle_contra_rad", "knee_flexion_angle_contra_rad", 
+                "ankle_flexion_angle_contra_rad")
+  
+  # Extract mean patterns
+  animation_data <- data.frame()
+  
+  for (feat in features) {
+    pattern <- getMeanPattern(loco, subject, task, feat)
+    if (!is.null(pattern)) {
+      temp_df <- data.frame(
+        phase = seq(0, 100, length.out = 150),
+        value = rad2deg(pattern),
+        joint = extract_joint(feat),
+        feature = feat
+      )
+      animation_data <- rbind(animation_data, temp_df)
+    }
+  }
+  
+  # Create animated plot
+  p <- ggplot(animation_data, aes(x = phase, y = value, color = joint)) +
+    geom_line(size = 2) +
+    geom_point(size = 4) +
+    scale_color_manual(values = biomech_colors$joints) +
+    scale_x_continuous(limits = c(0, 100)) +
+    labs(
+      title = "Gait Cycle Animation: {closest_state}% Gait Cycle",
+      subtitle = paste("Subject:", subject, "| Task:", task),
+      x = "Gait Cycle (%)",
+      y = "Joint Angle (degrees)",
+      color = "Joint"
+    ) +
+    theme_biomech() +
+    theme(legend.position = "bottom") +
+    transition_states(phase, transition_length = 1, state_length = 1) +
+    ease_aes("linear")
+  
+  # Render animation
+  anim <- animate(p, width = 800, height = 600, fps = 10, duration = 8)
+  
+  return(anim)
+}
+
+# Generate animation (uncomment to run)
+# gait_animation <- create_gait_animation(loco, subjects[1], "normal_walk")
+# anim_save("gait_cycle_animation.gif", gait_animation)
+```
+
+## Ridge Plots for Distribution Comparison
+
+```{r eval=FALSE}
+# Create ridge plots for comparing distributions across tasks
+create_ridge_plot <- function(data, feature_name) {
+  # Filter for specific feature
+  feature_data <- data %>%
+    filter(feature == feature_name) %>%
+    select(subject, task, phase_percent, mean_value, joint)
+  
+  p <- ggplot(feature_data, aes(x = rad2deg(mean_value), y = task, 
+                               fill = task, color = task)) +
+    geom_density_ridges(alpha = 0.7, bandwidth = 2) +
+    scale_fill_manual(values = biomech_colors$tasks) +
+    scale_color_manual(values = biomech_colors$tasks) +
+    labs(
+      title = paste("Distribution of", gsub("_", " ", feature_name)),
+      subtitle = "Density across gait cycle phases",
+      x = "Angle (degrees)",
+      y = "Task"
+    ) +
+    theme_biomech() +
+    theme(legend.position = "none")
+  
+  return(p)
+}
+
+# Generate ridge plots
+ridge_knee <- create_ridge_plot(viz_data, "knee_flexion_angle_contra_rad")
+ridge_hip <- create_ridge_plot(viz_data, "hip_flexion_angle_contra_rad")
+
+# Combine ridge plots
+combined_ridges <- ridge_knee + ridge_hip
+print(combined_ridges)
+```
+
+# Dashboard Development
+
+## Shiny Dashboard Structure
+
+```{r eval=FALSE}
+# Create comprehensive Shiny dashboard
+create_biomech_dashboard <- function() {
+  
+  # UI
+  ui <- dashboardPage(
+    dashboardHeader(title = "Biomechanics Analysis Dashboard"),
+    
+    dashboardSidebar(
+      sidebarMenu(
+        menuItem("Phase Patterns", tabName = "phase", icon = icon("chart-line")),
+        menuItem("Statistical Analysis", tabName = "stats", icon = icon("chart-bar")),
+        menuItem("Subject Comparison", tabName = "subjects", icon = icon("users")),
+        menuItem("Export Results", tabName = "export", icon = icon("download"))
+      )
+    ),
+    
+    dashboardBody(
+      tabItems(
+        # Phase Patterns Tab
+        tabItem(tabName = "phase",
+          fluidRow(
+            box(
+              title = "Controls", status = "primary", solidHeader = TRUE, width = 3,
+              selectInput("subject", "Subject:", choices = NULL),
+              selectInput("task", "Task:", choices = NULL),
+              checkboxGroupInput("features", "Features:", choices = NULL),
+              actionButton("update_phase", "Update Plot", class = "btn-primary")
+            ),
+            box(
+              title = "Phase Patterns", status = "primary", solidHeader = TRUE, width = 9,
+              plotlyOutput("phase_plot", height = "500px")
+            )
+          ),
+          fluidRow(
+            box(
+              title = "Individual Cycles", status = "info", solidHeader = TRUE, width = 12,
+              plotlyOutput("spaghetti_plot", height = "400px")
+            )
+          )
+        ),
+        
+        # Statistical Analysis Tab
+        tabItem(tabName = "stats",
+          fluidRow(
+            box(
+              title = "Statistical Controls", status = "primary", solidHeader = TRUE, width = 3,
+              selectInput("stat_measure", "Measure:", 
+                         choices = c("Maximum" = "max", "Minimum" = "min", 
+                                   "Range" = "range", "Mean" = "mean")),
+              selectInput("stat_joint", "Joint:", choices = NULL),
+              actionButton("update_stats", "Update Analysis", class = "btn-primary")
+            ),
+            box(
+              title = "Statistical Summary", status = "primary", solidHeader = TRUE, width = 9,
+              plotlyOutput("box_plot", height = "400px")
+            )
+          ),
+          fluidRow(
+            box(
+              title = "Correlation Analysis", status = "info", solidHeader = TRUE, width = 6,
+              plotOutput("correlation_plot", height = "400px")
+            ),
+            box(
+              title = "Summary Table", status = "info", solidHeader = TRUE, width = 6,
+              DT::dataTableOutput("summary_table")
+            )
+          )
+        ),
+        
+        # Subject Comparison Tab
+        tabItem(tabName = "subjects",
+          fluidRow(
+            box(
+              title = "Comparison Controls", status = "primary", solidHeader = TRUE, width = 3,
+              selectInput("comp_task", "Task:", choices = NULL),
+              selectInput("comp_feature", "Feature:", choices = NULL),
+              checkboxGroupInput("comp_subjects", "Subjects:", choices = NULL),
+              actionButton("update_comparison", "Update Comparison", class = "btn-primary")
+            ),
+            box(
+              title = "Subject Comparison", status = "primary", solidHeader = TRUE, width = 9,
+              plotlyOutput("comparison_plot", height = "500px")
+            )
+          )
+        ),
+        
+        # Export Tab
+        tabItem(tabName = "export",
+          fluidRow(
+            box(
+              title = "Export Options", status = "primary", solidHeader = TRUE, width = 12,
+              h4("Download Reports"),
+              br(),
+              downloadButton("download_plots", "Download All Plots", class = "btn-success"),
+              br(), br(),
+              downloadButton("download_data", "Download Analysis Data", class = "btn-info"),
+              br(), br(),
+              downloadButton("download_report", "Download Full Report", class = "btn-warning")
+            )
+          )
+        )
+      )
+    )
+  )
+  
+  # Server
+  server <- function(input, output, session) {
+    # Initialize reactive values
+    values <- reactiveValues(
+      loco_data = NULL,
+      subjects = NULL,
+      tasks = NULL,
+      features = NULL
+    )
+    
+    # Load data on startup
+    observe({
+      # This would be replaced with actual data loading
+      # values$loco_data <- loadLocomotionData("path/to/data.parquet")
+      # values$subjects <- getSubjects(values$loco_data)
+      # values$tasks <- getTasks(values$loco_data)
+      # values$features <- getFeatures(values$loco_data)
+      
+      # Update UI choices
+      updateSelectInput(session, "subject", choices = values$subjects)
+      updateSelectInput(session, "task", choices = values$tasks)
+      updateCheckboxGroupInput(session, "features", choices = values$features)
+    })
+    
+    # Phase plot
+    output$phase_plot <- renderPlotly({
+      # Implementation would create interactive phase plots
+      # based on selected inputs
+    })
+    
+    # Additional outputs would be implemented here
+    # ...
+  }
+  
+  return(list(ui = ui, server = server))
+}
+
+# To run the dashboard:
+# dashboard <- create_biomech_dashboard()
+# shinyApp(dashboard$ui, dashboard$server)
+```
+
+# Accessibility and Publication Standards
+
+## Color-Blind Friendly Palettes
+
+```{r eval=FALSE}
+# Create color-blind friendly visualization
+create_accessible_plot <- function(data) {
+  # Use Viridis color scale (color-blind friendly)
+  p <- ggplot(data, aes(x = phase_percent, y = rad2deg(mean_value), 
+                       color = task, linetype = task)) +
+    geom_line(size = 1.2) +
+    scale_color_viridis_d(name = "Task", option = "plasma") +
+    scale_linetype_manual(values = c("solid", "dashed", "dotted", "dotdash", "longdash"),
+                         name = "Task") +
+    facet_wrap(~joint, scales = "free_y") +
+    labs(
+      title = "Accessible Joint Angle Visualization",
+      subtitle = "Color-blind friendly with line patterns",
+      x = "Gait Cycle (%)",
+      y = "Angle (degrees)"
+    ) +
+    theme_biomech() +
+    theme(
+      legend.position = "bottom",
+      legend.box = "horizontal"
+    )
+  
+  return(p)
+}
+
+# Generate accessible plot
+accessible_plot <- create_accessible_plot(viz_data)
+print(accessible_plot)
+```
+
+## Publication-Ready Export Function
+
+```{r eval=FALSE}
+# Function to export publication-ready plots
+export_publication_plots <- function(plot_list, output_dir = "publication_plots") {
+  # Create output directory
+  if (!dir.exists(output_dir)) {
+    dir.create(output_dir, recursive = TRUE)
+  }
+  
+  # Export specifications for different journals
+  export_specs <- list(
+    nature = list(width = 183, height = 120, dpi = 300, units = "mm"),
+    science = list(width = 114, height = 80, dpi = 300, units = "mm"),
+    jbiomech = list(width = 190, height = 120, dpi = 300, units = "mm"),
+    presentation = list(width = 12, height = 8, dpi = 300, units = "in")
+  )
+  
+  # Export each plot in multiple formats
+  for (plot_name in names(plot_list)) {
+    plot_obj <- plot_list[[plot_name]]
+    
+    for (format_name in names(export_specs)) {
+      spec <- export_specs[[format_name]]
+      
+      # PNG for presentations
+      ggsave(
+        filename = file.path(output_dir, paste0(plot_name, "_", format_name, ".png")),
+        plot = plot_obj,
+        width = spec$width,
+        height = spec$height,
+        dpi = spec$dpi,
+        units = spec$units,
+        bg = "white"
+      )
+      
+      # PDF for publications
+      ggsave(
+        filename = file.path(output_dir, paste0(plot_name, "_", format_name, ".pdf")),
+        plot = plot_obj,
+        width = spec$width,
+        height = spec$height,
+        dpi = spec$dpi,
+        units = spec$units,
+        device = "pdf"
+      )
+    }
+  }
+  
+  cat("Plots exported to:", output_dir, "\n")
+}
+
+# Example usage
+plot_list <- list(
+  "phase_patterns" = phase_plot,
+  "statistical_summary" = box_plot_max,
+  "correlation_matrix" = accessible_plot
+)
+
+# Export plots
+export_publication_plots(plot_list)
+```
+
+# Best Practices Summary
+
+## Visualization Checklist
+
+```{r eval=FALSE}
+# Create a comprehensive visualization checklist
+create_viz_checklist <- function() {
+  checklist <- list(
+    "Data Preparation" = c(
+      "✓ Data cleaned and validated",
+      "✓ Missing values handled appropriately", 
+      "✓ Units converted to appropriate scale",
+      "✓ Outliers identified and treated"
+    ),
+    
+    "Plot Design" = c(
+      "✓ Appropriate plot type selected",
+      "✓ Color scheme is accessible",
+      "✓ Text size is readable",
+      "✓ Legend is clear and positioned well"
+    ),
+    
+    "Biomechanical Considerations" = c(
+      "✓ Joint angle conventions followed",
+      "✓ Gait cycle phases correctly labeled",
+      "✓ Side (ipsi/contra) clearly indicated",
+      "✓ Clinical relevance highlighted"
+    ),
+    
+    "Publication Standards" = c(
+      "✓ High resolution (≥300 DPI)",
+      "✓ Appropriate size for journal",
+      "✓ Color and grayscale versions",
+      "✓ Accessible to color-blind readers"
+    ),
+    
+    "Statistical Integrity" = c(
+      "✓ Confidence intervals shown",
+      "✓ Sample sizes reported",
+      "✓ Statistical tests appropriate",
+      "✓ Multiple comparisons corrected"
+    )
+  )
+  
+  # Print formatted checklist
+  cat("=== BIOMECHANICS VISUALIZATION CHECKLIST ===\n\n")
+  
+  for (category in names(checklist)) {
+    cat(category, "\n")
+    cat(paste(rep("-", nchar(category)), collapse = ""), "\n")
+    
+    for (item in checklist[[category]]) {
+      cat(item, "\n")
+    }
+    cat("\n")
+  }
+  
+  return(checklist)
+}
+
+# Display checklist
+viz_checklist <- create_viz_checklist()
+```
+
+## Performance Optimization
+
+```{r eval=FALSE}
+# Optimize plotting performance for large datasets
+optimize_plot_performance <- function(data, max_points = 1000) {
+  # Downsample data if too large
+  if (nrow(data) > max_points) {
+    sample_indices <- sample(nrow(data), max_points)
+    data <- data[sample_indices, ]
+    warning(paste("Data downsampled to", max_points, "points for performance"))
+  }
+  
+  # Use efficient geoms
+  # geom_point() instead of geom_jitter() for large datasets
+  # geom_line() instead of geom_smooth() when appropriate
+  
+  # Pre-calculate summaries
+  summary_data <- data %>%
+    group_by(task, joint, phase_percent) %>%
+    summarise(
+      mean_val = mean(mean_value, na.rm = TRUE),
+      se_val = sd(mean_value, na.rm = TRUE) / sqrt(n()),
+      .groups = "drop"
+    )
+  
+  return(summary_data)
+}
+
+# Example usage
+optimized_data <- optimize_plot_performance(viz_data)
+```
+
+# Conclusion
+
+Effective visualization of biomechanical locomotion data requires careful attention to scientific accuracy, statistical integrity, and visual accessibility. The LocomotionData package provides the foundation for creating publication-quality visualizations while maintaining focus on biomechanical interpretation and clinical relevance.
+
+## Key Principles
+
+1. **Scientific Accuracy**: Follow biomechanical conventions and standards
+2. **Statistical Integrity**: Show confidence intervals and report sample sizes
+3. **Accessibility**: Use color-blind friendly palettes and clear legends
+4. **Interactivity**: Enable exploration through interactive plots and dashboards
+5. **Publication Quality**: Export in appropriate formats and resolutions
+6. **Performance**: Optimize for large datasets and complex visualizations
+
+## Recommended Workflow
+
+1. **Data Preparation**: Clean, validate, and transform data appropriately
+2. **Exploratory Analysis**: Use interactive plots to understand patterns
+3. **Statistical Visualization**: Create publication-quality static plots
+4. **Dashboard Development**: Build interactive dashboards for stakeholders
+5. **Export and Share**: Generate multiple formats for different audiences
+
+For more advanced analysis techniques, see the advanced statistical analysis and machine learning vignettes.

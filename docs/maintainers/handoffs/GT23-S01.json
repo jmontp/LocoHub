@@ -1,0 +1,921 @@
+{
+  "task_id": "GT23-S01",
+  "status": "ready_for_independent_review",
+  "scientific_approval": false,
+  "last_checked_at_utc": "2026-11-24T00:13:45+00:00",
+  "summary": "Own GT23 segmentation for all 488 recordings, run as 4 pilots, 12 participant batches and 1 summary job under the guarded launcher (one at a time, peak 133-170 MiB). All 13,119 authors' windows are accounted (matched or missed with a reason); all 90 recordings without windows have one disposition (23 gait, 3 window, 64 continuous). Gait tasks reproduce the authors' strides exactly where the plate exists (start and end offset 0 ms for every matched window). Window-rule tasks (speed crossing) match starts only within 0-250 ms and their ends differ by about a second, because our rule yields separate spans where the authors have one window. Independent audit not yet done.",
+  "decisions_applied": [
+    "D-GT23-C01-2: own segmentation for all 488 recordings, checked against the authors' windows",
+    "D-GT23-C01-1 = C: forward and sideways only for the 11 forward-walking tasks (a force-frame matter for C06; S01 only records the task)"
+  ],
+  "module": "contributor_tools/gt23_segmentation.py (pure rules) and contributor_tools/run_gt23_s01.py (run, spec, summary)",
+  "rules": {
+    "gait (normal_walk, dynamic_walk, incline_walk, weighted_walk, walk_backward, stairs, obstacle_walk, side_shuffle)": "stride = rising crossing of 20 N (first sample at or above 20 N) to the same leg's next rising crossing, left plate for left and right plate for right; an interval is excluded with a reason if it contains missing force, is shorter than 0.3 s or longer than 5 s; the final contact is listed as excluded (no following contact). Right-plate-missing recordings give zero right records.",
+    "window, pelvis markers (ball_toss, curb_down, curb_up, cutting, jump, lunges, sit_to_stand, squats, step_ups, tire_run, turn_and_step) and trunk markers C7+STRN (lift_weight)": "span where the speed of the mean of the markers (central difference over 50 ms) is at or above 0.5 m/s; dips shorter than 0.25 s bridged only if measured; spans shorter than 0.25 s, open at the recording edge or next to a missing marker are excluded with a reason",
+    "continuous (meander, poses, push, start_stop, tug_of_war, twister)": "continuous recording, no strides",
+    "unknown task": "stops the job (UnknownTask), no default"
+  },
+  "fixed_in_advance_parameters": "20 N; 0.3 s and 5 s stride limits; 0.5 m/s; 50 ms difference span; 0.25 s debounce; match tolerance 50 ms (gait) and 250 ms (window), start time. None tuned to the agreement.",
+  "deviation_from_plan": "side_shuffle uses the gait rule (README lists shuffling under 20 N heel strike), not the window rule. It does not reproduce the authors' windows (1 and 4 of 150 matched).",
+  "label_rule": "A record carries an authors' file name (label_source=authors_window) only if it matches an authors' window within the tolerance; every other record has label_source=unknown. No speed, incline or weight label is inferred. Speed/incline parsing from file names is E01's job.",
+  "jobs": {
+    "pilots": {
+      "AB12 normal_walk_1": "pilot-nw",
+      "AB01 stairs_1_2": "pilot-stairs",
+      "AB12 poses_1": "pilot-poses",
+      "AB11 squats_1": "pilot-squats"
+    },
+    "batches": "gt23_s01_batch_<AB..>",
+    "summary": "converted_datasets/reconversion_v2/gt23_s01_summary/summary.json",
+    "specs_and_receipts": "docs/quality/audits/gt23-s01-<job>-spec.json and -launcher-receipt.json (every job: clean_success true, verify-cleanup proof true)",
+    "peak_rss_mib": {
+      "pilots": {
+        "nw": 134.9,
+        "stairs": 133.3,
+        "poses": 135.3,
+        "squats": 156.3
+      },
+      "batches": {
+        "AB01": 167.4,
+        "AB02": 163.2,
+        "AB03": 162.3,
+        "AB05": 164.2,
+        "AB06": 167.3,
+        "AB07": 162.9,
+        "AB08": 166.4,
+        "AB09": 165.4,
+        "AB10": 162.3,
+        "AB11": 169.5,
+        "AB12": 162.6,
+        "AB13": 163.3
+      }
+    }
+  },
+  "counts": {
+    "recordings": 488,
+    "authors_windows": 13119,
+    "authors_windows_left": 7721,
+    "authors_windows_right": 5398,
+    "recordings_without_windows": 90,
+    "without_windows_gait": 23,
+    "without_windows_window": 3,
+    "without_windows_continuous": 64
+  },
+  "acceptance_counts_all_equal": true,
+  "agreement_gait_and_window_per_task_and_leg": [
+    {
+      "task": "ball_toss",
+      "leg": "L",
+      "authors": 183,
+      "matched": 82,
+      "missed": 101,
+      "start_median_ms": 107.5,
+      "start_p95_abs_ms": 174.75,
+      "start_max_abs_ms": 225.0,
+      "end_median_ms": -725.0,
+      "end_p95_abs_ms": 999.75,
+      "missed_reasons": {
+        "nearest_record_excluded": 73,
+        "no_record_starts_within_tolerance": 28
+      },
+      "our_accepted": null,
+      "extra_in_recordings_with_authors_windows": null,
+      "extra_in_recordings_without_authors_windows": null
+    },
+    {
+      "task": "ball_toss",
+      "leg": "R",
+      "authors": 183,
+      "matched": 82,
+      "missed": 101,
+      "start_median_ms": 107.5,
+      "start_p95_abs_ms": 174.75,
+      "start_max_abs_ms": 225.0,
+      "end_median_ms": -725.0,
+      "end_p95_abs_ms": 999.75,
+      "missed_reasons": {
+        "nearest_record_excluded": 73,
+        "no_record_starts_within_tolerance": 28
+      },
+      "our_accepted": null,
+      "extra_in_recordings_with_authors_windows": null,
+      "extra_in_recordings_without_authors_windows": null
+    },
+    {
+      "task": "curb_down",
+      "leg": "L",
+      "authors": 135,
+      "matched": 1,
+      "missed": 134,
+      "start_median_ms": 110.0,
+      "start_p95_abs_ms": 110.0,
+      "start_max_abs_ms": 110.0,
+      "end_median_ms": 325.0,
+      "end_p95_abs_ms": 325.0,
+      "missed_reasons": {
+        "no_record_starts_within_tolerance": 133,
+        "nearest_record_excluded": 1
+      },
+      "our_accepted": null,
+      "extra_in_recordings_with_authors_windows": null,
+      "extra_in_recordings_without_authors_windows": null
+    },
+    {
+      "task": "curb_down",
+      "leg": "R",
+      "authors": 135,
+      "matched": 0,
+      "missed": 135,
+      "start_median_ms": null,
+      "start_p95_abs_ms": null,
+      "start_max_abs_ms": null,
+      "end_median_ms": null,
+      "end_p95_abs_ms": null,
+      "missed_reasons": {
+        "no_record_starts_within_tolerance": 135
+      },
+      "our_accepted": null,
+      "extra_in_recordings_with_authors_windows": null,
+      "extra_in_recordings_without_authors_windows": null
+    },
+    {
+      "task": "curb_up",
+      "leg": "L",
+      "authors": 129,
+      "matched": 10,
+      "missed": 119,
+      "start_median_ms": 12.5,
+      "start_p95_abs_ms": 120.5,
+      "start_max_abs_ms": 170.0,
+      "end_median_ms": 4107.5,
+      "end_p95_abs_ms": 22671.5,
+      "missed_reasons": {
+        "no_record_starts_within_tolerance": 115,
+        "nearest_record_excluded": 4
+      },
+      "our_accepted": null,
+      "extra_in_recordings_with_authors_windows": null,
+      "extra_in_recordings_without_authors_windows": null
+    },
+    {
+      "task": "curb_up",
+      "leg": "R",
+      "authors": 129,
+      "matched": 8,
+      "missed": 121,
+      "start_median_ms": 37.5,
+      "start_p95_abs_ms": 191.25,
+      "start_max_abs_ms": 200.0,
+      "end_median_ms": 4197.5,
+      "end_p95_abs_ms": 10765.5,
+      "missed_reasons": {
+        "no_record_starts_within_tolerance": 119,
+        "nearest_record_excluded": 2
+      },
+      "our_accepted": null,
+      "extra_in_recordings_with_authors_windows": null,
+      "extra_in_recordings_without_authors_windows": null
+    },
+    {
+      "task": "cutting",
+      "leg": "L",
+      "authors": 248,
+      "matched": 19,
+      "missed": 229,
+      "start_median_ms": -85.0,
+      "start_p95_abs_ms": 245.5,
+      "start_max_abs_ms": 250.0,
+      "end_median_ms": 3425.0,
+      "end_p95_abs_ms": 27423.5,
+      "missed_reasons": {
+        "no_record_starts_within_tolerance": 212,
+        "nearest_record_excluded": 17
+      },
+      "our_accepted": null,
+      "extra_in_recordings_with_authors_windows": null,
+      "extra_in_recordings_without_authors_windows": null
+    },
+    {
+      "task": "cutting",
+      "leg": "R",
+      "authors": 248,
+      "matched": 17,
+      "missed": 231,
+      "start_median_ms": -150.0,
+      "start_p95_abs_ms": 250.0,
+      "start_max_abs_ms": 250.0,
+      "end_median_ms": 3175.0,
+      "end_p95_abs_ms": 23571.0,
+      "missed_reasons": {
+        "no_record_starts_within_tolerance": 214,
+        "nearest_record_excluded": 17
+      },
+      "our_accepted": null,
+      "extra_in_recordings_with_authors_windows": null,
+      "extra_in_recordings_without_authors_windows": null
+    },
+    {
+      "task": "dynamic_walk",
+      "leg": "L",
+      "authors": 749,
+      "matched": 747,
+      "missed": 2,
+      "start_median_ms": 0.0,
+      "start_p95_abs_ms": 0.0,
+      "start_max_abs_ms": 0.0,
+      "end_median_ms": 0.0,
+      "end_p95_abs_ms": 0.0,
+      "missed_reasons": {
+        "nearest_record_excluded": 2
+      },
+      "our_accepted": 1377,
+      "extra_in_recordings_with_authors_windows": 489,
+      "extra_in_recordings_without_authors_windows": 141
+    },
+    {
+      "task": "incline_walk",
+      "leg": "L",
+      "authors": 355,
+      "matched": 355,
+      "missed": 0,
+      "start_median_ms": 0.0,
+      "start_p95_abs_ms": 0.0,
+      "start_max_abs_ms": 0.0,
+      "end_median_ms": 0.0,
+      "end_p95_abs_ms": 0.0,
+      "missed_reasons": {},
+      "our_accepted": 721,
+      "extra_in_recordings_with_authors_windows": 304,
+      "extra_in_recordings_without_authors_windows": 62
+    },
+    {
+      "task": "incline_walk",
+      "leg": "R",
+      "authors": 389,
+      "matched": 389,
+      "missed": 0,
+      "start_median_ms": 0.0,
+      "start_p95_abs_ms": 0.0,
+      "start_max_abs_ms": 0.0,
+      "end_median_ms": 0.0,
+      "end_p95_abs_ms": 0.0,
+      "missed_reasons": {},
+      "our_accepted": 770,
+      "extra_in_recordings_with_authors_windows": 321,
+      "extra_in_recordings_without_authors_windows": 60
+    },
+    {
+      "task": "jump",
+      "leg": "L",
+      "authors": 920,
+      "matched": 647,
+      "missed": 273,
+      "start_median_ms": 80.0,
+      "start_p95_abs_ms": 208.5,
+      "start_max_abs_ms": 250.0,
+      "end_median_ms": -100.0,
+      "end_p95_abs_ms": 965.5,
+      "missed_reasons": {
+        "no_record_starts_within_tolerance": 269,
+        "nearest_record_excluded": 4
+      },
+      "our_accepted": null,
+      "extra_in_recordings_with_authors_windows": null,
+      "extra_in_recordings_without_authors_windows": null
+    },
+    {
+      "task": "jump",
+      "leg": "R",
+      "authors": 920,
+      "matched": 647,
+      "missed": 273,
+      "start_median_ms": 80.0,
+      "start_p95_abs_ms": 208.5,
+      "start_max_abs_ms": 250.0,
+      "end_median_ms": -100.0,
+      "end_p95_abs_ms": 965.5,
+      "missed_reasons": {
+        "no_record_starts_within_tolerance": 269,
+        "nearest_record_excluded": 4
+      },
+      "our_accepted": null,
+      "extra_in_recordings_with_authors_windows": null,
+      "extra_in_recordings_without_authors_windows": null
+    },
+    {
+      "task": "lift_weight",
+      "leg": "L",
+      "authors": 570,
+      "matched": 495,
+      "missed": 75,
+      "start_median_ms": 70.0,
+      "start_p95_abs_ms": 201.5,
+      "start_max_abs_ms": 250.0,
+      "end_median_ms": -1170.0,
+      "end_p95_abs_ms": 1879.0,
+      "missed_reasons": {
+        "no_record_starts_within_tolerance": 67,
+        "nearest_record_excluded": 8
+      },
+      "our_accepted": null,
+      "extra_in_recordings_with_authors_windows": null,
+      "extra_in_recordings_without_authors_windows": null
+    },
+    {
+      "task": "lift_weight",
+      "leg": "R",
+      "authors": 570,
+      "matched": 495,
+      "missed": 75,
+      "start_median_ms": 70.0,
+      "start_p95_abs_ms": 201.5,
+      "start_max_abs_ms": 250.0,
+      "end_median_ms": -1170.0,
+      "end_p95_abs_ms": 1879.0,
+      "missed_reasons": {
+        "no_record_starts_within_tolerance": 67,
+        "nearest_record_excluded": 8
+      },
+      "our_accepted": null,
+      "extra_in_recordings_with_authors_windows": null,
+      "extra_in_recordings_without_authors_windows": null
+    },
+    {
+      "task": "lunges",
+      "leg": "L",
+      "authors": 368,
+      "matched": 314,
+      "missed": 54,
+      "start_median_ms": 45.0,
+      "start_p95_abs_ms": 211.75,
+      "start_max_abs_ms": 250.0,
+      "end_median_ms": -1330.0,
+      "end_p95_abs_ms": 1992.25,
+      "missed_reasons": {
+        "no_record_starts_within_tolerance": 44,
+        "nearest_record_excluded": 10
+      },
+      "our_accepted": null,
+      "extra_in_recordings_with_authors_windows": null,
+      "extra_in_recordings_without_authors_windows": null
+    },
+    {
+      "task": "lunges",
+      "leg": "R",
+      "authors": 368,
+      "matched": 314,
+      "missed": 54,
+      "start_median_ms": 45.0,
+      "start_p95_abs_ms": 211.75,
+      "start_max_abs_ms": 250.0,
+      "end_median_ms": -1330.0,
+      "end_p95_abs_ms": 1992.25,
+      "missed_reasons": {
+        "no_record_starts_within_tolerance": 44,
+        "nearest_record_excluded": 10
+      },
+      "our_accepted": null,
+      "extra_in_recordings_with_authors_windows": null,
+      "extra_in_recordings_without_authors_windows": null
+    },
+    {
+      "task": "normal_walk",
+      "leg": "L",
+      "authors": 1242,
+      "matched": 1237,
+      "missed": 5,
+      "start_median_ms": 0.0,
+      "start_p95_abs_ms": 0.0,
+      "start_max_abs_ms": 0.0,
+      "end_median_ms": 0.0,
+      "end_p95_abs_ms": 885.0,
+      "missed_reasons": {
+        "nearest_record_excluded": 5
+      },
+      "our_accepted": 2699,
+      "extra_in_recordings_with_authors_windows": 1189,
+      "extra_in_recordings_without_authors_windows": 273
+    },
+    {
+      "task": "normal_walk",
+      "leg": "R",
+      "authors": 353,
+      "matched": 353,
+      "missed": 0,
+      "start_median_ms": 0.0,
+      "start_p95_abs_ms": 0.0,
+      "start_max_abs_ms": 0.0,
+      "end_median_ms": 0.0,
+      "end_p95_abs_ms": 0.0,
+      "missed_reasons": {},
+      "our_accepted": 607,
+      "extra_in_recordings_with_authors_windows": 173,
+      "extra_in_recordings_without_authors_windows": 81
+    },
+    {
+      "task": "obstacle_walk",
+      "leg": "L",
+      "authors": 0,
+      "matched": 0,
+      "missed": 0,
+      "start_median_ms": null,
+      "start_p95_abs_ms": null,
+      "start_max_abs_ms": null,
+      "end_median_ms": null,
+      "end_p95_abs_ms": null,
+      "missed_reasons": {},
+      "our_accepted": 870,
+      "extra_in_recordings_with_authors_windows": 0,
+      "extra_in_recordings_without_authors_windows": 870
+    },
+    {
+      "task": "side_shuffle",
+      "leg": "L",
+      "authors": 150,
+      "matched": 1,
+      "missed": 149,
+      "start_median_ms": 35.0,
+      "start_p95_abs_ms": 35.0,
+      "start_max_abs_ms": 35.0,
+      "end_median_ms": -315.0,
+      "end_p95_abs_ms": 315.0,
+      "missed_reasons": {
+        "no_record_starts_within_tolerance": 149
+      },
+      "our_accepted": 148,
+      "extra_in_recordings_with_authors_windows": 147,
+      "extra_in_recordings_without_authors_windows": 0
+    },
+    {
+      "task": "side_shuffle",
+      "leg": "R",
+      "authors": 150,
+      "matched": 4,
+      "missed": 146,
+      "start_median_ms": 0.0,
+      "start_p95_abs_ms": 44.75,
+      "start_max_abs_ms": 50.0,
+      "end_median_ms": -72.5,
+      "end_p95_abs_ms": 2891.5,
+      "missed_reasons": {
+        "no_record_starts_within_tolerance": 146
+      },
+      "our_accepted": 150,
+      "extra_in_recordings_with_authors_windows": 146,
+      "extra_in_recordings_without_authors_windows": 0
+    },
+    {
+      "task": "sit_to_stand",
+      "leg": "L",
+      "authors": 1199,
+      "matched": 725,
+      "missed": 474,
+      "start_median_ms": 85.0,
+      "start_p95_abs_ms": 215.0,
+      "start_max_abs_ms": 250.0,
+      "end_median_ms": -130.0,
+      "end_p95_abs_ms": 804.0,
+      "missed_reasons": {
+        "nearest_record_excluded": 52,
+        "no_record_starts_within_tolerance": 422
+      },
+      "our_accepted": null,
+      "extra_in_recordings_with_authors_windows": null,
+      "extra_in_recordings_without_authors_windows": null
+    },
+    {
+      "task": "sit_to_stand",
+      "leg": "R",
+      "authors": 1199,
+      "matched": 725,
+      "missed": 474,
+      "start_median_ms": 85.0,
+      "start_p95_abs_ms": 215.0,
+      "start_max_abs_ms": 250.0,
+      "end_median_ms": -130.0,
+      "end_p95_abs_ms": 804.0,
+      "missed_reasons": {
+        "nearest_record_excluded": 52,
+        "no_record_starts_within_tolerance": 422
+      },
+      "our_accepted": null,
+      "extra_in_recordings_with_authors_windows": null,
+      "extra_in_recordings_without_authors_windows": null
+    },
+    {
+      "task": "squats",
+      "leg": "L",
+      "authors": 130,
+      "matched": 95,
+      "missed": 35,
+      "start_median_ms": 110.0,
+      "start_p95_abs_ms": 205.0,
+      "start_max_abs_ms": 245.0,
+      "end_median_ms": -1100.0,
+      "end_p95_abs_ms": 1661.5,
+      "missed_reasons": {
+        "no_record_for_this_leg": 10,
+        "nearest_record_excluded": 6,
+        "no_record_starts_within_tolerance": 19
+      },
+      "our_accepted": null,
+      "extra_in_recordings_with_authors_windows": null,
+      "extra_in_recordings_without_authors_windows": null
+    },
+    {
+      "task": "squats",
+      "leg": "R",
+      "authors": 130,
+      "matched": 95,
+      "missed": 35,
+      "start_median_ms": 110.0,
+      "start_p95_abs_ms": 205.0,
+      "start_max_abs_ms": 245.0,
+      "end_median_ms": -1100.0,
+      "end_p95_abs_ms": 1661.5,
+      "missed_reasons": {
+        "no_record_for_this_leg": 10,
+        "nearest_record_excluded": 6,
+        "no_record_starts_within_tolerance": 19
+      },
+      "our_accepted": null,
+      "extra_in_recordings_with_authors_windows": null,
+      "extra_in_recordings_without_authors_windows": null
+    },
+    {
+      "task": "stairs",
+      "leg": "L",
+      "authors": 163,
+      "matched": 60,
+      "missed": 103,
+      "start_median_ms": 0.0,
+      "start_p95_abs_ms": 0.0,
+      "start_max_abs_ms": 0.0,
+      "end_median_ms": 0.0,
+      "end_p95_abs_ms": 0.0,
+      "missed_reasons": {
+        "nearest_record_excluded": 103
+      },
+      "our_accepted": 61,
+      "extra_in_recordings_with_authors_windows": 1,
+      "extra_in_recordings_without_authors_windows": 0
+    },
+    {
+      "task": "stairs",
+      "leg": "R",
+      "authors": 180,
+      "matched": 76,
+      "missed": 104,
+      "start_median_ms": 0.0,
+      "start_p95_abs_ms": 0.0,
+      "start_max_abs_ms": 0.0,
+      "end_median_ms": 0.0,
+      "end_p95_abs_ms": 0.0,
+      "missed_reasons": {
+        "nearest_record_excluded": 104
+      },
+      "our_accepted": 76,
+      "extra_in_recordings_with_authors_windows": 0,
+      "extra_in_recordings_without_authors_windows": 0
+    },
+    {
+      "task": "step_ups",
+      "leg": "L",
+      "authors": 224,
+      "matched": 183,
+      "missed": 41,
+      "start_median_ms": 95.0,
+      "start_p95_abs_ms": 224.5,
+      "start_max_abs_ms": 250.0,
+      "end_median_ms": -120.0,
+      "end_p95_abs_ms": 362.0,
+      "missed_reasons": {
+        "no_record_starts_within_tolerance": 41
+      },
+      "our_accepted": null,
+      "extra_in_recordings_with_authors_windows": null,
+      "extra_in_recordings_without_authors_windows": null
+    },
+    {
+      "task": "step_ups",
+      "leg": "R",
+      "authors": 224,
+      "matched": 183,
+      "missed": 41,
+      "start_median_ms": 95.0,
+      "start_p95_abs_ms": 224.5,
+      "start_max_abs_ms": 250.0,
+      "end_median_ms": -120.0,
+      "end_p95_abs_ms": 362.0,
+      "missed_reasons": {
+        "no_record_starts_within_tolerance": 41
+      },
+      "our_accepted": null,
+      "extra_in_recordings_with_authors_windows": null,
+      "extra_in_recordings_without_authors_windows": null
+    },
+    {
+      "task": "tire_run",
+      "leg": "L",
+      "authors": 123,
+      "matched": 91,
+      "missed": 32,
+      "start_median_ms": -90.0,
+      "start_p95_abs_ms": 217.5,
+      "start_max_abs_ms": 245.0,
+      "end_median_ms": 90.0,
+      "end_p95_abs_ms": 2485.0,
+      "missed_reasons": {
+        "no_record_starts_within_tolerance": 31,
+        "nearest_record_excluded": 1
+      },
+      "our_accepted": null,
+      "extra_in_recordings_with_authors_windows": null,
+      "extra_in_recordings_without_authors_windows": null
+    },
+    {
+      "task": "tire_run",
+      "leg": "R",
+      "authors": 123,
+      "matched": 87,
+      "missed": 36,
+      "start_median_ms": -95.0,
+      "start_p95_abs_ms": 215.0,
+      "start_max_abs_ms": 240.0,
+      "end_median_ms": 105.0,
+      "end_p95_abs_ms": 2316.5,
+      "missed_reasons": {
+        "no_record_starts_within_tolerance": 35,
+        "nearest_record_excluded": 1
+      },
+      "our_accepted": null,
+      "extra_in_recordings_with_authors_windows": null,
+      "extra_in_recordings_without_authors_windows": null
+    },
+    {
+      "task": "turn_and_step",
+      "leg": "L",
+      "authors": 95,
+      "matched": 51,
+      "missed": 44,
+      "start_median_ms": -185.0,
+      "start_p95_abs_ms": 250.0,
+      "start_max_abs_ms": 250.0,
+      "end_median_ms": 1175.0,
+      "end_p95_abs_ms": 3880.0,
+      "missed_reasons": {
+        "no_record_starts_within_tolerance": 41,
+        "nearest_record_excluded": 3
+      },
+      "our_accepted": null,
+      "extra_in_recordings_with_authors_windows": null,
+      "extra_in_recordings_without_authors_windows": null
+    },
+    {
+      "task": "turn_and_step",
+      "leg": "R",
+      "authors": 97,
+      "matched": 52,
+      "missed": 45,
+      "start_median_ms": -177.5,
+      "start_p95_abs_ms": 245.0,
+      "start_max_abs_ms": 250.0,
+      "end_median_ms": 1437.5,
+      "end_p95_abs_ms": 3642.25,
+      "missed_reasons": {
+        "no_record_starts_within_tolerance": 40,
+        "nearest_record_excluded": 5
+      },
+      "our_accepted": null,
+      "extra_in_recordings_with_authors_windows": null,
+      "extra_in_recordings_without_authors_windows": null
+    },
+    {
+      "task": "walk_backward",
+      "leg": "L",
+      "authors": 572,
+      "matched": 572,
+      "missed": 0,
+      "start_median_ms": 0.0,
+      "start_p95_abs_ms": 0.0,
+      "start_max_abs_ms": 0.0,
+      "end_median_ms": 0.0,
+      "end_p95_abs_ms": 0.0,
+      "missed_reasons": {},
+      "our_accepted": 1051,
+      "extra_in_recordings_with_authors_windows": 374,
+      "extra_in_recordings_without_authors_windows": 105
+    },
+    {
+      "task": "weighted_walk",
+      "leg": "L",
+      "authors": 166,
+      "matched": 166,
+      "missed": 0,
+      "start_median_ms": 0.0,
+      "start_p95_abs_ms": 0.0,
+      "start_max_abs_ms": 0.0,
+      "end_median_ms": 0.0,
+      "end_p95_abs_ms": 0.0,
+      "missed_reasons": {},
+      "our_accepted": 301,
+      "extra_in_recordings_with_authors_windows": 104,
+      "extra_in_recordings_without_authors_windows": 31
+    }
+  ],
+  "our_window_rule_records_per_task": [
+    {
+      "task": "ball_toss",
+      "our_windows_accepted": 152,
+      "extra_in_recordings_with_authors_windows": 70,
+      "extra_in_recordings_without_authors_windows": 0
+    },
+    {
+      "task": "curb_down",
+      "our_windows_accepted": 121,
+      "extra_in_recordings_with_authors_windows": 120,
+      "extra_in_recordings_without_authors_windows": 0
+    },
+    {
+      "task": "curb_up",
+      "our_windows_accepted": 128,
+      "extra_in_recordings_with_authors_windows": 110,
+      "extra_in_recordings_without_authors_windows": 0
+    },
+    {
+      "task": "cutting",
+      "our_windows_accepted": 200,
+      "extra_in_recordings_with_authors_windows": 164,
+      "extra_in_recordings_without_authors_windows": 0
+    },
+    {
+      "task": "jump",
+      "our_windows_accepted": 767,
+      "extra_in_recordings_with_authors_windows": 101,
+      "extra_in_recordings_without_authors_windows": 18
+    },
+    {
+      "task": "lift_weight",
+      "our_windows_accepted": 1167,
+      "extra_in_recordings_with_authors_windows": 672,
+      "extra_in_recordings_without_authors_windows": 0
+    },
+    {
+      "task": "lunges",
+      "our_windows_accepted": 846,
+      "extra_in_recordings_with_authors_windows": 532,
+      "extra_in_recordings_without_authors_windows": 0
+    },
+    {
+      "task": "sit_to_stand",
+      "our_windows_accepted": 883,
+      "extra_in_recordings_with_authors_windows": 158,
+      "extra_in_recordings_without_authors_windows": 0
+    },
+    {
+      "task": "squats",
+      "our_windows_accepted": 202,
+      "extra_in_recordings_with_authors_windows": 107,
+      "extra_in_recordings_without_authors_windows": 0
+    },
+    {
+      "task": "step_ups",
+      "our_windows_accepted": 247,
+      "extra_in_recordings_with_authors_windows": 40,
+      "extra_in_recordings_without_authors_windows": 24
+    },
+    {
+      "task": "tire_run",
+      "our_windows_accepted": 158,
+      "extra_in_recordings_with_authors_windows": 47,
+      "extra_in_recordings_without_authors_windows": 0
+    },
+    {
+      "task": "turn_and_step",
+      "our_windows_accepted": 256,
+      "extra_in_recordings_with_authors_windows": 177,
+      "extra_in_recordings_without_authors_windows": 0
+    }
+  ],
+  "excluded_intervals_by_task_and_reason": {
+    "ball_toss|shorter_than_0.25_s": 150,
+    "curb_down|shorter_than_0.25_s": 13,
+    "curb_up|shorter_than_0.25_s": 13,
+    "cutting|span_boundary_next_to_missing_marker": 317,
+    "dynamic_walk|force_not_a_number_inside_stride": 5,
+    "dynamic_walk|last_contact_has_no_following_contact": 13,
+    "incline_walk|last_contact_has_no_following_contact": 48,
+    "incline_walk|longer_than_5_s": 16,
+    "jump|span_boundary_next_to_missing_marker": 2,
+    "jump|shorter_than_0.25_s": 40,
+    "lift_weight|shorter_than_0.25_s": 48,
+    "lunges|shorter_than_0.25_s": 34,
+    "lunges|span_boundary_next_to_missing_marker": 7,
+    "normal_walk|force_not_a_number_inside_stride": 32,
+    "normal_walk|last_contact_has_no_following_contact": 20,
+    "obstacle_walk|last_contact_has_no_following_contact": 12,
+    "side_shuffle|last_contact_has_no_following_contact": 24,
+    "sit_to_stand|shorter_than_0.25_s": 170,
+    "squats|shorter_than_0.25_s": 17,
+    "stairs|last_contact_has_no_following_contact": 248,
+    "tire_run|shorter_than_0.25_s": 8,
+    "turn_and_step|shorter_than_0.25_s": 60,
+    "walk_backward|last_contact_has_no_following_contact": 13,
+    "weighted_walk|force_not_a_number_inside_stride": 1,
+    "weighted_walk|last_contact_has_no_following_contact": 11,
+    "curb_down|span_boundary_next_to_missing_marker": 5,
+    "curb_up|span_boundary_next_to_missing_marker": 18,
+    "sit_to_stand|span_boundary_next_to_missing_marker": 2,
+    "step_ups|shorter_than_0.25_s": 21,
+    "turn_and_step|span_boundary_next_to_missing_marker": 4,
+    "cutting|shorter_than_0.25_s": 19,
+    "lift_weight|span_boundary_next_to_missing_marker": 9,
+    "obstacle_walk|force_not_a_number_inside_stride": 1,
+    "squats|span_boundary_next_to_missing_marker": 2,
+    "incline_walk|shorter_than_0.3_s": 1,
+    "incline_walk|force_not_a_number_inside_stride": 1,
+    "side_shuffle|shorter_than_0.3_s": 4,
+    "stairs|shorter_than_0.3_s": 1,
+    "tire_run|span_boundary_next_to_missing_marker": 1,
+    "walk_backward|force_not_a_number_inside_stride": 1,
+    "side_shuffle|force_not_a_number_inside_stride": 3
+  },
+  "plate_states_by_task_leg": {
+    "dynamic_walk|L|plate_present": 12,
+    "dynamic_walk|R|plate_present": 1,
+    "incline_walk|L|plate_present": 24,
+    "incline_walk|R|plate_present": 24,
+    "normal_walk|L|plate_present": 12,
+    "normal_walk|R|plate_missing_all_samples_not_a_number": 4,
+    "obstacle_walk|L|plate_present": 12,
+    "obstacle_walk|R|plate_missing_all_samples_not_a_number": 8,
+    "side_shuffle|L|plate_present": 12,
+    "side_shuffle|R|plate_present": 12,
+    "stairs|L|plate_present": 124,
+    "stairs|R|plate_present": 124,
+    "walk_backward|L|plate_present": 13,
+    "walk_backward|R|plate_never_reaches_threshold": 5,
+    "walk_backward|R|plate_missing_all_samples_not_a_number": 8,
+    "weighted_walk|L|plate_present": 11,
+    "weighted_walk|R|plate_missing_all_samples_not_a_number": 8,
+    "dynamic_walk|R|plate_missing_all_samples_not_a_number": 9,
+    "dynamic_walk|R|plate_never_reaches_threshold": 2,
+    "normal_walk|R|plate_present": 8,
+    "obstacle_walk|R|plate_never_reaches_threshold": 4,
+    "weighted_walk|R|plate_never_reaches_threshold": 3
+  },
+  "no_window_recordings": {
+    "total": 90,
+    "gait": 23,
+    "window": 3,
+    "continuous": 64,
+    "gait_detail": "12 obstacle_walk (treadmill; 870 left strides, right plate missing or never loaded: 0 right), 5 AB01 stairs_1_2/4/6/8/10 (ZERO strides: each holds one contact per plate, so no contact has a following contact; both contacts listed as excluded), AB07 dynamic_walk, incline_walk x2, normal_walk, walk_backward, weighted_walk (strides on the plates that exist)",
+    "window_detail": "AB02 jump_1 (3 spans), AB05 jump_1 (15), AB02 step_ups (24 accepted, 1 excluded)",
+    "continuous_detail": "12 each of meander, poses, push, tug_of_war, twister; 4 start_stop (AB10-AB13)"
+  },
+  "comparison_with_esml_audit": {
+    "file": "/mnt/s/workspace_docs/energy shaping ml/esml_research/code/hardware_analysis/dataset_late_stance_audit_20260723/gtech_2023_phase_reconstruction_audit.csv (credit: energy-shaping-ML project; read as text, no import, no parquet opened)",
+    "result": "Their detected heel strikes per subject and level or incline condition are within about one of our left-leg strides inside the authors' span (AB12 1.2 m/s: 17 vs 18; AB01 1.8 m/s: 21 vs 22). Their rule (0.05 BW, five-sample average, 0.35-2.0 s) is different; this is a comparison, not a check. Decline conditions are right-leg in the source so our left-only count is 0 there; not compared.",
+    "rows_in_summary": "esml_count_comparison"
+  },
+  "findings": [
+    "Gait tasks with a loaded plate reproduce the authors' strides exactly: normal_walk 1,590 of 1,595 windows matched (the 5 missed contain missing force in our stride), dynamic_walk 747 of 749, incline_walk 744 of 744, walk_backward 572 of 572, weighted_walk 166 of 166, all with 0 ms start offset.",
+    "Stairs: 136 of 343 matched (0 ms). 207 missed because each authors' window is one plate contact whose end is not the same leg's next contact; our heel-to-heel rule has no following contact and lists the contact as excluded (248 such contacts). The authors' stairs windows are therefore not heel-to-heel strides.",
+    "The five AB01 stair descents without authors' windows give zero strides from our rule (one contact per plate). The plan expected strides there; it does not hold.",
+    "side_shuffle: the README's heel-strike rule does not reproduce the authors' windows (5 of 300 matched).",
+    "Window tasks: starts agree within the 250 ms tolerance for 60 to 87 percent of windows in jump, lift_weight, lunges, sit_to_stand, squats, step_ups and tire_run (median offset 45 to 110 ms, ours later; ball_toss 45 percent, turn_and_step 54 percent), but ends differ by about 1 s (ours earlier) in squats, lunges, sit_to_stand and lift_weight, because the speed rule splits one authors' window (down plus up) into two spans. Curb and cutting agree poorly (curb_down 1 of 270, curb_up 18 of 258, cutting 36 of 496 matched). Left and right authors' windows are identical in these tasks, so counts repeat per leg.",
+    "Tolerances and parameters were fixed before the run; no value was adjusted after seeing the agreement.",
+    "For window-rule recordings the missed reason 'no_record_for_this_leg' means our rule found no span in the recording (squats 10); wording only, not rerun.",
+    "The pilot run_summary authors_windows_total is the whole participant's count; accounted counts only the named recordings."
+  ],
+  "checks": [
+    "tests/test_gt23_s01.py: 11 synthetic tests pass (known crossing times, exclusion reasons, speed of a known constant velocity, end-to-end on a synthetic participant with a missing right plate)",
+    "summary job: 488 recordings, 13,119 authors' windows (7,721 left, 5,398 right) all accounted, 90 = 23 + 3 + 64; all acceptance counts equal",
+    "each recording's GroundFrame_GRFs and marker file hash equals the X01 ledger (job fails the recording otherwise); each authors' stride file hash equals the events root",
+    "every launched job: verify-cleanup proof true; one launch per shell call; memory checked before each launch (Linux available about 8.1-8.3 GB, Windows free about 6.0 GB)"
+  ],
+  "limits": [
+    "The window rule does not reproduce the authors' manual verification; windows from it are not claimed to equal the authors'.",
+    "Left-leg and right-leg plates are assumed to belong to the left and right foot; for overground stairs the agreement supports that (0 ms) but no separate check was made.",
+    "Independent audit of the 12 batches not yet run."
+  ],
+  "remaining": [
+    "Independent verifier: re-derive counts and a sample of crossings from the source with separate code; check the 90 dispositions and the unmatched reasons.",
+    "Then GT23-C06."
+  ],
+  "next_action": "Independent verifier checks GT23-S01 against the acceptance criteria; then GT23-C06.",
+  "changed_files": [
+    "contributor_tools/gt23_segmentation.py",
+    "contributor_tools/run_gt23_s01.py",
+    "tests/test_gt23_s01.py",
+    "docs/maintainers/handoffs/GT23-S01.json",
+    "docs/maintainers/backlog.json",
+    "docs/maintainers/backlog.html",
+    "docs/quality/audits/gt23-s01-*"
+  ],
+  "evidence_paths": [
+    "converted_datasets/reconversion_v2/gt23_s01_summary/summary.json",
+    "converted_datasets/reconversion_v2/gt23_s01_batch_<AB..>/{ledger,segments,authors_windows}.jsonl",
+    "docs/quality/audits/gt23-s01-summary-launcher-receipt.json"
+  ]
+}

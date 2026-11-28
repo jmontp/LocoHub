@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fukuchi full-ensemble run: interruption and recovery</title>
+<style>body{font:16px/1.55 system-ui;color:#263345;max-width:850px;margin:32px auto;padding:0 16px}code{overflow-wrap:anywhere}li{margin:12px 0}a{color:#334e77}</style>
+</head><body><main>
+<h1>Recover an interrupted ensemble run</h1>
+<p>This is a maintainer procedure for the prepared full-cohort run. It does not report that all 508 pairs have been converted. The original pilot and its frozen queue remain separate.</p>
+<p>The runner intentionally stops when it encounters a partial output, an existing exclusive log, or a source file without a matching acquisition receipt. Repeating <code>--resume</code> cannot repair those cases. Preserve the evidence first.</p>
+<ol>
+<li>Confirm that the runner and its owned worker process group have exited. Keep the coordinator's single-worker slot reserved during recovery. Never stop unrelated processes.</li>
+<li>Create a new, uniquely named recovery directory under the run root. Copy the current <code>summary.json</code> there before any resume, and record its SHA256. Record the exact plan hash, failed pair, error, original paths and hashes of every file to be moved. Do not edit a completed readback report to make it pass.</li>
+<li>The version 2 runner automatically compares every previously completed pair's readback report and Parquet SHA256 with the preserved completion receipts before replacing the summary. It also retains receipts for later pairs if the resumed attempt stops early. Any mismatch needs investigation, not automatic acceptance. Keep the archived summary as additional recovery evidence.</li>
+<li>For an incomplete conversion only, move its entire <code>pairs/&lt;stem&gt;</code> directory and exclusive <code>&lt;stem&gt;.log</code> into the recovery directory, preserving filenames and a mapping of old to new paths. Move an incomplete preview directory and its preview log similarly. Do not move completed, receipt-matching pair outputs. This leaves the authorized destination fresh without deleting the failed attempt.</li>
+<li>If acquisition was interrupted, leave every ledgered, hash-matching source file in place. Move only unledgered partial files into recovery after hashing them; never insert an unverified file into the acquisition ledger. Keep the original cumulative network-byte counter. A retry consumes additional admission budget; if the 16 MiB cumulative limit would be exceeded, stop for a separately reviewed acquisition plan.</li>
+<li>Record the recovery action and retained evidence paths in a new JSON receipt. Recheck the unchanged plan and code hashes. Use the original command with explicit <code>--resume</code> only after the coordinator's resource and exclusive-worker checks pass. The runner will independently reread newly produced Parquet values against source tables.</li>
+</ol>
+<p>If the previous completion summary was lost or its readback receipt differs, do not use this procedure to claim a previously completed pair is verified. A separately scheduled independent readback is required, with its own retained report.</p>
+<h2>Worker limits</h2>
+<p>The imported guard starts each worker in its own process group, removes <code>PYTHONOPTIMIZE</code>, checks resources every 15 seconds, limits resource probes to 10 seconds and enforces a 120-second step timeout. Its <code>finally</code> block sends TERM to that owned group, waits up to five seconds, then sends KILL. The converter applies a 768 MiB address-space limit and one numerical thread. HTTP range reads have a separate 10-second socket timeout and a bounded byte admission; they are not numerical workers.</p>
+<p>A hard kill of the runner cannot execute its cleanup handler. The coordinator must check the recorded child PID and process group before restarting. Resource limits and source readback are not scientific approval of anatomical conventions; left values remain source-only.</p>
+</main></body></html>

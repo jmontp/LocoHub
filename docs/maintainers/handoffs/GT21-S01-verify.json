@@ -1,0 +1,170 @@
+{
+  "task_id": "GT21-S01",
+  "verifier_role": "independent second agent; folder listings, small JSON/README metadata and three small Mendeley public-API file lists (fetched to the scratchpad only); no motion/force array opened, no archive downloaded, extracted or re-hashed; worker files, backlog and AGENTS.md not edited",
+  "verdict": "done",
+  "decision_ready_to_copy": true,
+  "last_checked_at_utc": "2026-10-31T15:00:00Z",
+  "round_2": {
+    "verdict": "done",
+    "decision_ready_to_copy": true,
+    "last_checked_at_utc": "2026-10-31T15:00:00Z",
+    "summary": "F1 and F2 are done. The converter references and the v1-versus-2024 folder evidence hold. D-GT21-S01-1 meets the schema, its order is neutral, it leaks nothing and its options are complete. The sheet renders cleanly at both widths. The AB14 equivalence job is plan-only. One stale precondition and one wording nuance are noted, and neither blocks copying.",
+    "file_checks": [
+      {
+        "item": "converter line references",
+        "result": "pass",
+        "evidence": "convert_gtech_2021_phase_to_parquet.m line 849 is ik_file = fullfile(mode_path, 'ik_offset', trial_name). Lines 821, 860, 871, 884, 897 and 908 load conditions, id, gcRight, gcLeft, fp and markers respectively, as cited. Line 73 also lists ik_offset among the required channels. utilities/gtech_estimate_segment_lengths.m lines 75-80 try static/markers first and fall back to levelground/treadmill/ramp/stair markers. That matches option B's 'segment lengths from walking markers' and shows static is preferred, not strictly required, while ik_offset is the joint-angle input."
+      },
+      {
+        "item": "v1 lacks ik_offset and static (AB17 listing)",
+        "result": "pass",
+        "evidence": "unzip -Z1 on the AB17 v1 ZIP reads the central directory only (peak RSS 3,016 KiB) and lists 1,517 members: 0 under ik_offset and 0 under static. Per mode there are 11 channel folders (levelground 22, ramp 61, stair 43, treadmill 7 trials, plus directory entries) and 3 osimxml files. Local AB14 has 12 channel folders (with ik_offset) plus static/{ik, ik_offset, markers}, 1,722 files, 1,058,109,726 bytes, exactly as the plan and the sheet's second figure state."
+      },
+      {
+        "item": "D-GT21-S01-1 schema, order, leak, completeness",
+        "result": "pass (optional wording note)",
+        "evidence": [
+          "All backlog decision fields are present. The question has no hashes, PIDs or paths. decide_before_recommendation is true, which suits a provenance choice, and the recommendation and 'why' appear only in the fold.",
+          "Order: by participants releasable with the current converter (16, 16, up to 22), ties broken by download size (none, 5.4 GB). That is a numeric attribute, stated on the sheet. Sizes: the five unrecovered v1 archives sum to 994.6 + 1,054.2 + 1,076.8 + 1,118.0 + 1,140.7 MB = 5.38 GB, AB17 being already held, which matches '5.4 GB'. C's download is honestly 'not known'.",
+          "No leak: the chips, headline and reply line 'A, B, C or defer' are neutral. The table's consequences (two recipes versus the same as the 16) are facts, not a recommendation.",
+          "Complete: stop at 16; checksummed v1 with a second recipe or no angles; the 2024 copy with our own hashes and, per C's consequence, v1-checksum cross-checks if the AB14 comparison shows the shared files unchanged; plus defer. Version 2 (2021-10) predates the 2024 additions, so it is not a distinct option. No obvious option is missing.",
+          "Optional wording: the question says 'the authors' 2024 copy, which the other 16 came from', while a chip says 'not checked: origin of the 16 local copies'. The evidence (README 2024 notes; static and ik_offset folders) shows the 16 are the 2024-updated content; the acquisition channel is what remains unchecked. 'whose 2024 content the other 16 match' would remove the apparent contradiction. It does not change any option."
+        ]
+      },
+      {
+        "item": "decision sheet render",
+        "result": "pass",
+        "evidence": "Playwright with system Chrome at true 390x900 and 1100x900 viewports: overflow 0 px (heights 3,185 and 3,593 px). Structure: ask strip, headline, 7 chips (3 pass, 1 failed, 3 not checked), two figures (participant-by-folder grid; v1 versus 2024 folder counts), options table with 'left out' first and defer, neutral-order note, folded recommendation, 'Not shown', reply line. The check field (version 1 column red in the ik_offset and static rows, 2024 green) is true in figure 2. Minor: figure 2's row labels are small at 390 px but readable."
+      },
+      {
+        "item": "AB14 equivalence plan is plan-only",
+        "result": "pass",
+        "evidence": "plan.json status is 'plan_only_not_launched' (sha256 ecc3c249…, matches handoff). Its folder holds only plan.json. /mnt/s/locomotion_data/gt21_v1_equivalence_reference does not exist, and no file over 1 MB is new under /mnt/s/locomotion_data today. The steps (one guarded download with size and SHA-256 validation, central-directory read, CRC32 of local bytes, no extraction or decoding) and limits are bounded. The archive id, size and SHA-256 match the fresh Mendeley part-1 list."
+      },
+      {
+        "item": "crosswalk and receipts",
+        "result": "pass",
+        "evidence": "Rerunning review_gt21_s01_crosswalk.py into the scratchpad gives output identical to the committed audit apart from the timestamp (builder fa0d0fd3…, audit 2eabe195…). embedded_receipts_20261031 now carries the fresh Mendeley lists, including parts 1 and 3, with hashes and content."
+      },
+      {
+        "item": "stale launcher precondition",
+        "result": "noted (non-blocking)",
+        "evidence": "The handoff's next_action ('once the guarded launcher is reviewed') and remaining ('needs the reviewed guarded launcher (UM21-T02)'), and plan.json's prerequisite 'until then launch nothing', are out of date. docs/maintainers/handoffs/UM21-T02-launcher-verify.json has verdict done_for_launcher. The AB14 plan still needs the other listed prerequisites before launch (a reviewed reference mode in acquire_gt21_missing_participant.py, a CRC comparison script, fresh admission). The coordinator or worker should update those lines; the conservative wording causes no harm meanwhile."
+      }
+    ],
+    "test_runs": [
+      {
+        "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_backlog_workflow.py",
+        "result": "71 passed"
+      },
+      {
+        "command": "python3 contributor_tools/build_backlog_page.py --check",
+        "result": "Backlog valid; HTML current (94 tasks)"
+      },
+      {
+        "command": "unzip -Z1 on the AB17 v1 ZIP (central directory only); find over local AB14",
+        "result": "as in file_checks"
+      },
+      {
+        "command": "Playwright render of review_sheets/D-GT21-S01-1 at 390 and 1100 px",
+        "result": "overflow 0"
+      }
+    ],
+    "questions_for_jose": [
+      "D-GT21-S01-1, ready to copy from docs/maintainers/handoffs/GT21-S01.json (optionally with the 'whose 2024 content the other 16 match' wording)."
+    ]
+  },
+  "round_1_verdict": "back_to_worker",
+  "summary": "The inventory is correct and reproducible. There are 22 publisher v1 archives and 16 local participants with 2,301 recordings (levelground 506, ramp 1015, stair 665, treadmill 115). AB17 is held as the checksum-matched v1 archive, and five participants are unrecovered. The local copy is not v1 as published, and the AB15 metadata matches Mendeley exactly. Two conclusions do not follow from the evidence. First, the handoff says the choice between the checksummed Mendeley v1 archives and the author's 2024 mirror needs no José decision. But the active GT21 converter reads ik_offset and static markers, which v1 lacks (the crosswalk's own AB17 blocker). So that choice sets which processing, and which participants, can enter the cohort: more than one acceptable option, with scientific and scope consequences. Second, AB15 is recommended as the next ~1 GB acquisition, but another v1 archive will hit the same ik_offset/static blocker. That blocker, not the size order, decides whether a v1 recovery is usable.",
+  "checks": [
+    {
+      "id": 1,
+      "area": "participants and per-mode recordings from folder listings",
+      "result": "pass",
+      "evidence": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET holds exactly 16 AB folders: AB06-AB11, AB13, AB14, AB16, AB18, AB20, AB21, AB24, AB25, AB27, AB30. Each has one session directory plus osimxml. Counting conditions/*.mat per mode gives levelground 506, ramp 1015, stair 665, treadmill 115, total 2,301, with the same per-subject values as the crosswalk (e.g. AB06 30/63/42/8). Every subject has static/ and ik_offset/ in all four modes. Rerunning contributor_tools/review_gt21_s01_crosswalk.py with OUT redirected to the scratchpad gives output identical to docs/quality/audits/gt21-s01-cohort-crosswalk.json apart from generated_at_utc. The builder and audit hashes match the handoff (88b08d1c…, 596c388d…)."
+    },
+    {
+      "id": 2,
+      "area": "publisher list and AB15 metadata against Mendeley",
+      "result": "pass",
+      "evidence": "Fresh public-API file lists for all three parts (fcgm3chfff, k9kvm5tn3f, jj3r5f9pnf), version 1, saved to the scratchpad only (largest 8.6 KB). They list exactly 22 subject archives, AB06-AB30 without AB22, AB26 or AB29. For all 22, the file_id, size and SHA-256 equal the crosswalk; the worker had re-fetched only part 2. Each part lists versions 1 (2021-02-26) and 2 (2021-10-18). AB15: file_id 789b7453-81fe-4d1b-87c1-df727ac4853a, 994,631,418 bytes, SHA-256 f2f65ec8…c37d, which matches the handoff. AB17: the local ZIP stats at 953,425,349 bytes (dated 2026-10-21), equal to the manifest. Its receipt SHA-256 9acf79dd… equals the manifest; it was not re-hashed here either."
+    },
+    {
+      "id": 3,
+      "area": "local copy differs from v1",
+      "result": "pass",
+      "evidence": "Local README.txt SHA-256 45282345… does not match the publisher v1 README (832677…). The local README documents 'static … (Included in update 4/28/2024)', 'ik_offset … (Included in update 4/28/2024)' and 'RUN_OSIM.m … (Updated 4/28/2024)'. Both Mendeley versions predate 2024. Local SubjectInfo.mat (bc990b2c…) equals the publisher v1 record. AB17's v1 archive has no static or ik_offset (gt21-ab17-recovery.json version_reconciliation). Local files are dated 2025-08-11. The claim that the local copy is not v1 as published, with its exact origin unrecorded, is supported. The 2024 RUN_OSIM update means ik/id equivalence between v1 and the local tree is also unestablished; the crosswalk lists byte identity as not checked."
+    },
+    {
+      "id": 4,
+      "area": "downloads and converted_datasets writes",
+      "result": "pass, with a ruling",
+      "evidence": "find with -newermt 2026-10-31 -size +1M under converted_datasets and /mnt/s/locomotion_data returns nothing. The only new paths under converted_datasets/reconversion_v2 are the 7 files of gt21_s01_crosswalk_20261031 (119 B to 7.2 KB, gitignored), and the parent directory's mtime moved. No other job folder changed, and converted_datasets/README.md was DOC-01's change. The builder writes only the audit JSON. Ruling on 'never overwrite implicitly': a new, uniquely dated folder of small publisher-metadata receipts overwrites nothing and follows the existing gt21_participant_repository_receipts_20261021 pattern. The crosswalk binds every one of its files by SHA-256, so it complies. Optional: because the folder is gitignored, embed or copy these few kilobytes into the audit record so the evidence survives outside this machine."
+    },
+    {
+      "id": 5,
+      "area": "Mendeley v1 versus the author mirror: José decision?",
+      "result": "failed",
+      "evidence": [
+        "The worker logged 'recover from checksummed Mendeley v1' as an agent choice. Preferring checksummed, DOI-versioned bytes would be the conventional default if the two sources were equivalent. They are not.",
+        "convert_gtech_2021_phase_to_parquet.m reads ik_offset as a core channel (line 73) and estimates segment lengths from static markers (line 152). The crosswalk's own AB17 blocker says: 'Publisher v1 lacks ik_offset/static; converter cannot substitute ik without documented processing.'",
+        "So the source choice decides what can happen to the six missing participants. (A) Mendeley v1: verifiable bytes and a citable version, but without static or ik_offset. They would need a different processing recipe from the other 16 (a mixed-version cohort) or remain partly unconvertible. (B) Author's 2024 mirror: likely consistent with the local 16, which carry static and ik_offset, but with no publisher checksums, so LocoHub would record its own hashes at download. (C) Keep the cohort at 16 and document six participants as unavailable. Each option is acceptable and each changes scope or processing consistency.",
+        "AGENTS.md reserves scientific judgments and scope to José and says to ask when a choice has more than one acceptable option. This qualifies. It is not urgent: defer is allowed, and the cost of waiting is only that the six stay unrecovered."
+      ]
+    },
+    {
+      "id": 6,
+      "area": "AB15 as next recovery",
+      "result": "failed",
+      "evidence": [
+        "The size-order rule is neutral and the AB15 metadata is correct. But AB15 is another v1 archive that will hit the same ik_offset/static blocker as AB17. Its condition (AB17 extracted and schema pilot accepted) checks structure, not whether v1 participants can be processed like the other 16.",
+        "The decisive unknown for both options is whether the 2024 update changed shared channels (ik, id, fp, etc.) relative to v1. A v1 archive of a participant already held locally would answer it by comparing members against the local tree; the smallest such archive is AB14 at 957,109,717 bytes. That is one candidate. Alternatively, the next acquisition waits for José's source decision.",
+        "Either way, the next bounded action should follow from resolving the v1-versus-2024 question, not from size order alone."
+      ]
+    },
+    {
+      "id": 7,
+      "area": "tests",
+      "result": "pass",
+      "evidence": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_backlog_workflow.py → 71 passed; python3 contributor_tools/build_backlog_page.py --check → Backlog valid; HTML current (93 tasks)."
+    }
+  ],
+  "required_fixes": [
+    "F1: Withdraw 'No José decision is needed'. Add a structured draft decision to the handoff for the coordinator to copy, in the backlog decision format (question, 2-3 options each with a one-line consequence, cost_of_waiting, recommended, confidence, why, check, decide_before_recommendation true). Question: which source the six missing GT21 participants should come from, given that the converter needs ik_offset and static and v1 lacks them. Options: Mendeley v1 checksummed (mixed processing or partial conversion); author 2024 mirror with LocoHub-recorded hashes (consistent processing, unverifiable origin); keep 16 and document six as unavailable. Order them neutrally, e.g. by download size, and state the order. No hashes, PIDs or paths in the question.",
+    "F2: Replace the AB15 next-recovery recommendation with a next action that resolves the v1-versus-2024 equivalence or waits for F1. For example: a plan-only acquisition of the smallest v1 archive of an already-local participant (AB14, 957,109,717 bytes) for member-hash comparison against the local tree, still only through the reviewed guarded launcher. Or justify why AB15 is useful whichever way F1 is decided."
+  ],
+  "optional": [
+    "Embed the 7 small fresh Mendeley receipts (or their essential fields and hashes) in the audit, so the evidence does not live only in a gitignored folder.",
+    "The crosswalk could note that my fresh part-1 and part-3 manifests also match, so AB12 and AB28 no longer rely only on the 2026-10-21 receipts."
+  ],
+  "questions_for_jose": [
+    "Pending F1: the source of the six missing GT21 participants. Mendeley v1 is checksummed but lacks static and ik_offset; the author 2024 mirror is version-consistent but unchecksummed; or stop at 16."
+  ],
+  "test_runs": [
+    {
+      "command": "python3 listing script over CAMARGO_ET_AL_J_BIOMECH_DATASET (os.listdir only)",
+      "result": "16 subjects; 506/1015/665/115 = 2,301; static and ik_offset present everywhere"
+    },
+    {
+      "command": "curl Mendeley public-api /datasets/{fcgm3chfff,k9kvm5tn3f,jj3r5f9pnf}/files?version=1 and /versions (to scratchpad)",
+      "result": "22 archives; all match the crosswalk"
+    },
+    {
+      "command": "review_gt21_s01_crosswalk.main() with OUT redirected to the scratchpad",
+      "result": "identical to the committed audit apart from the timestamp"
+    },
+    {
+      "command": "find converted_datasets /mnt/s/locomotion_data -newermt 2026-10-31 -size +1M",
+      "result": "none"
+    },
+    {
+      "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_backlog_workflow.py",
+      "result": "71 passed"
+    },
+    {
+      "command": "python3 contributor_tools/build_backlog_page.py --check",
+      "result": "Backlog valid; HTML current (93 tasks)"
+    }
+  ],
+  "next_action": "Worker applies F1 (a draft José decision in the handoff) and F2 (next action tied to the v1-versus-2024 question) and returns GT21-S01 to review. The coordinator copies the decision into backlog.json only after it is verified."
+}

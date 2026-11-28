@@ -1,0 +1,22 @@
+{
+  "task_id": "CORE-10",
+  "verifier_role": "independent second agent; own synthetic fixtures; reviewed builder sha256 fafb7021... (matches the worker handoff)",
+  "verdict": "done",
+  "last_checked_at_utc": "2026-10-31T14:50:00Z",
+  "research_data_read": false,
+  "scientific_approval": false,
+  "authorizes_publication": false,
+  "summary": "V1 (structure-only applicability, now including identity keys) and V2 (JSON-only profile review) are fixed. Both refuse before any read and hold against my adversarial fixtures. The worker's only edit to my test file was removing the three strict-xfail decorators. No residuals.",
+  "checks": [
+    {"id": 1, "area": "verifier file", "result": "pass", "evidence": "tests/test_release_builder_gaps_verify.py has no xfail markers left (the docstring mention aside). The bodies of test_structural_only_applicability_is_refused (its parametrize kept) and test_non_json_profile_review_values_fail_with_a_release_error match what I wrote. The builder sha256 equals the handoff value."},
+    {"id": 2, "area": "V1 + identity keys", "result": "pass", "evidence": "_TASK_KEYS = {task, task_id, observation_type} plus IDENTITY_COLUMNS. For both reviewed and approved profiles, each of these is refused before any read (zero pq.read_table calls), with no bundle: {subject}, {source_recording_id}, {observation_id}, {task, observation_type, reference_side} and {subject, task_id}. {population, reference_side, observation_type} still releases and filters (1 observation passes). Unknown or mis-cased keys cannot pass anything: they match no metadata and leave observations unchecked, so they fail safe. Legacy profiles without a status are not subject to the rule, by design, and keep their limitation."},
+    {"id": 3, "area": "V2 JSON-only review", "result": "pass", "evidence": "These are refused before any read with 'JSON values', for legacy profiles too: a scalar YAML date review, a nested unquoted date, .nan, .inf, a !!set and a !!binary value. For reviewed profiles, the unquoted-date case (my former CORE-09-V2 xfail) is now a ReleaseError. An unquoted date outside the review (top-level 'generated') does not block the release and does not reach manifest.profile, because only the review is copied into the JSON outputs."},
+    {"id": 4, "area": "DATA_CONTRACT.md", "result": "pass", "evidence": "The release-section sentence names task, task_id, observation_type and the identity columns as insufficient alone, and says any profile whose review holds a non-JSON value is refused. Both match the code."},
+    {"id": 5, "area": "test runs", "result": "pass", "evidence": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_release_builder_gaps.py tests/test_release_builder_gaps_verify.py tests/test_release_publish_drvfs.py tests/test_release_publish_drvfs_verify.py tests/test_release_lineage_adversarial.py tests/test_release_lineage_verify.py tests/test_dataset_release.py tests/test_data_contract.py tests/test_backlog_workflow.py -rxXs -> 362 passed, 0 xfailed, 0 skipped (the drvfs cases ran). python3 contributor_tools/build_backlog_page.py --check -> Backlog valid; HTML current (91 tasks). No temporary directories are left on /mnt/s."}
+  ],
+  "verifier_tests": {
+    "file": "tests/test_release_builder_gaps_verify.py",
+    "added": "CORE-10 section: 10 identity/structure-only refusals (5 blocks x reviewed/approved), 1 population-plus-structure release, 6 JSON-only review refusals on legacy profiles, 1 test that non-review metadata does not leak."
+  },
+  "next_action": "Coordinator: move CORE-10 to done."
+}

@@ -1,0 +1,1467 @@
+{
+  "task_id": "CORE-04",
+  "phase": "design and synthetic fixtures (acceptance items 1, 3, 4; pilots not in scope)",
+  "verifier_role": "independent second agent; own synthetic fixtures and expected values; the worker's fixture generator was not imported",
+  "verdict": "done_for_GT21_pilot",
+  "verdict_scope": "pilot GT21 (last pilot); not scientific approval",
+  "last_checked_at_utc": "2026-10-31T15:30:00Z",
+  "pilot_gt21": {
+    "verdict": "done_for_GT21_pilot",
+    "detector_sha256_checked": "ed52fc49",
+    "last_checked_at_utc": "2026-10-31T15:30:00Z",
+    "summary": "The GT21 pilot reproduces and is done; this is not scientific approval. My own adapter, on fresh subjects (AB10, AB13), labelled tasks from the heel path, assigned plates per contact segment, and covered treadmill, overground, incline, decline, stair ascent and stair descent. It found 0 wrong signs applied or suggested in 216 leg-channels, and all 187 single-test votes were right. The worker's 648 leg-channels recount exactly. The ground truth matches GT21-C01. Pelvis-rise task labels cannot flip a sign. Both detector fixes are correct, and from stored evidence they cannot have changed any UM21, GT23 or GT24 verdict. The 'off-grid' AB24 recording is a plate file that starts 1 ms after the kinematics, not an off-grid clock. The sheet meets the rules. Recommendations are not blocking.",
+    "checks": [
+      {
+        "id": 1,
+        "name": "Independent re-run",
+        "result": "pass",
+        "evidence": [
+          "Own adapter (scratch verify_gt21.py): the same admitted reader (gt21_numeric_source) and the same source heel strikes (gcRight/gcLeft). Seed 20261110 drew AB13 and AB10 from the subjects not in the pilot.",
+          "Task per stride from the analysed foot's heel rise/run between its own heel strikes, not the pelvis: ramp +-0.05, stair +-0.25, level < 0.03.",
+          "Plates assigned per contact segment (vy > 50 N) to the foot with the nearer ankle marker (< 0.25 m). The force is kept only if contact starts in the first 10 % of the stride and no plate is shared with the other foot. Per-stride pelvis-facing axis; up axis from the data.",
+          "24 legs, 216 leg-channels: 56 applied right, 78 suggested right, 82 abstained, 0 conflict, 0 wrong. All 187 single-test votes right.",
+          "Applied included hip, knee and ankle angles, ankle moment and ankle power on treadmill and ramps, and ankle moment on stair descent. Stair ascent had 2-3 plate-captured strides per leg, so its force tests abstained.",
+          "AB13 level overground right had 0 plate-captured strides. The new gate code returned no gate and the frame checks were empty, with no error.",
+          "Peak RSS 192.2 MiB; 0 recordings rejected; 124 turning and 71 transition strides excluded."
+        ]
+      },
+      {
+        "id": 2,
+        "name": "Recount of the raw probe",
+        "result": "pass",
+        "evidence": "core04-gt21-pilot-probe.json (probe 37e5e753, detector ed52fc49, equal to the current file): 72 legs, 648 leg-channels. 305 applied right, 216 suggested right, 127 abstained, 0 conflict, 0 wrong. All 809 single-test votes right. Gate: 41 pass, 31 unknown. Half-cycle 'half' results: 10, all lever_arm on hip_moment (weak; scores 0). pelvis_tilt is passed in 0 legs. Peak RSS 222.1 MiB."
+      },
+      {
+        "id": 3,
+        "name": "Ground truth against GT21-C01",
+        "result": "pass",
+        "evidence": "gait2392 coordinates (survey): hip +1; knee angle -1 (range -120..10 deg, flexion negative) and knee moment -1 under rule B; ankle +1; powers +1. GT21-C01 leaves pelvis tilt unresolved (Z-X-Y rotations, heading about +-90 deg, not sagittal), and the pilot correctly passes no pelvis channel (sagittal heading in 1 of 131 recordings). ik model-zero angles have the same sign as ik_offset, so only the offsets differ; offsets are never applied."
+      },
+      {
+        "id": 4,
+        "name": "Task labels from pelvis rise",
+        "result": "pass (cannot flip a sign)",
+        "evidence": [
+          "Mode comes from the source folder, so a ramp can never be labelled a stair or the reverse. Within a mode, the label is the sign of the measured rise over at least 0.3 m of run, with dead bands (ramp 0.06, stair 0.20); transitions between the bands are excluded and counted. Real slopes are well outside the bands (ramps 5.2 deg and above, so rise/run > 0.09; stairs about 0.5).",
+          "A mislabel would need the pelvis to rise during a descent stride.",
+          "Even then, only plate-timed tests use the task. Markers, lever arm and ID-light do not, so a mislabel gives a conflict or a suggest, not a wrong apply. This is the pattern seen in the backward-walking and time-reversal probes.",
+          "My heel-path labels reached the same outcome class with 0 wrong."
+        ]
+      },
+      {
+        "id": 5,
+        "name": "Detector fixes and earlier pilots",
+        "result": "pass; no re-run needed for the recorded verdicts",
+        "evidence": [
+          "grf_unit_check now ignores units without finite GRF. Before, they entered as -inf and pulled the median peak down. Removing them can only raise a passing median, never above 4 BW in walking. Every stored leg passed before (UM21 20/20, GT23 20/20, GT24 40/40), so the results are unchanged.",
+          "leg_assignment_check no longer counts a unit without stance as a swing (+1) vote. A unit with stance always votes on some stance-run test, so a timed test that voted on every stride means no unit lacked stance. GT23 v2 (20/20 legs) and GT24 (40/40) both meet that, so the gate inputs are identical.",
+          "UM21 v2 has 10 legs with 1-4 strides of slack. Recomputing the worst case (all of those strides stance-less former +1 votes): the 8 'pass' legs stay at 0.96-0.99 (>= 0.9), and AB07/i10 R and L stay 'fail' (0.068 -> at most 0.035). Every gate result, and so every verdict, is unchanged.",
+          "The detector file changed again (ed52fc49), so any full-dataset or converter use still needs a pilot of the bound code (AGENTS.md)."
+        ]
+      },
+      {
+        "id": 6,
+        "name": "AB24 ramp_6_l_01_02 'off-grid' plate clock",
+        "result": "explained: a 1 ms plate start lag, not an off-grid clock",
+        "evidence": "Bounded read of the two Header columns. ik runs at 200 Hz from 53.935 s (3975 samples). fp runs at 1000 Hz on the exact ms grid but starts at 53.936 s (19870 samples). Only the first ik sample (1 of 3975, 0.025 %) has no matching plate sample (offset 1.0 ms); every other sample lands on the grid. The probe's whole-recording rejection is conservative and correct, but the chip's 'off the 200 Hz grid (cause not checked)' is inaccurate. Recommend 'plate file starts 1 ms after the kinematics; first sample unmatched'. Dropping that one sample would recover the recording."
+      },
+      {
+        "id": 7,
+        "name": "Sheet at 1100 px and in a 390 px iframe",
+        "result": "pass",
+        "evidence": [
+          "Order, 8 chips (2 pass, 6 not checked), 3 question-titled figures (4.35, 4.50, 4.34 in at 170 dpi), 3 not-shown items. No IDs, hashes or paths above the details. No horizontal scroll at 390 px.",
+          "Figure 2 scales to 72 legs (axis 0-72).",
+          "Minor: figure 3 colours the out-of-band headings red, the colour other figures use for 'wrong sign'. A neutral or grey colour would avoid the clash."
+        ]
+      },
+      {
+        "id": 8,
+        "name": "Policy fixes",
+        "result": "pass",
+        "evidence": "task_done raises ValueError on duplicate task IDs. CITATION_ID_RE fullmatch with re.ASCII rejects a trailing newline and non-ASCII digits. The GT24-C02 backlog record now contains 'gt24-readme:L90-91'. test_each_refutation_task_record_names_its_citation_or_entry is a regular test, not an xfail. All pass."
+      }
+    ],
+    "recommendations": [
+      "Reword the AB24 chip and record the 1 ms plate-start lag. Optionally drop the unmatched first sample instead of rejecting the recording.",
+      "Figure 3: use a non-red colour for out-of-band headings."
+    ],
+    "test_runs": [
+      {
+        "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_sign_offset_detector.py tests/test_sign_offset_detector_verify.py tests/test_core04_probe_builders.py tests/test_documentation_policy.py tests/test_backlog_workflow.py",
+        "result": "240 passed in 5.96s"
+      },
+      {
+        "command": "same prefix: python3 contributor_tools/build_backlog_page.py --check",
+        "result": "Backlog valid; HTML current (94 tasks)."
+      }
+    ],
+    "resources": {
+      "mode": "AGENTS.md read-only probe exception; one recording at a time through the admitted 64 MiB reader; nice 19 / ionice idle; single-threaded; RLIMIT_AS 1.5 GiB; no other numerical job running",
+      "peak_rss_mib": {
+        "verifier GT21 run (2 subjects, 26 recordings)": 192.2,
+        "AB24 clock check (2 Header columns)": 90.9
+      },
+      "outputs": [
+        "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/verify_gt21.py",
+        "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/gt21_out.json",
+        "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/gt21_1100.png",
+        "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/gt21_390.png"
+      ]
+    }
+  },
+  "pilot_gt24_round_5": {
+    "verdict": "done_for_GT24_pilot",
+    "last_checked_at_utc": "2026-10-31T14:00:00Z",
+    "summary": "The simplified policy is sound. Every code path that withholds a statement needs a table entry with an exact citation_id, the same channel and sign, and a refuting task whose backlog status is exactly 'done'. Status or ID ambiguity only ever keeps the statement, except duplicate task IDs, which validate_backlog already rejects. The real table withholds only the GT24 README ankle statements. The one thing code cannot check is that a table entry names the task that actually refuted the statement; any done task satisfies the check. That is a reviewed-data responsibility, and I confirmed the single existing entry (GT24-C02 refutes README lines 90-91 for the ankle). The re-score is unchanged at 40/202/118 with 0 wrong. No data were read. Done is not scientific approval.",
+    "checks": [
+      {
+        "id": 1,
+        "name": "Backlog status as the verification source",
+        "result": "pass, with one note",
+        "cases": [
+          "Task missing from the backlog: kept (logged 'not a backlog task').",
+          "Status 'Done' or 'done ' (case or whitespace): kept.",
+          "refuted_by_task with a trailing space: kept.",
+          "Duplicate task IDs: task_done takes the last record, so 'review' followed by 'done' gives withheld. The real backlog cannot hold duplicates, because validate_backlog raises 'Duplicate task id' and build_backlog_page --check passes. Recommend task_done also fail closed on duplicates, since it reads the backlog without validating it.",
+          "Real table: task_done('GT24-C02') is True (status done; its verify verdict is done, checked in earlier rounds)."
+        ]
+      },
+      {
+        "id": 2,
+        "name": "Exact citation_id regex",
+        "result": "pass (hygiene notes only)",
+        "cases": [
+          "Accepted: 'gt24-readme:L90-91', 'readme:L1', 'a:S-units', 'gt24-readme:S3.2'.",
+          "Rejected: 'GT24-readme:L90' (upper case), 'gt24 readme:L90' (space), 'gt24-readme:L90-91 ' (trailing space), 'x:L1-2-3'.",
+          "Matching is exact equality, so near-variants ('L90-091') are kept, never over-matched.",
+          "Hygiene: '$' admits a trailing newline ('gt24-readme:L90-91\\n' matches) and '\\d' admits non-ASCII digits ('L٩٠'). With exact equality this can only cause a statement to be kept, never wrongly withheld. Recommend fullmatch, or re.ASCII with \\Z."
+        ]
+      },
+      {
+        "id": 3,
+        "name": "Can anything withhold an unrefuted statement?",
+        "result": "only a mis-authored table entry",
+        "evidence": [
+          "split_documentation withholds only via hits that match the channel and the exact citation_id, with an equal refuted_sign and task_done True. An agreeing sign, a different citation, an unverified or missing task, or a malformed sign or ID either keeps the statement or raises.",
+          "Not machine-checked: whether refuted_by_task actually refutes the cited statement. An entry pointing to any unrelated done task (e.g. DOC-01) withholds.",
+          "Recommend a test that each entry's task record mentions its citation_id or entry id, for example a 'refutes' field in the task handoff.",
+          "The existing entry is correct. GT24-C02 (done, verified) refutes the README lines 90-91 ankle statement, matching gt24-c02-ankle-sign.json and the GT24-C02 verify handoff."
+        ]
+      },
+      {
+        "id": 4,
+        "name": "Probe and re-score",
+        "result": "pass",
+        "evidence": "probe_core04_gt24 passes hip_angle +1, knee_angle -1, hip_moment +1 and knee_moment -1. It withholds ankle_angle -1 and ankle_moment -1 (citation_id gt24-readme:L90-91). counts_policy_rescore is 40 applied, 202 suggested, 118 abstained, 0 conflict, 0 wrong, equal to my round-2 recomputation."
+      }
+    ],
+    "recommendations": [
+      "task_done: raise on duplicate task IDs instead of taking the last record.",
+      "CITATION_ID_RE: use fullmatch, or re.ASCII with \\Z.",
+      "Add a link test: every refuted_documentation entry's task record references its citation_id or entry id."
+    ],
+    "test_runs": [
+      {
+        "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_sign_offset_detector.py tests/test_sign_offset_detector_verify.py tests/test_core04_probe_builders.py tests/test_documentation_policy.py tests/test_backlog_workflow.py",
+        "result": "223 passed in 5.76s"
+      },
+      {
+        "command": "same prefix: python3 contributor_tools/build_backlog_page.py --check",
+        "result": "Backlog valid; HTML current (94 tasks)."
+      }
+    ],
+    "resources": "No research data read; temp tables and backlogs in the verifier scratchpad."
+  },
+  "pilot_gt24_round_4": {
+    "verdict": "back_to_worker",
+    "last_checked_at_utc": "2026-10-31T13:30:00Z",
+    "summary": "Quote-based provenance, sign type checks, evaluation of every entry, the 'ids' log field and the unchanged re-score all check out. With the real table, only the GT24 ankle statement is withheld. Two rules can still be gamed in the unsafe direction, with the statement withheld when it should be kept. (1) 'Latest round by last_checked_at_utc' is a string max: a newest round without a timestamp, a tie, a numeric offset or a space-separated time, or rounds held in a list can each hide a later back_to_worker round. (2) The locator is a substring match: a prefix ('README lines 9' matches 'README lines 95') or a locator without a document name ('lines 90-91' matches a paper) over-matches. No data were read.",
+    "checks": [
+      {
+        "id": 1,
+        "name": "Latest-round rule (temp backlog and verify files; real files untouched)",
+        "result": "fail",
+        "cases": [
+          "Newest round has no timestamp (round_2 back_to_worker): it sorts as '' (oldest), so verified_done is True. Hole.",
+          "Equal timestamps, done round listed first: True. With the back round listed first: False. Result depends on order.",
+          "Newer round with a naive timestamp '2026-10-31T10:00:00' (back) against '09:00:00Z' (done): False, correct here only because the strings happen to sort.",
+          "Newer round with an offset '2026-10-31T05:30:00-05:00' (10:30Z, back) against '09:00:00Z' (done): True. Hole, because strings are compared, not times.",
+          "Newer round with a space separator '2026-10-31 10:00:00Z' (back): True. Hole, because ' ' sorts before 'T'.",
+          "Rounds kept in a list (rounds: [...]) with a later back_to_worker: True. Hole, because only top-level dicts are seen."
+        ],
+        "ruling": "List or key order should not decide either. Repository conventions differ: some verify files prepend new rounds (CORE-04-verify), others append (round_1, round_2), and key names vary ('pilot_gt24_round_3', 'rule_b_switch'). Fail closed instead. A refutation is verified only if the top-level verdict is done and every round-like record (dicts and list items carrying a verdict) has a timezone-aware ISO timestamp, parsed as a datetime. The newest round must be unique and done. Any missing, naive or unparseable timestamp, or a tie involving a non-done round, makes it not verified, and the statement is kept with the reason logged."
+      },
+      {
+        "id": 2,
+        "name": "Locator rule",
+        "result": "fail",
+        "cases": [
+          "'README lines 9' (>= 8 characters, letter and digit) matches 'README lines 95: ...'. Withheld; prefix over-match.",
+          "'README 1' matches 'README 10-12 ankle'. Withheld; prefix over-match.",
+          "'lines 90-91' matches 'Paper (Smith 2020) lines 90-91'. Withheld; no document name required.",
+          "'aaaaaaa1' does not match unrelated text, so it is kept. '1 a     ' is rejected after strip."
+        ],
+        "ruling": "Match a citation key exactly, or at least require the locator to start the citation and be followed by a non-alphanumeric character or the end of the string. The adapter's citation must name the document. Do not use a free substring."
+      },
+      {
+        "id": 3,
+        "name": "Other claims",
+        "result": "pass",
+        "evidence": [
+          "Provenance cites the quote text plus the task. test_instruction_quote_is_recorded_under_both_tasks_in_the_backlog searches backlog.json for the quote under GT24-C02 and GT23-C02, not by index.",
+          "_is_sign uses an exact int type check, which rejects bool, None, strings and floats.",
+          "Every matching entry is evaluated (test parametrised over order). Log entries carry 'ids'.",
+          "Real table: passed are hip_angle +1, knee_angle -1, hip_moment +1 and knee_moment -1; withheld are ankle_angle -1 and ankle_moment -1 (ids GT24-README-ankle-sign).",
+          "The re-score is unchanged (40/202/118, 0 wrong; verified in round 2)."
+        ]
+      }
+    ],
+    "required_fixes": [
+      "Make verified_done fail closed. Collect every record carrying a verdict, including list items. Parse last_checked_at_utc as a timezone-aware datetime, and reject a missing, naive or unparseable value. The unique newest record must be done. Tests: missing timestamp, tie, numeric offset, space separator, list-held rounds.",
+      "Make the citation match exact, by key or by an anchored, token-bounded match on a document-named locator. Tests: prefix ('README lines 9' against 'README lines 95'), and a locator without a document name."
+    ],
+    "test_runs": [
+      {
+        "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_sign_offset_detector.py tests/test_sign_offset_detector_verify.py tests/test_core04_probe_builders.py tests/test_documentation_policy.py tests/test_backlog_workflow.py",
+        "result": "209 passed in 5.79s"
+      },
+      {
+        "command": "same prefix: python3 contributor_tools/build_backlog_page.py --check",
+        "result": "Backlog valid; HTML current (94 tasks)."
+      }
+    ],
+    "resources": "No research data read; temp tables and verify files in the verifier scratchpad."
+  },
+  "pilot_gt24_round_3": {
+    "verdict": "back_to_worker",
+    "last_checked_at_utc": "2026-10-31T12:55:00Z",
+    "summary": "The policy now enforces its rule for the cases it names. With the real table it withholds only the GT24 ankle statements (ankle_angle -1 and ankle_moment -1) and passes hip and knee. Two small fixes remain, and neither affects the current GT24 result. First, verified_done reads only the top-level verdict, so a stale top-level 'done' over a later 'back_to_worker' round still counts as verified. Second, the provenance cites list indexes (checks[15], checks[14]); they resolve today but will drift. No data were read.",
+    "checks": [
+      {
+        "id": 1,
+        "name": "Provenance citation",
+        "result": "fail (fragile)",
+        "evidence": "backlog.json GT24-C02 handoff.checks[15] and GT23-C02 handoff.checks[14] currently hold the quote: 'José instruction in chat, 2026-10-30: \"we should just fix both readmes based on the evidence\" (GT24 ankle sign, GT23 moment units)...'. Inserting any earlier check would change those indexes. The quote is an agent-written record of a chat instruction relayed by the coordinator, not a backlog decision entry; the coordinator should confirm it is the authoritative record."
+      },
+      {
+        "id": 2,
+        "name": "Adversarial policy tests",
+        "result": "one hole; others fail closed",
+        "method": "Temp tables, backlog and handoffs in the scratchpad; the real files were not edited.",
+        "cases": [
+          "(a) Task done, verify file with top-level verdict 'done' but round_2 verdict 'back_to_worker' (stale top level): statement WITHHELD. Hole: the result depends on the top-level verdict being kept current.",
+          "(a2) Verdict present only inside rounds (no top-level): kept, with a logged reason. Safe.",
+          "(b1, b2) Case or whitespace variants of the citation ('readme lines 90-91', 'README  lines 90-91'): no match, kept. Safe direction.",
+          "(b3) Whitespace-only match string: raises ValueError. Safe.",
+          "(b4) A very short match string 'R' withholds an unrelated statement ('Repository paper p.4') with the same channel and sign. A table with a careless match string over-matches; recommendation below.",
+          "(c1, c3) Statement sign None or the string '-1': raises a TypeError or ValueError in the log f-string. Fails loudly; recommend explicit validation.",
+          "(c2) Sign -1.0: withheld. This equals -1, so it is acceptable.",
+          "(d1) Two entries for one channel, the first unverified and the second verified: kept, because only the first same-sign hit is checked. Conservative but order-dependent.",
+          "(d2) First verified, second not: withheld.",
+          "(d3) refuted_sign 0: raises.",
+          "(d4) refuted_sign true (JSON bool): accepted as +1, because the bool equals 1."
+        ]
+      },
+      {
+        "id": 3,
+        "name": "Real table and probe",
+        "result": "pass",
+        "evidence": "probe_core04_gt24 DOCUMENTATION_PASSED is hip_angle +1, knee_angle -1, hip_moment +1 and knee_moment -1. Withheld are ankle_angle -1 and ankle_moment -1 (action 'withheld'). verified_done('GT24-C02') is True: the backlog status is done, and GT24-C02-verify has top-level 'done', round_2 'done' and round_1 'back_to_worker', which is consistent."
+      }
+    ],
+    "required_fixes": [
+      "verified_done: when the verify file has round_* entries, also require the latest round's verdict to be done (or require the top-level verdict to equal it); otherwise keep the statement. Add a test for a stale top level.",
+      "Provenance: cite the quote text with its task ('GT24-C02 handoff check beginning \"José instruction in chat, 2026-10-30\"') instead of list indexes, in documentation_policy.py and refuted_documentation.json. Optionally add a test that finds the quote in backlog.json."
+    ],
+    "recommendations": [
+      "Validate the item sign (must be +1 or -1, not None, a string or a bool) and refuted_sign (an int, not a bool) explicitly, with a clear message.",
+      "Check every same-sign matching entry, not just the first, and withhold only if one is verified; log all of them.",
+      "Make the citation match specific: require citation_contains to name the document and its locator (e.g. 'README lines 90-91'), or match a citation key exactly, so a short string cannot over-match."
+    ],
+    "test_runs": [
+      {
+        "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_sign_offset_detector.py tests/test_sign_offset_detector_verify.py tests/test_core04_probe_builders.py tests/test_documentation_policy.py tests/test_backlog_workflow.py",
+        "result": "187 passed in 5.94s"
+      },
+      {
+        "command": "same prefix: python3 contributor_tools/build_backlog_page.py --check",
+        "result": "Backlog valid; HTML current (94 tasks)."
+      }
+    ],
+    "resources": "No research data read."
+  },
+  "pilot_gt24_round_2": {
+    "verdict": "back_to_worker",
+    "last_checked_at_utc": "2026-10-31T12:20:00Z",
+    "summary": "The figure fix, the BT12 note and the re-score all check out, and the probe now passes only the hip and knee README statements. The documentation policy, however, does not enforce its own rule. split_documentation withholds a statement whenever any table entry matches its channel and a citation substring. It never checks that refuted_by names a verified, done audit, it accepts an empty citation_contains (which matches every citation), and it ignores the statement's sign. So an unverified, empty or overly broad entry silently removes the conflict guard. No data were read.",
+    "checks": [
+      {
+        "id": 1,
+        "name": "Re-score from stored evidence",
+        "result": "pass",
+        "evidence": "I recombined the stored v1 probe evidence with the module's own combine and _propagate: derived evidence dropped, the documentation items for ankle_angle and ankle_moment dropped, relations re-propagated. Result: 40 applied right, 202 suggested right, 118 abstained, 0 conflict, 0 wrong. That equals the stored data-only verdicts in 360 of 360 leg-channels and matches counts_policy_rescore in the pilot JSON."
+      },
+      {
+        "id": 2,
+        "name": "Policy cannot drop an unrefuted statement",
+        "result": "fail",
+        "evidence": [
+          "My bypass attempts against split_documentation, using temp tables only (the real table was not touched):",
+          "(a) refuted_by 'my opinion (not an audit)' with citation_contains 'README' withheld ankle_angle -1, ankle_angle +1 and hip_angle +1.",
+          "(b) citation_contains '' with refuted_by '' withheld both ankle statements, because the empty substring matches every citation.",
+          "(c) With the real table, a hypothetical ankle_angle +1 statement that agrees with the data and cites 'README lines 90-91' is also withheld; matching ignores the sign.",
+          "The current GT24 entry is legitimate: GT24-C02 is done in backlog.json and its verify handoff verdict is done. The mechanism, though, does not require that."
+        ]
+      },
+      {
+        "id": 3,
+        "name": "Probe passes only hip/knee README statements",
+        "result": "pass",
+        "evidence": "Importing probe_core04_gt24.py (4fa8259f; no data read) gives DOCUMENTATION_PASSED = hip_angle +1, knee_angle -1, hip_moment +1 and knee_moment -1, and DOCUMENTATION_REFUTED = ankle_angle -1 and ankle_moment -1 (id GT24-README-ankle-sign). The stored v1 probe (f85c34f4) supplied all six statements; it predates the policy and is re-scored as recorded in builder_history."
+      },
+      {
+        "id": 4,
+        "name": "All three sheets at 1100 px and in a 390 px iframe",
+        "result": "pass",
+        "evidence": [
+          "fig_tests now uses set_xlim(0, n_legs). The GT24 figure shows '40 legs', with an axis from 0 to 40, and no bar is clipped. The UM21 and GT23 figure-2 images still read 20 legs. All three figures are 4.5 in wide.",
+          "Each page has 8 chips and 3 figures, with no task IDs, hashes or paths above the details and no horizontal scroll at 390 px.",
+          "The GT24 chips name the refuted-README withholding and '2 NaN-filled by the publisher'. The details carry the BT12 note."
+        ]
+      },
+      {
+        "id": 5,
+        "name": "Provenance of José's instruction",
+        "result": "not checkable from records",
+        "evidence": "'fix both readmes based on the evidence' (2026-10-30) appears only in CORE-04's own files: the design note, the handoff, the pilot JSON, the probe, the review builder, refuted_documentation.json and documentation_policy.py. There is no entry in backlog.json decisions or answers, and none in the GT24-C02 handoffs. The coordinator relayed it, so I take it on that basis. It should be logged where José's decisions live, so the policy's authority is traceable."
+      }
+    ],
+    "required_fixes": [
+      "documentation_policy.split_documentation must enforce the rule, not just a table lookup:\n(1) refuted_by must name a task ID that is 'done' in backlog.json and whose verify handoff verdict is done (or accepted), checked at load time; otherwise raise, or keep the statement.\n(2) citation_contains must be non-empty.\n(3) The entry must state the refuted sign, and only a statement with that channel and that sign is withheld.\nAdd tests for each bypass: an unverified refuted_by, an empty citation_contains, and an agreeing-sign statement."
+    ],
+    "recommendations": [
+      "Coordinator: log José's 2026-10-30 instruction ('fix both readmes based on the evidence') in backlog.json, for example as an answered decision or a decisions note, and point refuted_documentation.json at it."
+    ],
+    "test_runs": [
+      {
+        "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_sign_offset_detector.py tests/test_sign_offset_detector_verify.py tests/test_core04_probe_builders.py tests/test_documentation_policy.py tests/test_backlog_workflow.py",
+        "result": "182 passed in 5.74s"
+      },
+      {
+        "command": "same prefix: python3 contributor_tools/build_backlog_page.py --check",
+        "result": "Backlog valid; HTML current (94 tasks)."
+      }
+    ],
+    "resources": "No research data read: stored probe JSON, code imports without data access, temp policy tables in the scratchpad, sheet renders."
+  },
+  "pilot_gt24": {
+    "verdict": "back_to_worker",
+    "detector_sha256_checked": "efd74e73",
+    "last_checked_at_utc": "2026-10-31T11:40:00Z",
+    "summary": "The science reproduces, and the pilot is returned for one figure fix and one record note. My own adapter on fresh subjects (BT09 and BT13 from Phase1And2, BT18 from Phase3) found no wrong sign applied or suggested, either with the README supplied or without it. In data-only mode the ankle moment +1 (dorsiflexor positive) applied in 12 of 14 legs and was suggested in the other 2. The README ankle statement produced a conflict in every leg. Late-stance CoP sat ahead of the ankle in 97-100% of samples, so the plantarflexor moment is negative and the source is dorsiflexion-positive. This is a third independent confirmation that the README is wrong for the ankle, after GT24-C02 and its verifier. BT12 right has no strides because the publisher NaN-filled that leg (insole and moments 0% finite in both level trials, 95% in incline 5), as the README's load-cell note describes. Required: the sheet's figure 2 is clipped at 20 legs, and the BT12 cause must be recorded.",
+    "checks": [
+      {
+        "id": 1,
+        "name": "Independent re-run, fresh subjects",
+        "result": "pass",
+        "evidence": [
+          "Own adapter (scratch verify_gt24.py). Seed 20261108, excluding the pilot's subjects and GT24-C02's (BT10, BT11, BT02, BT20, BT24).",
+          "Differences from the worker's adapter: strides from insole vertical force above an absolute 30 N (0.6-2.0 s); ankle at a rounded (0.05, 0.05) m in the calcn frame; masses parsed from the README; 10-degree slopes included (decline 10 on, incline 10 off).",
+          "14 legs, 126 leg-channels.",
+          "With the README supplied: 43 suggested right, 26 conflict (ankle angle and ankle moment), 57 abstained, 0 wrong.",
+          "Data only: 12 applied right (ankle moment, from lever arm plus late stance), 57 suggested right, 57 abstained, 0 wrong.",
+          "On the 2 BT09 incline-10 legs, the leg gate failed (steep incline, as on UM21), so late stance and push-off abstained and the ankle moment stayed at suggest +1 from the lever arm alone.",
+          "Peak RSS 182.4 MiB (133.8 MiB for the BT12 check). Zip size and mtime unchanged; one member at a time."
+        ]
+      },
+      {
+        "id": 2,
+        "name": "Recount of the raw probe",
+        "result": "pass",
+        "evidence": "core04-gt24-pilot-probe.json (probe f85c34f4, detector efd74e73): 40 legs. With the README: 162 suggested right, 80 conflict, 118 abstained, 0 applied, 0 wrong. Data only: 40 applied right (ankle moment in every leg; lever arm +1 and late stance +1), 202 suggested right, 118 abstained, 0 wrong. All 282 non-documentation test votes are right in both modes. Ankle angle is conflict with docs and suggest +1 (push-off) without. 5 leg-conditions are skipped: 3 exo-off trials not present, and BT12 R level on and off with 0 strides."
+      },
+      {
+        "id": 3,
+        "name": "Data-only ankle moment +1",
+        "result": "pass",
+        "evidence": "It holds in 40/40 worker legs and 14/14 of mine (12 applied, 2 suggested). A direct physics check supports it: in the last 30% of stance the calcn-frame CoP lies ahead of the ankle in 97-100% of samples, with the force upward, so the internal moment is plantarflexor, which is negative under rule B. The source votes +1, meaning dorsiflexor positive. This agrees with GT24-C02 and its verifier."
+      },
+      {
+        "id": 4,
+        "name": "Is applying from lever arm plus late stance legitimate without markers?",
+        "result": "yes",
+        "evidence": [
+          "The lever arm runs in the publisher's calcn frame: insole force and CoP, with x along the foot, y up, and z to the person's right, so a counterclockwise rotation lifts the toes. A 2-D moment does not change under in-plane rotation, so the foot's pitch does not matter.",
+          "The frame can still be wrong, but CoP progression tests it: heel-to-toe in every leg. Without heel and toe markers the CoP-within-foot check is unknown, so the lever arm stays moderate.",
+          "Late stance needs only the stance timing and the moment's sign, so it is a different failure mode. A mirrored calcn frame would fail CoP progression; a left/right insole swap would fail the knee gate.",
+          "Two moderate tests from different families give score 2, which the D-CORE-04-1 = C rule allows.",
+          "Caveat: the generic talus position is not the subject's own. With late-stance CoP ahead of the ankle in 97-100% of samples, the sign is insensitive to it (my 0.05/0.05 against the worker's 0.049/0.042 gave identical votes)."
+        ]
+      },
+      {
+        "id": 5,
+        "name": "Ruling: should strong data beat documentation?",
+        "result": "the conflict block is correct as designed; overriding must be explicit and logged",
+        "evidence": [
+          "The detector should keep 'documentation can block, never apply'. A disagreement between the source's own statement and the data is exactly the case for a human, and data tests can share an adapter fault (my GT23 mirrored-frame run produced 13 wrong suggests).",
+          "For converter use the override should come from a verified audit, not from automatic precedence. The adapter should supply only documentation statements that a verified audit has not refuted, and record any refuted statement in the report (e.g. 'README 90-91 ankle: refuted by GT24-C02, verified').",
+          "Whether a verified agent audit may override a publisher README for a released sign is a sign/convention judgment. Under AGENTS.md that belongs to José unless he has already ruled on GT24. If he has not, the coordinator should queue a short decision before any GT24 converter uses detector-applied ankle signs. The committed GT24 converter already carries no ankle flip (GT24-C02), so nothing waits on the detector for GT24."
+        ]
+      },
+      {
+        "id": 6,
+        "name": "Why BT12 right has no strides",
+        "result": "explained",
+        "evidence": "Bounded read of BT12 moment_filt and insole_sim in Phase1And2. normal_walk_1_1_1-2_on and normal_walk_1_2_1-2_off: right ankle moment and right insole force are 0% finite, left 100%. incline_walk_1_1_up5_on: 95.1% finite on both sides. The publisher NaN-filled the right leg in those trials, matching the README note that 'several trials where the resulting joint torques are invalid ... has been NaNd'. This is not an adapter bug; the skip is correct."
+      },
+      {
+        "id": 7,
+        "name": "Sheet at 1100 px and in a 390 px iframe",
+        "result": "fail on one item",
+        "evidence": [
+          "Pass: order, 8 chips (4 pass, 4 not checked), 3 question-titled figures (4.04, 4.50, 4.25 in at 170 dpi), 3 not-shown items. No IDs or paths above the details. No horizontal scroll at 390 px. Figure 3 shows the README sign as a hatched bar against the 40/40 data votes.",
+          "Fail: figure 2 ('Did any single test vote for the wrong sign?') reuses the UM21 fig_tests, which hard-codes set_xlim(0, 20) and the title 'Each test on its own, 20 legs'. GT24 has 40 legs, so every bar is clipped at 20 and any wrong or no-decision segment beyond 20 would be invisible. The figure cannot show its claimed failure, as AGENTS.md requires.",
+          "Minor: the 'leg-conditions left out' chip can now name the cause (publisher NaN-filled the BT12 right leg)."
+        ]
+      }
+    ],
+    "required_fixes": [
+      "Make fig_tests scale to the number of legs (x limit and title) and rebuild the GT24 sheet. The function is shared, so check that the UM21 and GT23 sheets still render correctly (20 legs each).",
+      "Record the BT12 right cause in the pilot JSON and the sheet details or chip: the publisher NaN-filled the right leg in both level trials (insole and moments 0% finite)."
+    ],
+    "recommendations": [
+      "Raise with the coordinator whether José must approve a verified audit overriding the GT24 README ankle statement before converter use (see check 5)."
+    ],
+    "test_runs": [
+      {
+        "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_sign_offset_detector.py tests/test_sign_offset_detector_verify.py tests/test_core04_probe_builders.py tests/test_backlog_workflow.py",
+        "result": "180 passed in 5.48s"
+      },
+      {
+        "command": "same prefix: python3 contributor_tools/build_backlog_page.py --check",
+        "result": "Backlog valid; HTML current (94 tasks)."
+      }
+    ],
+    "resources": {
+      "mode": "AGENTS.md read-only probe exception; one zip member at a time; nice 19 / ionice idle; single-threaded; RLIMIT_AS 1.5 GiB; no other numerical job running",
+      "peak_rss_mib": {
+        "verifier GT24 run": 182.4,
+        "BT12 NaN check": 133.8
+      },
+      "outputs": [
+        "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/verify_gt24.py",
+        "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/gt24_out.json",
+        "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/gt24_1100.png",
+        "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/gt24_if390.png"
+      ]
+    }
+  },
+  "pilot_gt23_round_3": {
+    "verdict": "done_for_GT23_pilot",
+    "last_checked_at_utc": "2026-10-31T10:45:00Z",
+    "summary": "Record check only; no data read. The reconstructed builders reproduce their recorded hashes exactly. My own structural comparison confirms the v2 probe step was unchanged when each sheet was built, and that the split probe files carry the probe-step code. Summary counts are unchanged. The GT23 pilot is done; this is not scientific approval. The current GT23 probe file (0ee1f68a) adds the per-stride axis-agreement check and has not been run, so any reuse of the GT23 adapter needs a re-run.",
+    "checks": [
+      {
+        "id": 1,
+        "name": "Reconstructed hashes",
+        "result": "pass",
+        "evidence": "recon/gt23_builder_97375fa6_reconstructed.py hashes to 97375fa65933ba8b..., equal to the builder hash recorded in core04-gt23-pilot-probe-v2.json. recon/builder_e0bf7d46_reconstructed.py hashes to e0bf7d46... (UM21 v2 probe) and recon/gt23_builder_probe_reconstructed.py to d99d53ac... (GT23 v1 probe), both checked in earlier rounds."
+      },
+      {
+        "id": 2,
+        "name": "Own AST comparisons",
+        "result": "pass, with one claim not checkable",
+        "evidence": [
+          "UM21: e0bf7d46 against the current probe_core04_um21.py (17846c46): 29 shared top-level functions and constants identical; only main differs (CLI dispatcher); only sheet code removed. This matches the worker's mapping exactly.",
+          "GT23 v2: 97375fa6 against the v2 sheet builder 57a9a5c9: every probe-step function identical (condition_record, load_trial, summarize, parsing, resample, Reader, run_probe and the rest); only build_sheet and fig_heading differ, plus the added BUILDER_HISTORY. The v2 probe step was unchanged when its sheet was built.",
+          "GT23: 97375fa6 against the current probe_core04_gt23.py (0ee1f68a): 25 identical. condition_record and main differ, and stride_axis_angle is new. This is consistent with the axis-agreement check added after the mapping.",
+          "Not checkable: the intermediate 218d5614 file was not kept, so I could not compare it directly. It does not matter for the pilot record, because the outputs were produced by 97375fa6, which is reconstructed exactly. 218d5614 is only a waypoint."
+        ]
+      },
+      {
+        "id": 3,
+        "name": "Sheet files cannot change probe hashes",
+        "result": "pass",
+        "evidence": "Each probe_core04_*.py records only digest(Path(__file__)) in its output's code_sha256, so the probe hash covers only the probe file. The review_core04_*_pilot.py files import the probe module read-only, are hashed separately as the '(sheet)' entry (GT23 f0fb936a, UM21 fb63872e, both equal to the current files), and are never hashed into a probe output. tests/test_core04_probe_builders.py enforces the split (probe-only functions absent from sheet files and the reverse) and unit-tests stride_axis_angle (a reversed axis gives more than 90 deg; missing markers give None)."
+      },
+      {
+        "id": 4,
+        "name": "Summary counts unchanged",
+        "result": "pass",
+        "evidence": "GT23: 87 applied, 54 suggested, 39 abstained, 0 conflict, 0 wrong (180), matching the v2 probe and my round-2 recount; sheet headline '87 signs applied, none wrong'. UM21: 86/85/29, 0 wrong (stored v2; after_scope_change_prediction 85/81/34 recorded separately); sheet headline '86 UMich signs applied'."
+      }
+    ],
+    "test_runs": [
+      {
+        "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_sign_offset_detector.py tests/test_sign_offset_detector_verify.py tests/test_core04_probe_builders.py tests/test_backlog_workflow.py",
+        "result": "179 passed in 5.30s"
+      },
+      {
+        "command": "same prefix: python3 contributor_tools/build_backlog_page.py --check",
+        "result": "Backlog valid; HTML current (94 tasks)."
+      }
+    ],
+    "follow_ups": [
+      "Any reuse of the GT23 adapter (or a GT23 full run) needs a probe run with probe_core04_gt23.py 0ee1f68a, which records the per-stride pelvis/foot axis agreement, as the pilot of the bound code.",
+      "Keep each future intermediate probe file (or its git commit) so that mapping claims stay checkable."
+    ],
+    "resources": "No research data read: hashes, AST comparisons of code files, stored JSON and sheet HTML only."
+  },
+  "pilot_gt23_round_2": {
+    "verdict": "back_to_worker",
+    "last_checked_at_utc": "2026-10-31T10:15:00Z",
+    "summary": "Every science and sheet item checks out. The v2 recount is exact. The per-leg decline ID-light votes match my own pelvis-axis numbers stride for stride. The fallback is counted and cannot hide a mirror. The v1 builder history is proven by my own structural comparison. One record fix remains. The v2 probe recorded builder 97375fa6, but the sheet and current file are 57a9a5c9, and the v2 history entry says only 'builder: current'. It must name 97375fa6 and show that the probe step is unchanged, as was done for v1. No new data were read.",
+    "checks": [
+      {
+        "id": 1,
+        "name": "v2 recount from the raw probe",
+        "result": "pass",
+        "evidence": [
+          "core04-gt23-pilot-probe-v2.json (sha256 abba296a..., matching the summary inputs; seed 20261102; AB01, AB13, AB06; detector efd74e73): 20 legs, 180 leg-channels. 87 applied right, 54 suggested right, 39 abstained, 0 conflict, 0 wrong. All 220 single-test votes are right.",
+          "Changes from v1 (6, all to the right sign or from abstain): hip_moment suggest -> apply on AB01 decline 5 and AB13 decline 5; hip_power abstain -> suggest on the same two legs; hip_moment abstain -> suggest on AB13 and AB06 stair descent.",
+          "The v1 probe is kept unchanged (69da8886)."
+        ]
+      },
+      {
+        "id": 2,
+        "name": "Decline ID-light against the verifier's pelvis-axis numbers",
+        "result": "pass (exact)",
+        "evidence": [
+          "AB01 decline 5: v2 19/19 votes, median |r| 0.955; mine 19/19, median r 0.95.",
+          "AB13 decline 10: v2 0/4 (4 votes < 5, abstain); mine 4 of 18 strides with |r| >= 0.6.",
+          "AB06 decline 5: v2 16/16; mine 16/16.",
+          "AB13 decline 5: 12/12, median |r| 0.673; not in my set.",
+          "AB01 decline 10: abstains because CoP-within-foot fails, as in v1.",
+          "Hip moment is applied on 4 of 6 decline legs (v1: 2), as claimed."
+        ]
+      },
+      {
+        "id": 3,
+        "name": "Fallback cannot silently hide a mirrored stride",
+        "result": "pass, with a recommendation",
+        "evidence": [
+          "The fallback is used only when a stride's pelvis-marker median is non-finite. It then uses the condition segment's own heel-to-toe axis, computed over that segment's strides, and each segment is one walking direction. So the fallback axis points the walking way, with toe-out only.",
+          "Use is counted per leg in forward_axis_strides and reported in the summary: 3 strides, all AB06 incline 5 (12 pelvis + 3 foot).",
+          "A mirrored stride would also be a minority against the 90% unit-agreement rule, and mirrored frames fail the plate frame checks. In my earlier accidental mirrored-frame run this gave conflicts, never a wrong apply.",
+          "Recommendation, not blocking: record per stride whether the pelvis axis and the foot axis agree within 90 deg, which makes a marker-label swap visible."
+        ]
+      },
+      {
+        "id": 4,
+        "name": "v1 builder history",
+        "result": "pass",
+        "evidence": "The reconstruction (scratchpad recon/gt23_builder_probe_reconstructed.py) hashes to d99d53ac. My own structural comparison against the v1 sheet builder 4165840b finds these probe-step functions identical: load_trial, condition_record, summarize, parsing, resample, Reader, run_probe, main, digest, peak_rss_mib and mem_available. Only sheet code differs: LABEL, SHORT, build_sheet, fig_grid, fig_heading, legs and test_rows."
+      },
+      {
+        "id": 5,
+        "name": "Sheet at 1100 px and in a 390 px iframe",
+        "result": "pass",
+        "evidence": [
+          "Figure 3 is retitled 'Does the foot axis used as forward match the pelvis facing?'. The heading chip is now 'not checked' and states the 5-28 deg v1 offset and the v2 change. A new pass chip reports hip moment applied on 4 of 6 decline legs.",
+          "8 chips; 3 figures at 4.30, 4.50 and 4.46 in, with fonts of 10 pt or more; 3 not-shown items. No IDs, hashes or paths above the details.",
+          "The skipped AB01 stair-descent leg is accounted for in the details.",
+          "No horizontal scroll at 390 px."
+        ]
+      },
+      {
+        "id": 6,
+        "name": "Record integrity for v2",
+        "result": "fail",
+        "evidence": "The v2 probe's code_sha256 names builder 97375fa6. The summary's sheet builder and the current file are 57a9a5c9. BUILDER_HISTORY's v2 entry says 'builder: current', which is inaccurate. Nothing shows that the probe step is unchanged between 97375fa6 and 57a9a5c9."
+      }
+    ],
+    "required_fixes": [
+      "Correct the v2 builder-history entry: the probe ran with 97375fa6 and the sheet with 57a9a5c9. Show that the probe step is unchanged (reconstruct 97375fa6 exactly and compare the probe-step functions, as for v1), or re-run the v2 probe with the current builder."
+    ],
+    "test_runs": [
+      {
+        "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_sign_offset_detector.py tests/test_sign_offset_detector_verify.py tests/test_backlog_workflow.py",
+        "result": "176 passed in 5.20s"
+      },
+      {
+        "command": "same prefix: python3 contributor_tools/build_backlog_page.py --check",
+        "result": "Backlog valid; HTML current (94 tasks)."
+      }
+    ],
+    "resources": "No research data read: recount and comparisons from the stored probe JSON, the code reconstruction and sheet renders only."
+  },
+  "pilot_gt23": {
+    "verdict": "back_to_worker",
+    "detector_sha256_checked": "efd74e73",
+    "last_checked_at_utc": "2026-10-31T09:30:00Z",
+    "summary": "The science reproduces, and I return the pilot for record and sheet fixes only. My own adapter on fresh subjects (AB10 and AB11; level, incline 10, decline 10, stair ascent and stair descent) gave 0 wrong signs applied or suggested in 135 leg-channels, and every one of 147 single-test votes was right. The worker's 180 leg-channels recount exactly. Ground truth, frame, units, mass source and blank-fill are correct. The low decline ID-light correlation is not a bug. The adapter's forward axis is one foot's heel-to-toe axis, which carries 12-21 degrees of toe-out in those legs; the person's pelvis facing restores the correlation (AB01 decline 5: median r 0.39 -> 0.95). Required: disclose the builder change between probe and sheet, record this explanation, and fix the sheet's heading chip and figure-3 framing.",
+    "checks": [
+      {
+        "id": 1,
+        "name": "Independent re-run on a fresh seed",
+        "result": "pass",
+        "evidence": [
+          "Own adapter (scratch verify_gt23.py). Seed 20261107 drew AB10 and AB11 from the subjects not in the pilot (AB01, AB06 and AB13 excluded). Up axis from data (+Y in all trials). Forward = per-stride PSIS->ASIS facing.",
+          "Treadmill strides come from my own vertical-GRF heel strikes (20 N, 0.7-1.8 s). Incline vs decline is decided per stride from the heel path slope in mid stance (+8.1 to +8.6 deg against -11.7 to -12.2 deg), not from file names. Level walking is limited to the dataset's 1.2 m/s time window.",
+          "Stairs use the dataset stride times, the only source because each pass has one plated stance per foot. Ascent vs descent comes from hip-marker height change. Mass is the publisher README value.",
+          "Result: 15 legs, 135 leg-channels. 51 applied right, 47 suggested right, 37 abstained, 0 conflict, 0 wrong. All 147 single-test votes are right.",
+          "Stair ascent: hip and ankle angle, ankle moment and ankle power applied. Stair descent: ankle moment applied. Decline 10: hip and ankle angle, hip and ankle moment applied.",
+          "Adversarial by accident: my first run used one whole-trial facing axis on incline_walk_2, which contains a turnaround between up10 and down10, and on stair passes. That mirrored the marker frame for half the strides. The detector gave 16 conflicts and 13 wrong suggests but 0 wrong applies; CoP progression and braking failed in the mirrored legs as designed. That run is kept as gt23_out_pertrial_axis.json.",
+          "Peak RSS 232.6 MiB. Read-only; nothing written under converted_datasets/ or source folders."
+        ]
+      },
+      {
+        "id": 2,
+        "name": "Recount of the raw probe",
+        "result": "pass",
+        "evidence": "core04-gt23-pilot-probe.json (sha256 69da8886..., matching the summary inputs) has 20 legs and 180 leg-channels: 85 applied right, 52 suggested right, 43 abstained, 0 conflict, 0 wrong. All 210 single-test votes are right. Half-cycle-ambiguous hips: AB01, AB13 and AB06 on incline 10. GRF-unit check and marker vertical order pass in 20/20 legs. Probe detector hash efd74e73 equals the current file."
+      },
+      {
+        "id": 3,
+        "name": "Ground truth",
+        "result": "pass",
+        "evidence": "The gait2392 family is confirmed by the survey (shipped .osim; hip flexion +, knee flexion negative, ankle dorsiflexion +; internal OpenSim ID moments), and GT23-C02 gives power = moment x coordinate speed. Under rule B: knee angle -1; knee moment -1 (an extension-positive generalized force against flexor-positive); hip, ankle and powers +1. Independently, all 147 of my test votes, which are physics- and marker-based, agree with this truth."
+      },
+      {
+        "id": 4,
+        "name": "Adapter frame, units, mass, blank-fill",
+        "result": "pass with a recommendation",
+        "evidence": [
+          "OpenSim ground frame, Y up (data-derived up = +Y). Markers .trc in mm converted to m. CoP is in m in the same frame (CoP x about -5.3 m, markers -5.25 m), so no registration is needed; the CoP-within-foot check passes or is unknown in every leg except AB01 decline 10.",
+          "GRF is in N with the publisher README mass; the GRF-unit check passes in 20/20. Decisions are scale-free, so the GT23-C03 divisor problem does not affect them.",
+          "A marker missing from a pass is NaN-filled with a note, not invented.",
+          "The forward axis is the analysed foot's heel-to-toe axis per trial or pass. It differs from the pelvis facing by 5-28 deg (the worker's heading figure), so it rotates the 'sagittal' plane. See check 5."
+        ]
+      },
+      {
+        "id": 5,
+        "name": "Decline ID-light correlation",
+        "result": "explained: an adapter axis choice plus an assumption limit, not a bug",
+        "evidence": [
+          "Worker probe: ID-light cast no votes on AB01 and AB13 decline 5 and 10 (and AB01 decline 10 also failed CoP-within-foot). AB06 declines voted 15/15 and 16/16.",
+          "My recomputation on the same strides (dataset segmentation, right leg), median per-stride r of the hip moment against the ID-light estimate:",
+          "AB01 decline 5 (axes differ 21.2 deg): heel-to-toe axis 0.39 (0/19 strides |r| >= 0.6); pelvis axis 0.95 (19/19).",
+          "AB13 decline 10 (11.8 deg): 0.25 (0/18) against 0.54 (4/18).",
+          "AB06 decline 5 (5.4 deg): 0.74 (15/16) against 0.85 (16/16).",
+          "A rotated projection plane leaks frontal-plane GRF and CoP terms, through the hip abductor moment, into the planar estimate. In decline walking the sagittal hip moment is small, so the leak dominates. My adapter, which uses the per-stride pelvis axis, got ID-light 36/36 and 32/32 votes on decline 10. The remaining AB13 shortfall reflects planar-model limits (greater-trochanter hip proxy, out-of-plane motion). Abstention is the safe outcome."
+        ]
+      },
+      {
+        "id": 6,
+        "name": "GT23 sheet at 1100 px and in a 390 px iframe",
+        "result": "fail on two items",
+        "evidence": [
+          "Pass: order, 8 chips, 3 question-titled figures (4.30, 4.50, 4.46 in), 3 not-shown items, folded details. No task IDs or paths above the details ('GT23 pilot' is the dataset code). No horizontal scroll at 390 px.",
+          "Fail 1: the green chip 'no reversed pelvis: every heading within 28 deg of the foot axis' and the figure-3 title 'Was any pelvis computed facing backwards?' frame a 5-28 deg forward-axis offset as fine. That offset is the unexplained cause of the decline ID-light abstentions, which the record lists as 'cause not checked'. Under AGENTS.md an unexplained anomaly must not sit behind a green chip. Also, GT23 has no stored pelvis channel, so nothing was 'computed facing backwards'; the figure compares pelvis-marker facing with the foot axis.",
+          "Fail 2 (record): the probe ran with builder d99d53ac and the sheet with 4165840b. The summary has no builder history or proof that the probe step is unchanged; this is the same class of fix as UM21 round 1."
+        ]
+      }
+    ],
+    "required_fixes": [
+      "Record the decline ID-light cause in the pilot JSON explanations (forward axis = foot heel-to-toe with 12-21 deg toe-out; pelvis facing restores r, per the verifier numbers above), replacing 'cause not checked'.",
+      "Sheet: retitle figure 3 (e.g. 'Does the foot axis used as forward match the pelvis facing?'). Make the heading chip say what the offset does (up to 28 deg; it lowers decline ID-light correlation), or turn it into a not-checked chip; do not leave it green as 'no reversed pelvis'.",
+      "Add a builder history: probe d99d53ac, sheet 4165840b. Say what changed and confirm, or demonstrate, that the probe step is unchanged."
+    ],
+    "recommendations": [
+      "GT23 adapter: use the per-stride (or per-pass) PSIS->ASIS facing as the forward axis; GT23 ships pelvis markers. This should recover hip-moment applies on declines. It is an adapter change, so re-run the GT23 probe only if the adapter is to be bound for later use.",
+      "Design note: for any adapter that derives the forward axis from one foot, say that toe-out rotates the sagittal plane and degrades planar ID first."
+    ],
+    "test_runs": [
+      {
+        "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_sign_offset_detector.py tests/test_sign_offset_detector_verify.py tests/test_backlog_workflow.py",
+        "result": "176 passed in 5.53s"
+      },
+      {
+        "command": "same prefix: python3 contributor_tools/build_backlog_page.py --check",
+        "result": "Backlog valid; HTML current (94 tasks)."
+      }
+    ],
+    "resources": {
+      "mode": "AGENTS.md read-only probe exception; one trial at a time; nice 19 / ionice idle; single-threaded; RLIMIT_AS 1.5 GiB. Started after another agent's process had exited.",
+      "peak_rss_mib": {
+        "verifier GT23 run (2 subjects, 120 files read)": 232.6,
+        "decline ID-light axis experiment (3 trials)": 213.4
+      },
+      "outputs": [
+        "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/verify_gt23.py",
+        "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/gt23_out.json",
+        "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/gt23_out_pertrial_axis.json",
+        "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/gt23_1100.png",
+        "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/gt23_if390.png"
+      ]
+    }
+  },
+  "pilot_um21_v2_round_2": {
+    "verdict": "done_for_UM21_pilot",
+    "detector_sha256_checked": "efd74e73",
+    "last_checked_at_utc": "2026-10-31T05:00:00Z",
+    "summary": "All four record fixes check out against the files. I recomputed the predicted totals myself by recombining the stored v2 evidence with the current build's combine() and _propagate(): 85 applied, 81 suggested, 34 abstained, 0 wrong, with exactly the worker's six hip_power changes. The same reconstruction without the scope change reproduces every stored v2 verdict (86/85/29, 0 differences), which validates the method. A new UM21 probe is not needed before the GT23 pilot. It is needed before any full-dataset or converter use of the detector on UM21, because AGENTS.md requires a passing pilot of the same bound code. The UM21 pilot is done; this is not scientific approval.",
+    "checks": [
+      {
+        "id": 1,
+        "name": "Per-recording pelvis truth",
+        "result": "pass",
+        "evidence": "ground_truth.per_recording_caveat in the pilot JSON names AB04/i0 (Plug-in Gait walking direction reversed; pelvis rotation about 180 deg; the +1 suggestion is right there). The sheet details and design-note line 651 say the same. Claim checked against the v2 probe: the pelvis marker test is -1 in all 20 pilot legs, with offsets of -0.05 to +0.16 deg."
+      },
+      {
+        "id": 2,
+        "name": "Builder history and probe-step identity",
+        "result": "pass",
+        "evidence": "builder_history has the v2 entry. The reconstructed builder (scratchpad recon/builder_e0bf7d46_reconstructed.py) hashes to e0bf7d46d916857c, equal to the hash recorded in the v2 probe. My own AST comparison of it against the current builder (38d1f514) finds these probe-step functions identical: digest, peak_rss_mib, mem_available, rot_x, strides, resample, summarize, participant_mass, probe_recording, run_probe and main. Only the constants TEST_LABEL and BUILDER_HISTORY differ, and both are sheet or record only."
+      },
+      {
+        "id": 3,
+        "name": "Gate message",
+        "result": "pass",
+        "evidence": "GATE_FAIL now names both causes: a plate from the other leg, or a knee pattern outside the gate's assumption (steep incline). The gate's threshold (leg_gate_min 0.9) and task set are unchanged. test_gate_failure_message_names_both_causes covers it."
+      },
+      {
+        "id": 4,
+        "name": "Hip H3 scope change and predicted totals",
+        "result": "pass",
+        "evidence": "POWER_TIMING_TASKS['hip'] = {'level_walking'}. The change is logged as data-informed (AB03/i10 R, 84/90 wrong), and test_hip_power_timing_abstains_on_an_incline_pattern covers it. My recomputation from the stored v2 evidence: drop derived evidence, drop hip power_timing outside level walking, re-combine, apply the half-turn rule, re-propagate with the stored relations. Result 85/81/34, 0 wrong. The changes are AB07/i5 R and L, AB03/i5 R and L, and AB01/i5 R hip_power (suggest -> abstain), and AB01/i5 L hip_power (apply -> suggest). This equals the worker's prediction."
+      }
+    ],
+    "rerun_decision": {
+      "ruling": "The prediction is enough to move to the GT23 pilot. A UM21 probe on the bound build is needed later, before any UM21 full-dataset or converter use.",
+      "why": "The evidence-combining layer of efd74e73 reproduces the stored fb174cf2 verdicts exactly, and the only intended detector changes are a constant task set and a message string. I cannot diff the evidence-generating functions between fb174cf2 and efd74e73 (the file is untracked), so the prediction does not prove that every test's votes are unchanged. AGENTS.md requires a passing pilot of the same bound code before a full-dataset run, so the UM21 probe must be re-run on whatever build is bound for UM21 use. It can run with the GT pilots' final build to avoid repeated runs."
+    },
+    "test_runs": [
+      {
+        "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_sign_offset_detector.py tests/test_sign_offset_detector_verify.py tests/test_backlog_workflow.py",
+        "result": "176 passed in 5.28s"
+      },
+      {
+        "command": "same prefix: python3 contributor_tools/build_backlog_page.py --check",
+        "result": "Backlog valid; HTML current (93 tasks)."
+      }
+    ],
+    "resources": "No research data read. Recombination of stored probe JSON evidence only, at nice 19.",
+    "follow_ups": [
+      "UM21 conversion item for per-recording pelvis sign (AB04/i0 reversed walking direction): coordinator/José, outside CORE-04.",
+      "UM21 probe re-run on the build bound for UM21 use, before any full-dataset or converter use."
+    ]
+  },
+  "pilot_um21_v2": {
+    "verdict": "back_to_worker",
+    "detector_sha256_checked": "fb174cf2",
+    "last_checked_at_utc": "2026-10-31T04:20:00Z",
+    "summary": "The pilot numbers recount exactly and the body mass is the participant's own recorded value. My independent run on a fresh seed applied no wrong sign. Returned for record fixes only. First, my run found a real per-recording source property. In AB04/i0 (not in the pilot sample), Plug-in Gait computed the pelvis with the progression direction reversed: median pelvis rotation 180.2 deg, against about 0 deg elsewhere. That flips the stored pelvis tilt (median -2.1 deg against +10 to +16 deg in other level trials). The detector suggested +1 for that recording with an offset of 0.15 deg, which is physically right, while the blanket UM21 ground truth (pelvis -1) is wrong there. Second, on a 10-degree incline the hip power-timing (H3) assumption failed: AB03/i10 R voted the wrong sign in 84 of 90 strides, and the result was a safe conflict. Third, the leg gate's 10-degree incline failures are a real assumption failure. The gate should stay conservative, with clearer wording. Fourth, builder_history has no v2 entry, although the builder changed between probe and sheet.",
+    "checks": [
+      {
+        "id": 1,
+        "name": "Independent re-run on a fresh seed",
+        "result": "pass (no wrong apply; the 2 'wrong' suggests are right per recording)",
+        "evidence": [
+          "Own adapter on build fb174cf2; registration declared as the verifier's midpoint rule. Mass from my own ParticipantDetails reader; unit durations (frames - 1)/100 Hz.",
+          "Seed 20261105 drew 3 recordings from those not used by the pilot or my earlier runs: AB03/i10 (10-degree incline), AB04/i0 (level) and AB02/i5. 6 legs, 60 leg-channels.",
+          "Against the blanket rule-B truth: 20 applied, all right (knee angle 4, ankle angle 6, hip angle 1, hip moment 1, ankle moment 4, ankle power 4); 26 suggested right; 9 abstained; 3 conflict (AB03/i10 R hip angle, hip moment and hip power, from a contradicted power relation); 2 suggested 'wrong' (AB04/i0 pelvis +1, both legs).",
+          "Those 2 are right for that recording. Bounded reads of RPelvisAngles show median tilt/obliquity/rotation of -2.1/2.5/180.2 deg in AB04/i0, against rotation -1.7 to 1.0 deg and level-walking tilt 14-16 deg in AB02/i0 and AB01/i0. The marker test agreed with +1 in 113/113 and 108/108 strides, offset 0.15 deg. Plug-in Gait used a reversed progression frame for that trial, and the earlier UM21-C03 census already listed AB04/i0 L foot-progression anomalies.",
+          "New tests: 33 of 36 decided, with 1 wrong vote. hip power_timing on AB03/i10 R voted -1 in 84/90 strides for a layout-2 truth of +1. The power-identity contradiction turned hip angle, moment and power into conflict. On AB03/i10 the leg gate was 'unknown' (0.667 and 0.339), so the timing tests ran.",
+          "Probe exception: one recording at a time, nice 19 / ionice idle, single-threaded. Peak RSS 212.9 MiB, plus 44.6 MiB for the pelvis check. Source size and mtime unchanged; nothing written under converted_datasets/. Another agent's pytest had exited before I started."
+        ]
+      },
+      {
+        "id": 2,
+        "name": "Recount of the raw v2 probe",
+        "result": "pass",
+        "evidence": "From core04-um21-pilot-probe-v2.json (sha256 0f84f80a..., matching the summary's inputs_sha256): 200 leg-channels, 86 applied right, 85 suggested right, 29 abstained, 0 conflict, 0 wrong. New tests (hip stance extension, ankle push-off, hip moment timing, power timing, ID-light): 90 of 120 decided, 0 wrong. 7 of 20 hips are half-cycle ambiguous. Hip lever-arm 'half' flags: AB08/d10 R, AB04/d5 L, AB06/d5 L. Gate failures: only AB07/i10 R and L (knee peak in swing in 0.068 and 0.069 of strides). Probe detector hash fb174cf2 equals the current file. Peak RSS 224.1 MiB."
+      },
+      {
+        "id": 3,
+        "name": "Body-mass source",
+        "result": "pass",
+        "evidence": "participant_mass() reads Streaming/<subject>/ParticipantDetails, keeps only a 'Bodymass' row with unit 'kg' and a single positive value, and returns None otherwise. My independent reader (case-insensitive label scan, exactly one row required) returns the same values: AB03 61.40, AB04 77.50 and AB02 75.00 kg. The pilot's AB01-AB08 values range from 53.7 to 87.1 kg. These are the dataset's per-participant records; nothing is estimated or defaulted."
+      },
+      {
+        "id": 4,
+        "name": "Ruling on the AB07/i10 gate",
+        "result": "real assumption failure; keep the gate conservative; fix the wording only",
+        "evidence": [
+          "The gate assumes the knee's largest |excursion from median| is the swing flexion peak. On a 10-degree incline the stance knee is strongly flexed at contact and then extends, so with a high median the stance excursion can be the largest. Measured: AB07/i10 0.068 and 0.069 of strides with the peak in swing; my AB03/i10 0.667 and 0.339; every 5-degree and level leg 0.93 or higher.",
+          "Do not exclude steep inclines. The task label has no slope magnitude, so the scope is not expressible a priori. And excluding would let timing tests run without the gate on the very inclines where one (hip H3 on AB03/i10) failed its own assumption.",
+          "Required: reword GATE_FAIL. It currently says only 'plate belongs to the other leg?'. It should also name 'or the knee pattern does not fit the gate (e.g. steep incline)'. The sheet chip already reports the abstention neutrally.",
+          "Any redesign (for example knee-velocity timing) must be fixed and tested synthetically before the GT pilots, not tuned on these UM21 recordings."
+        ]
+      },
+      {
+        "id": 5,
+        "name": "Sheet against AGENTS.md, rendered at 1100 px and in a 390 px iframe",
+        "result": "pass",
+        "evidence": "Order: ask, headline with scope, 8 chips (4 pass, 4 not checked), 3 figures each titled as a question, not shown, reply line, folded details. Figure widths are 4.39, 4.50 and 4.13 in at 170 dpi, with fonts of 10 pt or more. No task IDs, hashes or paths appear above the details; the reply line is 'detector pilot: ok | what looks wrong'. Both renders are legible with no horizontal scroll. Fig3 shows the ambiguous band; its 'other leg (example)' legend entry has no plotted example point, consistent with the legend-swatch practice accepted earlier."
+      }
+    ],
+    "required_fixes": [
+      "Pilot record and design-note ground truth: UM21 pelvis tilt is not uniformly -1 under rule B. AB04/i0 was processed with a reversed progression frame (pelvis rotation about 180 deg), so its pelvis sign is +1. State that the pelvis truth is per recording, and record that the detector's +1 suggestion there is right. The pilot's own 10 recordings are unaffected.",
+      "Add a v2 entry to builder_history: the probe ran with builder e0bf7d46 and the sheet with 2126c434. Say what changed, and confirm the probe step is unchanged.",
+      "Reword GATE_FAIL so a failed gate names both causes, a plate from the other leg or a knee pattern outside the gate's assumption (steep incline). Do not change its threshold or scope."
+    ],
+    "recommendations": [
+      "Hip power timing (H3): the assumption failed on a 10-degree incline (AB03/i10 R, 84/90 wrong) and caused collateral conflicts. Consider restricting it to level walking, as a logged, data-informed scope change made before the GT pilots. Not blocking, because the failure ended in conflict.",
+      "Coordinator: open a UM21 conversion item for per-recording pelvis sign (Plug-in Gait progression-direction flips, e.g. AB04/i0). Pelvis rotation near 180 deg is a data-derived detector; whether to correct or exclude is a José decision."
+    ],
+    "test_runs": [
+      {
+        "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_sign_offset_detector.py tests/test_sign_offset_detector_verify.py tests/test_backlog_workflow.py",
+        "result": "174 passed in 5.24s"
+      },
+      {
+        "command": "same prefix: python3 contributor_tools/build_backlog_page.py --check",
+        "result": "Backlog valid; HTML current (92 tasks)."
+      }
+    ],
+    "resources": {
+      "peak_rss_mib": {
+        "verifier probe (3 recordings)": 212.9,
+        "pelvis channel check (8 recordings, 1 channel each)": 44.6
+      },
+      "outputs": [
+        "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/verify_um21_v2.py",
+        "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/v2_out.json",
+        "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/v2_sheet_1100.png",
+        "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/v2_sheet_if390.png"
+      ]
+    }
+  },
+  "phase3_C_round_2": {
+    "verdict": "accepted",
+    "detector_sha256_checked": "fb174cf2",
+    "last_checked_at_utc": "2026-10-31T03:05:00Z",
+    "summary": "The half-cycle check together with the family merge closes the leg-swap hole. My strict-xfail test now passes, and only its marker was removed. 252 adversarial other-leg hip columns, built with harmonics, asymmetric shapes and contralateral offsets of 35-65%, gave no wrong apply. Wrong-joint and time-reversed columns gave at most a wrong suggest, never a wrong apply. A correct channel is abstained only under a sync error of 15% of a cycle or more, which is conservative. The merge is order-independent and keeps conflicts. The narrowed expectations follow from the fix and hide nothing. The 0.15 BW disclosure is acceptable, because a timing vote that ID-light contradicts now gives a tested conflict. No research data were read. Next: the UM21 probe re-run on this build once the numerical slot is free.",
+    "checks": [
+      {
+        "id": 1,
+        "name": "Verifier xfail test",
+        "result": "pass",
+        "evidence": "test_hip_column_from_other_leg_is_not_applied and _planar_leg are identical to my text except for the removed @pytest.mark.xfail decorator. The assertion is unchanged, and it passes."
+      },
+      {
+        "id": 2,
+        "name": "Breaking the fix",
+        "result": "pass",
+        "evidence": [
+          "(A) Other-leg hip column: 2nd harmonic 0-0.2 rad at 3 phases; other-leg amplitude and harmonic changed (asymmetric gait); contralateral offsets 0.35-0.65 of the cycle. 252 cases, 0 wrong applies. There is no 'lag0' band that a mislabel can reach while the lag-0 fit stays wrong.",
+          "(B) Correct hip with a constant lag. A pure cosine is always ambiguous, so it is suggest (the disclosed cost). With a 0.12 rad harmonic: applies +1 up to a 5% lag; suggest at 10%; at 15-20% the marker test is 'half' and abstains as if the column came from the other leg. A 15% lag is a sync error of more than 150 ms, so this false abstention is conservative and acceptable. Per-unit event jitter of +-4%: applies +1.",
+          "(C) Other fault classes on the full fixture. Ipsilateral wrong-joint columns (hip<-knee, ankle<-knee, knee<-hip, ankle<-hip, hip<-ankle, hip_moment<-ankle_moment, ankle_moment<-hip_moment, ankle_moment<-knee_moment, ankle_power<-hip_power): no wrong apply; at most a wrong suggest. Time-reversed columns for hip, ankle and knee angle, hip and ankle moment, and ankle power: no wrong apply. A corrupted knee column trips the leg gate and stops all plate-timed applies, which is conservative."
+        ]
+      },
+      {
+        "id": 3,
+        "name": "Family merge: order independence and stickiness",
+        "result": "pass, with one latent note",
+        "evidence": "combine() is a pure function of the evidence set, and every permutation gives the same verdict: ambiguous marker + timing -> suggest; with a dissenting timing vote -> conflict; ambiguous marker + knee hinge -> apply (the hinge is shift-invariant, so it is a genuinely different family). The ambiguous flag stays on the original evidence, so the re-combine in _propagate keeps the merge, and conflicts are decided before families. Latent: ambiguous marker + timing + derived:power_identity would reach apply, because derived power counts as a separate family. This is unreachable today: deriving the hip angle needs hip power applied, which needs the hip angle applied. If later tests make it reachable, derived evidence whose anchors share the ambiguity should inherit the merge."
+      },
+      {
+        "id": 4,
+        "name": "Rewritten expectations",
+        "result": "pass",
+        "evidence": "All three narrow coverage: the hip angle becomes suggest (ambiguous) under coarse, fine and full input, and hip power becomes abstain. They follow directly from the fix. New tests cover both outcomes: an asymmetric hip applies while its other-leg column does not, and a sweep of 7 channels x 2 hip shapes gives no wrong apply."
+      },
+      {
+        "id": 5,
+        "name": "0.15 BW fixture disclosure",
+        "result": "acceptable",
+        "evidence": "The fixed-hip planar fixture cannot produce a physiological hip moment, as the worker explains. The timing logic is now tested on a labelled normative pattern. At 0.30 BW, timing and ID-light disagree and the result is conflict (test added). The disclosure appears in the design note (hip moment timing row, line 315). The real-data validity of hip_moment_timing remains a pilot question."
+      }
+    ],
+    "test_runs": [
+      {
+        "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_sign_offset_detector.py tests/test_sign_offset_detector_verify.py tests/test_backlog_workflow.py",
+        "result": "174 passed in 5.14s"
+      },
+      {
+        "command": "same prefix: python3 contributor_tools/build_backlog_page.py --check",
+        "result": "Backlog valid; HTML current (89 tasks)."
+      }
+    ],
+    "next": [
+      "UM21 probe re-run on build fb174cf2 when the numerical slot is free, under the probe exception. Compare it field by field with the re-scored rule-B result, and tabulate the new tests (hip stance extension, ankle push-off, hip moment timing, power timing, ID-light abstaining without a mass) and the half-cycle results against ground truth.",
+      "Report how often real hips are half-cycle ambiguous (they stay suggest)."
+    ],
+    "resources": "Synthetic probes only (scratch probe_p3r2.py), at nice 19 / ionice idle with single-threaded env vars. No research data read.",
+    "scratch": [
+      "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/probe_p3r2.py"
+    ]
+  },
+  "phase3_C": {
+    "verdict": "back_to_worker",
+    "detector_sha256_checked": "a855345e",
+    "last_checked_at_utc": "2026-10-31T02:10:00Z",
+    "summary": "The new tests have the right physics and sign under rule B. The ID-light hip estimate matches my own independent moving-hip formula. The abstention rules hold for stairs, running, task None, backward walking and a missing body mass. One required fix: a single, common fault makes two default families agree on a wrong sign. If the hip-angle column belongs to the other leg (an L/R column mislabel), it is shifted by half a cycle and looks negated. Marker geometry and hip stance extension then both vote -1, the knee-based leg gate passes, and hip_angle is applied with the wrong sign. I reproduced this with the worker's fixture and with my own generator. A second issue is not blocking: the fixture's hip-moment pattern is not physiological, so the fixture does not exercise hip_moment_timing as designed. The test passes at 0.15 BW propulsion, abstains at 0.20 BW and votes wrong at 0.30 BW. ID-light then disagrees, which gives a safe conflict. No research data were read.",
+    "checks": [
+      {
+        "id": 1,
+        "name": "Physics and sign under rule B",
+        "result": "pass",
+        "evidence": [
+          "Hip stance extension: the hip is flexed at contact and extended at toe-off in level, incline and decline walking, stair ascent and running, so the rule-B hip angle falls over stance. The worker's fixture votes +1 for the truth.",
+          "Ankle push-off: from heel rise to toe-off the ankle plantarflexes (dorsiflexion positive), so the angle falls over the last 25% of stance. This holds for stair ascent and running; decline walking falls less and abstains below 0.10 rad.",
+          "Hip moment timing: the internal hip moment is extensor (negative under B) in early stance, when the GRF passes in front of the hip, and flexor (positive) in late stance, so late - early > 0. That is internal-moment correct.",
+          "Power timing: ankle A2 and hip H3 are generation (positive) whatever the angle and moment conventions, so the test checks how the power column is stored.",
+          "ID-light: the Newton-Euler recursion signs are correct for foot (Fa = m(a - g) - F), shank and thigh, and the hip output is JOINT_CCW[hip] x the counterclockwise moment on the thigh. With a hip that moves (1.3 m/s progression plus bounce), it matches my own whole-leg angular-momentum formula about the moving hip: r = 0.995, max difference 10% of peak away from the unit ends."
+        ]
+      },
+      {
+        "id": 2,
+        "name": "Independence of plate timing (single faults)",
+        "result": "fail",
+        "evidence": [
+          "Hip-angle column from the other leg (half-cycle shift): marker -1 (24/24) and hip_stance_extension -1 (24/24) give apply -1, which is wrong. The leg gate passes because it checks only the knee channel. My generator, which adds a 2nd harmonic, gives the same result (20/20 each). The shared failure mode is channel identity: a half-cycle shift of a near-sinusoid looks like negation to every test that compares shape or direction at fixed timing.",
+          "The same fault elsewhere: the hip-moment column gives suggest -1 (ID-light abstains); hip power gives suggest -1; the ankle angle and ankle power columns abstain.",
+          "Contralateral plate: the gate fails, so the timing tests abstain (worker test).",
+          "Plates lagging mocap by 20%: the gate fails.",
+          "Plates leading by 20%: conflicts only.",
+          "Everything time-reversed (approximates backward walking labelled level): hip angle conflict; nothing wrong is applied.",
+          "Joint channels reversed against markers and plates: wrong signs are suggested only.",
+          "Mirrored markers and plates: conflicts (worker test)."
+        ]
+      },
+      {
+        "id": 3,
+        "name": "Assumptions and abstention",
+        "result": "pass",
+        "evidence": [
+          "stair_descent: timing tests and the gate abstain; only the ankle moment applies, from the existing tests.",
+          "run and stair_ascent: hip angle, ankle angle, ankle moment and ankle power apply, all with the right sign.",
+          "task None and backward_walking: nothing applies.",
+          "GRF in N with a declared 70 kg mass: hip moment apply +1. GRF in N with no mass: ID-light abstains, hip moment is suggest only, and no mass is invented.",
+          "A low push-off below 0.10 rad, or no H3 burst (|mean| < 15% of peak), gives no vote, by construction. Pathological and slow gait must be passed as task None; the population is not checked, which the design note already discloses."
+        ]
+      },
+      {
+        "id": 4,
+        "name": "Fixture change and rewritten assertions",
+        "result": "partial (disclosed weakness, not blocking)",
+        "evidence": [
+          "The four rewritten assertions only widen the expected apply set, to hip and ankle angles under coarse and to those plus ankle power under fine. No safety assertion was removed.",
+          "The fixture's hip moment is not a physiological pattern: phase 0-12% -0.44, 12-30% +1.05 (a midstance flexor peak), 42-60% +0.27. hip_moment_timing passes on the fixture only because the brief early extensor is smaller than the late value.",
+          "Changing only the propulsion peak: 0.15 BW votes +1 (23/23); 0.20 BW gives no vote; 0.30 BW votes -1 (22/22); 0.38 BW votes -1 (24/24).",
+          "At 0.30 BW, ID-light and the lever arm vote +1, so hip_moment ends in conflict, not a wrong apply.",
+          "The fixture therefore does not validate hip_moment_timing. Its real-data justification is the Winter early-extensor / late-flexor pattern, which still needs the pilot."
+        ]
+      },
+      {
+        "id": 5,
+        "name": "ID-light: Winter fractions, units, padding",
+        "result": "pass",
+        "evidence": [
+          "Winter (2009) Table 4.1 fractions: thigh 0.100 / 0.433 / 0.323; leg 0.0465 / 0.433 / 0.302; foot 0.0145 / 0.50 / 0.475 (mass, COM from proximal, radius of gyration about COM). These match the table.",
+          "The foot segment is taken heel to toe rather than Winter's ankle to metatarsal-head definition. The approximation is acceptable for a sign test.",
+          "Units: GRF per kg (BW x g; N / declared mass; otherwise abstain), so the result is in N*m/kg with inertia = fraction x (rho L)^2 per kg.",
+          "Padding: linear drift is removed and added back, and the periodic pad excludes the duplicated endpoint. The pad is 3 fs / cutoff (about 68 samples) and the filtfilt is 2nd-order Butterworth.",
+          "My moving-hip comparison exercises the drift handling, and the result is cropped correctly.",
+          "ID-light is not task-gated. That is acceptable, because heel-strike-to-heel-strike periodicity is assumed only for padding quality, not for sign."
+        ]
+      }
+    ],
+    "test_runs": [
+      {
+        "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_sign_offset_detector.py tests/test_sign_offset_detector_verify.py tests/test_backlog_workflow.py",
+        "result": "156 passed before my addition; my verify file now: 22 passed, 1 xfailed (strict). With --runxfail the new test fails at its intended assertion ('apply' != 'apply')."
+      },
+      {
+        "command": "same prefix: python3 contributor_tools/build_backlog_page.py --check",
+        "result": "Backlog valid; HTML current (89 tasks)."
+      }
+    ],
+    "verifier_tests": "My earlier tests are unchanged since the rule-B round. Added test_hip_column_from_other_leg_is_not_applied: a strict xfail with its own planar generator. Remove the marker when fix 1 lands.",
+    "required_fixes": [
+      "Phase 3 fix 1: stop a single L/R column mislabel from applying a hip-angle sign through marker geometry + hip stance extension. Options:\n(a) Per-channel leg check against the contralateral leg's markers when available: the source must correlate better with its own leg's reference at lag 0 than with the other leg's.\n(b) A lag check in the reference test: abstain when the best |r| lag is near half a cycle, and when lag 0 and half-cycle are not separable by a margin (near-sinusoids), do not let marker + plate timing apply on their own.\n(c) Extend the plate-to-leg gate to each plate-timed channel with a sign-independent timing feature of that channel.\nWhatever the choice, the fix must hold for a pure sinusoid as well as for real-shaped curves, and the decision log must say which option was chosen."
+    ],
+    "recommendations": [
+      "Give the fixture a physiological hip pattern (CoP ahead of the hip with an extensor moment through loading response, flexor in late stance, a moving hip) at 0.2 BW propulsion, so hip_moment_timing is exercised as designed and not tuned through the propulsion value. Add a test that timing vs ID-light disagreement gives conflict.",
+      "Add hip_moment_timing and the ankle push-off threshold to the UM21 pilot re-run table, which is the first real-data check of their assumptions."
+    ],
+    "resources": "Synthetic probes only (scratch probe_p3.py, probe_p3b.py), at nice 19 / ionice idle with single-threaded env vars. No research data read.",
+    "scratch": [
+      "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/probe_p3.py",
+      "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/probe_p3b.py"
+    ]
+  },
+  "rule_b_switch": {
+    "verdict": "accepted",
+    "last_checked_at_utc": "2026-10-31T00:40:00Z",
+    "summary": "The detector's switch to rule B is correct. I re-derived every knee change from physics, and no rule-C assumption remains in the module, the design note's rule and ground-truth tables, the pilot JSON or the CORE-04 sheet. My tests now assert rule B with their intent unchanged. The worker's mirroring argument for re-scoring the UM21 pilot holds analytically and in a synthetic equivariance check. No data was read. Because the probe ran on an earlier detector build (40a9d08c, rule C; current df34999d), a probe re-run under rule B is still needed later, once the worker slot is free. It is not needed for this round. It should be done before the UM21 pilot is marked done or D-CORE-04-1 is put to José.",
+    "module_checks": [
+      {
+        "item": "knee factor JOINT_CCW = {hip +1, knee -1, ankle +1}",
+        "result": "pass",
+        "evidence": "Under rule B the named directions are hip flexion, knee flexion and ankle dorsiflexion. With the person facing +x and z = the person's right, hip flexion (knee forward) and dorsiflexion (toes up) are counterclockwise, while knee flexion (shank swings back) is clockwise. So only the knee factor is -1. Segment angles stay counterclockwise (pelvis anterior tilt negative)."
+      },
+      {
+        "item": "marker knee = thigh - shank",
+        "result": "pass",
+        "evidence": "marker_reference_angles gives joint = JOINT_CCW x (distal - proximal), so knee = -(shank - thigh). A thigh vertical with the ankle 0.2 m behind the knee gives +0.47 rad; my test asserts > 0.3. For a planar leg, the knee equals thigh - shank to 1e-15."
+      },
+      {
+        "item": "chain shank = thigh - knee",
+        "result": "pass",
+        "evidence": "With target = s x source, s_d d = s_q q - s_j j, so the fitted b = -s_d s_j and the relation product is c x b with c = -1. A source built as shank = thigh - knee gives product +1 for (shank, knee); a rule-C-built shank gives -1. Pattern votes come from source data before c is applied, so they do not change between rules."
+      },
+      {
+        "item": "knee lever-arm flip",
+        "result": "pass",
+        "evidence": "lever = -JOINT_CCW x (r x F)_z = +(r x F)_z for the knee. GRF behind the knee gives an internal extensor moment, which is counterclockwise on the shank and so negative under rule B. My test builds the truth with numpy's 3D cross product and recovers +1 and -1 for flipped sources through lever_arm_test('knee')."
+      },
+      {
+        "item": "hinge expectation",
+        "result": "pass",
+        "evidence": "A large excursion on the positive side now votes +1 (flexion positive already), the mirror of rule C. Thresholds are unchanged and symmetric in sign."
+      },
+      {
+        "item": "unchanged parts",
+        "result": "pass",
+        "evidence": "The ankle and hip lever arms, the late-stance plantarflexor test, the power identity (both knee moment and knee angle flip, so the product is invariant), the plate frame checks, the branch screen and the vertical order do not depend on the knee convention."
+      }
+    ],
+    "residual_rule_C_search": {
+      "result": "pass, with one stale summary outside the requested scope",
+      "evidence": "Searched for 'rule C', 'rule-C', 'flexion negative', 'extensor positive' and 'flexor negative'. Module: none; TARGET_CONVENTION says rule B with knee flexion and flexor positive. Design note: the rule table and the GT21/GT23/GT24 ground-truth table are under B (gait2392 knee angle and moment -1; UM21 knee +1). The remaining 'knee flexion negative' mentions describe the synthetic injected source, which is correct. Pilot JSON: target_rule B, ground truth pelvis -1, hip +1, knee angle +1, ankle +1, moments +1, power slot 1 -1 / slot 3 +1. This matches my UM21-C03 derivation mapped to B (Plug-in Gait is flexion and flexor positive; only pelvis tilt differs). The one 'rule C' mention is rescored_from. Sheet: the details say rule B and 're-scored to B without re-reading data'; chips and figures do not depend on the rule. Stale text outside scope: CORE-04.json 'summary' still says 'under rule C (D-UM21-C03-1 = C)'. Fix it at the next handoff edit; non-blocking."
+    },
+    "rescore_argument": {
+      "result": "pass (analytic and synthetic); confirm with a probe re-run later",
+      "evidence": "Rule B = -C for the knee angle and knee moment targets only. Every knee test is odd under that change:\n- The marker reference is negated: slope sign flips, |r| is unchanged, the circular centre is negated, and the wrapped offset negates (the CI swaps ends).\n- The hinge votes are mirrored.\n- The knee lever arm is multiplied by -1.\n- The chain product for (shank, knee) negates while derived values stay invariant.\n- The power product is unchanged.\n_vote is symmetric except at exact ties, which abstain either way. Ties in the chain pattern index are unaffected because the pattern is fitted before the knee factor. to_rule_b() negates knee signs, non-documentation evidence signs, offsets with swapped CI ends, and only the chain relations that contain the knee, then rescores against the B truth. This matches the argument. UM21 has no documentation statements and no segment channels, so no derivation through the knee is missed. Synthetic check with the current detector on the worker's fixture: negating the knee source channels leaves every verdict unchanged and flips only the knee signs (7/7 channels as predicted). Caveat: the probe was produced by detector 40a9d08c, and the current file is df34999d. to_rule_b covers the rule change but cannot show that no other detector logic changed, so a field-by-field comparison with a rule-B probe re-run is the remaining confirmation."
+    },
+    "verifier_tests_updated": {
+      "file": "tests/test_sign_offset_detector_verify.py",
+      "changes": [
+        "Module docstring: expected signs under rule B; notes that rule C differed only at the knee.",
+        "_gait(): knee waveform flexion positive (rule B).",
+        "test_marker_angles_match_anatomical_labels: a flexed knee now asserts knee_angle > 0.3 (was < -0.3). Hip, pelvis and ankle assertions are unchanged.",
+        "test_lever_arm_sign_matches_cross_product_physics: the knee part still asserts that the internal extensor moment from the cross product is counterclockwise (> 0). It adds the rule-B knee moment (< 0) and checks that lever_arm_test('knee') recovers +1 and -1 for flipped sources.",
+        "test_no_derivation_from_conflicted_channel: shank built as thigh - knee (rule B chain). Intent unchanged: thigh is in conflict and shank is not applied.",
+        "Line 179 (test_offsets_never_applied...) is unchanged; it passes for the same reason as before: knee_angle apply -1 from joint_anatomy + marker_geometry."
+      ],
+      "result": "22 passed"
+    },
+    "test_runs": [
+      {
+        "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_sign_offset_detector.py tests/test_sign_offset_detector_verify.py tests/test_backlog_workflow.py",
+        "result": "143 passed in 4.04s (the only two detector test files that exist, plus the backlog workflow)"
+      },
+      {
+        "command": "same prefix: python3 contributor_tools/build_backlog_page.py --check",
+        "result": "Backlog valid; HTML current (88 tasks)."
+      }
+    ],
+    "later": [
+      "Re-run the UM21 probe under rule B when the numerical-worker slot is free, and compare it field by field with the to_rule_b() output. Do this before the UM21 pilot is marked done or D-CORE-04-1 goes to José.",
+      "Correct the CORE-04.json summary, which still says rule C.",
+      "pilot_um21_round_2 required fix (CoP-within-foot wording): now present in the D-CORE-04-1 'why' and in design note lines 297-300. Both say the check returned unknown at 73%/82% and that the pair conflicted only through late stance. The UM21 pilot can be closed once the rule-B probe re-run confirms the re-score."
+    ],
+    "resources": "No research data read; synthetic checks only, at nice 19 / ionice idle with single-threaded env vars."
+  },
+  "pilot_um21_round_2": {
+    "verdict": "back_to_worker",
+    "last_checked_at_utc": "2026-10-30T22:55:00Z",
+    "summary": "Four of the five round-1 fixes check out against the files, and so does the up-vector recommendation. The re-run probe still gives 36 applied, 84 suggested, 80 abstained and 0 wrong; I recounted it from the raw file. The new CoP-within-foot check does not catch my heel-at-contact AB04/d10 case: it returns 'unknown' in both legs, the ankle lever arm stays moderate and votes the wrong sign, and the outcome is still a safe conflict, only because late stance dissents. The decision's 'why' and the design note both say the check now tests registration, which reads as if it caught this case. The text fix is required because D-CORE-04-1 goes to José. Nothing else is outstanding.",
+    "checks": [
+      {
+        "id": 1,
+        "name": "CoP-within-foot check on the heel-at-contact AB04/d10 case",
+        "result": "fail (not caught; outcome still safe)",
+        "evidence": "Scratch adapter, heel-at-contact registration, cop_registration declared. AB04/d10: cop_within_foot is 'unknown' in R (90/124 units inside) and L (98/119); the median inside fraction is 0.935 in both. An 11 cm posterior shift keeps most stance samples within the heel-toe span +-3 cm. CoP progression is also 'unknown', so the ankle lever arm stays moderate and still votes -1 (55/55, 95/95). Late stance votes +1, so ankle_moment is conflict, unchanged from round 1. With midpoint registration: within-foot pass 124/124 and 119/119, ankle moment apply +1. The check only catches registration errors large enough to push more than 20% of a unit's stance outside the span. I do not recommend retuning its thresholds to catch this one case; that would be fitting to a known outcome."
+      },
+      {
+        "id": 2,
+        "name": "False abstention on normal walking",
+        "result": "pass",
+        "evidence": "Level walking, scratch adapter: AB02/i0 and AB09/i0, both legs, both registrations. Every leg passes the within-foot check (102/102 to 131/132 units, median inside fraction 0.936-1.0), and ankle_moment is apply +1 everywhere. Worker probe: 20/20 legs pass. The closest is AB01/i5 (108/110 and 106/109 units; median inside fraction 0.87-0.89 against the 0.80 per-unit threshold), so incline walking has the smallest margin. A false fail would only make the lever arm abstain, which is conservative. No wrong sign in 60 leg-channels across both registrations."
+      },
+      {
+        "id": 3,
+        "name": "Up-vector visible-frame minimum",
+        "result": "pass",
+        "evidence": "vertical_order_check now requires 50 visible frames for 'pass' and reports visible_frames. 'fail' still needs only visible frames, because an inversion shows in every frame. Visible frames: 11950-19800 per leg in the pilot and 15300-19800 in my legs."
+      },
+      {
+        "id": 4,
+        "name": "D-CORE-04-1 in a temp backlog copy",
+        "result": "pass on schema and order; text fix required",
+        "evidence": "Copied as-is from CORE-04.json proposed_decision into a temp copy of backlog.json (scratch backlog_with_DCORE041.json), where validate_backlog passes. Extra fields copy_note and options_order are tolerated. Option order A (none), B (2 channels), C (more) is neutral and stated. decide_before_recommendation is true, and the backlog card puts recommended and why in a fold. No label contains 'default', 'current' or 'recommend'. B's consequence says 'This is how the detector is configured now', a status-quo fact placed in the consequence line as I recommended in round 1; acceptable. Required: the why says 'a CoP-within-foot check now tests it', implying it would catch the verifier case. It does not (check 1)."
+      },
+      {
+        "id": 5,
+        "name": "Sheet reply line and render",
+        "result": "pass",
+        "evidence": "The reply line is now 'detector pilot: ok | what looks wrong'. No task IDs, hashes or paths appear before the folded details, and no recommendation text appears on the sheet. Rendered at 1100 px and in a 390 px iframe: same order, budgets and legibility as round 1, with no horizontal scroll."
+      },
+      {
+        "id": 6,
+        "name": "Record integrity and declared registration",
+        "result": "pass",
+        "evidence": "The probe file (21675be2...) records builder d09216be... and detector 40a9d08c..., and both equal the current files. The summary inputs_sha256 matches the probe file. builder_history lists probe e0f7a5c4 / builder 4392, then probe 520149f3 / builder 41a0 (said to match field by field except code hashes and memory), then the current record. I did not re-derive the 520149f3 comparison, since that file is superseded and the current probe recounts exactly. The CoP registration rule is passed to detect_leg (cop_registration=COP_REGISTRATION) and recorded in the summary as cop_registration_rule."
+      }
+    ],
+    "test_runs": [
+      {
+        "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_sign_offset_detector.py tests/test_sign_offset_detector_verify.py tests/test_backlog_workflow.py",
+        "result": "143 passed in 3.86s"
+      },
+      {
+        "command": "same prefix: python3 contributor_tools/build_backlog_page.py --check",
+        "result": "Backlog valid; HTML current (85 tasks)."
+      }
+    ],
+    "required_fixes": [
+      "D-CORE-04-1 'why' and the design note: replace 'a CoP-within-foot check now tests it' with what the verifier found. On AB04/d10 with heel-at-contact registration, the check returned unknown (73% and 82% of strides inside; median inside fraction 0.935), the lever arm stayed moderate and voted wrong, and the pair returned conflict because late stance dissented. The check catches only larger registration errors. Do not retune its thresholds to this case."
+    ],
+    "resources": {
+      "mode": "read-only probe exception: two sequential runs (heel, midpoint), each reading AB04/d10, AB02/i0 and AB09/i0 one recording at a time. Started only after another agent's pytest had exited; nice 19 / ionice idle; single-threaded env vars; RLIMIT_AS 1 GiB; nothing written under converted_datasets/ or source folders",
+      "peak_rss_mib": {
+        "heel registration run": 196.1,
+        "midpoint registration run": 196.7
+      },
+      "source_unchanged": true,
+      "outputs": [
+        "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/verify_um21_variant2.py",
+        "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/r2_heel.json",
+        "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/r2_midpoint.json",
+        "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/backlog_with_DCORE041.json",
+        "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/r2_sheet_1100.png",
+        "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/r2_sheet_if390.png"
+      ]
+    }
+  },
+  "pilot_um21": {
+    "verdict": "back_to_worker",
+    "last_checked_at_utc": "2026-10-30T22:10:00Z",
+    "summary": "The science reproduces. My own adapter ran on a fresh, disjoint seed with three level-walking recordings: 0 wrong signs applied or suggested in 100 leg-channels (applied 18, suggested 39, abstained 41, conflict 2). The worker's counts (36 applied, 84 suggested, 80 abstained, 0 wrong, 0 conflict) recount exactly from the raw probe file. The adapter does not leak ground truth. The missing-marker change does not weaken the inverted-up guard. Returned for record and sheet fixes only. D-CORE-04-1 as written fails the backlog decision schema, and its option B label 'current default' anchors a decision whose recommendation must stay hidden. The sheet's reply line shows a task ID. The pilot builder changed after the probe ran, and the change is not disclosed. The decision text should also cite my finding: with a different CoP registration, a lever-arm vote was wrong and the pair caught it.",
+    "checks": [
+      {
+        "id": 1,
+        "name": "Independent re-run, no wrong sign",
+        "result": "pass",
+        "evidence": "Seed 20261103, recordings disjoint from the pilot's 10: AB02/i0, AB03/d5, AB03/i0, AB04/d10, plus AB09/i0 by seed 20261104 from the remaining level-walking recordings. 10 legs, 100 leg-channels. knee angle applied right 10/10; ankle moment applied right 8/10 and conflict 2/10 (AB04/d10 R and L); pelvis, hip and ankle angle suggested right 10/10 each; knee moment suggested right 9, abstained 1; hip moment and all powers abstained. Wrong signs: 0 applied, 0 suggested. Both conflicts are adapter sensitivity. My CoP registration (CoP = heel marker in the first 10 stance frames) puts the CoP about 11 cm behind the pilot's midpoint rule in 10-degree decline. The ankle lever arm, moderate because CoP progression was 'unknown' (55/124 and 37/119 forward), then voted -1, and late stance voted +1. Rerunning only AB04/d10 with the midpoint registration gives lever arm +1 (121/122, 119/119), so the result is apply +1 in both legs. Lesson: the lever-arm sign depends on the CoP registration, which the plate frame check does not test; the second family caught it."
+      },
+      {
+        "id": 2,
+        "name": "Adapter leakage",
+        "result": "pass",
+        "evidence": "In the pilot builder, TRUTH and TRUTH_POWER are used only in summarize() and test_table() for scoring, never in the detect_leg inputs. The UM21-C03 file is read only for the source size and mtime and to confirm the seeded sample lists. Transforms come from declared metadata or data: degrees to radians, component 1, GRF on the foot = -(plate force), z up, plate tilt magnitude from the README slope with its sign from the heel path, power slot = first filled slot, and CoP registration from the markers. My adapter derived the frame facts from the data without UM21-C03 or the README and agrees: up = lab +z in 5/5 recordings, body-force sign -1 (on the foot = -plate force) in 5/5, tilt 0/-1.0/0 deg for i0 and 10.0 deg for d10 (2.25 deg for d5 against the README's 5). A forward axis from PSIS->ASIS gives the same facing as the pilot's heel->toe axis, including -y in decline trials. Ground truth (UM21-C03 under rule C) matches my round-1 UM21-C03 derivation."
+      },
+      {
+        "id": 3,
+        "name": "Missing-marker vertical-order change",
+        "result": "pass (does not weaken the guard), with a recommendation",
+        "evidence": "Frames with any missing marker are now excluded instead of counting as failures. With an inverted up vector, every visible frame still fails: 1 visible frame gives 0.0, and a knee visible in 10/150 frames gives 0.0. A missing marker carries no information about the up vector, so excluding it cannot turn a failure into a pass. The old behaviour falsely failed recordings with zero fill. Remaining gap: there is no minimum number of visible frames (1 visible frame decides 'pass'), and the count is not reported. Recommend requiring at least min_units x min_samples_per_unit visible frames and reporting the count. My run passed in 10/10 legs at 1.00; the pilot passed in 20/20."
+      },
+      {
+        "id": 4,
+        "name": "D-CORE-04-1 schema, order and leakage",
+        "result": "fail",
+        "evidence": "As written (CORE-04.json proposed_decision), validate_backlog rejects it: 'decision.task_id: expected nonempty text'. The options use 'option' where the schema needs 'key', and status is free text instead of open/queued. With task_id=CORE-04, status=queued and option->key mapped mechanically, it validates against the current backlog. That is the copy the coordinator would make, so the handoff should carry it in that form. Option order: A (0 channels), B (2), C (more), stated as 'fewest first'. This is neutral. decide_before_recommendation is true. Leak: option B's label says '(current default)'. On a blind decision this anchors on the recommended option; move the default status into a consequence line, or state it for every option. The pilot sheet has no decision block and no text naming or favouring an option. The 'why' says each pair member was right whenever it voted. My independent run is a counterexample for the lever arm under a different registration, and the pair still caught it. Add that sentence."
+      },
+      {
+        "id": 5,
+        "name": "Sheet against AGENTS.md, rendered at 1100 px and in a 390 px iframe",
+        "result": "fail on one item",
+        "evidence": "Order: ask, headline with scope, 8 chips (pass / not checked), 3 figures titled as questions, not shown (3), reply line, folded details. The builder enforces prose of 60 words or fewer. Figure widths at 170 dpi: 4.39, 4.50 and 4.30 in, with fonts of 10 pt or more and one panel each. The anomaly (1 broken stride kept) is a 'not checked' chip. Fig1 and fig2 show the failure state through labelled legend swatches ('wrong sign (example; none here)', 'Red would mark a wrong vote'). Fig3 is a source overlay. At 1100 px everything is legible. In a 390 px iframe there is no horizontal scroll, the figures scale to about 11 px text and are still legible, and the reply line wraps. Fail: the reply line 'CORE-04 pilot: ok | what looks wrong' shows a task ID outside the folded details. Other verification sheets use 'ok | what looks wrong' or a plain topic label."
+      },
+      {
+        "id": 6,
+        "name": "Record integrity",
+        "result": "fail on disclosure",
+        "evidence": "File hashes match the pilot record: probe e0f7a5c4..., detector 9fc3e878..., sheet builder 41a009ef.... The probe was produced by builder 4392164738..., and the current builder is 41a009ef.... The record does not say whether the probe step changed. The recount of the raw probe file equals the summary: 200 leg-channels, 84 suggested right, 36 applied right, 80 abstained. Marker checks pass 20/20 and CoP progression passes 20/20."
+      }
+    ],
+    "test_runs": [
+      {
+        "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_sign_offset_detector.py tests/test_sign_offset_detector_verify.py tests/test_backlog_workflow.py",
+        "result": "140 passed in 3.50s"
+      },
+      {
+        "command": "same prefix: python3 contributor_tools/build_backlog_page.py --check",
+        "result": "Backlog valid; HTML current (84 tasks)."
+      }
+    ],
+    "required_fixes": [
+      "Write D-CORE-04-1 in backlog schema form (task_id, status queued, options with key/label/consequence) and confirm it with validate_backlog.",
+      "Remove '(current default)' from option B's label, or state the default neutrally for every option.",
+      "Add to the decision's 'why' that, in the verifier's independent run, the ankle lever arm voted wrong in 2 legs under a different CoP registration and the pair returned conflict.",
+      "Replace the sheet reply line with one that has no task ID (e.g. 'detector pilot: ok | what looks wrong').",
+      "State in the pilot record what changed in the builder between the probe (4392...) and the sheet (41a0...), and confirm the probe step is unchanged; rerun the probe only if it changed."
+    ],
+    "recommendations": [
+      "vertical_order_fraction: require a minimum number of visible frames and report the count.",
+      "Pilot record and design note: say that the plate-geometry family depends on the adapter's CoP registration rule, which the frame check does not test; record the rule used for each dataset."
+    ],
+    "resources": {
+      "mode": "read-only probe exception: one recording at a time from Streaming.mat, nothing written under converted_datasets/ or source folders, nice 19 / ionice idle, single-threaded env vars, RLIMIT_AS 1 GiB, no other numerical job running",
+      "peak_rss_mib": {
+        "main run (5 recordings)": 198.8,
+        "AB04/d10 midpoint-registration rerun": 190.6
+      },
+      "source_unchanged": true,
+      "outputs": [
+        "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/verify_um21_pilot.py",
+        "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/verify_um21_out.json",
+        "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/verify_um21_variant.py",
+        "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/verify_um21_midpoint_AB04d10.json",
+        "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/sheet_1100.png",
+        "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/sheet_if390.png"
+      ]
+    }
+  },
+  "round_3": {
+    "verdict": "design_phase_accepted",
+    "last_checked_at_utc": "2026-10-30T20:30:00Z",
+    "summary": "All round-2 fixes are in the code. Each holds even with min_families=1, so the two-family rule is not what makes them pass. The coordinator's two-family rule is implemented as written. Under the default fine grouping, the only channels that can be applied are knee angle (marker geometry + joint anatomy) and ankle moment (plate geometry + plate timing). The design note documents this consequence; it is a scope matter, not a defect. In adversarial probes no single fault made two default families agree on a wrong sign, and no default path applied a wrong sign. Two small rule gaps remain and only reach 'suggest' under the defaults. They are listed as follow-ups to fix before the UM21 pilot. Acceptance covers the design and synthetic phase only. It is not scientific approval, and pilots (acceptance item 2) remain.",
+    "verify_file": {
+      "diff_check": "Against my round-1 text plus my round-2 block: the only worker changes are the 4 round-1 and 5 round-2 strict-xfail decorators. No assertion or fixture was changed.",
+      "line_190_update": "test_moderate_dissent_blocks_strong_and_weak_dissent_does_not now asserts the new rule. One strong reference test with a weak template dissent gives 'suggest' with sign +1. Strong reference + moderate knee hinge (two fine families) + weak dissent gives apply/medium. Real test names are used so families resolve.",
+      "line_179_reason": "knee_angle is applied with sign -1 from reference_angle:marker (marker_geometry) and knee_hinge_asymmetry (joint_anatomy), families ['joint_anatomy', 'marker_geometry']. With task=None the hinge abstains and the knee is only 'suggest', so the assertion depends on two families. hip_angle is 'suggest' (one family), so its 'offset kept' assertion still holds."
+    },
+    "round_2_fix_checks": [
+      {
+        "fix": 1,
+        "result": "pass",
+        "evidence": "The CoP-progression and braking checks run only for level, incline and decline walking; otherwise they return 'unknown' and the ankle lever arm is moderate. Backward walking and toe walking in a mirrored frame give suggest -1 with min_families=1 and are not applied. Double fault (backward walking labelled level walking, mirrored plate): suggest -1 from plate_geometry only. The timing test abstains, so the result is not applied."
+      },
+      {
+        "fix": 2,
+        "result": "pass",
+        "evidence": "Contradictions are judged against one pre-step snapshot, now over apply or suggest. With two contradicting relations, all of pelvis, hip and thigh are in conflict, also with min_families=1."
+      },
+      {
+        "fix": 3,
+        "result": "pass with a residual gap",
+        "evidence": "Every pelvis, hip or knee point must be above the foot point (ankle, else heel, else toe). Parallel and deep squat, sit-to-stand and stair swing pass; my jog (knee flexion 100 deg) and sprint (130 deg) swing also pass (1.00). Pelvis-only markers give 'unknown', which blocks via marker_points and via MarkerAngles. Gap: a plain dict copy of MarkerAngles loses the guard, and an inverted up vector then gives suggest -1 (not applied under the defaults)."
+      },
+      {
+        "fix": 4,
+        "result": "pass with a residual gap",
+        "evidence": "Both channel and reference are re-expressed about their own robust circular centre. A source equal to a reference near +-pi gives +1. With most units on the (pi - x) branch the result is conflict, also with min_families=1. Gap: the half-turn conflict is set before _propagate. In my probe, a later chain derivation into the same channel recomputes combine(), which ignores the half-turn flag: the result is 'suggest' (default) and 'apply' with min_families=1. The flagged +-pi offset stays in the report. This contradicts design rule 6 ('whatever the sign evidence says')."
+      },
+      {
+        "fix": "units/stance",
+        "result": "pass with a recommendation",
+        "evidence": "A degree channel within 2*pi is now blocked by the [0.1, 10] slope band (slope 57.3, abstain). The GRF unit must be declared, and an undeclared unit makes the force-plate tests abstain. A declared unit that does not match the data is not checked. BW data declared N_per_kg gives a stance fraction of 0.41 against a true 0.60. N/kg data declared N gives 0 (abstain, safe). N data declared N_per_kg leaves the floor at 0.5 N, which is ineffective."
+      }
+    ],
+    "family_independence": [
+      {
+        "pair": "marker_geometry + joint_anatomy (knee angle)",
+        "result": "no shared single fault found",
+        "evidence": "Inputs differ: markers and the up vector, against the channel's shape and the task. Contralateral knee column: the marker test abstains (half-cycle phase), and the result is suggest from joint_anatomy only. Hyperextension-dominant knee labelled walking: the marker test gives +1, the hinge does not vote, and the result is suggest. An inverted up vector affects the markers only. The hinge is independent of it, so a wrong marker sign meets the hinge and gives conflict."
+      },
+      {
+        "pair": "plate_geometry + plate_timing (ankle moment)",
+        "result": "no shared single fault found",
+        "evidence": "They share the stance mask, the vertical GRF and the task label. A mirrored plate affects the lever arm only; the timing test uses the moment sign and stance timing, which have no frame. Contralateral plate assigned to this leg: both abstain. External-moment storage: both give -1, which is correct. A wrong task label alone: the frame check fails and the lever arm abstains. A wrong label together with a mirrored plate (two faults): suggest only. The shared dependence on the task label stays a caller precondition."
+      },
+      {
+        "pair": "structure",
+        "result": "documented consequence",
+        "evidence": "Derived segment-chain evidence is grouped with marker geometry, and derived power evidence is a single family that cannot anchor itself. So pelvis, hip, ankle and segment angles, knee and hip moments, and all powers can reach at most 'suggest'. Under 'coarse', nothing can be applied. The design note states both."
+      }
+    ],
+    "test_runs": [
+      {
+        "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_sign_offset_detector.py tests/test_sign_offset_detector_verify.py tests/test_backlog_workflow.py",
+        "result": "127 passed in 3.48s (verify file: 22 passed)"
+      },
+      {
+        "command": "same prefix: python3 contributor_tools/build_backlog_page.py --check",
+        "result": "Backlog valid; HTML current (83 tasks)."
+      },
+      {
+        "command": "same prefix: round-2 scenarios rerun with params min_families=1 (scratch, not committed)",
+        "result": "fix1 suggest/suggest; fix2 conflict x3; fix3 abstain; fix4a apply +1; fix4b conflict"
+      }
+    ],
+    "follow_ups_before_pilot": [
+      "Enforce the half-turn conflict after _propagate (or inside combine), so that a derivation cannot turn it into suggest or apply. Add a test: a knee anchor plus a shank with a half-turn reference, with min_families 1 and 2.",
+      "Guard references that arrive as a plain dict: record their provenance in the report, or require marker references to come through marker_points/MarkerAngles. Under the defaults this reaches only 'suggest'.",
+      "Sanity-check the declared GRF unit against the peak vertical magnitude (N/kg about 8-30, BW about 0.8-3, N about 300-3000) and refuse a mismatch. Mass must not be invented."
+    ],
+    "resources": "Synthetic probes (scratch probe3.py) and tests only, one process at nice 19 / ionice idle. No research data read; nothing written under converted_datasets/. Only the verify test file (line 190 block) and this handoff were edited."
+  },
+  "round_2": {
+    "verdict": "back_to_worker",
+    "last_checked_at_utc": "2026-10-30T19:55:00Z",
+    "summary": "The four round-1 fixes are in the code and their tests pass for the right reason. My verify file differs from my original only by the four removed xfail decorators; every assertion is unchanged. Adversarial probes found four new ways to apply a wrong sign, all on synthetic input. (1) The CoP-progression frame check falsely passes a reversed plate frame when the true CoP moves toe-to-heel, as in backward walking or toe walking. The ankle lever arm is then strong, applies alone and gets the sign wrong. The design note says these cases abstain; they do in the correct frame but not in a mirrored one. (2) Propagation step 1 checks contradictions sequentially, so a second contradicting relation is skipped and a wrong hip sign stays applied. The docstring and design note claim order independence. (3) With fewer than two of hip/knee/ankle (for example, pelvis-only markers), the vertical-order check is 'unknown' and does not block, so an inverted up vector applies a wrong pelvis sign. (4) The new wrap re-expression is applied to the source but not to the reference. A source identical to a reference near +-pi gets apply -1. With most units on the (180 - x) branch, a wrong sign is applied together with a flagged 180-degree offset.",
+    "fix_checks": [
+      {
+        "fix": 1,
+        "result": "pass for the case tested; see new fix 1",
+        "evidence": "plate_frame_check fails on the verify mirrored-frame fixture, and the lever arm abstains. Without ankle positions the check is unknown and the ankle lever arm is moderate, so it cannot apply alone. Heel-strike CoP noise (0.3 m SD on the first 4 stance samples) still passes in the correct frame and fails in the mirrored one. Forefoot running: in the mirrored frame the result is conflict (the late-stance test dissents), and in the correct frame it is suggest. Not caught: backward walking and toe walking in a mirrored frame pass the check, so a wrong sign is applied (new fix 1)."
+      },
+      {
+        "fix": 2,
+        "result": "partial",
+        "evidence": "Derivation now reads a snapshot taken after step 1, and verify::test_no_derivation_from_conflicted_channel passes. Step 1 itself mutates verdicts inside its loop: a relation whose members were all applied is skipped once an earlier relation has put one member in conflict. With faulty pelvis and hip references both chain pairs contradict, yet hip_angle stays apply -1 (new fix 2)."
+      },
+      {
+        "fix": 3,
+        "result": "pass for hip/knee/ankle marker sets; see new fix 3",
+        "evidence": "vertical_order_fraction with the inverted-up verify fixture raises ValueError, and detect_leg(marker_points) records 'fail' and uses no marker references. When fewer than two of hip/knee/ankle are present, the result is 'unknown' and the references are still used: pelvis-only markers with an inverted up vector apply pelvis -1 against a truth of +1."
+      },
+      {
+        "fix": 4,
+        "result": "pass for offsets; see new fix 4",
+        "evidence": "Offset differences are wrapped. A [0, 2*pi) stored ankle gives an estimate of 0.0, not flagged, and a flipped source in the same storage also gives 0.0. The new screen re-expresses only the source within +-180 deg of its median: a source equal to a reference near +-pi gets apply -1, and with 12 of 20 units on the (pi - x) branch, the normal units are masked whole and apply -1 is returned with a flagged -pi offset."
+      }
+    ],
+    "recommendation_checks": [
+      {
+        "item": "degrees refused",
+        "result": "pass with limit",
+        "evidence": "Pelvis tilt in degrees around -10 deg is refused (units_check). A small-range channel in degrees (+-2 deg around 0) stays under 2*pi, is not refused, and is applied with scale_review=True. The sign is correct in both orientations (+1 and -1), so this is a units issue, not a sign error. Recommend blocking apply when the reference slope magnitude is above about 10 or below 0.1."
+      },
+      {
+        "item": "deep flexion not a branch",
+        "result": "pass",
+        "evidence": "Continuous excursions are reported as far_from_median_frames and not masked; masking needs a one-sample jump above 90 deg or a whole unit. The whole-unit rule is what masks the normal units in new fix 4."
+      },
+      {
+        "item": "stance floor 0.5 N/kg",
+        "result": "pass for N/kg; unit-dependent",
+        "evidence": "Stance fraction for a true 0.60 stance: 0.59 with GRF in N/kg, 0.59 in newtons (80 kg), and 0.41 in body weights, because the floor becomes 50% BW. A contact-free unit with 3 N noise in newtons is 84% stance, so the floor does nothing for raw newtons. The design note covers newtons but not BW. Recommend checking the GRF unit from its peak magnitude and refusing, or requiring an explicit unit argument; mass must not be invented to convert."
+      },
+      {
+        "item": "forward axis per pass",
+        "result": "pass",
+        "evidence": "Stated in the design note."
+      },
+      {
+        "item": "chain distal/joint pair",
+        "result": "not done; acceptable",
+        "evidence": "It was marked 'consider'. Leaving it conservative only loses evidence."
+      }
+    ],
+    "vertical_order_probe": "Fraction of frames with hip above knee above ankle: parallel squat 1.00, stair ascent swing (thigh 80 deg) 1.00, deep squat (thigh to 115 deg) 0.69, sit-to-stand with 40% seated 0.57. The last two are false failures: conservative, but they discard all marker evidence for those tasks. Recommend testing hip above ankle and knee above ankle, which hold in every LocoHub task, instead of hip above knee.",
+    "test_runs": [
+      {
+        "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_sign_offset_detector.py tests/test_sign_offset_detector_verify.py tests/test_backlog_workflow.py",
+        "result": "111 passed in 3.63s (before the round-2 verifier tests were appended)"
+      },
+      {
+        "command": "same prefix: python3 -m pytest -q -rx tests/test_sign_offset_detector_verify.py (with round-2 tests)",
+        "result": "16 passed, 6 xfailed; with --runxfail each of the 6 fails at its intended assertion"
+      },
+      {
+        "command": "same prefix: python3 contributor_tools/build_backlog_page.py --check",
+        "result": "Backlog valid; HTML current (82 tasks)."
+      }
+    ],
+    "verify_file_diff": "Diffed against a byte copy of my round-1 text (scratch verify_original.py): the only differences were the 4 removed xfail decorators (8 lines). Round 2 appends 5 new strict-xfail tests (6 cases); nothing earlier was changed.",
+    "added_tests_round_2": [
+      "test_mirrored_plate_frame_not_applied_when_cop_moves_toe_to_heel[backward walking | toe walking] (new fix 1)",
+      "test_every_contradicting_relation_is_honoured (new fix 2)",
+      "test_inverted_up_with_pelvis_only_markers_is_not_applied (new fix 3)",
+      "test_source_equal_to_reference_near_pi_gives_plus_one (new fix 4)",
+      "test_no_apply_with_half_turn_offset (new fix 4)"
+    ],
+    "required_fixes": [
+      {
+        "id": 1,
+        "fix": "Run the CoP-progression check only for forward heel-strike tasks (level/incline/decline walking). For any other task, including None, backward_walking, run and stair_descent, it is 'unknown', so the ankle lever arm stays moderate. Correct the design-note sentence saying that forefoot strikers and toe walkers abstain: in a mirrored frame they pass."
+      },
+      {
+        "id": 2,
+        "fix": "_propagate step 1: evaluate every relation against the verdicts as they stood before step 1, then mark conflicts, so that a member of any contradicted relation is in conflict whatever the order. Add a test with two contradicting relations that share one member."
+      },
+      {
+        "id": 3,
+        "fix": "When the vertical-order check cannot run, do not use marker references silently. Either extend the check to the markers present (for example, pelvis markers above heel/toe/ankle) or treat 'unknown' as blocking strong marker evidence. Apply the same rule when marker_reference_angles is called directly."
+      },
+      {
+        "id": 4,
+        "fix": "Re-express the reference the same way as the source (or fit on pairs unwrapped together), so that a reference near +-pi cannot flip the slope. Do not 'apply' when the offset estimate exceeds pi/2 in magnitude; return conflict with the reason 'half-turn offset: branch or zero-definition mismatch'. That case goes to review, which is conservative."
+      }
+    ],
+    "recommended_not_blocking": [
+      "Vertical-order check: test hip above ankle and knee above ankle, to avoid false failures in deep squat and sit-to-stand.",
+      "GRF unit: detect or require it; the 0.5 floor is 50% BW in BW units and negligible in newtons.",
+      "Block apply when the reference slope magnitude is above about 10 or below 0.1 (small-range channels in degrees)."
+    ],
+    "resources": "Synthetic probes and tests only (scratch probe2.py), one process at nice 19 / ionice idle, about 1-4 s each. No research data read; nothing written under converted_datasets/. The worker's files and the backlog were not edited."
+  },
+  "round_1": {
+    "verdict": "back_to_worker",
+    "last_checked_at_utc": "2026-10-30T19:05:00Z",
+    "summary": "The rule-C physics is right, the vote, bootstrap and flag rules are fixed in advance, deterministic and implemented as written, and no code path applies an offset or applies a sign from documentation or a template alone. Four defects send it back. (1) In a force-plate frame whose forward axis is reversed, the ankle lever arm alone applies the wrong moment sign whenever the late-stance test abstains (task=None, which the design asks for in atypical populations). The design note's claim that the marker angles catch this is not implemented. (2) One-hop propagation can derive a sign from a channel that another relation has already put in conflict. (3) An inverted up vector mirrors every marker reference angle with no check, so every marker-anchored channel would apply the wrong sign. (4) A channel stored with 360-degree wraps gets a flagged offset of exactly 2*pi. Each defect has a strict-xfail test in tests/test_sign_offset_detector_verify.py. No research data was read.",
+    "checks": [
+      {
+        "id": 1,
+        "name": "Physics under rule C",
+        "result": "pass (with fix 3 on an input precondition)",
+        "evidence": "I derived the rules myself with x forward, y up and z = x cross y = the person's right. The internal moment on the distal segment from static equilibrium about the joint is M = -(r x F)_z, r = CoP - joint, F = GRF on the body. Code line 329 equals this, and I checked it against numpy's 3D cross product. CoP ahead of the ankle under upward GRF gives a negative (plantarflexor) internal moment. GRF behind the knee gives a positive (extensor) moment. Both match the rule table. lever_arm_test recovers both source signs. Segment chain: thigh measured from straight down (distal forward +), foot heel->toe from horizontal (toes up +), pelvis PSIS->ASIS from horizontal (anterior tilt -). Joint = distal - proximal therefore gives hip flexion +, knee flexion - and ankle dorsiflexion +. My labelled postures confirm all four (knee 0.2 m ahead, ankle behind the knee, toe above heel, ASIS below PSIS). Power: M*dq/dt is positive at push-off (plantarflexing velocity with plantarflexor moment). power_relation returns product -1 for -(M*w) storage and +1 for M*w with dt=None. Projection: across 8 random headings, each with a random lateral reflection, the angles equal the planar truth to 1e-9. It uses only dot products, so lab handedness does not matter. It does depend on the sign of the 'up' input. With up inverted, every marker angle is mirrored (knee r = -0.9997 vs truth), and nothing checks for this (fix 3)."
+      },
+      {
+        "id": 2,
+        "name": "Safety paths",
+        "result": "fail (fixes 1 and 2)",
+        "evidence": "Offsets: _bootstrap_offset always sets applied=False. apply_signs only multiplies channels with sign_applied. My test confirms a +0.1 rad offset survives in the output byte for byte. Documentation and template evidence score 0. Documentation alone, template alone, and documentation plus an agreeing template all give abstain. A moderate or strong dissent gives conflict; a weak dissent still gives apply/medium, as designed. Defect A (fix 1): with the plate frame mirrored forward, verdicts are level_walking -> conflict (the late-stance test dissents, correct) but task=None -> apply -1, which is wrong. A single strong lever-arm vote reaches score 2 and depends entirely on a frame the detector does not check. Design note sentence 'The marker-angle test catches this, because the knee and ankle must agree' has no implementation: no test links angle or marker evidence to moment channels. Origin mismatch between CoP and joints of 0.3 or 0.6 m gave abstain or the correct sign in my probes, so this case is less acute. Defect B (fix 2): _propagate snapshots 'direct' before the loop. A channel turned to conflict by a contradicting relation therefore still counts as applied for later relations. Demonstrated: a faulty hip reference puts thigh and hip in conflict, yet shank_angle gets apply from derived:segment_chain off the conflicted thigh. Circularity otherwise: derived evidence is never used to derive further, because of the pre-loop snapshot. Power cannot be applied directly, so a moment cannot be derived from a power anchor. Independent-segment references built from the same IK angles remain circular, which the design note discloses."
+      },
+      {
+        "id": 3,
+        "name": "Statistical rules and failure modes",
+        "result": "pass on rules; fail on wrap/offset interaction (fix 4); recommendations on other failure modes",
+        "evidence": "DEFAULTS are fixed constants, echoed into every report. My parametrised vote tests give: 4 units abstain; 5 units decide; 9/10 decide (both signs); 8/10 abstain. Offset: the median of per-unit medians, from agreeing units only. The 95% percentile bootstrap uses seed 20261030 with 2000 resamples and is identical on repeat. The CI contains injected offsets of +-0.06 and 0.02 rad. Its width falls within 0.5-1.6x the asymptotic median CI 2*1.96*1.2533*sigma/sqrt(n). The flag is set for +-0.06 and not for 0.02 rad, even though that CI excludes 0. Defect C (fix 4): an angle stored on [0, 2*pi) with about half its frames wrapped gets estimate 2*pi, CI [2*pi, 2*pi] and flag_for_review=True. The screen masked the other half of the frames as 'wrap_360'. Non-blocking observations: (a) Degrees passed through detect_leg: the branch screen masked about 3300 of 3600 frames. Hip abstained, and knee was still applied (medium) on the remaining frames with scale_review=True. The sign was correct, but the units are evidently wrong. (b) Deep knee flexion of 125 degrees (squat or sit-to-stand) is masked and counted as 'branch_180_frames'. (c) stance_from_grf is relative to each unit's peak, so a contact-free unit with 2 N noise is 88% 'stance'. (d) Out-and-back passes with one forward axis: units on the return pass are mirrored and the test abstains (12/24). This is safe, but the forward axis should be per pass. (e) Left/right: projection and lever arm use only [forward, up], and detection runs per leg, so the left leg is viewed from the right under rule C with no mirroring hazard inside the detector. (f) Treadmill vs overground: CoP and joint centres must share origin and axes; this is the caller's job and is covered by fix 1. (g) If the pelvis excursion is near noise, the chain fit abstains on both pairs, including the well-determined distal/joint pair. This is conservative."
+      },
+      {
+        "id": 4,
+        "name": "AGENTS.md compliance",
+        "result": "pass with note",
+        "evidence": "No research data are read. The module, tests and design note state that everything is synthetic, and scientific_approval=false is in every report. No mass, timing or offset is invented or applied. Thresholds are a priori, and the handoff discloses that the pelvis fixture noise (not the threshold) was changed after inspection. Note: the worker's fixtures build their moment truth with the same lever formula as the module, and their chain truth with the same CHAIN sums. Those tests therefore show recovery of injected flips but not physical correctness. My verifier tests supply the independent physics checks (cross product, anatomical postures, push-off power)."
+      },
+      {
+        "id": 5,
+        "name": "Requested test run",
+        "result": "pass",
+        "evidence": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_sign_offset_detector.py tests/test_backlog_workflow.py -> 88 passed in 3.11s. build_backlog_page.py --check -> Backlog valid; HTML current (82 tasks)."
+      }
+    ],
+    "added_tests": {
+      "file": "tests/test_sign_offset_detector_verify.py",
+      "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -rx tests/test_sign_offset_detector_verify.py",
+      "result": "12 passed, 4 xfailed in 1.21s; with --runxfail each of the 4 fails at its intended assertion",
+      "passing": [
+        "test_marker_angles_match_anatomical_labels",
+        "test_lever_arm_sign_matches_cross_product_physics",
+        "test_power_identity_sign_from_push_off_physics",
+        "test_projection_invariant_to_heading_and_reflection",
+        "test_vote_thresholds (5 cases)",
+        "test_offset_flag_rule_and_ci_width",
+        "test_offsets_never_applied_and_only_apply_signs_change_data",
+        "test_moderate_dissent_blocks_strong_and_weak_dissent_does_not"
+      ],
+      "strict_xfail_defects": [
+        "test_lever_arm_alone_must_not_apply_in_mirrored_plate_frame (fix 1)",
+        "test_no_derivation_from_conflicted_channel (fix 2)",
+        "test_inverted_up_vector_is_detected (fix 3)",
+        "test_360_wrapped_storage_does_not_create_offset (fix 4)"
+      ],
+      "scratch": "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/probe.py (probes P1-P8, synthetic only)"
+    },
+    "required_fixes": [
+      {
+        "id": 1,
+        "fix": "A lever-arm vote must not reach 'apply' on its own unless the force-plate frame has been checked. Options: (a) Add a frame-consistency check that is reported in the evidence, e.g. stance CoP within the heel-toe marker span and CoP progressing heel->toe along the marker forward axis. If it fails or cannot run, downgrade the lever arm to moderate. (b) Require a second independent test of moderate or greater for any moment 'apply'. Also correct or implement the design-note sentence claiming that marker angles catch a flipped forward axis. Remove the xfail marker once the test passes."
+      },
+      {
+        "id": 2,
+        "fix": "_propagate: resolve contradictions first, then derive only from channels whose current verdict is still 'apply' from direct evidence. The result must not depend on relation order. Add a test with the contradicting relation placed both before and after the deriving one."
+      },
+      {
+        "id": 3,
+        "fix": "Guard the marker geometry against an inverted up vector, e.g. require the hip above the knee above the ankle in most frames after projection, and raise or abstain otherwise. Record the check in the report. The design note's invariance claim should say that it holds for heading and handedness given a correct up vector."
+      },
+      {
+        "id": 4,
+        "fix": "Wrap the per-unit offset differences (sign*source - reference) to (-pi, pi] before taking the median and bootstrap, so that a 360-degree storage wrap is not reported or flagged as an offset. A genuine 180-degree zero-definition difference should still be flagged."
+      }
+    ],
+    "recommended_not_blocking": [
+      "Abstain, or refuse with a clear reason, when any angle magnitude exceeds 2*pi (evidently degrees), instead of applying on the frames that survive the branch screen.",
+      "Report 'beyond 100 deg of median' separately from 'branch_180', or make the screen task-aware, so deep knee/hip flexion in squat or sit-to-stand is not labelled a 180-degree branch.",
+      "Give stance_from_grf an absolute floor (N or body weight), so a contact-free unit is not mostly 'stance'.",
+      "State in the design note that forward_axis must be computed per straight pass or per unit for overground out-and-back or turning trials.",
+      "Consider deciding the chain's distal/joint pair even when the proximal (pelvis) term is unresolved."
+    ],
+    "not_checked": [
+      "Behaviour on real data and real noise: pilots are out of scope for this phase.",
+      "The ground-truth table in the design note against the source survey (pilot phase).",
+      "Full planar inverse-dynamics validity of the lever-arm strengths (out of scope by design)."
+    ],
+    "resources": "Synthetic tests and probes only, one process at nice 19 / ionice idle, about 1-3 s each. No research data read; nothing written under converted_datasets/. The backlog JSON/HTML and the worker's files were not edited."
+  }
+}

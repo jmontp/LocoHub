@@ -22,7 +22,7 @@ import pandas as pd
 
 try:
     # Prefer canonical mapping from the Python feature constants
-    from locohub.feature_constants import LEGACY_GRF_ALIASES  # type: ignore
+    from contributor_tools.common.feature_constants import LEGACY_GRF_ALIASES  # type: ignore
 except Exception:
     # Fallback: local copy in case locohub is not importable in the environment
     LEGACY_GRF_ALIASES: Dict[str, str] = {

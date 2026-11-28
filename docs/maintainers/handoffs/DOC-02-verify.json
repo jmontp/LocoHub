@@ -1,0 +1,100 @@
+{
+  "task_id": "DOC-02",
+  "verifier_role": "independent second agent; docs review only; no research data read; worker files, backlog and AGENTS.md not edited",
+  "verdict": "done",
+  "last_checked_at_utc": "2026-10-31T00:30:00Z",
+  "round_2": {
+    "verdict": "done",
+    "last_checked_at_utc": "2026-10-31T00:30:00Z",
+    "summary": "F1-F4 are in the files and accurate. So are the extra fixes the worker reported (GT24 quality sentence, FU18 hip note, trunk arrow). The re-run sweep finds no unannotated active statement that calls knee flexion or pelvis anterior tilt positive the LocoHub standard. All three gate commands pass. Done covers DOC-02's documentation acceptance only. It is not scientific approval of any dataset, and no files follow the rule until reconversion.",
+    "file_checks": [
+      {"item": "F1: seven converter-doc annotations", "result": "pass", "evidence": "Each file has a 'Historical (before the 2026-10-30 sign rule)' note or inline qualifier. Each links to docs/reference/index.html#signs-and-frames with the correct relative depth: ../../docs from common/ and ../../../docs from conversion_scripts/<name>/. Each says converter code is unchanged. common/CLAUDE.md column renamed to 'Pre-rule output (knee flexion +)'. Gait120: 'LocoHub Standard' column renamed to 'Pre-rule output', and 'our standard' text qualified. MBLUEAnkle: 'negative, as in the source' is consistent with source extension +. UMich_2024: torque note 'knee extensor moment is positive' is consistent with source extension +. GaTech_2024 README and StrokePiG (untracked): notes are present. Every remaining knee-flexion-positive line in these files sits under a historical note. One exception, acceptable: Gait120/CLAUDE.md line 304 ('note: converted to flexion+') is a factual output description in the output-column list."},
+      {"item": "F1: GaTech_2025 ankle note", "result": "pass", "evidence": "The note attributes plantarflexion+ to the publisher README, which docs/quality/audits/gt25-ankle-audit-independence-review.json supports (README lines 68 and 71 define biological ankle plantarflexion positive). It says gait2392 ankle_angle is dorsiflexion-positive, which is correct. It cites the GT24 erratum as the precedent where the same README statement proved wrong. It leaves the GT25 source sign 'under separate review' (GT25-C01 acceptance includes specifying the biological ankle coordinate) and does not claim GT25 data are dorsiflexion-positive. Not an overclaim."},
+      {"item": "F3: Decided vs LocoHub definitions", "result": "pass", "evidence": "Reference md and html are identical in substance. 'Decided on 30 October 2026' contains frame (+x walking, +y up, +z right), CCW positive, internal moments with the angle's sign, power = M·ω (generation +), and sideways force/CoP outward per leg. These are exactly D-UM21-C03-1 = C and D-GT21-C01-1 = B as recorded in backlog decisions and the DOC-02 scope. 'LocoHub definitions (not separate decisions)' contains joint-angle composition, zero references, trunk sign and GRF on the person. The GRF table row is also tagged '(LocoHub definition)'. DATA_CONTRACT.md has the same split under 'Decided 2026-10-30 (D-UM21-C03-1 = C, D-GT21-C01-1 = B)' and 'LocoHub definitions ... (not separate decisions)'. Frontal/transverse 'not yet adopted' is listed under definitions, which is a status statement and harmless."},
+      {"item": "F2: zero-offset wording", "result": "pass", "evidence": "'These hold as equalities only up to each dataset's constant zero offsets.' Segment rows read 'LocoHub zero: ...; dataset notes state the actual zero', with 4 occurrences in each of md and html. gait2392 column: '(same sense, up to zero offsets)'. Trunk: 'Zero not yet defined'. DATA_CONTRACT says the same."},
+      {"item": "F4: community.md line endings", "result": "pass", "evidence": "file(1): CRLF line terminators. git diff --numstat HEAD: 2 2, the two content lines only."},
+      {"item": "GT24 quality sentence", "result": "pass", "evidence": "docs/quality/index.html line 45 now reads: 'The publisher README states that ankle plantarflexion is positive, but the source data are dorsiflexion-positive' and links the GT24 erratum and audits/gt24-c02-ankle-sign.json (exists). It also says the previously prepared negation is wrong and LocoHub does not negate. This matches the docs/datasets/gt24/index.html erratum conclusion 'LocoHub therefore does not negate the source ankle channels.'"},
+      {"item": "FU18 hip note", "result": "pass", "evidence": "'The hip moment keeps the source sign, which has not been checked against the rule.' The note now avoids implying that the hip complies."},
+      {"item": "SVG render", "result": "pass", "evidence": "Rendered a scratch copy with headless Chrome at 390 px and 1100 px; the diagram is legible at both. The trunk arc now runs from near vertical above the head backward, counterclockwise with r=124 about the hip, with the arrowhead at the end. All other arcs are unchanged from round 1 and still correct."}
+    ],
+    "sweep": "Re-ran over docs/ and contributor_tools/ .md/.html/.txt, tracked and untracked, excluding legacy, handoffs, backlog, audits and review_sheets. The patterns covered flexion +/positive, anterior tilt positive, right-hand rule, ISB, 'LocoHub/our standard' and plantarflexion positive. Every hit is one of: the new rule text; a line under a historical note; publisher-README attributions (GT24 erratum, GT25 note); the round-1 listed unpublished generator files (.generated, _metadata); or the gitignored GT23 validation report.",
+    "observations_not_blocking": [
+      "Gait120 source knee sign is unverified, and this predates DOC-02. The converter and its CLAUDE.md say the source knee is extension-positive. But the bundled rajagopal_gait120.osim gives knee_angle_r a range of 0 to 2.094 rad, which suggests a flexion-positive model coordinate. The worker's added parenthetical '(same as the current LocoHub rule)' inherits this unverified premise. Resolve it from source evidence when Gait120 is reconverted. It needs no José decision unless the evidence is ambiguous.",
+      "contributor_tools/validation_ranges/default_ranges.yaml still encodes knee flexion + and pelvis anterior tilt + ranges (carried over from round 1). Reconverted files cannot be assessed against it until a range task updates the signs from cited evidence.",
+      "Page-level horizontal overflow at 390 px is pre-existing (same on HEAD)."
+    ],
+    "test_runs": [
+      {"command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 docs/build.py --check", "result": "exit 0; 'Checked 40 HTML pages and 1649 referenced assets.'"},
+      {"command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_data_documentation.py", "result": "8 passed"},
+      {"command": "python3 contributor_tools/build_backlog_page.py --check", "result": "Backlog valid; HTML current (87 tasks)."}
+    ],
+    "questions_for_jose": []
+  },
+  "round_1_verdict": "back_to_worker",
+  "summary": "The sign table, frame text, gait2392 equivalents and the diagram are all correct against D-UM21-C03-1 = C and D-GT21-C01-1 = B, and all three gate commands pass. The task goes back for three small documentation fixes. (1) The contradiction sweep missed active contributor guidance that still calls knee flexion positive 'the LocoHub standard'. (2) The joint-angle composition is stated as an exact identity, which conflicts with the dataset-specific zero references stated in the same bullet. (3) Definitions added beyond the two decisions are presented as part of the adopted decisions. One hygiene item: community.md line endings were converted. No question needs José before the fixes.",
+  "ground_truth": {
+    "D-UM21-C03-1": "C (answered 2026-10-30T18:14:41Z): counterclockwise positive for everything, gait2392",
+    "D-GT21-C01-1": "B (answered 2026-10-30T21:28:58Z): sideways GRF/CoP positive outward per leg, left leg mirrored"
+  },
+  "checks": [
+    {
+      "id": 1,
+      "area": "sign table vs decisions and physics",
+      "result": "pass",
+      "evidence": "Derived independently with x right, y up and z = x × y out of the page, which is the person's right when they face +x (right = forward × up). Viewed from +z, counterclockwise rotates +x toward +y. Thigh: down (0,-1) toward +x is CCW, so knee forward/hip flexion is +. Shank relative to thigh rotating backward (knee flexion) is CW, so flexion is − and extension +. Foot forward (1,0) toward +y is CCW, so toes up/dorsiflexion is +. PSIS→ASIS line (1,0) with the front dropping is CW, so anterior tilt is − and posterior +. Trunk up (0,1) with the shoulders moving back toward -x is CCW, so leaning back is +. Internal moments: knee extensor +, knee flexor −, ankle plantarflexor −, hip flexor +, each consistent with its angle. Power M·ω is invariant to the shared sign flip, so generation is +. Callout values: 60° flexion = −1.047 rad, stated −1.05. gait2392 equivalents are correct. hip_flexion is flexion +. knee_angle is flexion −: the model knee range in gt21-c01-conventions.json is [−2.0944, 0.1745] rad. ankle_angle is dorsiflexion +. pelvis_tilt is posterior +. lumbar_extension is about z, extension +, per the same audit's model axes. The ID output name knee_angle_r_moment is correct. Segment rows are labelled '(same sense)', not as equalities, which is correct. Sideways GRF/CoP is +z for the right leg and −z for the left, matching B. GRF forward + and braking − agree with the existing default_ranges.yaml (grf_anterior_ipsi negative early in stance)."
+    },
+    {
+      "id": 2,
+      "area": "SVG diagram",
+      "result": "pass",
+      "evidence": "Every arc uses sweep-flag 0 (visually counterclockwise in SVG's y-down space) with the arrowhead at the arc end. I checked each arc against its centre and limb vector. Hip starts on the thigh axis and rotates forward. Knee starts on the shank axis and rotates forward (extension). Thigh and shank start on dashed verticals. Foot starts at the heel-to-toe line and rotates up. Ankle rotates toes-up toward the shank. Pelvis rises at the front. Trunk rotates back. The head's nose points +x. Axes: +x right, +y up, +z drawn as a dot in a circle (out of page). Labels match the table. Rendered from a local copy with headless Chrome at 390 px and 1100 px: the diagram is legible at phone width (about 14 px text) and readable in about 5 seconds. The 390 px page has horizontal overflow (scrollWidth 485), which also occurs on the HEAD version, so it is pre-existing and not caused by this task. Cosmetic, non-blocking: the trunk arc starts about 10° behind vertical rather than at the trunk axis, and the callout text uses the muted grey of the existing callout style.",
+      "evidence_paths": ["docs/assets/sagittal-signs.svg (sha256 17df1aa5..., matches handoff)"]
+    },
+    {
+      "id": 3,
+      "area": "claims beyond the decisions",
+      "result": "failed",
+      "evidence": "Each added claim is physically consistent, but none is marked as a LocoHub definition separate from the decisions. In DATA_CONTRACT.md, the line 'Summary, adopted 2026-10-30 (decisions D-UM21-C03-1 = C and D-GT21-C01-1 = B)' is followed by the GRF-on-the-person bullet, so the reader takes it as decided. The reference page also states every row as 'adopted'. (a) GRF acting on the person: consistent with existing ranges and the GT21 audit, and low risk. (b) Segment zero references (thigh/shank from straight down; foot and pelvis PSIS→ASIS from forward horizontal): these come from the UM21-C03 audit 'derivations', not from the decision text. The trunk zero is undefined. (c) The 'Joint angles' bullet says 'signs compose: thigh = pelvis + hip, shank = thigh + knee, foot = shank + ankle' as exact equalities. The same bullet then says joint zero references (e.g. static-pose subtraction) are dataset-specific, so the equalities hold only up to constant offsets. The table also gives segment zeros as fixed. A reader could compute shank = thigh + knee and expect an exact match. (d) Trunk leaning back + follows directly from 'counterclockwise for everything' and is fine. (e) The CoP origin is correctly left dataset-specific."
+    },
+    {
+      "id": 4,
+      "area": "contradiction sweep and historical notes",
+      "result": "failed",
+      "evidence": "The worker's fixes to the reference, community FAQ and checklist, contributing/index, GA26, MB24, FU18 and the GT21 quality note are accurate and do not overclaim. Each GA26/MB24/FU18 note matches its existing processing statement. The quality note correctly says outward-per-leg is not yet applied. My sweep found active contributor guidance outside legacy/ that still states knee flexion positive as the standard, and none of it is listed in left_unchanged_with_reason. Tracked: contributor_tools/common/CLAUDE.md lines 287-295, a 'Sign Conventions' table with column 'LocoHub Standard' = Knee 'Flexion +' and action 'Negate' (shared ID module guidance for every converter). contributor_tools/conversion_scripts/Gait120/CLAUDE.md lines 252, 260-261 ('flexion-positive standard'). GaTech_2025_DomainAdaptation/CLAUDE.md lines 55-61 ('our flexion+'; it also calls the OpenSim convention 'ankle plantarflexion+', which contradicts gait2392's dorsiflexion-positive ankle_angle stated in the new reference). MBLUEAnkle/CLAUDE.md line 74 ('flexion-positive standard'). UMich_2024_KneeExo/README.md lines 68, 81. Untracked: GaTech_2024_TaskAgnostic/README.md lines 99-102 and StrokePiG/CLAUDE.md line 66. These describe current converter behaviour, which is still true, but they call it the standard, so acceptance item 2 is not met for them. Non-DOC-02 observation (owner: GT24 tasks): docs/quality/index.html line 45 says 'The source defines ankle plantarflexion as positive', which conflicts with the 2026-10-30 GT24 erratum that the source data are dorsiflexion-positive. Config observation (owner: reconversion/range tasks, not docs): contributor_tools/validation_ranges/default_ranges.yaml still encodes knee flexion + and pelvis anterior tilt + ranges, and will need sign updates before reconverted files are assessed."
+    },
+    {
+      "id": 5,
+      "area": "gate commands",
+      "result": "pass",
+      "evidence": "python3 docs/build.py --check: exit 0, 'Checked 40 HTML pages and 1648 referenced assets.' The worker's reported backlog.html Markdown-link failure has been fixed since. tests/test_data_documentation.py with the AGENTS.md env prefix: 8 passed. build_backlog_page.py --check: 'Backlog valid; HTML current (86 tasks).'"
+    },
+    {
+      "id": 6,
+      "area": "diff hygiene",
+      "result": "failed",
+      "evidence": "docs/contributing/community.md was converted from CRLF to LF line endings. git diff shows 404 changed lines, but only 2 with --ignore-cr-at-eol. The worker's content change is 2 lines. I could not tell whether this predates the worker, because the session-start git status already showed the file as modified."
+    }
+  ],
+  "required_fixes": [
+    "F1 (acceptance 2): Mark each active contributor statement that knee flexion + is the standard as describing current converter output from before the rule, with a link to the reference #signs-and-frames section. Use minimal edits in contributor_tools/common/CLAUDE.md (Sign Conventions table: rename the 'LocoHub Standard' column or add a note that it predates the rule and that the module still negates knee until a converter task changes it), Gait120/CLAUDE.md, GaTech_2025_DomainAdaptation/CLAUDE.md, MBLUEAnkle/CLAUDE.md and UMich_2024_KneeExo/README.md. For the untracked GaTech_2024_TaskAgnostic/README.md and StrokePiG/CLAUDE.md, annotate them the same way or list them in left_unchanged_with_reason. Do not change converter code.",
+    "F2: In the reference 'Joint angles' bullet (md and html), state that the composition holds for signs and holds as an equality only up to each dataset's zero offsets (for example 'thigh = pelvis + hip, up to constant zero offsets'). Make the segment-angle zero references in the table consistent with this, either as LocoHub definitions or as 'typical; dataset notes state the actual zero'.",
+    "F3: Separate the decisions from LocoHub definitions in both the reference section and the DATA_CONTRACT.md summary. Keep the decided items (frame, CCW rule, internal moments with the angle's sign, power, outward-per-leg sideways GRF/CoP) under the decision attribution. Mark GRF acting on the person, segment zero references and the trunk sign as LocoHub definitions that follow from the rule and existing usage.",
+    "F4: Restore CRLF line endings in docs/contributing/community.md so the diff contains only the 2 content lines (unless the conversion is shown to predate DOC-02)."
+  ],
+  "optional": [
+    "FU18 moment note: the sentence 'the pilot knee moment sign does not follow it' could imply that hip and ankle do follow the rule. Consider adding that hip keeps the unverified source sign.",
+    "SVG: start the trunk arc on the trunk axis."
+  ],
+  "questions_for_jose": [],
+  "questions_considered_and_not_raised": [
+    "Renaming knee_flexion_* columns: option C's recorded consequence already said 'knee flexion becomes negative under a flexion name', so José chose with that cost visible. Not re-asked.",
+    "GRF acting on the person (not the plate): the near-universal convention, and it matches existing default ranges. Logged as a LocoHub definition under F3 rather than escalated. If José wants it confirmed, the one-minute check is that default_ranges.yaml has grf_anterior negative in early stance (braking)."
+  ],
+  "test_runs": [
+    {"command": "python3 docs/build.py --check", "result": "exit 0; 40 HTML pages, 1648 assets"},
+    {"command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_data_documentation.py", "result": "8 passed"},
+    {"command": "python3 contributor_tools/build_backlog_page.py --check", "result": "Backlog valid; HTML current (86 tasks)"},
+    {"command": "headless Chrome render of a scratch copy of docs/reference at 390 px and 1100 px; scrollWidth compared with HEAD copy", "result": "diagram legible; 485 px overflow identical on HEAD"}
+  ],
+  "next_action": "Worker applies F1-F4 and returns DOC-02 to review. The verifier then rechecks only F1-F4 and the gate commands."
+}

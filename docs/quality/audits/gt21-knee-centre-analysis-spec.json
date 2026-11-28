@@ -1,0 +1,50 @@
+{
+  "job_id": "gt21-knee-centre-analysis",
+  "command": [
+    "python3",
+    "contributor_tools/analyze_gt21_knee_centre.py",
+    "compute",
+    "--out-root",
+    "converted_datasets/reconversion_v2/gt21_knee_centre_v1",
+    "--seed",
+    "20261127"
+  ],
+  "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+  "output_root": "converted_datasets/reconversion_v2/gt21_knee_centre_v1",
+  "receipt_path": "docs/quality/audits/gt21-knee-centre-analysis-launcher-receipt.json",
+  "bindings": {
+    "contributor_tools/analyze_gt21_knee_centre.py": "0b6f363b33cb3a1a5a76656fb6e25438c98962a6eb0a4c86b718663aeb677c42",
+    "contributor_tools/analyze_gt21_static_pose.py": "38ac573d93c8f980dee17c40c99f9e8ce0cfd9956d1d05919fd07b8174fd8f05",
+    "contributor_tools/gt21_rb_pass.py": "b199962c508e05c12fdd376175a15acd5d8ad92c622ce74196044d1857db39eb",
+    "contributor_tools/gt21_numeric_source.py": "23f7b5a05a75464efd3d2f0ac3f767c927a31411af5941c339924fc5034a8917",
+    "contributor_tools/common/review_sheet.py": "c82327addbe46146f45ed325cd26eaa2d73c25df5bb2191813164a78634b9140",
+    "contributor_tools/guarded_launcher.py": "372519f9dd1f52510f747eed3779044765fdc158b08ca007deb8d6d8708c844f",
+    "converted_datasets/reconversion_v2/gt21_static_analysis_v1/per_participant.csv": "b0a01986e47488c858b5e99d6a3ec2757c8dfccb00c5ca1e4fd38958663ce4a6",
+    "converted_datasets/reconversion_v2/gt21_static_analysis_v1/comparison.json": "4cf12c96ab500daf62a5e355e38bcf3277d86ec5a603a705f02d37a830793b12",
+    "converted_datasets/reconversion_v2/gt21_rb01_inventory_20261123/recording_ledger.jsonl": "907b26763b1293a872794df3ceb90f2bc8ceec710e62c6e9b43ea49936a52f92"
+  },
+  "timeout_seconds": 3600,
+  "kill_after_seconds": 30,
+  "poll_seconds": 15,
+  "startup_memory_mib": {
+    "linux": 3584,
+    "windows": 2816
+  },
+  "runtime_memory_mib": {
+    "linux": 2048,
+    "windows": 2048
+  },
+  "expected_output_names": [
+    "run_summary.json",
+    "per_participant.csv",
+    "comparison.json",
+    "model_inspection.json"
+  ],
+  "address_space_mib": 768,
+  "disk_admission": [
+    {
+      "path": "/mnt/s/workspace/locomotion-data-standardization/converted_datasets",
+      "min_free_mib": 2048
+    }
+  ]
+}

@@ -29,7 +29,9 @@ across bare and exo conditions. EMG data is not converted here as the standardiz
 format focuses on kinematics and kinetics. Raw EMG data can be accessed from the
 source dataset.
 
-Output: Phase-normalized parquet file with 150 points per gait cycle.
+Output: Phase-normalized parquet file with 150 points per subject ensemble curve.
+The source does not provide individual cycles or their durations. Physical
+velocities and accelerations are therefore unavailable.
 """
 
 import numpy as np
@@ -39,6 +41,7 @@ from scipy.io import loadmat
 from scipy.interpolate import interp1d
 from typing import Dict, List, Tuple, Optional
 import argparse
+import json
 
 
 # Configuration
@@ -97,34 +100,6 @@ def interpolate_to_phase(data: np.ndarray, num_points_out: int = NUM_POINTS_OUTP
         return np.full(num_points_out, np.nan)
 
 
-def compute_velocity_from_angle(angle_rad: np.ndarray, assumed_stride_duration_s: float = 1.0) -> np.ndarray:
-    """
-    Compute angular velocity from angle data using gradient.
-
-    Note: Since data is ensemble-averaged, we use an assumed typical stride duration.
-    This provides approximate velocities for validation purposes.
-
-    Args:
-        angle_rad: Angle data in radians (150 points)
-        assumed_stride_duration_s: Assumed stride duration in seconds
-
-    Returns:
-        Angular velocity in rad/s
-    """
-    dt = assumed_stride_duration_s / (len(angle_rad) - 1)
-    velocity = np.gradient(angle_rad) / dt
-    return velocity
-
-
-def compute_acceleration_from_velocity(velocity_rad_s: np.ndarray, assumed_stride_duration_s: float = 1.0) -> np.ndarray:
-    """
-    Compute angular acceleration from velocity data using gradient.
-    """
-    dt = assumed_stride_duration_s / (len(velocity_rad_s) - 1)
-    acceleration = np.gradient(velocity_rad_s) / dt
-    return acceleration
-
-
 def load_s1_data(data_path: Path) -> Dict:
     """
     Load dataset_S1.mat file.
@@ -165,6 +140,7 @@ def process_task(
     task_name: str,
     task_id: str,
     task_info: str,
+    source_name: str = "dataset_S1.mat",
 ) -> List[pd.DataFrame]:
     """
     Process all subjects for a single task.
@@ -216,19 +192,10 @@ def process_task(
         # Note: Torque is in Nm, not mass-normalized. We'll flag this.
         torque_interp = interpolate_to_phase(-torque)
 
-        # Compute velocities and accelerations
-        # Use task-specific assumed stride durations
-        if task_code in ['LW', 'RA', 'RD']:
-            stride_dur = 1.1  # Walking ~1.1s per stride
-        elif task_code in ['SA', 'SD']:
-            stride_dur = 1.5  # Stairs ~1.5s per step
-        else:  # LL (squat)
-            stride_dur = 3.0  # Squat rep ~3s
-
-        knee_vel = compute_velocity_from_angle(knee_rad, stride_dur)
-        knee_acc = compute_acceleration_from_velocity(knee_vel, stride_dur)
-        thigh_vel = compute_velocity_from_angle(thigh_rad, stride_dur)
-        shank_vel = compute_velocity_from_angle(shank_rad, stride_dur)
+        # Averaging removes individual timing. A typical duration cannot recover
+        # physical derivatives, so preserve these channels as unavailable.
+        knee_vel = np.full(NUM_POINTS_OUTPUT, np.nan)
+        knee_acc = np.full(NUM_POINTS_OUTPUT, np.nan)
 
         # Create phase array
         phase = np.linspace(0, 100, NUM_POINTS_OUTPUT)
@@ -238,13 +205,23 @@ def process_task(
         # We populate available fields and leave others as NaN
         nan_array = np.full(NUM_POINTS_OUTPUT, np.nan)
 
+        # Identify the source array/column, not an invented individual trial.
+        source_recording_id = f"um24k:{source_name}:exo:{task_code}:column:{subj_num}"
+        info = dict(part.split(':', 1) for part in task_info.split(',') if part)
+        info.update(observation_type='ensemble_curve', recording_identity_kind='source_ensemble_array', timing='unavailable',
+                    physical_derivatives='unavailable_without_individual_timing')
         stride_df = pd.DataFrame({
             'subject': f"UM24_AB{subj_num:02d}",
-            'subject_metadata': 'population:able_bodied,exo:worn_powered',
+            'subject_metadata': json.dumps({'population': 'able_bodied', 'exo': 'worn_powered'}),
             'task': task_name,
             'task_id': task_id,
-            'task_info': task_info,
-            'step': '001',  # Ensemble average = single representative cycle
+            'task_info': json.dumps(info, sort_keys=True),
+            'source_recording_id': source_recording_id,
+            'observation_id': f"{source_recording_id}:ensemble",
+            'observation_type': 'ensemble_curve',
+            'reference_side': 'unknown',
+            'source_sample_count': len(knee_deg),
+            'step': f"{source_recording_id}:ensemble",  # Compatibility grouping only
             'phase_ipsi': phase,
 
             # Joint angles (rad) - only knee available
@@ -365,6 +342,7 @@ def main():
             task_name=task_name,
             task_id=task_id,
             task_info=task_info,
+            source_name=input_path.name,
         )
         all_strides.extend(strides)
 
@@ -375,7 +353,7 @@ def main():
 
         print(f"\nSaving to: {output_path}")
         print(f"Total rows: {len(combined_df)}")
-        print(f"Total strides: {len(combined_df) // NUM_POINTS_OUTPUT}")
+        print(f"Total ensemble curves: {combined_df['observation_id'].nunique()}")
         print(f"Unique subjects: {combined_df['subject'].nunique()}")
         print(f"Tasks: {combined_df['task'].unique().tolist()}")
 

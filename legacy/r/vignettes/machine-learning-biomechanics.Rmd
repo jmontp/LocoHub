@@ -1,0 +1,883 @@
+---
+title: "Machine Learning for Biomechanics with LocomotionData"
+author: "José A. Montes Pérez"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Machine Learning for Biomechanics with LocomotionData}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 8,
+  fig.height = 6,
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+# Introduction
+
+This vignette demonstrates machine learning approaches for biomechanical locomotion data using the LocomotionData package. We cover classification workflows, dimensionality reduction techniques, clustering methods, and feature importance analysis specifically designed for gait analysis.
+
+## Prerequisites
+
+```{r eval=FALSE}
+# Install required packages
+install.packages(c("randomForest", "e1071", "caret", "cluster", "factoextra", 
+                   "Rtsne", "umap", "pROC", "ROCR", "corrplot", "viridis",
+                   "plotly", "ggplot2", "dplyr", "tidyr"))
+```
+
+```{r eval=FALSE}
+library(LocomotionData)
+library(randomForest)
+library(e1071)
+library(caret)
+library(cluster)
+library(factoextra)
+library(Rtsne)
+library(umap)
+library(pROC)
+library(ROCR)
+library(corrplot)
+library(viridis)
+library(plotly)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+```
+
+# Data Preparation for Machine Learning
+
+## Feature Extraction
+
+```{r eval=FALSE}
+# Load example dataset
+loco <- loadLocomotionData("multi_condition_gait_study.parquet")
+
+# Extract comprehensive feature set
+features <- c(
+  # Kinematic features
+  "knee_flexion_angle_contra_rad", "hip_flexion_angle_contra_rad", 
+  "ankle_flexion_angle_contra_rad",
+  "knee_flexion_angle_ipsi_rad", "hip_flexion_angle_ipsi_rad", 
+  "ankle_flexion_angle_ipsi_rad",
+  
+  # Kinetic features  
+  "knee_flexion_moment_contra_Nm", "hip_flexion_moment_contra_Nm",
+  "ankle_flexion_moment_contra_Nm",
+  "knee_flexion_moment_ipsi_Nm", "hip_flexion_moment_ipsi_Nm",
+  "ankle_flexion_moment_ipsi_Nm"
+)
+
+# Extract ML-ready dataset with engineered features
+ml_data <- extractMLFeatures(loco, 
+                            features = features,
+                            feature_types = c("max", "min", "range", "mean", 
+                                            "std", "skewness", "kurtosis",
+                                            "peak_time", "symmetry"))
+
+# View feature dimensions
+dim(ml_data$feature_matrix)
+head(ml_data$feature_names)
+```
+
+## Target Variable Creation
+
+```{r eval=FALSE}
+# Create classification targets
+ml_data$pathology_class <- factor(ml_data$pathology, 
+                                 levels = c("healthy", "osteoarthritis", "stroke"))
+
+ml_data$age_group <- cut(ml_data$age, 
+                        breaks = c(0, 30, 50, 70, 100),
+                        labels = c("young", "middle", "older", "elderly"))
+
+ml_data$walking_speed_class <- cut(ml_data$walking_speed,
+                                  breaks = c(0, 0.8, 1.2, 2.0),
+                                  labels = c("slow", "normal", "fast"))
+
+# Create regression targets
+ml_data$mobility_score <- calculateMobilityScore(loco)
+ml_data$fall_risk_score <- calculateFallRiskScore(loco)
+```
+
+# Classification Methods
+
+## Random Forest Classification
+
+```{r eval=FALSE}
+# Prepare training and testing sets
+set.seed(42)
+train_indices <- createDataPartition(ml_data$pathology_class, p = 0.7, list = FALSE)
+train_data <- ml_data[train_indices, ]
+test_data <- ml_data[-train_indices, ]
+
+# Train Random Forest classifier
+rf_model <- randomForest(pathology_class ~ ., 
+                        data = train_data[, c("pathology_class", ml_data$feature_names)],
+                        ntree = 500,
+                        mtry = sqrt(length(ml_data$feature_names)),
+                        importance = TRUE)
+
+# Model summary
+print(rf_model)
+
+# Feature importance
+importance_scores <- importance(rf_model)
+feature_importance <- data.frame(
+  Feature = rownames(importance_scores),
+  MeanDecreaseAccuracy = importance_scores[, "MeanDecreaseAccuracy"],
+  MeanDecreaseGini = importance_scores[, "MeanDecreaseGini"]
+) %>%
+  arrange(desc(MeanDecreaseAccuracy))
+
+# Plot feature importance
+ggplot(feature_importance[1:20, ], aes(x = reorder(Feature, MeanDecreaseAccuracy), 
+                                      y = MeanDecreaseAccuracy)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  coord_flip() +
+  labs(title = "Top 20 Features by Importance",
+       x = "Feature", y = "Mean Decrease in Accuracy") +
+  theme_minimal()
+```
+
+## Support Vector Machine (SVM)
+
+```{r eval=FALSE}
+# Prepare data (scale features for SVM)
+train_scaled <- train_data
+test_scaled <- test_data
+
+# Scale features
+feature_cols <- ml_data$feature_names
+train_scaled[, feature_cols] <- scale(train_data[, feature_cols])
+test_scaled[, feature_cols] <- scale(test_data[, feature_cols], 
+                                    center = attr(scale(train_data[, feature_cols]), "scaled:center"),
+                                    scale = attr(scale(train_data[, feature_cols]), "scaled:scale"))
+
+# Train SVM with RBF kernel
+svm_model <- svm(pathology_class ~ ., 
+                data = train_scaled[, c("pathology_class", feature_cols)],
+                kernel = "radial",
+                cost = 1,
+                gamma = 1/length(feature_cols))
+
+# Hyperparameter tuning
+tune_result <- tune(svm, pathology_class ~ ., 
+                   data = train_scaled[, c("pathology_class", feature_cols)],
+                   ranges = list(cost = 2^(-2:2), gamma = 2^(-3:1)))
+
+# Best model
+svm_best <- tune_result$best.model
+print(svm_best)
+```
+
+## Model Evaluation and Comparison
+
+```{r eval=FALSE}
+# Predictions
+rf_pred <- predict(rf_model, test_data)
+svm_pred <- predict(svm_best, test_scaled)
+
+# Confusion matrices
+rf_cm <- confusionMatrix(rf_pred, test_data$pathology_class)
+svm_cm <- confusionMatrix(svm_pred, test_data$pathology_class)
+
+print("Random Forest Results:")
+print(rf_cm)
+
+print("SVM Results:")
+print(svm_cm)
+
+# ROC curves for binary classification (healthy vs pathological)
+test_data$is_pathological <- ifelse(test_data$pathology_class == "healthy", 0, 1)
+
+# Get probabilities
+rf_prob <- predict(rf_model, test_data, type = "prob")[, "healthy"]
+svm_prob <- attr(predict(svm_best, test_scaled, decision.values = TRUE), "decision.values")[, 1]
+
+# ROC analysis
+rf_roc <- roc(test_data$is_pathological, 1 - rf_prob)
+svm_roc <- roc(test_data$is_pathological, svm_prob)
+
+# Plot ROC curves
+plot(rf_roc, col = "blue", main = "ROC Curves Comparison")
+lines(svm_roc, col = "red")
+legend("bottomright", legend = c(paste("RF AUC =", round(auc(rf_roc), 3)),
+                                paste("SVM AUC =", round(auc(svm_roc), 3))),
+       col = c("blue", "red"), lty = 1)
+```
+
+## Cross-Validation and Model Selection
+
+```{r eval=FALSE}
+# 10-fold cross-validation setup
+train_control <- trainControl(method = "cv", 
+                             number = 10,
+                             classProbs = TRUE,
+                             summaryFunction = multiClassSummary)
+
+# Compare multiple algorithms
+models <- list(
+  rf = train(pathology_class ~ ., data = train_data[, c("pathology_class", feature_cols)],
+             method = "rf", trControl = train_control, metric = "Accuracy"),
+  
+  svm = train(pathology_class ~ ., data = train_scaled[, c("pathology_class", feature_cols)],
+              method = "svmRadial", trControl = train_control, metric = "Accuracy"),
+  
+  knn = train(pathology_class ~ ., data = train_scaled[, c("pathology_class", feature_cols)],
+              method = "knn", trControl = train_control, metric = "Accuracy"),
+  
+  glm = train(pathology_class ~ ., data = train_scaled[, c("pathology_class", feature_cols)],
+              method = "multinom", trControl = train_control, metric = "Accuracy")
+)
+
+# Compare models
+resamples_result <- resamples(models)
+summary(resamples_result)
+
+# Visualize comparison
+bwplot(resamples_result, metric = "Accuracy")
+dotplot(resamples_result, metric = "Accuracy")
+```
+
+# Dimensionality Reduction
+
+## Principal Component Analysis (PCA)
+
+```{r eval=FALSE}
+# Perform PCA on feature matrix
+pca_result <- prcomp(train_data[, feature_cols], scale. = TRUE)
+
+# Variance explained
+var_explained <- summary(pca_result)$importance[2, ]
+cumvar_explained <- summary(pca_result)$importance[3, ]
+
+# Plot variance explained
+pca_var_df <- data.frame(
+  PC = 1:length(var_explained),
+  Variance = var_explained,
+  Cumulative = cumvar_explained
+)
+
+ggplot(pca_var_df[1:20, ], aes(x = PC)) +
+  geom_bar(aes(y = Variance), stat = "identity", fill = "lightblue", alpha = 0.7) +
+  geom_line(aes(y = Cumulative), color = "red", size = 1) +
+  geom_point(aes(y = Cumulative), color = "red", size = 2) +
+  scale_y_continuous(name = "Proportion of Variance", 
+                     sec.axis = sec_axis(~., name = "Cumulative Variance")) +
+  labs(title = "PCA Variance Explanation", x = "Principal Component") +
+  theme_minimal()
+
+# Biplot
+fviz_pca_biplot(pca_result, 
+                col.ind = train_data$pathology_class,
+                palette = c("#1f77b4", "#ff7f0e", "#2ca02c"),
+                addEllipses = TRUE,
+                ellipse.level = 0.95,
+                repel = TRUE,
+                title = "PCA Biplot - Pathology Groups")
+```
+
+## t-SNE for Non-linear Dimensionality Reduction
+
+```{r eval=FALSE}
+# Prepare data for t-SNE (use first 50 PCs to reduce computation)
+pca_data <- pca_result$x[, 1:50]
+
+# Run t-SNE
+set.seed(42)
+tsne_result <- Rtsne(pca_data, dims = 2, perplexity = 30, verbose = TRUE)
+
+# Create visualization dataframe
+tsne_df <- data.frame(
+  tsne1 = tsne_result$Y[, 1],
+  tsne2 = tsne_result$Y[, 2],
+  pathology = train_data$pathology_class,
+  age_group = train_data$age_group,
+  walking_speed = train_data$walking_speed
+)
+
+# Plot t-SNE results
+p1 <- ggplot(tsne_df, aes(x = tsne1, y = tsne2, color = pathology)) +
+  geom_point(size = 2, alpha = 0.7) +
+  scale_color_viridis_d() +
+  labs(title = "t-SNE Visualization - Pathology Groups",
+       x = "t-SNE 1", y = "t-SNE 2") +
+  theme_minimal()
+
+p2 <- ggplot(tsne_df, aes(x = tsne1, y = tsne2, color = walking_speed)) +
+  geom_point(size = 2, alpha = 0.7) +
+  scale_color_viridis_c() +
+  labs(title = "t-SNE Visualization - Walking Speed",
+       x = "t-SNE 1", y = "t-SNE 2") +
+  theme_minimal()
+
+# Interactive plot
+plotly_tsne <- plot_ly(tsne_df, x = ~tsne1, y = ~tsne2, 
+                      color = ~pathology, colors = viridis(3),
+                      text = ~paste("Pathology:", pathology, 
+                                   "<br>Age Group:", age_group,
+                                   "<br>Walking Speed:", round(walking_speed, 2)),
+                      hovertemplate = "%{text}<extra></extra>") %>%
+  add_markers(size = 5) %>%
+  layout(title = "Interactive t-SNE Plot")
+
+plotly_tsne
+```
+
+## UMAP for Uniform Manifold Approximation
+
+```{r eval=FALSE}
+# Run UMAP
+umap_result <- umap(pca_data, n_neighbors = 15, min_dist = 0.1)
+
+# Create visualization dataframe
+umap_df <- data.frame(
+  umap1 = umap_result$layout[, 1],
+  umap2 = umap_result$layout[, 2],
+  pathology = train_data$pathology_class,
+  age_group = train_data$age_group
+)
+
+# Plot UMAP results
+ggplot(umap_df, aes(x = umap1, y = umap2, color = pathology)) +
+  geom_point(size = 2, alpha = 0.7) +
+  scale_color_viridis_d() +
+  labs(title = "UMAP Visualization - Pathology Groups",
+       x = "UMAP 1", y = "UMAP 2") +
+  theme_minimal()
+```
+
+# Clustering Analysis
+
+## K-means Clustering
+
+```{r eval=FALSE}
+# Determine optimal number of clusters
+k_range <- 2:10
+wss <- numeric(length(k_range))
+
+for (i in seq_along(k_range)) {
+  kmeans_result <- kmeans(pca_data[, 1:10], centers = k_range[i], nstart = 25)
+  wss[i] <- kmeans_result$tot.withinss
+}
+
+# Elbow plot
+elbow_df <- data.frame(k = k_range, wss = wss)
+ggplot(elbow_df, aes(x = k, y = wss)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Elbow Method for Optimal k",
+       x = "Number of Clusters", y = "Within Sum of Squares") +
+  theme_minimal()
+
+# Silhouette analysis
+silhouette_avg <- numeric(length(k_range))
+for (i in seq_along(k_range)) {
+  kmeans_result <- kmeans(pca_data[, 1:10], centers = k_range[i], nstart = 25)
+  sil <- silhouette(kmeans_result$cluster, dist(pca_data[, 1:10]))
+  silhouette_avg[i] <- mean(sil[, 3])
+}
+
+sil_df <- data.frame(k = k_range, silhouette = silhouette_avg)
+ggplot(sil_df, aes(x = k, y = silhouette)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Average Silhouette Score",
+       x = "Number of Clusters", y = "Average Silhouette Score") +
+  theme_minimal()
+
+# Final clustering with optimal k
+optimal_k <- k_range[which.max(silhouette_avg)]
+final_kmeans <- kmeans(pca_data[, 1:10], centers = optimal_k, nstart = 25)
+
+# Add cluster assignments to visualization
+tsne_df$cluster <- factor(final_kmeans$cluster)
+
+ggplot(tsne_df, aes(x = tsne1, y = tsne2, color = cluster)) +
+  geom_point(size = 2, alpha = 0.7) +
+  scale_color_viridis_d() +
+  labs(title = paste("K-means Clustering (k =", optimal_k, ")"),
+       x = "t-SNE 1", y = "t-SNE 2") +
+  theme_minimal()
+```
+
+## Hierarchical Clustering
+
+```{r eval=FALSE}
+# Hierarchical clustering
+dist_matrix <- dist(pca_data[, 1:10])
+hclust_result <- hclust(dist_matrix, method = "ward.D2")
+
+# Dendrogram
+fviz_dend(hclust_result, k = optimal_k, color_labels_by_k = TRUE, 
+          rect = TRUE, rect_fill = TRUE, rect_border = "jco",
+          labels_track_height = 0.8)
+
+# Cut tree to get clusters
+hclust_clusters <- cutree(hclust_result, k = optimal_k)
+tsne_df$hclust_cluster <- factor(hclust_clusters)
+
+# Compare clustering methods
+cluster_comparison <- data.frame(
+  kmeans = final_kmeans$cluster,
+  hierarchical = hclust_clusters,
+  pathology = train_data$pathology_class
+)
+
+# Adjusted Rand Index for cluster comparison
+library(mclust)
+ari_kmeans_hclust <- adjustedRandIndex(final_kmeans$cluster, hclust_clusters)
+ari_kmeans_pathology <- adjustedRandIndex(final_kmeans$cluster, as.numeric(train_data$pathology_class))
+
+cat(sprintf("ARI between k-means and hierarchical: %.3f\n", ari_kmeans_hclust))
+cat(sprintf("ARI between k-means and pathology: %.3f\n", ari_kmeans_pathology))
+```
+
+# Feature Selection and Engineering
+
+## Univariate Feature Selection
+
+```{r eval=FALSE}
+# ANOVA-based feature selection
+anova_p_values <- numeric(length(feature_cols))
+names(anova_p_values) <- feature_cols
+
+for (i in seq_along(feature_cols)) {
+  anova_result <- aov(train_data[[feature_cols[i]]] ~ train_data$pathology_class)
+  anova_p_values[i] <- summary(anova_result)[[1]]$`Pr(>F)`[1]
+}
+
+# Select features with p < 0.05
+significant_features <- names(anova_p_values[anova_p_values < 0.05])
+cat(sprintf("Selected %d out of %d features\n", length(significant_features), length(feature_cols)))
+
+# Visualize p-values
+anova_df <- data.frame(
+  Feature = names(anova_p_values),
+  P_value = anova_p_values,
+  Significant = anova_p_values < 0.05
+) %>%
+  arrange(P_value)
+
+ggplot(anova_df, aes(x = reorder(Feature, -log10(P_value)), y = -log10(P_value), 
+                    color = Significant)) +
+  geom_point(size = 2) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "red") +
+  coord_flip() +
+  labs(title = "Feature Selection by ANOVA",
+       x = "Feature", y = "-log10(p-value)") +
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = 8))
+```
+
+## Recursive Feature Elimination (RFE)
+
+```{r eval=FALSE}
+# RFE with Random Forest
+rfe_control <- rfeControl(functions = rfFuncs, method = "cv", number = 5)
+
+# Run RFE
+rfe_result <- rfe(train_data[, feature_cols], train_data$pathology_class,
+                 sizes = c(5, 10, 15, 20, 25, 30),
+                 rfeControl = rfe_control)
+
+# Results
+print(rfe_result)
+plot(rfe_result, type = c("g", "o"))
+
+# Selected features
+selected_features <- predictors(rfe_result)
+cat("Selected features by RFE:\n")
+print(selected_features)
+```
+
+## Feature Engineering
+
+```{r eval=FALSE}
+# Create interaction features
+create_interaction_features <- function(data, features) {
+  interaction_features <- c()
+  feature_data <- data[, features, drop = FALSE]
+  
+  # Pairwise ratios
+  for (i in 1:(length(features)-1)) {
+    for (j in (i+1):length(features)) {
+      ratio_name <- paste0(features[i], "_div_", features[j])
+      feature_data[[ratio_name]] <- feature_data[[features[i]]] / (feature_data[[features[j]]] + 1e-6)
+      interaction_features <- c(interaction_features, ratio_name)
+    }
+  }
+  
+  # Symmetry indices
+  contra_features <- features[grep("_contra_", features)]
+  ipsi_features <- features[grep("_ipsi_", features)]
+  
+  for (i in seq_along(contra_features)) {
+    contra_feat <- contra_features[i]
+    ipsi_feat <- gsub("_contra_", "_ipsi_", contra_feat)
+    
+    if (ipsi_feat %in% ipsi_features) {
+      symmetry_name <- paste0(gsub("_contra_.*", "", contra_feat), "_symmetry_index")
+      feature_data[[symmetry_name]] <- abs(feature_data[[contra_feat]] - feature_data[[ipsi_feat]]) / 
+                                      (abs(feature_data[[contra_feat]]) + abs(feature_data[[ipsi_feat]]) + 1e-6)
+      interaction_features <- c(interaction_features, symmetry_name)
+    }
+  }
+  
+  return(list(data = feature_data, new_features = interaction_features))
+}
+
+# Apply feature engineering
+engineered_result <- create_interaction_features(train_data, selected_features)
+engineered_data <- engineered_result$data
+new_features <- engineered_result$new_features
+
+cat(sprintf("Created %d new interaction features\n", length(new_features)))
+```
+
+# Model Interpretation and Explainability
+
+## SHAP Values (using approximate method)
+
+```{r eval=FALSE}
+# Simple feature contribution analysis
+calculate_feature_contributions <- function(model, data, baseline_data) {
+  baseline_pred <- predict(model, baseline_data, type = "prob")
+  contributions <- matrix(0, nrow = nrow(data), ncol = ncol(data))
+  
+  for (i in 1:ncol(data)) {
+    modified_data <- data
+    modified_data[, i] <- mean(baseline_data[, i])  # Replace with baseline
+    modified_pred <- predict(model, modified_data, type = "prob")
+    contributions[, i] <- baseline_pred[, 1] - modified_pred[, 1]  # Contribution to first class
+  }
+  
+  colnames(contributions) <- colnames(data)
+  return(contributions)
+}
+
+# Calculate contributions for test instances
+baseline_data <- train_data[, selected_features]
+test_contributions <- calculate_feature_contributions(rf_model, 
+                                                     test_data[1:10, selected_features], 
+                                                     baseline_data)
+
+# Visualize contributions for first test instance
+contrib_df <- data.frame(
+  feature = colnames(test_contributions),
+  contribution = test_contributions[1, ]
+) %>%
+  arrange(desc(abs(contribution)))
+
+ggplot(contrib_df[1:15, ], aes(x = reorder(feature, contribution), y = contribution)) +
+  geom_bar(stat = "identity", fill = ifelse(contrib_df$contribution[1:15] > 0, "steelblue", "red")) +
+  coord_flip() +
+  labs(title = "Feature Contributions for Test Instance 1",
+       x = "Feature", y = "Contribution to Classification") +
+  theme_minimal()
+```
+
+## Partial Dependence Plots
+
+```{r eval=FALSE}
+# Partial dependence for top features
+library(pdp)
+
+# Select top 4 features
+top_features <- feature_importance$Feature[1:4]
+
+# Create partial dependence plots
+pdp_plots <- lapply(top_features, function(feature) {
+  pdp_data <- partial(rf_model, pred.var = feature, 
+                     train = train_data[, c("pathology_class", selected_features)],
+                     type = "classification", which.class = "healthy")
+  
+  ggplot(pdp_data, aes_string(x = feature, y = "yhat")) +
+    geom_line(size = 1, color = "steelblue") +
+    labs(title = paste("Partial Dependence:", feature),
+         y = "Probability of Healthy Class") +
+    theme_minimal()
+})
+
+# Arrange plots
+library(gridExtra)
+do.call(grid.arrange, c(pdp_plots, ncol = 2))
+```
+
+# Clinical Decision Support
+
+## Risk Stratification
+
+```{r eval=FALSE}
+# Create risk stratification model
+risk_features <- c("knee_flexion_max", "walking_speed", "symmetry_index", "age")
+
+# Train risk model
+risk_model <- glm(is_pathological ~ ., 
+                 data = train_data[, c("is_pathological", risk_features)],
+                 family = binomial)
+
+# Risk score calculation
+calculate_risk_score <- function(model, data) {
+  linear_pred <- predict(model, data, type = "link")
+  risk_score <- plogis(linear_pred)  # Convert to probability
+  
+  # Categorize risk
+  risk_category <- cut(risk_score,
+                      breaks = c(0, 0.3, 0.7, 1.0),
+                      labels = c("Low", "Moderate", "High"))
+  
+  return(data.frame(risk_score = risk_score, risk_category = risk_category))
+}
+
+# Apply to test data
+test_risk <- calculate_risk_score(risk_model, test_data[, risk_features])
+test_data$risk_score <- test_risk$risk_score
+test_data$risk_category <- test_risk$risk_category
+
+# Visualize risk distribution
+ggplot(test_data, aes(x = risk_category, y = risk_score, fill = risk_category)) +
+  geom_boxplot(alpha = 0.7) +
+  geom_jitter(width = 0.2, alpha = 0.5) +
+  scale_fill_viridis_d() +
+  labs(title = "Risk Score Distribution by Category",
+       x = "Risk Category", y = "Risk Score") +
+  theme_minimal()
+```
+
+## Clinical Reporting
+
+```{r eval=FALSE}
+# Generate clinical report for individual patient
+generate_patient_report <- function(patient_data, models) {
+  # Predictions from multiple models
+  rf_pred <- predict(models$rf, patient_data, type = "prob")
+  risk_score <- calculate_risk_score(models$risk, patient_data)
+  
+  # Feature contributions
+  contributions <- calculate_feature_contributions(models$rf, patient_data, baseline_data)
+  
+  # Create report
+  report <- list(
+    patient_id = patient_data$subject[1],
+    pathology_probability = rf_pred,
+    risk_score = risk_score$risk_score,
+    risk_category = risk_score$risk_category,
+    key_features = names(sort(abs(contributions[1, ]), decreasing = TRUE))[1:5],
+    recommendations = generate_recommendations(risk_score$risk_category)
+  )
+  
+  return(report)
+}
+
+generate_recommendations <- function(risk_category) {
+  switch(as.character(risk_category),
+    "Low" = "Continue regular monitoring. Maintain current activity level.",
+    "Moderate" = "Consider additional assessment. Monitor gait changes closely.",
+    "High" = "Recommend immediate clinical evaluation. Consider intervention strategies."
+  )
+}
+
+# Example patient report
+example_report <- generate_patient_report(test_data[1, ], 
+                                        list(rf = rf_model, risk = risk_model))
+print(example_report)
+```
+
+# Performance Optimization
+
+## Model Ensemble
+
+```{r eval=FALSE}
+# Create ensemble of models
+ensemble_predictions <- function(rf_pred, svm_pred, weights = c(0.6, 0.4)) {
+  # Convert to probability matrices if needed
+  if (is.factor(rf_pred)) rf_pred <- model.matrix(~.-1, data.frame(pred = rf_pred))
+  if (is.factor(svm_pred)) svm_pred <- model.matrix(~.-1, data.frame(pred = svm_pred))
+  
+  # Weighted average
+  ensemble_prob <- weights[1] * rf_pred + weights[2] * svm_pred
+  ensemble_class <- factor(colnames(ensemble_prob)[max.col(ensemble_prob)],
+                          levels = levels(test_data$pathology_class))
+  
+  return(list(probabilities = ensemble_prob, predictions = ensemble_class))
+}
+
+# Apply ensemble
+rf_prob_matrix <- predict(rf_model, test_data, type = "prob")
+svm_prob_matrix <- predict(svm_best, test_scaled, type = "prob")
+
+ensemble_result <- ensemble_predictions(rf_prob_matrix, svm_prob_matrix)
+ensemble_accuracy <- mean(ensemble_result$predictions == test_data$pathology_class)
+
+cat(sprintf("Ensemble Accuracy: %.3f\n", ensemble_accuracy))
+```
+
+## Feature Selection Pipeline
+
+```{r eval=FALSE}
+# Complete ML pipeline with preprocessing
+create_ml_pipeline <- function() {
+  # Preprocessing steps
+  preprocess_steps <- list(
+    # Remove near-zero variance features
+    nzv_filter = function(data) data[, !nearZeroVar(data, saveMetrics = TRUE)$nzv],
+    
+    # Remove highly correlated features
+    cor_filter = function(data) {
+      cor_matrix <- cor(data, use = "complete.obs")
+      high_cor <- findCorrelation(cor_matrix, cutoff = 0.9)
+      if (length(high_cor) > 0) data[, -high_cor] else data
+    },
+    
+    # Scale features
+    scale_features = function(data) as.data.frame(scale(data))
+  )
+  
+  return(preprocess_steps)
+}
+
+# Apply pipeline
+pipeline <- create_ml_pipeline()
+processed_data <- train_data[, feature_cols]
+for (step in pipeline) {
+  processed_data <- step(processed_data)
+}
+
+cat(sprintf("Features after pipeline: %d -> %d\n", 
+           length(feature_cols), ncol(processed_data)))
+```
+
+# Best Practices and Guidelines
+
+## Cross-Validation Strategy
+
+```{r eval=FALSE}
+# Subject-wise cross-validation to prevent data leakage
+create_subject_folds <- function(subjects, k = 5) {
+  unique_subjects <- unique(subjects)
+  n_subjects <- length(unique_subjects)
+  fold_size <- ceiling(n_subjects / k)
+  
+  folds <- split(unique_subjects, rep(1:k, each = fold_size, length.out = n_subjects))
+  
+  # Convert to row indices
+  fold_indices <- lapply(folds, function(fold_subjects) {
+    which(subjects %in% fold_subjects)
+  })
+  
+  return(fold_indices)
+}
+
+# Apply subject-wise CV
+subject_folds <- create_subject_folds(train_data$subject, k = 5)
+
+# Custom CV for caret
+custom_cv <- trainControl(
+  method = "cv",
+  number = 5,
+  index = subject_folds,
+  classProbs = TRUE,
+  summaryFunction = multiClassSummary
+)
+
+# Train with subject-wise CV
+rf_subject_cv <- train(pathology_class ~ ., 
+                      data = train_data[, c("pathology_class", selected_features)],
+                      method = "rf", 
+                      trControl = custom_cv, 
+                      metric = "Accuracy")
+
+print(rf_subject_cv)
+```
+
+## Model Validation and Testing
+
+```{r eval=FALSE}
+# Comprehensive model evaluation
+evaluate_model_comprehensive <- function(model, test_data, test_labels) {
+  # Predictions
+  predictions <- predict(model, test_data)
+  probabilities <- predict(model, test_data, type = "prob")
+  
+  # Metrics
+  cm <- confusionMatrix(predictions, test_labels)
+  
+  # Multi-class metrics
+  accuracy <- cm$overall["Accuracy"]
+  kappa <- cm$overall["Kappa"]
+  
+  # Class-specific metrics
+  sensitivity <- cm$byClass[, "Sensitivity"]
+  specificity <- cm$byClass[, "Specificity"]
+  precision <- cm$byClass[, "Pos Pred Value"]
+  f1_score <- cm$byClass[, "F1"]
+  
+  # AUC for each class (one-vs-rest)
+  auc_scores <- numeric(ncol(probabilities))
+  names(auc_scores) <- colnames(probabilities)
+  
+  for (class_name in colnames(probabilities)) {
+    binary_labels <- ifelse(test_labels == class_name, 1, 0)
+    auc_scores[class_name] <- auc(roc(binary_labels, probabilities[, class_name]))
+  }
+  
+  # Compile results
+  results <- list(
+    confusion_matrix = cm,
+    overall_metrics = data.frame(
+      Accuracy = accuracy,
+      Kappa = kappa,
+      Mean_AUC = mean(auc_scores)
+    ),
+    class_metrics = data.frame(
+      Class = names(sensitivity),
+      Sensitivity = sensitivity,
+      Specificity = specificity,
+      Precision = precision,
+      F1_Score = f1_score,
+      AUC = auc_scores
+    )
+  )
+  
+  return(results)
+}
+
+# Evaluate final model
+final_evaluation <- evaluate_model_comprehensive(rf_model, 
+                                               test_data[, selected_features], 
+                                               test_data$pathology_class)
+
+print(final_evaluation$overall_metrics)
+print(final_evaluation$class_metrics)
+```
+
+# Conclusion
+
+Machine learning approaches for biomechanical data analysis require careful consideration of data structure, feature engineering, and clinical interpretability. The LocomotionData package provides the foundation for building robust ML pipelines while maintaining focus on biomechanical meaning and clinical utility.
+
+## Key Principles
+
+1. **Subject-wise cross-validation** prevents data leakage in longitudinal studies
+2. **Feature engineering** improves model performance and interpretability  
+3. **Ensemble methods** combine strengths of different algorithms
+4. **Model interpretability** is crucial for clinical acceptance
+5. **Risk stratification** enables personalized care decisions
+6. **Validation strategies** ensure robust performance estimates
+
+## Future Directions
+
+- Deep learning approaches for sequence modeling
+- Federated learning for multi-site studies
+- Real-time prediction for wearable devices
+- Integration with clinical decision support systems
+
+For more advanced techniques and clinical applications, see the visualization and advanced statistical analysis vignettes.

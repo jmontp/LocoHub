@@ -1,0 +1,64 @@
+{
+  "task_id": "ESML-crosswalk",
+  "written_at_utc": "2026-11-23T00:00:00Z",
+  "source": "Read-only survey of the energy-shaping-ML project (José's), which fixes LocoHub data at prepare time and leaves LocoHub parquets unchanged. Nothing was run; files were read by name and text only. Claims below are that project's, not independently verified here.",
+  "findings": [
+    {
+      "dataset": "um21",
+      "use_in": "UM21-S02",
+      "item": "Treadmill plate registration for foot-frame CoP",
+      "path": "/mnt/s/workspace_docs/energy shaping ml/esml_research/code/training/cop_reference_um21.py",
+      "detail": "There is no plate-to-lab transform. The plate offset per recording is the leave-subject-out median of other subjects' own-moment offsets in the same condition, using donors with a lever-residual IQR of 20 mm or less. Error against the recording's own offset: median 4-11 mm by condition, p95 34 mm. Moments behave as if taken about the Plug-in Gait ankle centre (median 16 mm behind the malleolar midpoint along the foot). Belt height comes from the push-off rotation centre (0-4 cm above the Vicon origin). Belt frame tilts with incline; decline faces the other way. 29 tests; used in 5-fold training.",
+      "tests": "/mnt/s/workspace_docs/energy shaping ml/esml_research/code/training/tests/test_cop_reference.py",
+      "output": "/mnt/s/workspace_docs/energy shaping ml/esml_research/LocoHub/cop_reference/umich_2021_cop_ankle.json"
+    },
+    {
+      "dataset": "um21",
+      "use_in": "already known (UM21-C01/P01, T02-1)",
+      "item": "Pelvis sign doubled into shank/foot; AB01 i5 is a copy of i10",
+      "path": "/mnt/s/workspace_docs/energy shaping ml/esml_research/code/training/ankle_expressivity/es_data.py; /mnt/s/workspace_docs/energy shaping ml/esml_research/code/training/recording_exclusions.py",
+      "detail": "Matches LocoHub findings; LocoHub already rebuilds thigh/shank after the sign step and leaves AB01 i5 out."
+    },
+    {
+      "dataset": "gt21",
+      "use_in": "GT21-RB02/RB04 merged pass",
+      "item": "Per-foot force plate assignment and force sidecar",
+      "path": "/mnt/s/workspace_docs/energy shaping ml/esml_research/code/training/ankle_expressivity/gt21_force.py",
+      "detail": "Each plate contact goes to the foot whose heel-toe midpoint is nearest the plate CoP, with an ambiguous two-feet zone and an events fallback. Forces and CoP are summed over the foot's plates. Signs: vertical = sum vy, anterior = -sum vz, lateral = sum vx, over weight_kg*9.81. Lateral CoP is in the foot-heading frame; rows beyond 0.10 m are NaN. A per-recording counts CSV is included. 11 tests; used in training.",
+      "tests": "/mnt/s/workspace_docs/energy shaping ml/esml_research/code/training/tests/test_es_gt21_force.py",
+      "output": "/mnt/s/workspace_docs/energy shaping ml/esml_research/LocoHub/gt21_force/"
+    },
+    {
+      "dataset": "gt21",
+      "use_in": "GT21-RB04",
+      "item": "Ankle joint centre from the authors' scaled model",
+      "path": "/mnt/s/workspace_docs/energy shaping ml/esml_research/code/training/cop_reference.py; /mnt/s/workspace_docs/energy shaping ml/esml_research/code/training/cop_reference_gt21.m",
+      "detail": "Joint centre from tibia_<side>_offset in the scaled .osim: median 8.6 mm (0.9-17.8) anterior of the lateral malleolus marker. Ankle height above the sole is 4.5-5.7 cm per subject. There is no medial marker, even in the static trial."
+    },
+    {
+      "dataset": "gt21",
+      "use_in": "GT21-Q01",
+      "item": "Angle outliers",
+      "path": "/mnt/s/workspace_docs/energy shaping ml/esml_research/code/docs/ankle_expressivity_20260918.md (2026-09-21)",
+      "detail": "3,375 rows with |angle| beyond 1.5/2.5 rad, mostly whole segments of AB24 ramp_1 (5.8-7.8 rad, likely wraps) and AB07 levelground cw slow seg01. Proposed, not applied there. Also a plate-dropout rule: vGRF == 0 with |moment| > 0.3 Nm/kg."
+    },
+    {
+      "dataset": "gt23",
+      "use_in": "GT23-C06",
+      "item": "Ankle and CoP geometry from the Scaled1 models",
+      "path": "/mnt/s/workspace_docs/energy shaping ml/esml_research/code/training/cop_reference.py",
+      "detail": "Talus origin is 0.04877 m anterior of the calcn origin along calcn x. It lies a median 35.7 mm below the ankle-marker midpoint along the tibia (range 24.3-47.7) and 0.7 mm behind it. The knee-marker axis is 1.7 deg off tibia y. AB01 uses the -Scaled1_original model."
+    },
+    {
+      "dataset": "gt23",
+      "use_in": "GT23-S01",
+      "item": "Phase reconstruction audit",
+      "path": "/mnt/s/workspace_docs/energy shaping ml/esml_research/code/hardware_analysis/dataset_late_stance_audit_20260723/",
+      "detail": "Heel-strike detection per subject and task; stairs and non-cyclic tasks were excluded there. No validation against the authors' windows. GT23 AB03 was dropped in that project; no reason was found in its files."
+    }
+  ],
+  "cautions": [
+    "The ESML UM21 ankle point (malleolar midpoint + 35.7 mm down the shank) borrows a GT23 model constant; LocoHub should not copy that across datasets without its own check.",
+    "CoP columns in the current LocoHub parquets are not comparable across datasets (UM21 displacement from first loaded sample, GT21 lab offset from lateral malleolus, GT23 calcn frame)."
+  ]
+}

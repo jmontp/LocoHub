@@ -1,0 +1,305 @@
+{
+  "task_id": "GT23-E02",
+  "status": "ready_for_independent_review",
+  "scientific_approval": false,
+  "last_checked_at_utc": "2026-11-24T14:33:47+00:00",
+  "summary": "Angle wraps unwrapped (whole turns of 360 degrees only), step_ups foot-frame pressure point held like curb_up, only changed recordings re-exported (15 of 488 recordings: 12 step_ups + 3 with wraps), Q01 assessment v2 on all 19,573 observations with L2 on the time table only. Failed observations 815 -> 156 (L5 590 -> 90, L2 189 -> 5, L1 40 -> 58). Independent verifier NOT yet run.",
+  "decisions_applied": [
+    "Jos\u00e9: blatant errors (+180/360) are fixed, nothing refit or tuned",
+    "L2 choice (made before any v2 result, in the module docstring and PROFILE_V2): time table only, failures mapped to the phase observations whose source span contains both samples of the jump; not scaled by sample spacing (at 392 ms the scaled limit is about 2,300 degrees and tests nothing)"
+  ],
+  "agent_defaults_logged": [
+    "Unwrap rule (gt23_fixes.unwrap_segments): np.unwrap (period 2 pi) of pelvis, thigh, shank and foot angles over each run of consecutive finite samples (a NaN gap is never bridged); the first sample of a distal segment run keeps the branch that puts its joint angle inside (-180,180]; joints re-differenced (hip = thigh-pelvis, knee = thigh-shank, ankle = foot-shank, same as C06); speeds re-derived with the C06 central difference and the published speed kept bit for bit where within 1e-9 rad/s (no speed changed anywhere); a recomputed value within 1e-9 rad of the published one keeps the published bits. check_whole_turns refuses any change that is not a whole multiple of 2 pi.",
+    "Step-up rule: task rule (recording task step_ups, 12 recordings, one per participant): foot-frame cop_anterior/vertical/lateral, left and right, all NaN with a stated reason in held_signals and a step-up limit note in task_info; force, plate pressure point (cop_lab_*), angles untouched. Evidence recorded per recording (heel marker height above plate surface on loaded samples, markers from the source); the 0.17 m C06 reference line is only a reference for the shares, not used in the rule.",
+    "Re-export scope: a recording is re-exported if any angle sample changes or it is a step_ups recording; the E01 export code is reused unchanged (E01 gt23_export.py and run_gt23_e01.py hashes unchanged) with the fixes applied to the C06 columns before export. Phase observations are re-interpolated from the corrected source; a phase sample interpolated between a wrapped and an unwrapped source sample changes by a fraction of a turn (4 samples in AB13, 4 in AB11) and is logged as interpolated_across_a_wrap with its changed source sample.",
+    "Q01 v2 input: per participant the E01 root minus the superseded recordings plus the E02 root; observation identities and row counts must equal E01 exactly (checked); flag step_up_cop_held added; read batches 2048 rows (v1 4096).",
+    "Pilot of the E02 export: AB13 dynamic_walk_1 (wrap), step_ups (hold), normal_walk_1 (clean, correctly not exported); Q01 v2 pilot AB10 + AB13 (the two participants with the largest unwrapped recordings and the one wrap sample)."
+  ],
+  "unwrap_result": {
+    "recordings_with_a_changed_sample": {
+      "AB13/dynamic_walk_1": "1 time sample (index 19258, right foot and ankle, +360 -> in-branch, i.e. -360 on the right-foot angle sample)",
+      "AB10/meander_1": "7,200 samples (indices 1960 to 9159) in right foot and right ankle",
+      "AB11/turn_and_step_1": "9,191 samples (indices 14942 to 24132) in left foot and left ankle"
+    },
+    "column_samples_changed_in_source_time": 32784,
+    "time_rows_changed": 16392,
+    "observations_with_changed_samples": {
+      "total": 28,
+      "time": 3,
+      "phase": 25,
+      "AB10": 1,
+      "AB11": 25,
+      "AB13": 2
+    },
+    "changed_sample_entries_logged": 39952,
+    "by_table": {
+      "time": 32784,
+      "phase": 7168
+    },
+    "changes_log": "converted_datasets/reconversion_v2/gt23_e02_batch_<AB>/changes.jsonl (every changed sample: table, observation_id, reference_side, column, sample index, old, new, whole turns; phase entries also the source index pair)",
+    "phase_cells_not_a_whole_turn": "8 (AB13 4, AB11 4): interpolated between a wrapped and an unwrapped source sample, each with a changed source sample",
+    "speed_samples_changed": 0,
+    "scan": "all 488 recordings scanned; no other recording has a changed sample (hip and knee never change)"
+  },
+  "time_table_l2_classification": {
+    "AB13/dynamic_walk_1": "2 published jumps (samples 19258/19259, +-360 deg on right foot and ankle): both wraps, both removed",
+    "AB10/meander_1": "2 published jumps: 1960 is a wrap (356.9 deg, removed); 1955 (-36.9 deg) is NOT a wrap and remains",
+    "AB11/turn_and_step_1": "3 published jumps: 14942 and 21679 are wraps (356 deg, removed); 14936 (-32.9 deg) is NOT a wrap and remains",
+    "AB11/start_stop_1": "2 jumps (8212: 46.9 deg, 8213: 48.5 deg): NOT wraps, unchanged",
+    "other_recordings": "no other recording has a time-table L2 failure (scan of all 488)"
+  },
+  "q01_v2": {
+    "before_v1": {
+      "observations": 19573,
+      "overall": {
+        "no_failure_found": 18758,
+        "failed": 815
+      },
+      "by_limit": {
+        "L5": 590,
+        "L2": 189,
+        "L1": 40
+      },
+      "samples": {
+        "L5": 144997,
+        "L2": 15750,
+        "L1": 2839
+      }
+    },
+    "after_v2": {
+      "observations": 19573,
+      "overall": {
+        "no_failure_found": 19417,
+        "failed": 156
+      },
+      "by_limit": {
+        "L5": 90,
+        "L1": 58,
+        "L2": 5
+      },
+      "samples": {
+        "L5": 4453,
+        "L1": 22423,
+        "L2": 12
+      }
+    },
+    "reading": "Failed observations 815 -> 156. L5 590 -> 90 (step-up hold removed ~500, nothing else changed). L2 189 -> 5: 3 time observations (AB10 meander_1 1955; AB11 start_stop_1 8212/8213; AB11 turn_and_step_1 14936) + 2 phase observations that contain the 14936 jump. L1 40 -> 58: 20 AB11 turn_and_step_1 phase observations now fail L1 because the unwrapped left ankle there runs to -773 degrees (before: values near +-180, partly inside the limit by accident). L1, L4, L5 code unchanged.",
+    "by_participant": {
+      "AB01": {
+        "before_failed": 51,
+        "after_failed": 8,
+        "by_limit_after": {
+          "L5": 7
+        }
+      },
+      "AB02": {
+        "before_failed": 65,
+        "after_failed": 4,
+        "by_limit_after": {
+          "L5": 3
+        }
+      },
+      "AB03": {
+        "before_failed": 116,
+        "after_failed": 63,
+        "by_limit_after": {
+          "L5": 61
+        }
+      },
+      "AB05": {
+        "before_failed": 69,
+        "after_failed": 18,
+        "by_limit_after": {
+          "L5": 9,
+          "L1": 7
+        }
+      },
+      "AB06": {
+        "before_failed": 53,
+        "after_failed": 4,
+        "by_limit_after": {
+          "L1": 2
+        }
+      },
+      "AB07": {
+        "before_failed": 57,
+        "after_failed": 6,
+        "by_limit_after": {
+          "L1": 5,
+          "L5": 1
+        }
+      },
+      "AB08": {
+        "before_failed": 56,
+        "after_failed": 1,
+        "by_limit_after": {
+          "L5": 1
+        }
+      },
+      "AB09": {
+        "before_failed": 63,
+        "after_failed": 4,
+        "by_limit_after": {
+          "L1": 4
+        }
+      },
+      "AB10": {
+        "before_failed": 68,
+        "after_failed": 5,
+        "by_limit_after": {
+          "L5": 4,
+          "L1": 2,
+          "L2": 1
+        }
+      },
+      "AB11": {
+        "before_failed": 74,
+        "after_failed": 27,
+        "by_limit_after": {
+          "L1": 27,
+          "L2": 4
+        }
+      },
+      "AB12": {
+        "before_failed": 67,
+        "after_failed": 0,
+        "by_limit_after": {}
+      },
+      "AB13": {
+        "before_failed": 76,
+        "after_failed": 16,
+        "by_limit_after": {
+          "L5": 4,
+          "L1": 11
+        }
+      }
+    },
+    "structural_failures": "none; observation set equals E01 exactly in every participant"
+  },
+  "labels": {
+    "run_2.0_2.5": "Flight is present in all checkable cycles (2.0 m/s: 347 of 347, 2.5 m/s: 359 of 359; 89 of 795 cannot be checked), so the labels stay run. The publisher README text (walking at 2.0 and 2.5 m/s) disagrees with the data: recorded here as a README error; no relabel. No walking control exists (right plate NaN in 1.2/1.8 m/s walking), so the flight statistic is not calibrated against walking.",
+    "normal_walk_unlabelled": "511 of the 1,716 normal_walk_unlabelled cycles show flight (both legs under 20 N, median 21 percent of the cycle); recorded, NOT relabelled, no label invented; for the other 1,205 no plate pair is available. Source: GT23-Q01 handoff (not recomputed here)."
+  },
+  "odd_or_limits": [
+    "AB10 meander_1 (right foot) and AB11 turn_and_step_1 (left foot): after the unwrap the foot angle drifts continuously to -483 and -805 degrees and the ankle to -477 and -773 degrees. The unwrap is faithful to the continuous series, but a sagittal foot angle that turns more than a full turn is not a branch-cut problem: the foot sits about 180 degrees from the shank for thousands of samples (published ankle near +-180, already failing L1). Cause unresolved (not examined: heading frame or heel/toe marker problem). Needs Jos\u00e9: keep the continuous values, return to the published +-180 values for these two recordings, or hold the foot and ankle angles there. Not decided here; 20 more AB11 phase observations fail L1 as a consequence.",
+    "The rule asked for continuous segment angles; the same rule moves the first-sample branch only to put the joint inside (-180,180].",
+    "Foreign jobs on the shared host made the launcher refuse twice (\"foreign_worker_linux_ancestor\"), once because I ran the dry run from a wrapper script (the ancestor check treats the script as a worker); waited, no check bypassed.",
+    "First Q01 v2 pilot exited 1 (peak RSS 301.7 MiB above the runner 300 MiB self cap on the second participant); I did not raise the cap: smaller read batches and gc between participants, pilot_r2 clean at 224 MiB; v2 pilot failure kept as evidence.",
+    "E02 readbacks peaked at 262-371 MiB RSS inside the launcher (768 MiB address-space cap), above the 300 MiB that applies to ad-hoc probes; same as the E01 readbacks (280-339).",
+    "Heel-gap evidence for step_ups was read from the source marker files (one recording at a time) inside the launcher jobs."
+  ],
+  "code_frozen": {
+    "gt23_fixes.py": "55abc2b26813553c",
+    "run_gt23_e02.py": "01bfffbf43338f8c",
+    "audit_gt23_e02.py": "49ca268ec092b445",
+    "run_gt23_q01v2.py": "c219b9e8c0f63161 (second version; first version superseded after the pilot cap failure)",
+    "note": "E02 pilot, 12 batches and 12 readbacks bind the same hashes; E01 export files unchanged (gt23_export.py e66e75b6, run_gt23_e01.py 316ba41e)"
+  },
+  "jobs": "E02 pilot export + pilot readback; 12 batches; 12 readbacks (all pass, 0 problems); export summary; Q01 v2 pilot (failed on the cap, kept) + pilot_r2; 12 batches; summary. Every job: dry run, memory checked before launch (Linux available 8.0-9.9 GB, Windows free 9.3-10.6 GB), one launch per shell call, verify-cleanup proven. Receipts docs/quality/audits/gt23-e02-*-launcher-receipt.json and gt23-q01v2-*.",
+  "peak_rss_mib_launcher_largest_process": {
+    "gt23-e02-audit-AB01": 278.8,
+    "gt23-e02-audit-AB02": 279.6,
+    "gt23-e02-audit-AB03": 310.7,
+    "gt23-e02-audit-AB05": 277.5,
+    "gt23-e02-audit-AB06": 278.6,
+    "gt23-e02-audit-AB07": 288.2,
+    "gt23-e02-audit-AB08": 264.7,
+    "gt23-e02-audit-AB09": 262.0,
+    "gt23-e02-audit-AB10": 316.3,
+    "gt23-e02-audit-AB11": 349.7,
+    "gt23-e02-audit-AB12": 269.8,
+    "gt23-e02-audit-AB13": 370.9,
+    "gt23-e02-batch-AB01": 179.6,
+    "gt23-e02-batch-AB02": 180.9,
+    "gt23-e02-batch-AB03": 179.8,
+    "gt23-e02-batch-AB05": 176.4,
+    "gt23-e02-batch-AB06": 179.5,
+    "gt23-e02-batch-AB07": 180.7,
+    "gt23-e02-batch-AB08": 181.5,
+    "gt23-e02-batch-AB09": 177.7,
+    "gt23-e02-batch-AB10": 184.4,
+    "gt23-e02-batch-AB11": 217.3,
+    "gt23-e02-batch-AB12": 175.0,
+    "gt23-e02-batch-AB13": 207.2,
+    "gt23-e02-pilot-AB13": 208.8,
+    "gt23-e02-pilot-audit-AB13": 349.8,
+    "gt23-e02-summary": 109.7,
+    "gt23-q01v2-batch_AB01": 220.0,
+    "gt23-q01v2-batch_AB02": 218.4,
+    "gt23-q01v2-batch_AB03": 238.0,
+    "gt23-q01v2-batch_AB05": 220.3,
+    "gt23-q01v2-batch_AB06": 212.6,
+    "gt23-q01v2-batch_AB07": 240.3,
+    "gt23-q01v2-batch_AB08": 212.9,
+    "gt23-q01v2-batch_AB09": 209.9,
+    "gt23-q01v2-batch_AB10": 211.3,
+    "gt23-q01v2-batch_AB11": 219.9,
+    "gt23-q01v2-batch_AB12": 214.8,
+    "gt23-q01v2-batch_AB13": 217.8,
+    "gt23-q01v2-pilot": 301.7,
+    "gt23-q01v2-pilot_r2": 224.2,
+    "gt23-q01v2-summary": 34.0
+  },
+  "peak_rss_mib_summary": {
+    "e02_batches_range": [
+      175.0,
+      217.3
+    ],
+    "e02_readbacks_range": [
+      262.0,
+      370.9
+    ],
+    "q01v2_batches_range": [
+      209.9,
+      240.3
+    ],
+    "ad_hoc_read_only_probes": "145.5 (scan of all C06 angle columns), 126.0 (single-recording probe); all under prlimit 600 MiB, nice 19"
+  },
+  "roots": {
+    "e02_batches": "converted_datasets/reconversion_v2/gt23_e02_batch_<AB>",
+    "e02_readbacks": "converted_datasets/reconversion_v2/gt23_e02_audit_<AB>",
+    "e02_summary": "converted_datasets/reconversion_v2/gt23_e02_summary/summary.json",
+    "q01v2_batches": "converted_datasets/reconversion_v2/gt23_q01v2_batch_<AB>",
+    "q01v2_summary": "converted_datasets/reconversion_v2/gt23_q01v2_summary/assessment_summary.json",
+    "pilots": [
+      "converted_datasets/reconversion_v2/gt23_e02_pilot_AB13",
+      "converted_datasets/reconversion_v2/gt23_e02_pilot_audit_AB13",
+      "converted_datasets/reconversion_v2/gt23_q01v2_pilot",
+      "converted_datasets/reconversion_v2/gt23_q01v2_pilot_r2"
+    ],
+    "superseded": "docs/quality/audits/gt23-e02-superseded.json"
+  },
+  "checks": [
+    "tests/test_gt23_e02.py (18) and tests/test_gt23_q01v2.py (6) synthetic; with E01 and Q01 tests 57 passed",
+    "12 independent readbacks of E02 against E01: pass, changed cells equal the log, nothing else differs, held pressure point only in step_ups"
+  ],
+  "not_checked": [
+    "the cause of the near-180 degree foot/ankle state in AB10 meander_1 and AB11 turn_and_step_1",
+    "phase observations are not tested for L2 on their own samples (by choice); a jump shorter than a phase interval that is not in the time table cannot exist",
+    "scientific approval of any label or limit; the 511 and 2.0/2.5 flight statistics are carried from Q01, not recomputed"
+  ],
+  "remaining": [
+    "Independent verifier (second agent).",
+    "Jos\u00e9: decision on the two multi-turn foot recordings (see odd_or_limits).",
+    "Then GT23-R01 with the corrected roots."
+  ],
+  "next_action": "Independent verifier checks GT23-E02; then GT23-R01 uses E01 roots with the E02 recordings substituted and the Q01 v2 assessment.",
+  "changed_files": [
+    "contributor_tools/gt23_fixes.py",
+    "contributor_tools/run_gt23_e02.py",
+    "contributor_tools/audit_gt23_e02.py",
+    "contributor_tools/run_gt23_q01v2.py",
+    "tests/test_gt23_e02.py",
+    "tests/test_gt23_q01v2.py",
+    "docs/maintainers/handoffs/GT23-E02.json",
+    "docs/maintainers/backlog.json",
+    "docs/maintainers/backlog.html",
+    "docs/quality/audits/gt23-e02-*",
+    "docs/quality/audits/gt23-q01v2-*"
+  ],
+  "evidence_paths": [
+    "converted_datasets/reconversion_v2/gt23_e02_summary/summary.json",
+    "converted_datasets/reconversion_v2/gt23_q01v2_summary/assessment_summary.json",
+    "docs/quality/audits/gt23-e02-superseded.json"
+  ]
+}

@@ -1,0 +1,35 @@
+{
+ "task": "CORE-PW01",
+ "date_utc": "2026-11-25T00:48:30.153416+00:00",
+ "packages": {
+  "um21": "converted_datasets/reconversion_v2/um21_r01_package_v4",
+  "gt23": "converted_datasets/reconversion_v2/gt23_r01_review_v11"
+ },
+ "receipts": [
+  "docs/quality/audits/um21-r01-package-pilot-launcher-receipt-v4-a1.json",
+  "docs/quality/audits/um21-r01-package-full-launcher-receipt-v4-a1.json",
+  "docs/quality/audits/gt23-r01-pilot-launcher-receipt-v11.json",
+  "docs/quality/audits/gt23-r01-full-launcher-receipt-v11.json",
+  "docs/quality/audits/core-pw01-readback-um21-v4-a2-launcher-receipt.json",
+  "docs/quality/audits/core-pw01-readback-gt23-v11-a3-launcher-receipt.json"
+ ],
+ "changed_files": [
+  "contributor_tools/common/joint_power.py",
+  "contributor_tools/common/release_package.py (Part.transform hook, readback in checks ctx)",
+  "contributor_tools/run_um21_r01_package.py",
+  "contributor_tools/run_gt23_r01_bundle.py",
+  "contributor_tools/readback_power_recompute.py",
+  "tests/test_joint_power.py",
+  "tests/test_um21_r01_package.py"
+ ],
+ "readback": {
+  "um21": true,
+  "gt23": true
+ },
+ "caveats": [
+  "UM21 readback a2 ran with the readback script before a one-line held-signal cache fix that only matters for GT23 (UM21 has one power group); rerun for UM21 if a strictly matching receipt is wanted.",
+  "GT23 hip adduction, hip rotation and subtalar power are unchanged source values (no joint velocity in the package).",
+  "Builder-added columns limitations, lineage_id, assessment_id and the held_signals text change by design (power flags, new hashes)."
+ ],
+ "next": "Independent verifier."
+}

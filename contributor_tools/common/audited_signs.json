@@ -1,0 +1,553 @@
+{
+ "schema_version": "audited-signs/0.3",
+ "purpose": "Verified per-dataset sagittal signs (rule B, target = sign x source) and per-recording exceptions (hold, or a sign correction approved by a backlog decision) consumed by contributor_tools/common/sign_application.py (CORE-11). Part of the bound build. An entry is used only when every task in audit_tasks is done in docs/maintainers/backlog.json and every one of those backlog records cites the entry id explicitly. Everything else falls back to the detector alone. A correction is applied only when every task in its audit_tasks is done and cites its id and its decision carries the recorded answer; otherwise its channels are held.",
+ "target_rule": "B (D-UM21-C03-1 = B)",
+ "seeded": "2026-10-31, CORE-11 rounds 3-4, from the verified audits named per entry and the coordinator's round-4 rulings; no data read; AB04/i0 exception changed from hold to correct by UM21-P02 (D-UM21-P01-1 = C), no data read",
+ "omitted": [
+  "UM21 powers: two storage layouts per recording (UM21-C03 kinetic_layout); a dataset-wide sign would be wrong for one layout. Detector alone.",
+  "GT21 and GT23 pelvis: not a sagittal tilt or not published.",
+  "GT21, GT23 and GT24 powers, GT24 knee moment: no verified audit of their sign.",
+  "GT24 hip moment: removed (coordinator ruling, round 4): its only data evidence is one family (CORE-04 stance timing) without a model definition behind it.",
+  "SIGN-SURVEY is not a verified backlog task and is not cited by any entry.",
+  "Segment angles (thigh, shank, foot): no audited per-dataset sign; detector alone."
+ ],
+ "datasets": {
+  "UM21": {
+   "recording_id_pattern": "AB[0-9]{2}/[di][0-9]+",
+   "recording_id_example": "AB04/i0 (subject/condition, as in UM21-C03 and UM21-P01)",
+   "entries": [
+    {
+     "id": "UM21-pelvis_tilt",
+     "channel": "pelvis_tilt",
+     "sign": -1,
+     "audit_tasks": [
+      "UM21-C03"
+     ],
+     "evidence_basis": "marker pelvis angle (UM21-C03, 8/8 legs per sample) + Vicon definition",
+     "citation": "docs/quality/audits/um21-c03-conventions.json per_channel PelvisAngles (marker pelvis angle, source sign +1 clinical) and sign_changes_by_option.B (pelvis tilt x -1)"
+    },
+    {
+     "id": "UM21-hip_angle",
+     "channel": "hip_angle",
+     "sign": 1,
+     "audit_tasks": [
+      "UM21-C03"
+     ],
+     "evidence_basis": "marker hip angle (UM21-C03, 8/8) + paper and vendor definition",
+     "citation": "docs/quality/audits/um21-c03-conventions.json per_channel HipAngles (marker hip angle, sign +1)"
+    },
+    {
+     "id": "UM21-knee_angle",
+     "channel": "knee_angle",
+     "sign": 1,
+     "audit_tasks": [
+      "UM21-C03"
+     ],
+     "evidence_basis": "marker knee angle (UM21-C03, 8/8) + paper and vendor definition",
+     "citation": "docs/quality/audits/um21-c03-conventions.json per_channel KneeAngles clinical (marker knee angle, sign +1); rule B keeps clinical knee flexion positive"
+    },
+    {
+     "id": "UM21-ankle_angle",
+     "channel": "ankle_angle",
+     "sign": 1,
+     "audit_tasks": [
+      "UM21-C03"
+     ],
+     "evidence_basis": "marker ankle angle (UM21-C03, 8/8) + paper and vendor definition",
+     "citation": "docs/quality/audits/um21-c03-conventions.json per_channel AnkleAngles (marker ankle angle, sign +1)"
+    },
+    {
+     "id": "UM21-hip_moment",
+     "channel": "hip_moment",
+     "sign": 1,
+     "audit_tasks": [
+      "UM21-C03",
+      "CORE-04"
+     ],
+     "evidence_basis": "force-plate lever arm (UM21-C03, weak: component 1 best in 5/8) + CORE-04 UM21 pilot v2 ID-light and stance timing, right whenever decided",
+     "citation": "docs/quality/audits/um21-c03-conventions.json per_channel HipMoment (force-plate lever arm, sign +1); weak test: published sign better in 14/16 legs; docs/quality/audits/core04-um21-pilot.json (v2) per_test"
+    },
+    {
+     "id": "UM21-knee_moment",
+     "channel": "knee_moment",
+     "sign": 1,
+     "audit_tasks": [
+      "UM21-C03"
+     ],
+     "evidence_basis": "force-plate lever arm (UM21-C03, 7-8/8) + paper definition (flexor positive, internal)",
+     "citation": "docs/quality/audits/um21-c03-conventions.json per_channel KneeMoment clinical (force-plate lever arm, sign +1)"
+    },
+    {
+     "id": "UM21-ankle_moment",
+     "channel": "ankle_moment",
+     "sign": 1,
+     "audit_tasks": [
+      "UM21-C03"
+     ],
+     "evidence_basis": "force-plate lever arm (UM21-C03, 8/8, r 0.94-0.98)",
+     "citation": "docs/quality/audits/um21-c03-conventions.json per_channel AnkleMoment (force-plate lever arm, sign +1)"
+    }
+   ],
+   "exceptions": [
+    {
+     "id": "UM21-P01-AB04-i0-pelvis",
+     "recordings": [
+      "AB04/i0"
+     ],
+     "action": "correct",
+     "corrections": {
+      "pelvis_tilt": -1
+     },
+     "derived_channels": [
+      "thigh_angle",
+      "shank_angle",
+      "foot_angle"
+     ],
+     "derivation": "Rule B after sign application (sign_application.derive_segment_angles, SEGMENT_CHAIN): thigh = pelvis_tilt + hip_angle, shank = thigh - knee_angle, foot = shank + ankle_angle, from the hook's published channels, so the corrected tilt reaches all three. In source signs this is the UM21-C03 recipe family (thigh = hip - pelvis, shank = hip - pelvis - knee, foot = hip - pelvis - knee + ankle). The current MATLAB producers derive these columns from the stored pelvis before any sign handling (conversion_scripts/Umich_2021/convert_umich_time_to_parquet.m, thigh/shank/foot lines after choose_pelvis_signal; convert_umich_phase_to_parquet.m, 'enforces hip = thigh - pelvis' block); segment angles passed to the hook for AB04/i0 are held, never flipped.",
+     "derived_velocities": [
+      "pelvis_tilt_velocity",
+      "thigh_angle_velocity",
+      "shank_angle_velocity",
+      "foot_angle_velocity"
+     ],
+     "velocity_rule": "pelvis_sagittal_velocity_rad_s and thigh/shank/foot_sagittal_velocity_{ipsi,contra}_rad_s of AB04/i0 are recomputed after the hook with sign_application.derive_angular_velocities from the published pelvis tilt and the derive_segment_angles outputs (same differentiation as the UM21 converters, MATLAB gradient; see VELOCITY_METHOD), or left out. The converters' own velocities are built from the stored (reversed) pelvis: pelvis sagittal velocity has the wrong sign and segment velocities carry 2 x d(tilt)/dt. Velocity inputs passed to the hook are held.",
+     "not_released": {
+      "pelvis_obliquity": "flipped by the same 180 deg heading reversal (UM21-P01: 228/228 strides); outside the sagittal release; not corrected and not released for this recording",
+      "pelvis_rotation": "shifted by 180 deg by the same reversal (UM21-P01); outside the sagittal release; not corrected and not released for this recording",
+      "pelvis_obliquity_velocity": "pelvis_frontal_velocity_rad_s: derivative of the flipped obliquity (wrong sign); not released for this recording",
+      "pelvis_rotation_velocity": "pelvis_transverse_velocity_rad_s: derivative of a rotation stored about +/-180 deg, which can spike at the wrap; not released for this recording"
+     },
+     "decision": {
+      "id": "D-UM21-P01-1",
+      "answer": "C"
+     },
+     "audit_tasks": [
+      "UM21-P01",
+      "UM21-P02"
+     ],
+     "evidence_basis": "marker pelvis tilt independent of the pelvis channel (UM21-P01: markers agree with the flipped tilt in 114/114 right and 114/114 left strides, median residual 0.15 deg vs 3.05/3.01 deg as stored) + stored pelvis rotation 180 deg off (heading -179.77 / +179.77 deg), the exact (-tilt, -obliquity, rotation + 180) pattern of a reference turned 180 deg about vertical; reproduced by the UM21-P01 verifier (0/171 windows published sign, flipped residual 0.13 deg)",
+     "citation": "docs/quality/audits/um21-p01-pelvis-heading.json summary.classes.reversed = [AB04/i0]; docs/maintainers/handoffs/UM21-P01-verify.json checks 1-2; backlog decision D-UM21-P01-1 answer C (2026-10-31T16:59:46Z)",
+     "reason": "Plug-in Gait computed the AB04/i0 pelvis facing backwards, so its stored pelvis tilt has the wrong sign. José chose C (D-UM21-P01-1): keep the recording with pelvis tilt sign-flipped from marker evidence, and thigh, shank and foot computed from the corrected tilt. Joint angles and moments are unaffected (UM21-P01)."
+    }
+   ]
+  },
+  "GT21": {
+   "recording_id_pattern": "AB[0-9]{2}/[0-9_]+/(treadmill|levelground|ramp|stair)/[A-Za-z0-9_]+\\.mat",
+   "recording_id_example": "AB24/12_02_2018/ramp/ramp_6_l_01_02.mat (as in the CORE-04 GT21 probe)",
+   "entries": [
+    {
+     "id": "GT21-hip_angle",
+     "channel": "hip_angle",
+     "sign": 1,
+     "audit_tasks": [
+      "GT21-C01",
+      "CORE-04"
+     ],
+     "evidence_basis": "model coordinate definition (GT21-C01 hip_flexion +flexion) + CORE-04 GT21 pilot marker reference and stance extension",
+     "citation": "docs/quality/audits/gt21-c01-conventions.json channel_policy.joint_angles (hip_flexion +flexion; model_axes_verified); docs/quality/audits/core04-gt21-pilot.json per_test; docs/maintainers/handoffs/CORE-04-verify.json pilot_gt21"
+    },
+    {
+     "id": "GT21-knee_angle",
+     "channel": "knee_angle",
+     "sign": -1,
+     "audit_tasks": [
+      "GT21-C01",
+      "CORE-04"
+     ],
+     "evidence_basis": "model coordinate definition (GT21-C01 knee_angle +extension, range -120..10 deg) + CORE-04 GT21 pilot marker reference and knee range",
+     "citation": "docs/quality/audits/gt21-c01-conventions.json channel_policy.joint_angles (knee_angle +extension, range -120..10 deg); docs/quality/audits/core04-gt21-pilot.json per_test; docs/maintainers/handoffs/CORE-04-verify.json pilot_gt21"
+    },
+    {
+     "id": "GT21-ankle_angle",
+     "channel": "ankle_angle",
+     "sign": 1,
+     "audit_tasks": [
+      "GT21-C01",
+      "CORE-04"
+     ],
+     "evidence_basis": "model coordinate definition (GT21-C01 ankle_angle +dorsiflexion) + CORE-04 GT21 pilot marker reference and push-off",
+     "citation": "docs/quality/audits/gt21-c01-conventions.json channel_policy.joint_angles (ankle_angle +dorsiflexion); docs/quality/audits/core04-gt21-pilot.json per_test; docs/maintainers/handoffs/CORE-04-verify.json pilot_gt21"
+    },
+    {
+     "id": "GT21-hip_moment",
+     "channel": "hip_moment",
+     "sign": 1,
+     "audit_tasks": [
+      "CORE-04",
+      "GT21-C01"
+     ],
+     "evidence_basis": "CORE-04 GT21 pilot data (ID-light 71/71, stance timing 47/47, lever arm 45/45) + GT21-C01 model axes (positive along hip_flexion)",
+     "citation": "docs/quality/audits/core04-gt21-pilot.json per_test; docs/maintainers/handoffs/CORE-04-verify.json pilot_gt21; docs/quality/audits/gt21-c01-conventions.json channel_policy.joint_moments (positive along the coordinate; model_axes_verified)"
+    },
+    {
+     "id": "GT21-knee_moment",
+     "channel": "knee_moment",
+     "sign": -1,
+     "audit_tasks": [
+      "CORE-04",
+      "GT21-C01"
+     ],
+     "evidence_basis": "one data family (plate geometry: CORE-04 GT21 pilot knee lever arm 70/70 decided) + OpenSim gait2392 knee_angle coordinate definition (GT21-C01); level accepted by the coordinator for knee moments",
+     "citation": "docs/quality/audits/core04-gt21-pilot.json per_test; docs/maintainers/handoffs/CORE-04-verify.json pilot_gt21; docs/quality/audits/gt21-c01-conventions.json channel_policy.joint_moments (positive along knee_angle = extension)"
+    },
+    {
+     "id": "GT21-ankle_moment",
+     "channel": "ankle_moment",
+     "sign": 1,
+     "audit_tasks": [
+      "CORE-04",
+      "GT21-C01"
+     ],
+     "evidence_basis": "CORE-04 GT21 pilot data (ankle lever arm 70/70, late stance 70/70) + GT21-C01 model axes (positive along ankle_angle)",
+     "citation": "docs/quality/audits/core04-gt21-pilot.json per_test; docs/maintainers/handoffs/CORE-04-verify.json pilot_gt21; docs/quality/audits/gt21-c01-conventions.json channel_policy.joint_moments (positive along ankle_angle = dorsiflexion)"
+    }
+   ],
+   "exceptions": []
+  },
+  "GT23": {
+   "recording_id_pattern": "AB[0-9]{2}/[A-Za-z0-9_]+",
+   "recording_id_example": "AB01/normal_walk_1 (subject/trial)",
+   "entries": [
+    {
+     "id": "GT23-ankle_moment",
+     "channel": "ankle_moment",
+     "sign": 1,
+     "audit_tasks": [
+      "GT23-C02"
+     ],
+     "evidence_basis": "mass-free lever-arm ankle moment, dorsiflexion-positive internal (GT23-C02)",
+     "citation": "docs/maintainers/handoffs/GT23-C02.json summary: 'Ankle sign is dorsiflexion-positive internal (positive slope)' against a mass-free lever-arm ankle moment"
+    },
+    {
+     "id": "GT23-hip_angle",
+     "channel": "hip_angle",
+     "sign": 1,
+     "audit_tasks": [
+      "CORE-04"
+     ],
+     "evidence_basis": "CORE-04 GT23 pilot v2: marker reference 19/19 and hip stance extension 17/17 (two families) + gait2392 hip_flexion definition",
+     "citation": "docs/quality/audits/core04-gt23-pilot.json per_test (v2); docs/maintainers/handoffs/CORE-04-verify.json pilot_gt23 rounds 1-3"
+    },
+    {
+     "id": "GT23-knee_angle",
+     "channel": "knee_angle",
+     "sign": -1,
+     "audit_tasks": [
+      "CORE-04"
+     ],
+     "evidence_basis": "CORE-04 GT23 pilot v2: marker reference 19/19 and knee range 11/11 (two families) + gait2392 knee_angle definition",
+     "citation": "docs/quality/audits/core04-gt23-pilot.json per_test (v2); docs/maintainers/handoffs/CORE-04-verify.json pilot_gt23 rounds 1-3"
+    },
+    {
+     "id": "GT23-ankle_angle",
+     "channel": "ankle_angle",
+     "sign": 1,
+     "audit_tasks": [
+      "CORE-04"
+     ],
+     "evidence_basis": "CORE-04 GT23 pilot v2: marker reference 19/19 and push-off 18/18 (two families) + gait2392 ankle_angle definition",
+     "citation": "docs/quality/audits/core04-gt23-pilot.json per_test (v2); docs/maintainers/handoffs/CORE-04-verify.json pilot_gt23 rounds 1-3"
+    },
+    {
+     "id": "GT23-hip_moment",
+     "channel": "hip_moment",
+     "sign": 1,
+     "audit_tasks": [
+      "CORE-04"
+     ],
+     "evidence_basis": "CORE-04 GT23 pilot v2: lever arm 15/15, stance timing 15/15, ID-light 15/15 + gait2392 hip_flexion definition",
+     "citation": "docs/quality/audits/core04-gt23-pilot.json per_test (v2); docs/maintainers/handoffs/CORE-04-verify.json pilot_gt23 rounds 1-3"
+    },
+    {
+     "id": "GT23-knee_moment",
+     "channel": "knee_moment",
+     "sign": -1,
+     "audit_tasks": [
+      "CORE-04"
+     ],
+     "evidence_basis": "one data family (plate geometry: CORE-04 GT23 pilot v2 knee lever arm 18/18) + OpenSim gait2392 knee_angle coordinate definition; level accepted by the coordinator for knee moments",
+     "citation": "docs/quality/audits/core04-gt23-pilot.json per_test (v2); docs/maintainers/handoffs/CORE-04-verify.json pilot_gt23 rounds 1-3"
+    }
+   ],
+   "exceptions": []
+  },
+  "GT24": {
+   "recording_id_pattern": "(Phase1And2|Phase3)/BT[0-9]{2}/[A-Za-z0-9_]+",
+   "recording_id_example": "Phase1And2/BT06/normal_walk_1",
+   "entries": [
+    {
+     "id": "GT24-ankle_angle",
+     "channel": "ankle_angle",
+     "sign": 1,
+     "audit_tasks": [
+      "GT24-C02"
+     ],
+     "evidence_basis": "GT24-C02: push-off, net work and toe-walking checks (data) against the README; reproduced by its verifier",
+     "citation": "docs/quality/audits/gt24-c02-ankle-sign.json verdict (dorsiflexion positive as published; README lines 90-91 wrong)"
+    },
+    {
+     "id": "GT24-ankle_moment",
+     "channel": "ankle_moment",
+     "sign": 1,
+     "audit_tasks": [
+      "GT24-C02"
+     ],
+     "evidence_basis": "GT24-C02: stance plantarflexor moment negative (lever arm); reproduced by its verifier",
+     "citation": "docs/quality/audits/gt24-c02-ankle-sign.json verdict (stance plantarflexor moment negative; dorsiflexor positive)"
+    },
+    {
+     "id": "GT24-hip_angle",
+     "channel": "hip_angle",
+     "sign": 1,
+     "audit_tasks": [
+      "GT24-C02"
+     ],
+     "evidence_basis": "GT24-C02: exo hip encoder vs hip_flexion r -0.974 to -0.992 + README/model definition",
+     "citation": "backlog GT24-C02 handoff summary: exo hip encoder correlates -0.90 to -0.99 with hip_flexion; README hip statement right (hip flexion positive)"
+    },
+    {
+     "id": "GT24-knee_angle",
+     "channel": "knee_angle",
+     "sign": -1,
+     "audit_tasks": [
+      "GT24-C02"
+     ],
+     "evidence_basis": "GT24-C02: exo knee encoder vs knee_angle r +0.966 to +0.994 + README/model definition",
+     "citation": "backlog GT24-C02 handoff summary: exo knee encoder correlates +0.93 to +0.99 with OpenSim knee_angle; README knee statement right (knee extension positive)"
+    }
+   ],
+   "exceptions": []
+  },
+  "FA16": {
+   "recording_id_pattern": "(train|test)/No_Arm/Falisse2017_Formatted_No_Arm/([A-Za-z0-9_]+)/\\2\\.b3d#trial[0-9]+",
+   "recording_id_example": "train/No_Arm/Falisse2017_Formatted_No_Arm/subject_4/subject_4.b3d#trial0 (HIST-05 source_recording_id)",
+   "entries": [
+    {
+     "id": "FA16-pelvis_tilt",
+     "channel": "pelvis_tilt",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition only: adapter input is the pelvis pitch derived from the model's ground_pelvis orientation, front up positive by construction (HIST-06 mapping S1, S6); HIST-06 pilot v1r5: detector abstains (blocks, no task: one recorded contact per foot)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "FA16-hip_angle",
+     "channel": "hip_angle",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition only: +hip_flexion rotates the femur counterclockwise about +z (flexion) (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5: detector abstains (blocks, no task: one recorded contact per foot)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "FA16-knee_angle",
+     "channel": "knee_angle",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition only: walker knee: +knee_angle rotates the tibia clockwise about +z (flexion), range 0-2.09 rad (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5: detector abstains (blocks, no task: one recorded contact per foot)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "FA16-ankle_angle",
+     "channel": "ankle_angle",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition only: +ankle_angle rotates the talus counterclockwise about +z (dorsiflexion) (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5: detector abstains (blocks, no task: one recorded contact per foot)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "FA16-hip_moment",
+     "channel": "hip_moment",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition only: generalized force along hip_flexion (nimblephysics FramePass.tau), same sense as the coordinate (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5: detector abstains (blocks, no task: one recorded contact per foot)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "FA16-knee_moment",
+     "channel": "knee_moment",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition only: generalized force along knee_angle (flexion positive), same sense as the coordinate (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5: detector abstains (blocks, no task: one recorded contact per foot)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "FA16-ankle_moment",
+     "channel": "ankle_moment",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition only: generalized force along ankle_angle (dorsiflexion positive), same sense as the coordinate (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5: detector abstains (blocks, no task: one recorded contact per foot)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    }
+   ],
+   "exceptions": []
+  },
+  "TA21": {
+   "recording_id_pattern": "(train|test)/No_Arm/Tan2021_Formatted_No_Arm/([A-Za-z0-9_]+)/\\2\\.b3d#trial[0-9]+",
+   "recording_id_example": "train/No_Arm/Tan2021_Formatted_No_Arm/s7/s7.b3d#trial0 (HIST-05 source_recording_id)",
+   "entries": [
+    {
+     "id": "TA21-pelvis_tilt",
+     "channel": "pelvis_tilt",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition only: adapter input is the pelvis pitch derived from the model's ground_pelvis orientation, front up positive by construction (HIST-06 mapping S1, S6); HIST-06 pilot v1r5: detector abstains (no marker evidence)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "TA21-hip_angle",
+     "channel": "hip_angle",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition plus detector +1: +hip_flexion rotates the femur counterclockwise about +z (flexion) (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5 detector suggest +1 in 267 of 286 legs (one family, low confidence; no apply, no opposite sign)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "TA21-knee_angle",
+     "channel": "knee_angle",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition only: walker knee: +knee_angle rotates the tibia clockwise about +z (flexion), range 0-2.09 rad (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5: knee hinge test is walking-only",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "TA21-ankle_angle",
+     "channel": "ankle_angle",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition plus detector +1: +ankle_angle rotates the talus counterclockwise about +z (dorsiflexion) (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5 detector suggest +1 in 267 of 286 legs (one family, low confidence; no apply, no opposite sign)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "TA21-hip_moment",
+     "channel": "hip_moment",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition only: generalized force along hip_flexion (nimblephysics FramePass.tau), same sense as the coordinate (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5: hip moment timing test is walking-only",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "TA21-knee_moment",
+     "channel": "knee_moment",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition only: generalized force along knee_angle (flexion positive), same sense as the coordinate (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5: no lever-arm test (no joint positions)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "TA21-ankle_moment",
+     "channel": "ankle_moment",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition plus detector +1: generalized force along ankle_angle (dorsiflexion positive), same sense as the coordinate (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5 detector suggest +1 in 267 of 286 legs (one family, low confidence; no apply, no opposite sign)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    }
+   ],
+   "exceptions": []
+  },
+  "TA22": {
+   "recording_id_pattern": "(train|test)/No_Arm/Tan2022_Formatted_No_Arm/([A-Za-z0-9_]+)/\\2\\.b3d#trial[0-9]+",
+   "recording_id_example": "train/No_Arm/Tan2022_Formatted_No_Arm/02/02.b3d#trial0 (HIST-05 source_recording_id)",
+   "entries": [
+    {
+     "id": "TA22-pelvis_tilt",
+     "channel": "pelvis_tilt",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition only: adapter input is the pelvis pitch derived from the model's ground_pelvis orientation, front up positive by construction (HIST-06 mapping S1, S6); HIST-06 pilot v1r5: detector abstains (no marker evidence)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "TA22-hip_angle",
+     "channel": "hip_angle",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition plus detector +1: +hip_flexion rotates the femur counterclockwise about +z (flexion) (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5 detector suggest +1 in 96 of 96 legs (one family, low confidence; no apply, no opposite sign)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "TA22-knee_angle",
+     "channel": "knee_angle",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition plus detector +1: walker knee: +knee_angle rotates the tibia clockwise about +z (flexion), range 0-2.09 rad (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5 detector suggest +1 in 95 of 96 legs (one family, low confidence; no apply, no opposite sign)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "TA22-ankle_angle",
+     "channel": "ankle_angle",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition plus detector +1: +ankle_angle rotates the talus counterclockwise about +z (dorsiflexion) (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5 detector suggest +1 in 96 of 96 legs (one family, low confidence; no apply, no opposite sign)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "TA22-hip_moment",
+     "channel": "hip_moment",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition plus detector +1: generalized force along hip_flexion (nimblephysics FramePass.tau), same sense as the coordinate (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5 detector suggest +1 in 96 of 96 legs (one family, low confidence; no apply, no opposite sign)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "TA22-knee_moment",
+     "channel": "knee_moment",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition only: generalized force along knee_angle (flexion positive), same sense as the coordinate (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5: no lever-arm test (no joint positions)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "TA22-ankle_moment",
+     "channel": "ankle_moment",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition plus detector +1: generalized force along ankle_angle (dorsiflexion positive), same sense as the coordinate (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5 detector suggest +1 in 96 of 96 legs (one family, low confidence; no apply, no opposite sign)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    }
+   ],
+   "exceptions": []
+  }
+ }
+}

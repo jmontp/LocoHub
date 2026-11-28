@@ -1,0 +1,25 @@
+{
+ "task": "CORE-PW01",
+ "verifier": "independent (did not write the work)",
+ "date_utc": "2026-11-25T00:56:17.925315+00:00",
+ "verdict": "pass",
+ "checks": {
+  "1_receipts_code": "All six build and readback receipts are completed, clean, with no launcher or finalisation errors. UM21 and GT23 pilots ran with the same code hashes as their full builds (release_package c13dd303, joint_power afa4e63d, adapters 11167082 / 8ca6c116). All binding hashes match the current files, except the UM21 readback script, which changed after receipt a2. Reran that readback through the launcher (CORE-PW01-readback-um21-v4-verify, completed, clean, exit 0): all checks pass, identical results to a2 (R3 29 non-power columns bit-identical, R4 max abs difference 0).",
+  "2_power_values": "Seed 20261210, 10 observations per dataset, recomputed from the package's own columns with a separate script. UM21: joint speed = segment-velocity difference (hip thigh-pelvis, knee thigh-shank, ankle foot-shank). GT23: package joint velocity columns, ipsi and contra. Power equals moment x speed to under 1e-9 on every row (hip, knee, ankle), and is missing exactly where either input is missing. Zero failures.",
+  "3_unchanged_columns": "On the same sample every column other than the three power columns, limitations, lineage_id and (UM21 only, for some) held_signals is bit-identical to v3 / v10. Row counts equal.",
+  "4_coverage": "Compared assessment.jsonl entry by entry against v3/v10 (keyed by observation, side, table). UM21: 1407 held 'sign unsettled' entries on power removed (power now computed) and 174 'power missing' entries added; GT23: 753 'power missing' entries added. No difference at all in status, failed limits, channels, flight, variant flags, rows, or any non-power held or channel state. Consistent with D-REF-5 (power carries no source sign).",
+  "5_gt23_hip_gap": "Two seeded normal-walk observations (AB10 L, AB06 R). Moments are identical to the source, so the gap is entirely speed. Our hip velocity equals the derivative of our own hip angle (residual under 0.01 rad/s) and correlates 0.92 to 0.97 with the speed implied by published power / moment, with an RMS difference of about 0.5 to 1.0 rad/s. NRMS of new vs published hip power was 0.07, 0.15 and 0.13 on these three sides, below the reported dataset median of 0.28, so these two do not reproduce the median itself. The cause is the speed definition, which is expected, not an error. I did not test the authors' model coordinate directly.",
+  "6_builder_and_tests": "Part.transform is a generic optional callable with a schema-unchanged guard; the builder has no dataset-specific names. pytest -k 'release_package or gt23_r01 or um21_r01 or joint_power': 30 passed. build_backlog_page.py --check: valid, 123 tasks."
+ },
+ "caveats": [
+  "GT23 probe peaked at about 328 MiB RSS (limit was 300 MiB, address cap 600 MiB held); probe was read-only and small.",
+  "Spot checks, not a full re-derivation; full coverage rests on the worker readback receipts, which I confirmed are clean and current.",
+  "Hip adduction, hip rotation and subtalar power in GT23 stay source values by design.",
+  "The new extra rerun wrote converted_datasets/reconversion_v2/um21_r01_power_readback_v4_verify and docs/quality/audits/core-pw01-readback-um21-v4-verify-*."
+ ],
+ "evidence": [
+  "docs/quality/audits/core-pw01-readback-um21-v4-verify-launcher-receipt.json",
+  "docs/quality/audits/core-pw01-readback-um21-v4-verify-spec.json",
+  "converted_datasets/reconversion_v2/um21_r01_power_readback_v4_verify/readback.json"
+ ]
+}

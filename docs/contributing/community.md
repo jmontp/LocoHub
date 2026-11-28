@@ -40,7 +40,7 @@ Help us help you by providing:
 
 ??? question "My validation is failing - what should I do?"
     1. Check units (radians vs degrees is the most common issue)
-    2. Verify sign conventions match the standard
+    2. Verify sign conventions match the standard ([Signs and frames](../reference/index.md#signs-and-frames)) using source documentation, not curve appearance
     3. Look at the specific phase where failure occurs
     4. Consider if you need custom validation ranges for your population
 
@@ -55,7 +55,7 @@ Help us help you by providing:
     - `knee_flexion_angle_left_rad` / `knee_flexion_angle_right_rad`
 
 ??? question "What coordinate system should I use?"
-    Follow ISB recommendations where possible. See [Reference → Coordinate & Sign Conventions](../reference/index.md#coordinate-sign-conventions).
+    Use the LocoHub sign rule, not ISB or a source default: +x walking direction, +y up, +z the person's right side; joint angles and moments positive in their named direction (knee flexion +); segment angles counterclockwise positive (pelvis anterior tilt −). See [Reference → Signs and frames](../reference/index.md#signs-and-frames).
 
 ---
 

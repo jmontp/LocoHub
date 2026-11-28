@@ -1,0 +1,42 @@
+{
+  "task_id": "PM-02",
+  "status": "review",
+  "last_checked_at_utc": "2026-10-27T23:41:14+00:00",
+  "summary": "Revision 2, after independent verification (PM-02-verify.json) found about 35 retained directories without a row. The job universe is now every top-level directory of converted_datasets/reconversion_v2: all 364, each with a row, except 7 execution records folded into their queue job. It also includes every job in current or retired queue plans, including gt21_force_probe. Each of the 419 rows has one current disposition, an existing owner task and exact evidence. Counts are completed_unreviewed 103, superseded 167, needs_fresh_reviewed_plan 100, quarantined_known_bad 12 and obsolete 37. An independent directory and plan-file enumeration finds 0 unaccounted directories and 0 unaccounted plan jobs. No stopped, failed, unlaunched, stale-running or no-record job is counted as complete. Read-only: no process was started, signalled or resumed, and nothing under converted_datasets/ was modified. Scientific approval is not implied.",
+  "checks": [
+    "Builder contributor_tools/review_pm02_dispositions.py (sha256 bcad1a5a07be377115d00bd6d9c728a37344e4d493436ca8afa81b0e74a35015) ran at nice 19 / ionice 3 with one thread. It wrote docs/quality/audits/pm02-job-dispositions.json (sha256 c11882704b9ca097bc2c2742ffd8cdf33d862daffda634a8f4ac7eb7bc79cb29) at HEAD 569ee8f.",
+    "Completeness (new, independent of the builder's row construction): os.scandir lists 364 directories. 357 are rows and 7 are folded into queue jobs, so 0 are unaccounted. All 103 job entries were re-read from every plan*.json file in the 27 queue directories (current and retired versions), plus queue_status job lists for queues without a plan. 0 are unaccounted. The 10 top-level files are not jobs.",
+    "Verifier gaps closed. The 17 native MATLAB jobs (native_status.json, all completed) now have rows. So do the 4 subset auditors (audit_status checked_completed_subset_unreviewed, including force_corrected_full_audit_v2 at 39/2,301), the pilot, probe and proposal plans (prepared_unreviewed, so never_launched) and gt21_force_probe (retired metadata-queue plans; superseded by gt21_force_source_probe_1536, owner GT21-C01). The borderline directories are also rows.",
+    "New outcome no_terminal_record (51 rows): directories with outputs but no status receipt. None of these rows is counted as complete. They are needs_fresh_reviewed_plan, superseded by a newer version, or closed with a reason. Older versions in 25+ generic _vN lineages are superseded by their newest version.",
+    "Limited-scope completed rows now carry explicit notes: fixed_data_queue_20261020/0:um21_tread (complete_partial_scope), strokepig_native_batch_smoke (1 of 151), the GT21 subset audits, and every partial_requested_limit pilot.",
+    "All 8 invariants pass. They are: one disposition plus an existing owner; no not-success outcome labelled complete; completed rows bind a hashed receipt; supersession chains acyclic and resolving (ends: needs_fresh 115, completed_unreviewed 43, quarantined 8, obsolete 1); all 49 snapshot jobs present; all 33 watchers and 19 queues present; directory and plan-job completeness; and StrokePiG resolving to SP50-F01.",
+    "Unchanged rechecks still pass: the 4 MBLUE detour summaries match status.json, and native_controller_resumed=true for 402226 is retained as history. The other 6 receipt hashes also match. Census at 23:41Z: none of the 101 recorded PIDs is present on Linux (boot 1570e813), and there is no MATLAB, Python or OpenSim worker on Windows.",
+    "Sheet review_sheets/PM-02/index.html changes. The coverage chip is driven by the completeness check: it is green only with 0 unaccounted, and otherwise turns into a failed chip giving the count. Figure 1 has a dashed red NO STATUS column, so an unlisted job would be visible. The caption now separates replaced from closed work. The page title no longer contains the task ID. Figures are one panel per PNG at 6 in with 17-18 pt text. The page was rendered and inspected at 1100 px and inside a 390 px iframe; text is legible and nothing clips."
+  ],
+  "remaining": [
+    "gt25_streaming_transfer_pilot_v2 (completed_unreviewed) predates the GT25 ankle-sign stop, and its source audit never ran. GT25-P01 must check it before use.",
+    "51 directories have outputs but no terminal status. They are not success, and their owners must re-establish any that they still need.",
+    "gt21_metadata_corrected failed at AB06 treadmill_07_01 and was not investigated, because the force-corrected batch replaced it.",
+    "Owner mapping is rule-based on names, plus explicit overrides; each owner task should re-read its rows before planning."
+  ],
+  "next_action": "Fresh independent verification. Rerun the builder, confirm the 8 invariants and the completeness counts (364 directories, 103 plan-job entries, 0 unaccounted), and spot-check seeded rows from the newly added kinds (native_or_audit, result_or_review, retired queue jobs). After that, owners use needs_fresh_plan_by_owner as their job lists.",
+  "changed_files": [
+    "contributor_tools/review_pm02_dispositions.py",
+    "docs/quality/audits/pm02-job-dispositions.json",
+    "docs/maintainers/handoffs/PM-02.json",
+    "review_sheets/PM-02/index.html (gitignored)",
+    "review_sheets/PM-02/fig1_dispositions.png (gitignored)",
+    "review_sheets/PM-02/fig2_outcomes.png (gitignored)"
+  ],
+  "evidence_paths": [
+    "docs/quality/audits/pm02-job-dispositions.json",
+    "contributor_tools/review_pm02_dispositions.py",
+    "review_sheets/PM-02/index.html",
+    "docs/maintainers/handoffs/PM-02-verify.json",
+    "converted_datasets/reconversion_v2/swarm_backlog_20261021/gt25_stop_dependency_closure_replacement.json",
+    "docs/quality/audits/queue-recovery-expanded-49-summary.json",
+    "docs/quality/audits/backlog-refresh-20261027.json",
+    "converted_datasets/reconversion_v2/mblue_priority_handoff_20261021/status.json"
+  ],
+  "decisions": []
+}

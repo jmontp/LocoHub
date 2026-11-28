@@ -1,0 +1,71 @@
+{
+  "task_id": "CORE-06",
+  "verifier_role": "independent second agent; own synthetic fixtures; reviewed the round-2 builder (sha256 042113ac...) after the worker's round-2 report",
+  "verdict": "done",
+  "decision_ready_to_copy": false,
+  "last_checked_at_utc": "2026-10-31T12:40:00Z",
+  "research_data_read": false,
+  "scientific_approval": false,
+  "authorizes_publication": false,
+  "summary": "V1, V2, G3, G4 and G8 hold against adversarial fixtures on both /mnt/s and the Linux tmp path. G7 is now resolved at the root by CORE-08. The round-2 applicability enforcement and the categorical-order sort fix are correct. Two low residuals are logged: a short staging-edit window in V1, and task-only applicability satisfying the new rule. My G2 ruling is that it has a conventional default and does not need José. The task's own acceptance says 'G2 not decided by an agent', so the coordinator should amend that, not copy D-CORE-06-1.",
+  "checks": [
+    {"id": 1, "area": "verifier test files", "result": "pass", "evidence": "Round 1: the worker removed only the four strict-xfail decorators: G7 and G8 in test_release_lineage_verify.py, V1 and V2 in test_release_publish_drvfs_verify.py. I confirmed this from line counts (lineage 271 -> 269) and by reading each affected test, whose bodies are unchanged. The worker reports no round-2 edits to my files, and I made the later edits myself: a synthetic applicability block in both files, and the G7 test rewritten per the coordinator to assert that categorical identities release like plain strings."},
+    {"id": 2, "area": "G4 read through the open handle", "result": "pass on both filesystems", "evidence": [
+      "The only eager read goes through /proc/self/fd/N of the handle whose footer was checked (spy on pq.read_table).",
+      "A larger replacement after admission is rejected 'not read', with zero read_table calls.",
+      "A replacement with the same footer (same shape, other values) is read within the admitted size, then rejected by the hash of the same handle.",
+      "A file renamed over the input during the read: the read and hash see the original inode (consistent), and the later copy check rejects the new path ('changed during release creation').",
+      "fd reuse: the fd stays open across footer check, read and hash in one thread, and the /proc magic link reopens the same inode, so no fd reuse window exists.",
+      "Native Windows (no /proc) keeps the documented identity-check-to-read window."
+    ]},
+    {"id": 3, "area": "V1 staged-name removal and rollback", "result": "pass with residual R1", "evidence": [
+      "If a staged unlink fails during publication, the release rolls back. The destination is absent or marked, and no unmarked bundle verifies.",
+      "My CORE-05 test on residual staging names now passes legitimately: a later write to the stage creates a new file and cannot change the release.",
+      "Residual R1 (low): staged names are removed after the final hash check, not before. A staged file edited after its own check but before its unlink still changes the published release undetected. Pinned as strict xfail on both filesystems.",
+      "Fix: unlink the staged names after placement and before the hash check."
+    ]},
+    {"id": 4, "area": "V2, G8, G7", "result": "pass", "evidence": [
+      "V2: a staged symlink is refused (CORE-05 test passes).",
+      "G8: a 'not downloaded' limitation is added for https, s3 and doi URIs with local copies, and not for file://, a Windows drive path or a bare name. Status stays verified_local.",
+      "G7: single-category and reversed-category categorical identities release with the same observations, rows and order as plain strings. My reversed-category test fails with the pre-round-2 sort and passes now.",
+      "An unexpected TypeError in assessment is no longer converted, so main() raises, but it still fails closed: no bundle, lock or staging directory."
+    ]},
+    {"id": 5, "area": "G3 labels", "result": "pass; one adjacent wording note", "evidence": "The manifest records declared_by_contributor ['converter', 'review'] and keeps the review verbatim. The card says 'declared by the contributor' and 'The builder did not verify this review', and states the scope or 'not declared'. It uses no 'approved', 'certified' or 'verified review' wording. Adjacent, G2 territory: the card line 'Profile review status: reviewed' is the profile's own label and is not marked as declared. Labelling it 'declared in the profile' costs nothing and would not enact any G2 option."},
+    {"id": 6, "area": "applicability enforcement (round 2)", "result": "pass with residual R2", "evidence": [
+      "A reviewed or approved profile is refused before any read when applicability is {} or absent for any task. That covers a single task and a two-task profile with one task missing; zero read_table calls.",
+      "Malformed applicability (a list) fails closed with CLI exit 2.",
+      "A legacy profile with no status and no applicability still releases with the legacy limitation.",
+      "Residual R2 (low; convention): the check needs only a nonempty block. The worker's fixtures use 'applicability: {task: [level_walking]}', which restricts by task only and says nothing about population or condition, yet satisfies the rule. A real profile could do the same.",
+      "Follow-up: require at least one key other than task/task_id, or name the required keys (for example population), in the same logged default as G2."
+    ]},
+    {"id": 7, "area": "G2: does it need José?", "result": "no; a conventional default exists", "evidence": [
+      "The repo already has one convention for review records: provenance review requires reviewer and a timezone-stamped reviewed_at, and scope is optional but labelled (G3, verified here). Applying the same rule to profiles marked reviewed or approved is consistency, not a new convention.",
+      "This is the conservative direction AGENTS.md asks for: a bare label is not evidence, and draft profiles are not release profiles. CORE-01's verifier made the same call for applicability.",
+      "It refuses nothing that exists (no committed range profile declares review_status), removes no data, changes no release scope, is reversible, and every release still needs José's approval.",
+      "Option A is less conservative than existing practice. Option C adds a requirement not imposed on source reviews; José can opt into it later.",
+      "Conflict: CORE-06 acceptance item 3 says 'G2 not decided by an agent', so the coordinator must amend it before an agent implements the default."
+    ]},
+    {"id": 8, "area": "D-CORE-06-1 schema and neutrality (if the coordinator still sends it)", "result": "valid; mild lean", "evidence": [
+      "validate_backlog passes on an in-memory copy with the decision appended as 'open' (1 open).",
+      "Order by required fields (0, 2, 3) is strict, and the recommendation and 'why' sit in the click-to-reveal fold.",
+      "The check fact is true: no file in validation_ranges has review_status.",
+      "Lean: only C's consequence names a benefit ('each release says what its ranges were checked against'). A and B list only costs. Give each option a parallel 'what changes, cost, reversible' statement before copying."
+    ]},
+    {"id": 9, "area": "test runs", "result": "pass", "evidence": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_release_builder_gaps.py tests/test_release_builder_gaps_verify.py tests/test_release_publish_drvfs.py tests/test_release_publish_drvfs_verify.py tests/test_release_lineage_adversarial.py tests/test_release_lineage_verify.py tests/test_dataset_release.py tests/test_data_contract.py tests/test_validation_ranges_rule_b.py tests/test_validation_ranges_rule_b_verify.py tests/test_backlog_workflow.py -rxXs -> 336 passed, 1 skipped (strokepig untracked), 2 xfailed (strict: CORE-06-R1 on both filesystems). python3 contributor_tools/build_backlog_page.py --check -> Backlog valid; HTML current (89 tasks). No temporary directories are left on /mnt/s."}
+  ],
+  "residuals": [
+    {"id": "CORE-06-R1", "severity": "low", "follow_up": "Unlink staged names before the final hash check in _publish_files_exclusively, then remove the strict-xfail marker on test_staged_edit_after_its_hash_check_cannot_change_the_release."},
+    {"id": "CORE-06-R2", "severity": "low", "follow_up": "Decide, with the G2 default, which applicability keys count (task-only should not), and enforce it in profile_applicability_gaps or the builder."},
+    {"id": "CORE-06-R3", "severity": "informational", "follow_up": "Label the card's profile review status as declared in the profile."}
+  ],
+  "recommendation_to_coordinator": "Move CORE-06 to done. Do not copy D-CORE-06-1. Amend acceptance item 3 and open a small follow-up that enforces the provenance-consistent default for reviewed/approved profiles: reviewer and timezone-stamped reviewed_at required; scope optional but labelled; applicability that names more than the task. Log it as an agent default under AGENTS.md. If you prefer to ask José anyway, neutralise the option consequences first.",
+  "verifier_tests": {
+    "file": "tests/test_release_builder_gaps_verify.py",
+    "count": "28 passing + 2 strict xfail (R1 on Linux tmp and drvfs)",
+    "also_updated": "tests/test_release_lineage_verify.py (categorical identities release like plain strings; synthetic applicability block) and tests/test_release_publish_drvfs_verify.py (synthetic applicability block)."
+  },
+  "not_checked": [
+    "Native Windows Python (no /proc; os.rename publication branch).",
+    "Durability across power loss."
+  ]
+}

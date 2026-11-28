@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Browse locomotion datasets, preview signals, and download files for Python or MATLAB.">
+  <meta name="color-scheme" content="light dark">
+  <title>Former analysis API · LocoHub</title>
+  <link rel="stylesheet" href="../../stylesheets/site.css">
+  <script src="../../javascripts/extra.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="wordmark" href="../../index.html" aria-label="LocoHub home">LocoHub</a>
+      <nav class="primary-nav" aria-label="Main navigation"><a href="../../index.html">Data</a>
+<a href="../../tutorials/index.html">Tutorials</a>
+<a href="../../reference/index.html">File format</a>
+<a href="../../quality/index.html">Testing &amp; data quality</a></nav>
+      <form class="header-search" role="search" aria-label="Site search" action="../../search/index.html"><label class="visually-hidden" for="header-query">Search documentation</label><input id="header-query" type="search" name="q" placeholder="Search docs" required><button type="submit">Search</button></form>
+      <a class="repository-link" href="https://github.com/jmontp/LocoHub">GitHub</a>
+    </div>
+  </header>
+  <div class="page-layout">
+    <main id="main" class="page-content" tabindex="-1">
+      <div class="page-kicker"><a href="../../index.html">LocoHub</a><span aria-hidden="true">/</span>Former analysis API</div>
+      
+<h1 id="former-analysis-api">Former analysis API</h1>
+<p>LocoHub now focuses on standardized data, conversion, quality evidence, and reproducible dataset releases. The former Python, MATLAB, and R analysis libraries are retired from the supported public workflow. Their source is preserved in the repository's <code>legacy/</code> archive for reference.</p>
+<p>Read datasets with native tools:</p>
+<div aria-label="Scrollable data table" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Environment</th>
+<th>Load a Parquet file</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Python / pandas</td>
+<td><code>df = pandas.read_parquet("full.parquet")</code></td>
+</tr>
+<tr>
+<td>MATLAB</td>
+<td><code>T = parquetread("full.parquet");</code></td>
+</tr>
+<tr>
+<td>R / Arrow</td>
+<td><code>df &lt;- arrow::read_parquet("full.parquet")</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>See the <a href="../../tutorials/">Python and MATLAB tutorial</a> for loading, checking observation boundaries, selecting complete observations, and plotting. The <a href="../../reference/">file format</a> describes identities and units. Contributor tooling under <code>contributor_tools/</code> remains available for conversion and release preparation.</p>
+<p>When replacing former <code>get_cycles</code> or filtering calls, group by the complete observation identity declared in the release. Do not reshape rows into blocks of 150 without checking identities, phase order, and sample counts first.</p>
+
+    </main>
+    
+  </div>
+  <footer class="site-footer"><p>LocoHub</p><nav aria-label="Additional links"><a href="../../contributing/index.html">Contribute data</a><a href="../../maintainers/index.html">Maintainers</a><a href="../../reference/index.html#release-evidence">Download notes</a><a href="https://github.com/jmontp/LocoHub/issues">Report an issue</a></nav></footer>
+</body>
+</html>

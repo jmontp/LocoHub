@@ -1,0 +1,186 @@
+{
+  "task_id": "GT23-M01",
+  "status": "ready_for_independent_review",
+  "scientific_approval": false,
+  "last_checked_at_utc": "2026-11-24T03:50:00+00:00",
+  "summary": "Per-kg moments and powers of exactly the 52 recordings of the hash-bound C05 audit were multiplied by (mass used / own mass); 436 recordings kept as published with a note; body-weight forces use the README mass table for all 488 (AB03 = 113.5 kg, 40 recordings). Units documented only. 3 pilots + 12 batches + 1 summary under the guarded launcher, one at a time. Independent verifier NOT yet run.",
+  "decisions_applied": [
+    "D-GT23-C05-2 = A (fix the 52)",
+    "D-GT23-C05-3 = B (rescale all 52: 7 exact, 45 estimated)",
+    "AB03 body weight from the README (113.5 kg)",
+    "README unit text: documented only"
+  ],
+  "module": "contributor_tools/gt23_mass.py (pure functions), contributor_tools/run_gt23_m01.py (run, spec, summary), tests/test_gt23_m01.py (9 synthetic tests plus one on the committed audit counts)",
+  "output_roots": {
+    "batches": "converted_datasets/reconversion_v2/gt23_m01_batch_<AB..>",
+    "summary": "converted_datasets/reconversion_v2/gt23_m01_summary",
+    "pilots_final_code": [
+      "gt23_m01_pilot2_ab05_nw",
+      "gt23_m01_pilot2_ab03_dw",
+      "gt23_m01_pilot2_ab03_poses"
+    ],
+    "superseded_pilot": "gt23_m01_pilot_ab05_nw (first code; the N*m comparison lacked peak and relative fields; values identical; kept as evidence)"
+  },
+  "inputs_bound": [
+    "docs/quality/audits/gt23-c05-rescale-error.json (sha256 befedeae32d53244a510020e2b4e736ddec69b2932ee4024cd2b53a0ee081792)",
+    "docs/quality/audits/source_evidence/gt23/publisher-readme.txt (sha256 4a5c8ef0a8d96ed3b81253e7fed2d8516b884fa2aa63e4340c0ab54f2ac4752)",
+    "X01 ledgers and participant files; C06 batch3 ledgers (superseded C06 roots never read)"
+  ],
+  "output_columns": "time_s; 12 moment columns <source name>_Nm_kg; 12 power columns <source name>_W_kg; C06 force columns renamed _N to _BW (lab x/y/z and anterior/lateral, left/right). Per-column units also in each ledger row and in the Parquet metadata.",
+  "counts": {
+    "ab03_body_weight_mass_113_5": 40,
+    "ab03_recordings": 40,
+    "every_other_body_weight_mass_is_readme": true,
+    "kept": 436,
+    "kept_cannot_be_told": 434,
+    "kept_own_mass_confirmed": 2,
+    "recordings": 488,
+    "rescaled": 52,
+    "rescaled_equal_audit_list": true,
+    "rescaled_estimated": 45,
+    "rescaled_exact": 7
+  },
+  "factor": {
+    "all": {
+      "max": 1.5874125874125875,
+      "median": 1.0416171224732462,
+      "min": 0.6951541850220265,
+      "n": 52
+    },
+    "exact": {
+      "max": 1.2459259259259259,
+      "median": 1.0171875,
+      "min": 0.7111872146118722,
+      "n": 7
+    },
+    "estimated": {
+      "max": 1.5874125874125875,
+      "median": 1.1476725521669342,
+      "min": 0.6951541850220265,
+      "n": 45
+    },
+    "definition": "mass used (audit policy T divisor, a README table mass) / own mass (README); not refit"
+  },
+  "ledger": "Each batch ledger.jsonl has one row per recording: mass used, own mass, how known (exact/estimated/none), factor, note, audit provenance (lever estimate, interval, plausible masses and owners), units, checks.",
+  "kept_notes": {
+    "own_mass_confirmed": "AB01 normal_walk_1, AB03 cutting_1 (audit class own_mass_only)",
+    "cannot_be_told": "434 others (every non-rescaled class of the audit)"
+  },
+  "ab03_fix": {
+    "what": "Body-weight force columns (grf_*_BW) divided by 113.5 kg x 9.80665 for all 40 AB03 recordings; the local table's 82.18 kg is never read. Every other participant uses its README mass (equals the participant file).",
+    "which_forces_depend_on_mass": "Only the _BW columns. C06 force columns in N are checked equal to the plate columns in all 488 recordings (no mass inside); pressure point (m), heading and angles hold no mass; moments and powers are per kg and handled by the rescale, not by the body-weight mass.",
+    "pilot_check": "AB03 poses_1 loaded total vertical force: median 1.0036 BW with 113.5 kg (113.9 kg implied; C02 audit said 113.8 from plates). The old 82.18 kg would give 1.39 BW.",
+    "other_ab03_check": "Recordings with loaded stance show 0.92 to 1.08 BW median in dynamic tasks, as expected (not standing)."
+  },
+  "units_note": "Recorded in every ledger row and Parquet metadata: README says N*m and W, data are per kg, labelled Nm_kg and W_kg, not divided again.",
+  "checks": {
+    "unit_tests": "tests/test_gt23_m01.py 9 passed (synthetic known factors 78.9/71.5 = 1.1035, 84.1/113.5 = 0.741; only listed class rescaled; inconsistent audit stops; kept array is the same object; body weights at known mass; power consistency invariant; N*m check recovers mass; committed audit gives 488/52/436/7/45/2/434)",
+    "per_recording": "every rescaled recording: scaled/source equals the factor to 2e-16 on every column and the finite pattern is unchanged; every kept recording: moments and powers equal the source exactly",
+    "force_n": "all 488: C06 N columns equal X01 plate columns exactly",
+    "power_consistency": {
+      "kept_after_r": {
+        "max": 0.9998976856585503,
+        "median": 0.9808023831016505,
+        "min": 0.29195857279994575,
+        "n": 2519
+      },
+      "kept_after_slope": {
+        "max": 2.153295644934307,
+        "median": 0.9933591553207572,
+        "min": 0.09758838007026296,
+        "n": 2519
+      },
+      "kept_before_r": {
+        "max": 0.9998976856585503,
+        "median": 0.9808023831016505,
+        "min": 0.29195857279994575,
+        "n": 2519
+      },
+      "kept_before_slope": {
+        "max": 2.153295644934307,
+        "median": 0.9933591553207572,
+        "min": 0.09758838007026296,
+        "n": 2519
+      },
+      "max_after_minus_before_r": 1.4432899320127035e-15,
+      "max_after_minus_before_slope": 1.5543122344752192e-15,
+      "rescaled_after_r": {
+        "max": 0.998022612190814,
+        "median": 0.974127815722295,
+        "min": 0.7285863293713932,
+        "n": 237
+      },
+      "rescaled_after_slope": {
+        "max": 1.2390733014852073,
+        "median": 0.9571483504757596,
+        "min": 0.5406585016265563,
+        "n": 237
+      },
+      "rescaled_before_r": {
+        "max": 0.9980226121908129,
+        "median": 0.9741278157222947,
+        "min": 0.7285863293713931,
+        "n": 237
+      },
+      "rescaled_before_slope": {
+        "max": 1.2390733014852071,
+        "median": 0.9571483504757606,
+        "min": 0.5406585016265563,
+        "n": 237
+      }
+    },
+    "power_consistency_note": "Power = moment x (sign x C06 speed), sign +1 hip, -1 knee, +1 ankle (published knee coordinate is the negative of flexion). Slope and correlation are identical before and after rescale (largest difference 1.6e-15 in slope, 1.4e-15 in r) because moment and power carry the same factor. The agreement itself is limited by our recomputed speeds: rescaled recordings median slope 0.96 (0.54 to 1.24), median r 0.974 (0.73 to 0.998); kept recordings median slope 0.99, median r 0.981 (min 0.29, 2519 leg-joints). Right-leg values are empty where the right plate is missing.",
+    "inverse_dynamics_nm": "Local inverse_dynamics.sto exists for 8 exact-tier recordings that cover normal walking; rescaled moment x own mass vs N*m: AB06 1.1e-5, AB08 3e-13, AB12 8e-6 N*m (pass 1e-3); AB05 0.068, AB10 0.078, AB09 1.29 N*m (fail 1e-3; 0.02%, 0.03%, 0.5% of peak; least-squares implied masses agree with the mass used to 5 significant digits for AB05/AB10 and to 0.1% for AB09); AB13 not checked (the .sto has 50002 rows, the recording 52903); AB01 (own mass 78.9, kept) 0.10 N*m. Acceptance wording asked for 1e-3 N*m; this is not met for 3 of the 7 and not checkable for 1. The factors are unchanged: they come from table masses, not from this check, and nothing was refit."
+  },
+  "jobs": {
+    "pilots": [
+      "pilot AB05 normal_walk_1 (first code)",
+      "pilot2 AB05 normal_walk_1 (final code, exact, factor 1.1035)",
+      "pilot2 AB03 dynamic_walk_1 (estimated, 0.741)",
+      "pilot2 AB03 poses_1 (body-weight check)"
+    ],
+    "batches": "12, all completed, clean_success true, verify-cleanup proven for every job, no refusal after the first preflight attempts (those were refused by my own waiting shell and low available memory, nothing ran)",
+    "peak_rss_mib_launcher": {
+      "AB01": 216,
+      "AB02": 192,
+      "AB03": 190,
+      "AB05": 221,
+      "AB06": 228,
+      "AB07": 192,
+      "AB08": 221,
+      "AB09": 220,
+      "AB10": 221,
+      "AB11": 188,
+      "AB12": 219,
+      "AB13": 231,
+      "pilot_AB05": 184,
+      "pilot_AB03_dynamic_walk": 149,
+      "pilot_AB03_poses": 154,
+      "summary": 116
+    }
+  },
+  "receipts": "docs/quality/audits/gt23-m01-*-launcher-receipt.json and gt23-m01-*-spec.json",
+  "code_frozen": {
+    "gt23_mass.py": "f7a94667a9152be7b8ab1246f8803aa46ad0e8a7f4e676165e61e27063db0ac2",
+    "run_gt23_m01.py": "c42b020f442875449245023a095fca4f2279ab5d54586e348f33e3b4958055a7",
+    "note": "frozen after the final-code pilots; all 12 batches and the summary are bound to these hashes"
+  },
+  "limits": [
+    "The 45 estimated recordings rest on the force-plate estimate matched to the nearest README mass (audit: remaining error at most 11%, median 4%, if the mass used is a recorded one).",
+    "N*m check does not reach 1e-3 for AB05, AB09, AB10; AB13 unavailable.",
+    "Power agreement is limited by recomputed speeds, not by the rescale.",
+    "Only moments, powers and body-weight forces are produced here; sign convention (knee negation) and phase export belong to E01."
+  ],
+  "remaining": [
+    "Independent verifier (second agent): recompute factors from the audit and README, re-read outputs against X01 companions, check the 436 are unchanged, AB03 body weight, and the N*m comparison."
+  ],
+  "next_action": "Independent verifier checks GT23-M01; then GT23-E01 is unblocked.",
+  "changed_files": [
+    "contributor_tools/gt23_mass.py",
+    "contributor_tools/run_gt23_m01.py",
+    "tests/test_gt23_m01.py",
+    "docs/maintainers/handoffs/GT23-M01.json",
+    "docs/maintainers/backlog.json",
+    "docs/maintainers/backlog.html"
+  ]
+}

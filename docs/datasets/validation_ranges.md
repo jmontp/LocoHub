@@ -1,6 +1,6 @@
 # Validation Ranges
 
-**Biomechanically validated ranges for locomotion data quality assessment**
+**Curated reference ranges; evidence and population applicability require review**
 
 ## Configuration Metadata
 
@@ -13,7 +13,7 @@
 
 ### Phase-Based Visualizations
 
-Validation ranges across the full gait cycle (0-100% phase):
+Reference bounds at configured phase samples (not a continuous waveform assessment):
 
 #### Kinematic Variables (Joint Angles)
 ![Decline Walking Kinematic Validation](validation_ranges/decline_walking_kinematic_filters_by_phase_with_data.png)
@@ -29,7 +29,7 @@ Validation ranges across the full gait cycle (0-100% phase):
 
 ### Phase-Based Visualizations
 
-Validation ranges across the full gait cycle (0-100% phase):
+Reference bounds at configured phase samples (not a continuous waveform assessment):
 
 #### Kinematic Variables (Joint Angles)
 ![Incline Walking Kinematic Validation](validation_ranges/incline_walking_kinematic_filters_by_phase_with_data.png)
@@ -45,7 +45,7 @@ Validation ranges across the full gait cycle (0-100% phase):
 
 ### Phase-Based Visualizations
 
-Validation ranges across the full gait cycle (0-100% phase):
+Reference bounds at configured phase samples (not a continuous waveform assessment):
 
 #### Kinematic Variables (Joint Angles)
 ![Level Walking Kinematic Validation](validation_ranges/level_walking_kinematic_filters_by_phase_with_data.png)

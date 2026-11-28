@@ -1,0 +1,93 @@
+{
+  "task_id": "PM-01",
+  "for_task": "UM21-T02",
+  "prepared_at_utc": "2026-10-27T20:37:48+00:00",
+  "status": "prepared_not_launched_awaiting_review",
+  "scientific_approval": false,
+  "evidence_report": "docs/quality/audits/pm01-stopped-jobs-review.json",
+  "purpose": "Single fresh UM21 treadmill pilot slot. It replaces every historical watcher chain and does not wait on, signal, or resume any historical PID, controller or queue.",
+  "launch_preconditions": [
+    "PM-01 is marked done after review of this handoff, and UM21-T01 is done with a named pilot record or records.",
+    "Immediately before launch, re-run both censuses: Linux /proc (boot_id, PID, start ticks, command line) and Windows Win32_Process. Proceed only if no other contributor_tools, reconversion_v2, MATLAB.exe, OpenSim or LocoHub Python worker is alive on either side. Record the census in the launch receipt.",
+    "Re-hash every file in 'bindings'. Any mismatch requires a new handoff, not an edit of this one.",
+    "The output root does not exist. Existing um21_tread_* directories are read-only history.",
+    "Disk admission: S: free >= 5 GiB and C: free >= 1 GiB (contributor_tools/reconvert_recording.py ensure_storage_headroom plus the producer's C: check).",
+    "Startup memory reserves: Linux MemAvailable >= 3584 MiB and Windows FreePhysicalMemory >= 2816 MiB. These are the values reviewed in the 2026-10-21 plan, carried forward unchanged and not raised or lowered."
+  ],
+  "execution_envelope": {
+    "numerical_workers": 1,
+    "chaining": "None. Terminal on success or failure; no successor job is started automatically.",
+    "priority": "nice -n 19, ionice -c 3",
+    "thread_env": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "ARROW_NUM_THREADS": "1",
+      "NUMEXPR_NUM_THREADS": "1"
+    },
+    "address_space_mib": 768,
+    "address_space_note": "Set inside extend_umich_tread_source.py by RLIMIT_AS. Any separate T02 audit script must set the same limit or a lower one.",
+    "launch_form": "setsid timeout --signal=TERM --kill-after=30s 3600 nice -n 19 ionice -c 3 python3 <command>",
+    "finite_timeout_seconds": 3600,
+    "timeout_basis": "pilot_v2 measured about 45 s per record after the full source hash. The 2.2 GB source SHA256 at idle I/O priority was not timed separately, and 3600 s bounds both.",
+    "runtime_memory_reserves": "Poll every 15 s: Linux MemAvailable >= 2048 MiB and Windows FreePhysicalMemory >= 2048 MiB. The producer itself refuses to start a record below 2 GiB Linux available.",
+    "stop": "Touching <output_root>/STOP_AFTER_CURRENT is honoured by the producer only between records. To stop a one-record run, send SIGTERM to the recorded process group, wait 30 s, then send SIGKILL.",
+    "cleanup_proof": "Record boot_id, leader PID, PGID and start ticks at launch. Cleanup is proven only when the boot_id still matches AND no /proc entry has that PGID AND no process has the recorded PID with the same start ticks. If the boot_id changed, record that the boot ended and treat cleanup as proven by reboot. Repeat the Windows census to show no new native child (this job has no native step). Write all of it into the terminal receipt.",
+    "on_resource_breach": "SIGTERM the process group, then do the same cleanup proof, record status 'stopped_resource_guard', and keep partial output for inspection. Never retry automatically."
+  },
+  "recommended_pilot": {
+    "decision_owner": "UM21-T01 (record selection) and the reviewer of this handoff",
+    "finding": "The producer pilot for AB01/d10 already exists in um21_tread_components_pilot_v2_20261021. It ran with byte-identical current producer code, 84 source columns, 183 observations, and its persisted output still matches its receipt. Repeating that run adds no evidence.",
+    "option_a_recommended": "If UM21-T01 accepts AB01/d10 as representative, the fresh guarded job is a new independent T02 audit over the existing pilot_v2 output and the AB01/d10 Streaming source. It reconstructs events and physical side from source identity, checks clock units and frame duration, and checks 150 inclusive phase samples. The audit script does not exist yet; it must be written, reviewed and bound under UM21-T02 before launch.",
+    "option_b": "If UM21-T01 selects a different record, for example to cover both physical sides or transition and missingness cases, note that extend_umich_tread_source.py can only select the first N records in baseline order (--max-recordings). Choosing another record requires a reviewed producer change and new bindings first; a producer run then writes to a new output root under this same envelope.",
+    "producer_command_if_rerun": [
+      "python3",
+      "contributor_tools/extend_umich_tread_source.py",
+      "--base-root",
+      "converted_datasets/reconversion_v2/um21_tread_corrected_20261020",
+      "--base-readback",
+      "converted_datasets/reconversion_v2/um21_tread_full_readback_20261021/source_comparison.json",
+      "--output-root",
+      "converted_datasets/reconversion_v2/um21_tread_t02_pilot_<YYYYMMDD>",
+      "--max-recordings",
+      "1"
+    ]
+  },
+  "bindings": {
+    "source": {
+      "path": "contributor_tools/conversion_scripts/Umich_2021/Streaming.mat",
+      "bytes": 2195168300,
+      "sha256_recorded": "df8b3e31d2fe6869b95b4776a8f77639da476685b4c0ccb86c985bee3f01b531",
+      "check_now": "Size and mtime_ns match the baseline summary. The full SHA256 was not recomputed in this read-only task; the producer recomputes it at start, and the T02 receipt must recompute it after the run as well."
+    },
+    "code_sha256": {
+      "contributor_tools/extend_umich_tread_source.py": "a7c565ebe25d00effd81403b295638ba82b049632555bf154c404eb524367075",
+      "contributor_tools/reconvert_umich_running.py": "c3ef8f722ada6916474e630bbc333eea7a01d727c15c53509df4bff2adad419b",
+      "contributor_tools/reconvert_umich_streaming.py": "87484583032660fb020816fdcc51916de07305694f5a38e2998b7756509ee42e",
+      "contributor_tools/reconvert_recording.py": "5e2ee7dc6ff586d726b0444c4d66bbaeebaf37856b63cde0f0a5b3874b18bc6f",
+      "contributor_tools/audit_probes/2026_10_20/check_um21_tread_source.py": "f340d4866a6d7c91b77be9bf5f3b526f780e59f31e7cf274c8f125357fa27d87"
+    },
+    "baseline_sha256": {
+      "converted_datasets/reconversion_v2/um21_tread_corrected_20261020/conversion_summary.json": "349b896e7daa28589d1af705a7be6fbbb1af32f7b09f092d289e63869554172d",
+      "converted_datasets/reconversion_v2/um21_tread_full_readback_20261021/source_comparison.json": "958a2b2cb8bddab8822d3db1d737136bf354b60fa04ccb79716cdb481b02ea51",
+      "AB01/d10 base phase.parquet (from summary)": "da06be57d17dce9330c0b2b42a4c16eace6392e28eb3528f3e48c54da786ff0b",
+      "AB01/d10 candidate_ledger.jsonl (from readback)": "4c15745a29d504e150ee02bcc87bc0f340243b533e22a1c86c55997e06931048"
+    },
+    "existing_pilot": {
+      "root": "converted_datasets/reconversion_v2/um21_tread_components_pilot_v2_20261021",
+      "receipt": "conversion_summary.json, status partial_requested_limit",
+      "phase_parquet_matches_receipt_at_review": true
+    }
+  },
+  "terminal_receipt_must_bind": [
+    "Before and after SHA256 of the source, every bound code file and the independent audit script",
+    "Output phase.parquet, candidate_ledger.jsonl and source_columns.json hashes",
+    "Launch and post-run Linux and Windows censuses, process identity and cleanup proof",
+    "Exit status, wall time and peak RSS"
+  ],
+  "unresolved": [
+    "Which record or records UM21-T01 selects, and whether AB01/d10 covers both physical sides and the transition/missingness cases T02 requires.",
+    "The independent T02 audit script is not yet written. It must not reuse source_components() or the producer's interpolation path.",
+    "No reusable guard runner without dead-PID coupling exists in the repository. The envelope above is the specification; the launcher must implement it and be reviewed with T02."
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "task_id": "GT23-C02",
+  "status": "review",
+  "last_checked_at_utc": "2026-10-30T18:48:38Z",
+  "summary": "RawData Joint_Moments.csv is N*m/kg, not N*m as README line 32 says; Joint_Powers.csv is W/kg, not W (line 33). Seed 20261030 drew AB02 incline_walk_2, AB01 incline_walk_2, AB03 weighted_walk_1, AB10 incline_walk_1, AB08 weighted_walk_1 (8 legs; AB03/AB08 right plate absent). A mass-free lever-arm ankle moment in N*m from Virtual_Insoles (calcn frame; norm equals GroundFrame_GRFs to 6e-12 N; CoP moves forward in 253/254 stances) regresses onto the source ankle column with slope 1/64 to 1/90 (implied normalizing mass 64.2-90.0 kg; 46-113 kg over a 3 x 3 ankle-position grid; correlation 0.9975-0.9998). A N*m column would give slope 1. Peak raw ankle values -1.1 to -2.3 against lever-arm peaks -94 to -192 N*m. Force-plate body mass (2 x mean single-leg vertical force over strides / g, minus the 11.3 kg vest for weighted walking) matches the README mass in 5/5 subjects: AB01 80.0 (78.9), AB02 85.1 (82.2), AB03 113.8 (113.5), AB08 87.5 (87.6), AB10 64.6 (67.5). Power = source moment x Joint_Velocities in rad/s, ratio 0.963-1.005, so powers carry the same per-kg normalization. Ankle sign is dorsiflexion-positive internal (positive slope), consistent with the survey.",
+  "verdict": {
+    "units": "N*m/kg (moments) and W/kg (powers) in RawData CSV_Data; README \"Nm\" and \"W\" are wrong",
+    "prior_audit": "gt23-publisher-units-and-mass-review.json accepted N*m from the README alone and proposed dividing by participant mass: that would double-normalize and is withdrawn. Its AB03 finding stands and is confirmed by force plates (about 114 kg, not the local model table 82.18).",
+    "converters": "Copying raw values as Nm_kg (current converters) is correct for units; body-weight GRF normalization still needs the publisher mass table."
+  },
+  "checks": [
+    "Read AGENTS.md, the GT23-C02 backlog entry, sign-conventions-source-survey.json, gt23-publisher-units-and-mass-review.json, and the publisher README copy bound by that review (lines 1-120).",
+    "`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 contributor_tools/review_gt23_c02_moment_units.py probe`: 5 subjects, 0 redraws, peak RSS 140.9 MiB (/usr/bin/time 144.3 MB). 25 CSV files read whole (largest about 11 MB), each sha256-hashed in the audit; mtimes re-checked after read. Nothing written under converted_datasets/ (README and publisher mass table there were only read).",
+    "`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 contributor_tools/review_gt23_c02_moment_units.py sheet` (no source read). Rendered at 1100 px and 390 px (iframe) with headless Chrome and inspected; figure 1 first drawn on an N*m axis hid the per-kg curves, redrawn in source units with the N*m curve marked off-axis; figure 2 uses a log axis so the README prediction (1 kg) is visible. Renders rv_wide_GT23-C02.png, rv_phone_GT23-C02.png in the session scratchpad.",
+    "`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 docs/build.py --check`: \"Checked 40 HTML pages and 1635 referenced assets.\"",
+    "`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_data_documentation.py tests/test_backlog_workflow.py`: 79 passed.",
+    "`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 contributor_tools/build_backlog_page.py --check`: \"Backlog valid; HTML current (82 tasks).\" This handoff did not edit backlog.json or backlog.html.",
+    "Resource rule: AGENTS.md says numerical jobs go through the guarded launcher (UM21-T02, not yet built). These were bounded read-only probes (one task file set at a time, RLIMIT_AS 1.5 GiB, nice 19 / ionice idle, single-threaded BLAS), scheduled by the coordinating agent as the only numerical worker; no converter, MATLAB or full-dataset job was launched. Recorded here so a verifier can judge the interpretation.",
+    "Revision 2 (verifier return, sheet/handoff fixes only; no source data read): figures now saved on a fixed 4.5 in canvas (layout constrained, no tight bbox) and the builder raises if any PNG is wider than 4.5 in; all PNGs are 765 px at 170 dpi = 4.50 in. Every figure text is at least 10 pt (legends, tick labels and annotations that were 9.5 pt raised to 10). The reply line (\"moment units: ok | what looks wrong\") no longer shows a task ID.",
+    "Revision 2: re-rendered with headless Chrome at 1100 px and inside a 390 px iframe and inspected: nothing clips; the shortened figure 1 title fits.",
+    "Revision 2: `OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 contributor_tools/review_gt23_c02_moment_units.py sheet` (reads only the audit JSON).",
+    "Revision 2: GT23 erratum (gt23.md, gt23/index.html) now says ProcessedData is affected: README lines 18-20 make the same N*m/W claims, and ProcessedData _moment.csv values equal RawData Joint_Moments.csv on matched time stamps in 3 trials with finite values (verifier evidence in GT23-C02-verify.json processed_vs_raw: AB12, AB06 weighted_walk_1_25lbs, AB03 normal_walk_1_0-6; max difference 0.0). Worded as value equality, not byte identity, because bytes were not compared; _moment_filt.csv and _power.csv were not compared.",
+    "Revision 2: `OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 docs/build.py --check`: \"Checked 40 HTML pages and 1635 referenced assets.\"; `OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 contributor_tools/build_backlog_page.py --check`: \"Backlog valid; HTML current (82 tasks).\"",
+    "Revision 2: last_checked_at_utc corrected. The round-1 value 2026-10-30T21:40:00Z was wrong (written about 18:30Z, a future time); it is now the actual UTC write time."
+  ],
+  "changed_files": [
+    "contributor_tools/review_gt23_c02_moment_units.py (new)",
+    "docs/quality/audits/gt23-c02-moment-units.json (new)",
+    "docs/datasets/gt23/index.html (dated erratum note in the header)",
+    "docs/datasets/gt23.md (same erratum as an admonition)",
+    "docs/maintainers/handoffs/GT23-C02.json (new)",
+    "review_sheets/GT23-C02/ (gitignored: index.html, fig1_example.png, fig2_mass.png)"
+  ],
+  "evidence_paths": [
+    "docs/quality/audits/gt23-c02-moment-units.json",
+    "review_sheets/GT23-C02/index.html"
+  ],
+  "output_sha256": {
+    "contributor_tools/review_gt23_c02_moment_units.py": "d7df3f61211c0f81fc886163f043db0ccc64036288413d70108f1f69c2a54cc2",
+    "docs/quality/audits/gt23-c02-moment-units.json": "065c1b51e88bbe008333f0e2700b26390d6d40b9f8d8ede95c6df735713ab694"
+  },
+  "resources": {
+    "peak_rss_mib": {
+      "probe": 140.9,
+      "sheet": "about 200 (matplotlib), not separately measured"
+    },
+    "workers": 1
+  },
+  "remaining": [
+    "Follow-up (not resolved): AB03 normalizing mass. The verifier found implied normalizing masses of 78-85 kg for AB03 (fixed and free lever, 2 tasks, 4 legs), while AB03's own models (Scaled1/4/9) and the force plates give about 113.5 kg. An AB02 model of 82.18 kg sits in AB03's folder, and the local mass table lists 82.18 kg for AB03. If the authors normalized AB03 by 82.18 kg, AB03 moments and powers are about 38 % too large. Needs a model-specific check and possibly a José exclusion/correction decision.",
+    "Follow-up (not resolved): per-trial scale anomalies. AB05 incline_walk_2 implies 114-120 kg against a README mass of 71.5 kg (plates 69-70 kg), implied/README up to 1.68, wider than the 0.73-1.33 this probe reports. AB10 incline_walk_1 (1.33) and AB08 weighted_walk_1 (0.73) are milder. Cause unknown (wrong model per trial, task-specific processing, or lever-arm limits); per-trial check needed before any release.",
+    "Which mass the authors divided by is not resolved (implied/README 0.73-1.33 with a generic ankle position). AB03 matters: README 113.5 kg vs local model table 82.18 kg; if the authors used a wrong model mass, AB03 moments are off by about 38 %. Next bounded check: parse each subject model's subtalar location (AB03 model provenance first) to sharpen the implied mass.",
+    "Hip and knee columns were not lever-armed; they share the file and show per-kg magnitudes (p1/p99 within about +/-1.5).",
+    "Only walking tasks; 5 of 12 subjects."
+  ],
+  "decisions": [],
+  "decision_note": "No convention choice remains; units are a measured fact. The AB03 denominator may later need a José exclusion decision if the model check shows the wrong mass was used.",
+  "next_action": "Verifier re-checks image widths, font sizes, the reply line and the timestamp, then moves GT23-C02 to done; AB03 and the per-trial scale anomalies go to follow-up work."
+}

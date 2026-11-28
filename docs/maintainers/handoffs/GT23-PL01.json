@@ -1,0 +1,712 @@
+{
+ "task_id": "GT23-PL01",
+ "status": "steps1to4_ready_for_final_independent_review",
+ "scientific_approval": false,
+ "last_checked_at_utc": "2026-11-24T16:49:43+00:00",
+ "summary": "Step 1 of 4 (C06 rerun) done under D-REF-4: pelvis in its own plane (horizontal part of mid-PSIS to mid-ASIS), each leg in the vertical plane perpendicular to its knee flexion axis; thigh, shank and foot of that leg are measured in it; joint angles are differences; speeds recomputed; foot frame and pressure point follow the leg plane. 5 pilots, 12 batches (488 recordings, 0 failed), a summary and a comparison report under the guarded launcher, one at a time, code frozen between pilots and batches (six file hashes checked before the batches and before the summary). Steps 2 to 4 (E01 export, E02 holds and wraps, Q01 v2) NOT started. Independent verifier requested.",
+ "markers_used_for_the_planes": {
+  "knee_flexion_axis": "lateral and medial knee markers: RKNE and RMKNE (right), LKNE and LMKNE (left); axis points to the person right (right: RKNE - RMKNE; left: LMKNE - LKNE); plane forward = up x (horizontal part of the axis)",
+  "pelvis": "LASI, RASI, LPSI, RPSI (mid-ASIS minus mid-PSIS, horizontal part, is the pelvis forward)",
+  "foot": "LCAL/RCAL (heel) to the mean of LMT1/LMT5 or RMT1/RMT5 (toe)",
+  "thigh_and_shank_axes": "Transforms_Euler femur and tibia y axes (authors scaled model, unchanged)",
+  "cross_check": "model femur z axis (horizontal part) against the marker knee axis: median signed difference by recording and leg, medians over legs reported below",
+  "not_used": "ASIS-line heading now only gives the walking direction for forward/sideways force in the 11 forward tasks (D-GT23-C01-1 = C); thigh clusters and trochanters still unused"
+ },
+ "knee_axis_marker_vs_model_deg": {
+  "left_median_of_recording_medians_and_p95": [
+   1.94,
+   6.4
+  ],
+  "right_median_of_recording_medians_and_p95": [
+   -0.43,
+   8.4
+  ],
+  "note": "marker knee axis differs from the model femur z axis by a recording-level median of about +2 deg (left) and -0.4 deg (right), with a 95th percentile of 6 to 8 deg within recordings; the markers define the plane as the task states and the model axis is only the cross-check"
+ },
+ "foot_frame_choice": "The pressure-point frame is the leg plane rotated by the foot angle (anterior along heel-to-toe projected into the plane, up perpendicular in the plane, sideways = plane normal, outward). Toe-out therefore appears as a sideways offset (foot of 15 deg toe-out: anterior scale cos 15, lateral = d sin 15). This reads the standard line \"CoP and foot frame follow the new foot plane\"; the earlier 3-D heel-to-toe frame is retired.",
+ "tests": "tests/test_gt23_c06.py: 25 synthetic tests pass, including the turning walker with the foot 90 deg from the pelvis heading (angles constant and continuous, old pelvis-plane reading gives 90 deg instead of 10), toe-out 15 deg closed forms for both legs, 42/40/30 in a rotated leg plane for both legs at three pelvis/leg heading pairs, knee-axis directions, missing knee marker stays missing, composition to 1e-12, second implementation in rotated planes with toe-out",
+ "checks_on_data": {
+  "composition_max_abs_err_rad": 4.440892098500626e-16,
+  "second_independent_implementation_max_abs_diff": {
+   "angles_rad": 8.881784197001252e-16,
+   "cop_m": 1.6653345369377348e-16
+  },
+  "recordings_with_a_one_sample_change_over_90_deg": {
+   "old_lab_plane": [
+    "AB10/meander_1",
+    "AB11/turn_and_step_1",
+    "AB13/dynamic_walk_1"
+   ],
+   "new_planes": [
+    "AB13/dynamic_walk_1"
+   ],
+   "note": "AB13 dynamic_walk_1 is the genuine branch cut (shank near -135, foot near -180) that E02 unwrapped correctly; it remains and is the only one"
+  },
+  "largest_one_sample_change_deg": {
+   "new": 360.265,
+   "old": 360.244
+  },
+  "focus_recordings": {
+   "AB10/meander_1/foot_sagittal_angle_right_rad": {
+    "new": {
+     "changes_over_90_deg": 0,
+     "finite_share": 1.0,
+     "max_one_sample_change_deg": 1.262,
+     "samples_abs_over_90_deg": 0
+    },
+    "old": {
+     "changes_over_90_deg": 1,
+     "finite_share": 1.0,
+     "max_one_sample_change_deg": 356.892,
+     "samples_abs_over_90_deg": 165
+    }
+   },
+   "AB11/turn_and_step_1/foot_sagittal_angle_left_rad": {
+    "new": {
+     "changes_over_90_deg": 0,
+     "finite_share": 1.0,
+     "max_one_sample_change_deg": 4.812,
+     "samples_abs_over_90_deg": 23
+    },
+    "old": {
+     "changes_over_90_deg": 2,
+     "finite_share": 1.0,
+     "max_one_sample_change_deg": 356.156,
+     "samples_abs_over_90_deg": 73
+    }
+   }
+  }
+ },
+ "before_after_offsets_vs_publisher_deg_median_over_recordings_all_tasks_and_walking": {
+  "AB01/L": {
+   "ankle": {
+    "new": 1.79,
+    "new_walking": 1.36,
+    "old": 1.46,
+    "old_walking": 1.4
+   },
+   "hip": {
+    "new": 10.32,
+    "new_walking": 9.47,
+    "old": 9.37,
+    "old_walking": 9.22
+   },
+   "knee": {
+    "new": 0.03,
+    "new_walking": 0.01,
+    "old": 0.01,
+    "old_walking": 0.01
+   }
+  },
+  "AB01/R": {
+   "ankle": {
+    "new": -0.43,
+    "new_walking": -0.23,
+    "old": -0.99,
+    "old_walking": -0.12
+   },
+   "hip": {
+    "new": 9.47,
+    "new_walking": 9.32,
+    "old": 9.18,
+    "old_walking": 8.97
+   },
+   "knee": {
+    "new": 0.01,
+    "new_walking": 0.01,
+    "old": 0.0,
+    "old_walking": 0.0
+   }
+  },
+  "AB02/L": {
+   "ankle": {
+    "new": -8.02,
+    "new_walking": -5.4,
+    "old": -5.57,
+    "old_walking": -4.73
+   },
+   "hip": {
+    "new": 1.47,
+    "new_walking": 0.76,
+    "old": 0.12,
+    "old_walking": 0.42
+   },
+   "knee": {
+    "new": -0.33,
+    "new_walking": -0.27,
+    "old": -0.0,
+    "old_walking": -0.0
+   }
+  },
+  "AB02/R": {
+   "ankle": {
+    "new": 0.33,
+    "new_walking": 1.45,
+    "old": 2.27,
+    "old_walking": 2.08
+   },
+   "hip": {
+    "new": 1.43,
+    "new_walking": 0.69,
+    "old": 0.22,
+    "old_walking": 0.42
+   },
+   "knee": {
+    "new": -0.57,
+    "new_walking": -0.35,
+    "old": 0.01,
+    "old_walking": 0.01
+   }
+  },
+  "AB03/L": {
+   "ankle": {
+    "new": -7.21,
+    "new_walking": -5.36,
+    "old": -7.55,
+    "old_walking": -5.77
+   },
+   "hip": {
+    "new": 9.31,
+    "new_walking": 9.35,
+    "old": 9.17,
+    "old_walking": 9.41
+   },
+   "knee": {
+    "new": 0.02,
+    "new_walking": 0.02,
+    "old": -0.01,
+    "old_walking": -0.01
+   }
+  },
+  "AB03/R": {
+   "ankle": {
+    "new": -7.91,
+    "new_walking": -1.05,
+    "old": -8.12,
+    "old_walking": -1.11
+   },
+   "hip": {
+    "new": 9.46,
+    "new_walking": 9.6,
+    "old": 8.97,
+    "old_walking": 9.32
+   },
+   "knee": {
+    "new": -0.15,
+    "new_walking": -0.12,
+    "old": -0.05,
+    "old_walking": -0.06
+   }
+  },
+  "AB05/L": {
+   "ankle": {
+    "new": -2.01,
+    "new_walking": -1.96,
+    "old": -2.63,
+    "old_walking": -2.46
+   },
+   "hip": {
+    "new": 12.91,
+    "new_walking": 12.75,
+    "old": 12.61,
+    "old_walking": 12.47
+   },
+   "knee": {
+    "new": 0.01,
+    "new_walking": 0.0,
+    "old": -0.05,
+    "old_walking": -0.03
+   }
+  },
+  "AB05/R": {
+   "ankle": {
+    "new": -1.19,
+    "new_walking": -0.88,
+    "old": -1.49,
+    "old_walking": -0.95
+   },
+   "hip": {
+    "new": 13.08,
+    "new_walking": 12.83,
+    "old": 12.57,
+    "old_walking": 12.49
+   },
+   "knee": {
+    "new": 0.01,
+    "new_walking": 0.01,
+    "old": -0.3,
+    "old_walking": -0.25
+   }
+  },
+  "AB06/L": {
+   "ankle": {
+    "new": -3.62,
+    "new_walking": -2.75,
+    "old": -3.23,
+    "old_walking": -2.82
+   },
+   "hip": {
+    "new": 0.53,
+    "new_walking": 1.22,
+    "old": -0.36,
+    "old_walking": 0.68
+   },
+   "knee": {
+    "new": -0.07,
+    "new_walking": -0.08,
+    "old": -0.0,
+    "old_walking": -0.01
+   }
+  },
+  "AB06/R": {
+   "ankle": {
+    "new": -3.6,
+    "new_walking": -3.31,
+    "old": -3.37,
+    "old_walking": -3.31
+   },
+   "hip": {
+    "new": 0.74,
+    "new_walking": 1.0,
+    "old": -0.2,
+    "old_walking": 0.92
+   },
+   "knee": {
+    "new": -0.05,
+    "new_walking": -0.07,
+    "old": -0.02,
+    "old_walking": -0.04
+   }
+  },
+  "AB07/L": {
+   "ankle": {
+    "new": -12.72,
+    "new_walking": -11.86,
+    "old": -13.39,
+    "old_walking": -12.77
+   },
+   "hip": {
+    "new": 1.23,
+    "new_walking": 1.73,
+    "old": 0.5,
+    "old_walking": 1.18
+   },
+   "knee": {
+    "new": -0.01,
+    "new_walking": -0.04,
+    "old": -0.93,
+    "old_walking": -0.51
+   }
+  },
+  "AB07/R": {
+   "ankle": {
+    "new": -7.87,
+    "new_walking": -7.37,
+    "old": -9.74,
+    "old_walking": -8.57
+   },
+   "hip": {
+    "new": 0.84,
+    "new_walking": 1.53,
+    "old": 0.77,
+    "old_walking": 1.28
+   },
+   "knee": {
+    "new": -0.43,
+    "new_walking": -0.41,
+    "old": -1.53,
+    "old_walking": -0.83
+   }
+  },
+  "AB08/L": {
+   "ankle": {
+    "new": -7.93,
+    "new_walking": -7.83,
+    "old": -7.02,
+    "old_walking": -6.71
+   },
+   "hip": {
+    "new": 8.48,
+    "new_walking": 8.42,
+    "old": 6.2,
+    "old_walking": 6.28
+   },
+   "knee": {
+    "new": -0.02,
+    "new_walking": 0.02,
+    "old": -0.35,
+    "old_walking": -0.39
+   }
+  },
+  "AB08/R": {
+   "ankle": {
+    "new": -3.18,
+    "new_walking": -2.87,
+    "old": -3.56,
+    "old_walking": -2.9
+   },
+   "hip": {
+    "new": 6.42,
+    "new_walking": 6.33,
+    "old": 6.31,
+    "old_walking": 6.4
+   },
+   "knee": {
+    "new": 0.04,
+    "new_walking": 0.02,
+    "old": 0.03,
+    "old_walking": 0.03
+   }
+  },
+  "AB09/L": {
+   "ankle": {
+    "new": 3.7,
+    "new_walking": 3.89,
+    "old": 3.51,
+    "old_walking": 3.87
+   },
+   "hip": {
+    "new": 8.3,
+    "new_walking": 8.34,
+    "old": 7.97,
+    "old_walking": 8.32
+   },
+   "knee": {
+    "new": 0.02,
+    "new_walking": 0.02,
+    "old": -0.0,
+    "old_walking": -0.0
+   }
+  },
+  "AB09/R": {
+   "ankle": {
+    "new": 0.34,
+    "new_walking": 0.84,
+    "old": -0.01,
+    "old_walking": 0.17
+   },
+   "hip": {
+    "new": 8.65,
+    "new_walking": 8.69,
+    "old": 7.89,
+    "old_walking": 8.22
+   },
+   "knee": {
+    "new": 0.03,
+    "new_walking": 0.02,
+    "old": -0.49,
+    "old_walking": -0.35
+   }
+  },
+  "AB10/L": {
+   "ankle": {
+    "new": -4.72,
+    "new_walking": -4.52,
+    "old": -4.79,
+    "old_walking": -4.74
+   },
+   "hip": {
+    "new": 4.2,
+    "new_walking": 4.21,
+    "old": 4.07,
+    "old_walking": 4.29
+   },
+   "knee": {
+    "new": 0.03,
+    "new_walking": 0.01,
+    "old": -0.0,
+    "old_walking": -0.01
+   }
+  },
+  "AB10/R": {
+   "ankle": {
+    "new": -5.44,
+    "new_walking": -5.07,
+    "old": -5.66,
+    "old_walking": -5.46
+   },
+   "hip": {
+    "new": 4.01,
+    "new_walking": 4.19,
+    "old": 3.96,
+    "old_walking": 4.24
+   },
+   "knee": {
+    "new": 0.01,
+    "new_walking": 0.02,
+    "old": -0.02,
+    "old_walking": -0.04
+   }
+  },
+  "AB11/L": {
+   "ankle": {
+    "new": -6.04,
+    "new_walking": -4.88,
+    "old": -5.8,
+    "old_walking": -5.03
+   },
+   "hip": {
+    "new": 6.88,
+    "new_walking": 8.16,
+    "old": 6.72,
+    "old_walking": 7.93
+   },
+   "knee": {
+    "new": 0.02,
+    "new_walking": 0.02,
+    "old": -0.03,
+    "old_walking": -0.07
+   }
+  },
+  "AB11/R": {
+   "ankle": {
+    "new": -3.22,
+    "new_walking": -2.73,
+    "old": -3.0,
+    "old_walking": -2.39
+   },
+   "hip": {
+    "new": 6.78,
+    "new_walking": 8.08,
+    "old": 6.86,
+    "old_walking": 8.03
+   },
+   "knee": {
+    "new": -0.02,
+    "new_walking": -0.03,
+    "old": 0.0,
+    "old_walking": -0.01
+   }
+  },
+  "AB12/L": {
+   "ankle": {
+    "new": -4.68,
+    "new_walking": -4.62,
+    "old": -4.37,
+    "old_walking": -4.46
+   },
+   "hip": {
+    "new": 3.82,
+    "new_walking": 4.19,
+    "old": 3.29,
+    "old_walking": 3.98
+   },
+   "knee": {
+    "new": 0.02,
+    "new_walking": 0.01,
+    "old": -0.03,
+    "old_walking": -0.08
+   }
+  },
+  "AB12/R": {
+   "ankle": {
+    "new": -6.91,
+    "new_walking": -7.27,
+    "old": -7.03,
+    "old_walking": -7.29
+   },
+   "hip": {
+    "new": 3.42,
+    "new_walking": 3.94,
+    "old": 3.43,
+    "old_walking": 3.93
+   },
+   "knee": {
+    "new": 0.01,
+    "new_walking": 0.01,
+    "old": 0.01,
+    "old_walking": 0.02
+   }
+  },
+  "AB13/L": {
+   "ankle": {
+    "new": -0.77,
+    "new_walking": -0.23,
+    "old": -0.95,
+    "old_walking": -0.51
+   },
+   "hip": {
+    "new": 16.52,
+    "new_walking": 16.36,
+    "old": 16.15,
+    "old_walking": 16.31
+   },
+   "knee": {
+    "new": 0.02,
+    "new_walking": 0.02,
+    "old": -0.0,
+    "old_walking": -0.01
+   }
+  },
+  "AB13/R": {
+   "ankle": {
+    "new": -1.49,
+    "new_walking": -1.19,
+    "old": -1.94,
+    "old_walking": -1.98
+   },
+   "hip": {
+    "new": 16.59,
+    "new_walking": 16.54,
+    "old": 15.93,
+    "old_walking": 15.93
+   },
+   "knee": {
+    "new": 0.02,
+    "new_walking": 0.03,
+    "old": -0.16,
+    "old_walking": -0.26
+   }
+  }
+ },
+ "held_columns_before_after": "see report.json held_columns; LASI-held columns 46 -> 18 (only forward/sideways force heading still needs the ASIS markers); new RKNE-held 12 (AB13 stairs_1_9 right leg: thigh, shank, foot, hip, knee, ankle angles and speeds and the right pressure point); LPSI/RPSI (pelvis, hip) and LMANK (left pressure point) unchanged; curb_up pressure point hold unchanged.",
+ "peak_rss_mib": {
+  "pilots": {
+   "ab10_meander": 172.5,
+   "ab11_turn": 214.8,
+   "ab05_nw": 274.9,
+   "ab12_stairs": 148.4,
+   "ab13_stairs": 148.2
+  },
+  "batches": {
+   "AB01": 286.4,
+   "AB02": 322.3,
+   "AB03": 273.6,
+   "AB05": 276.2,
+   "AB06": 286.0,
+   "AB07": 285.7,
+   "AB08": 278.2,
+   "AB09": 271.2,
+   "AB10": 275.7,
+   "AB11": 282.2,
+   "AB12": 271.0,
+   "AB13": 295.8
+  },
+  "report": 117.8
+ },
+ "roots": {
+  "pilots": [
+   "converted_datasets/reconversion_v2/gt23_planes_pilot_<name>"
+  ],
+  "batches": "converted_datasets/reconversion_v2/gt23_planes_batch_<AB..>",
+  "summary": "converted_datasets/reconversion_v2/gt23_planes_summary",
+  "report": "converted_datasets/reconversion_v2/gt23_planes_report",
+  "superseded": "docs/quality/audits/gt23-planes-superseded.json"
+ },
+ "code": [
+  "contributor_tools/gt23_conventions.py",
+  "contributor_tools/gt23_conventions_check.py",
+  "contributor_tools/run_gt23_c06.py",
+  "contributor_tools/report_gt23_planes.py (separate, run after the batches)",
+  "tests/test_gt23_c06.py"
+ ],
+ "q01_failure_counts": "not available yet: Q01 v2 runs at step 4 after the E01 and E02 reruns; the current Q01 v2 counts (on the old angles) are in GT23-E02.json",
+ "remaining": [
+  "Independent verifier for step 1",
+  "Step 2: E01 export rerun (moments from M01 unchanged)",
+  "Step 3: E02 holds and wraps rerun (unwrap only at genuine branch cuts, AB13 dynamic_walk_1)",
+  "Step 4: Q01 v2 assessment rerun",
+  "Final verifier"
+ ],
+ "next_action": "Final independent verifier on steps 1 to 4.",
+ "steps_2_to_4": {
+  "summary": "E01 export, E02 holds and unwrap, and Q01 v2 rerun on the step-1 (gt23_planes_batch_*) outputs under the guarded launcher, one job per call, code frozen between pilot and batches. Failed observations 815 (old v1) -> 125 (L5 590->108, L2 189->0, L1 40->9). Final independent verifier NOT yet run; no scientific approval.",
+  "code_changes": {
+   "root_names": "inputs re-pointed to gt23_planes_batch_<AB> and gt23_planes_summary; outputs gt23_pl_e01_*, gt23_pl_e02_*, gt23_pl_q01v2_*; q01v2 spec/job names now gt23-pl-q01v2-*; step-1 code (gt23_conventions.py, gt23_conventions_check.py, run_gt23_c06.py) untouched",
+   "files": [
+    "contributor_tools/run_gt23_e01.py",
+    "contributor_tools/audit_gt23_e01.py",
+    "contributor_tools/run_gt23_e02.py",
+    "contributor_tools/audit_gt23_e02.py",
+    "contributor_tools/run_gt23_q01_assessment.py",
+    "contributor_tools/run_gt23_q01_jobs.py",
+    "contributor_tools/run_gt23_q01v2.py",
+    "tests/test_gt23_pl_roots.py"
+   ],
+   "new_test": "tests/test_gt23_pl_roots.py (3 tests: inputs are plane roots, outputs are pl roots, q01v2 spec prefix)"
+  },
+  "e01": {
+   "roots": "converted_datasets/reconversion_v2/gt23_pl_e01_batch_<AB>, readbacks gt23_pl_e01_audit_<AB>, gt23_pl_e01_summary, gt23_pl_e01_audit_summary, pilot gt23_pl_e01_pilot_AB05 (+ _audit_AB05)",
+   "pilot": "AB05 normal_walk_1 (gait), jump_1 (window rule), poses_1 (continuous): 136 cycles, 30 transfers, 3 continuous; readback pass",
+   "counts": {
+    "cycles": 8831,
+    "transfers": 10254,
+    "continuous": 488,
+    "exclusions": 1415,
+    "authors_windows": 13119,
+    "authors_windows_exported": 9378,
+    "continuous_only_recordings": 64,
+    "phase_rows": 2862750,
+    "time_rows": 6397787
+   },
+   "readback": "all 12 participants pass, 0 failures; max abs diff to inputs 2.02e-9 (forces of about a thousand N); export counts equal readback counts"
+  },
+  "e02": {
+   "roots": "converted_datasets/reconversion_v2/gt23_pl_e02_batch_<AB>, gt23_pl_e02_audit_<AB>, gt23_pl_e02_summary, pilot AB13",
+   "step_up_hold": "12 recordings (AB01 step_ups_2, other 11 step_ups): foot-frame CoP held; force, plate CoP and angles untouched",
+   "unwrap_touched": {
+    "AB13/dynamic_walk_1": "1 time sample (index 19258) of right foot angle and right ankle angle was one whole turn off; 6 changed cells (2 time, 4 phase, 1 phase observation); no speed changed"
+   },
+   "not_touched": [
+    "AB10/meander_1",
+    "AB11/turn_and_step_1"
+   ],
+   "scan": "all 488 recordings scanned; no other recording has a changed sample or a published time-table jump over 30 deg",
+   "readbacks": "12 pass, 0 problems; exported recordings 13 (12 step_ups + AB13 dynamic_walk_1)"
+  },
+  "q01_v2": {
+   "roots": "converted_datasets/reconversion_v2/gt23_pl_q01v2_batch_<AB>, gt23_pl_q01v2_summary, pilot AB10+AB13",
+   "before_old_v1": {
+    "failed": 815,
+    "L5": 590,
+    "L2": 189,
+    "L1": 40
+   },
+   "after": {
+    "observations": 19573,
+    "failed": 125,
+    "no_failure_found": 19448,
+    "L5": 108,
+    "L2": 0,
+    "L1": 9,
+    "samples": {
+     "L5": 4579,
+     "L1": 308
+    }
+   },
+   "note": "earlier chain after-count was 156 (L5 90, L2 5, L1 58). L2 and L1 fall because plane angles have no wrap at AB10 meander_1 and AB11 turn_and_step_1; L5 rises 90 -> 108 with the leg-plane foot frame (not investigated further).",
+   "by_participant_after": {
+    "AB01": 12,
+    "AB02": 5,
+    "AB03": 71,
+    "AB05": 15,
+    "AB06": 3,
+    "AB07": 4,
+    "AB08": 2,
+    "AB09": 1,
+    "AB10": 6,
+    "AB11": 0,
+    "AB12": 0,
+    "AB13": 6
+   },
+   "observation_set_equals_e01": true
+  },
+  "peak_rss_mib_launcher_largest_process": {
+   "e01_batch": 241.2,
+   "e01_readback": 330.3,
+   "e01_summary": 109.9,
+   "e01_readback_summary": 66.6,
+   "e02_batch": 207.6,
+   "e02_readback": 343.4,
+   "e02_summary": 109.1,
+   "q01v2_batch": 243.9,
+   "q01v2_summary": 34.3
+  },
+  "odd": [
+   "Two launcher refusals (foreign_worker_linux_ancestor) came from calling the launcher through a bash wrapper script; kept as gt23-pl-e01-batch-AB01-refused*-receipt.json; later jobs called the launcher directly.",
+   "docs/quality/audits/gt23-pl-e01-pilot-AB10-launcher-receipt.json is a refused_precondition receipt from an earlier worker, no outputs.",
+   "A foreign job (wsp_ankle_kf) held the launcher for a while; not touched."
+  ],
+  "receipts": "docs/quality/audits/gt23-pl-{e01,e02,q01v2}-*-spec.json and -launcher-receipt.json"
+ }
+}

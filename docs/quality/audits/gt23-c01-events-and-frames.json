@@ -1,0 +1,1823 @@
+{
+  "task_id": "GT23-C01",
+  "status": "review",
+  "scientific_approval": false,
+  "scope": "All 26 GaTech 2023 publisher base tasks (\"activities\"): the 19 with publisher segmentation files (the backlog question's 19) plus 7 the publisher did not segment. Metadata, documentation and code only; no source arrays were read.",
+  "generated_by": "contributor_tools/review_gt23_c01_events_frames.py report",
+  "inputs_sha256": {
+    "docs/quality/audits/source_evidence/gt23/publisher-readme.txt": "4a5c8ef0a8d96ed3b81253e7fed2d8516b884fa2aa63e4340c0ab54cf2ac4752",
+    "converted_datasets/reconversion_v2/swarm_backlog_20261021/gt23_paper_fulltext.xml": "5c30a9035c70bc7a1d1041373623cc2e69d4d2caba3a71d1a0ee16f0d1f72baa",
+    "converted_datasets/reconversion_v2/swarm_backlog_20261021/gt23_publisher_source_review_20261021/Code.zip": "7e23cb25f81c7c92bb0679646644fc6dae25ad6505c9d5ea4df630dbe9814839",
+    "converted_datasets/reconversion_v2/gt23_task_coverage_review_20261020/source_coverage.json": "1dc0199e4a015803a6bdcabc6b10d2999fabcccc67c29cdcc04b26577138fc4b",
+    "converted_datasets/reconversion_v2/gt23_full_native_batch_20261020/inventory.json": "53127c5220d598a10c9e0568a664fb8c89a743966d6435df47060c5d5e9e8a04",
+    "contributor_tools/conversion_scripts/Gtech_2023/convert_gtech_2023_time_to_parquet.m": "8de9c1ae8938423be9f918720a3b0dfaab396f99bc6950fa47c18557d69fd69e",
+    "contributor_tools/conversion_scripts/Gtech_2023/convert_gtech_phase_to_parquet.m": "ec2c3015a03996d5fb9304fd17a1d56b27d40f843da824b80384ef1d529f17d6",
+    "contributor_tools/conversion_scripts/Gtech_2023/parse_gtech_activity_matlab.m": "e78f4758f16ee0b37306e44f2ea6a80a57f3b1012c1cac83198d99bbc597e2cb",
+    "contributor_tools/conversion_scripts/Gtech_2023/utilities/segment_sit_stand_transitions.m": "5cebf0aeef6687f2dcdc06f13798af14dadd1d270b9f37b4dc12bc4d518cceed",
+    "contributor_tools/conversion_scripts/Gtech_2023/utilities/segment_jump_cycles.m": "9f0d8edca1874ff3b747d9afeada140210a6ccece702ec9fb21064fae24695eb",
+    "docs/quality/audits/core04-gt23-pilot.json": "dd5235b5892d80989f91eba2fda0c9e953f1fbcf064cd35b7bc29cee66330ab3",
+    "docs/quality/audits/sign-conventions-source-survey.json": "7c3249dfaccd221780823367e138cb878d1a725c07c24bed353b2e7a159e5040",
+    "docs/quality/audits/gt23-joint-sign-and-segment-evidence.json": "ccc9f6f1682efdb324aecb17e15f4f44f6776a40a913f8ab87c67bd2b2d266c8",
+    "docs/quality/audits/gt23-known-pose-preparation.json": "45afdba9a26bff962b16fc5c5d0ddb108e11cabb3634f12a64e476df5d7da66d",
+    "docs/quality/audits/gt23-source-frame-review.json": "72d8744eee5efc762be943b279ad3e82fbab378fff85eb8349e8c4e295f7f1bd",
+    "docs/quality/audits/gt23-global-force-frame-correction.json": "bb0995c0071d34a00b286a1b36f597e4277cb6cd50228939da37c13c85b86cce",
+    "docs/quality/audits/gt23-cop-and-joint-coordinate-review.json": "edfa6b5fb9e972a92117e626430573e94b7aee08d483c8081bfead0139dd4766",
+    "docs/quality/audits/gt23-oversized-transform-container-review.json": "6597d9abd44bfc07327a4351b51b8d8f6581fd9018cbdca55b1d26daea557733",
+    "docs/quality/audits/gt23-full-source-scope.json": "feadc714fd4e68dabbb20c6ce35aae3d1d92b788b8d8c00281494eca01355564",
+    "docs/quality/audits/gt23-c02-moment-units.json": "065c1b51e88bbe008333f0e2700b26390d6d40b9f8d8ede95c6df735713ab694",
+    "docs/quality/audits/gt23-c03-normalizing-mass.json": "9dcc6b2d05680af1e70c411ba055a8cc223a0514db7865eb61692d8db90bb7fd",
+    "docs/quality/audits/gt23-c04-trial-divisors.json": "484c1c079e08035a823fc8770a54a3f53191b65329b586250690be391c6e9184",
+    "docs/reference/index.md": "010073cb752d81ff83a704a6448fe2db1113153e7d2a89694fa64dd5ef076aad"
+  },
+  "code_sha256": {
+    "contributor_tools/review_gt23_c01_events_frames.py": "df07312ba855893ad4227d215621e8b7ddae8e555459c219343e65d6f0fb0311"
+  },
+  "reads": "Publisher README copy, paper XML, Code.zip members, converter sources, prior audits, the parsing-field inventory (interval counts per field; produced 2026-10-20 by contributor_tools/audit_probes/2026_10_20/check_gt23_task_coverage.py), inventory.json and RawData directory names. During exploration the first 400 bytes of one AB01 normal_walk_1 GroundFrame_GRFs.csv and Activity_Flag.csv were printed to read column headers; no values are used as evidence.",
+  "totals": {
+    "activities": 26,
+    "segmented_activities": 19,
+    "recordings": 488,
+    "recordings_with_parsing": 398,
+    "parsing_files": 787,
+    "empty_parsing_files": 9,
+    "intervals_left": 7721,
+    "intervals_right": 5398,
+    "phase_kept": 8171,
+    "phase_dropped": 4948,
+    "phase_dropped_cycles": 498,
+    "phase_dropped_hop_contacts": 127,
+    "recordings_without_parsing_files": 85,
+    "recordings_without_source_intervals": 90
+  },
+  "forward_axis_classes": {
+    "backward_travel": {
+      "activities": [
+        "walk_backward"
+      ],
+      "status": "Facing is opposite to travel; the data reference defines +x as \"the walking direction\" while viewing the person \"facing right\". Needs D-GT23-C01-1."
+    },
+    "heading_changes": {
+      "activities": [
+        "cutting",
+        "meander",
+        "turn_and_step"
+      ],
+      "status": "The pelvis heading turns within the window; one forward axis per window is undefined. Needs D-GT23-C01-1."
+    },
+    "no_forward_travel": {
+      "activities": [
+        "ball_toss",
+        "jump",
+        "lift_weight",
+        "lunges",
+        "poses",
+        "push",
+        "side_shuffle",
+        "sit_to_stand",
+        "squats",
+        "tug_of_war",
+        "twister"
+      ],
+      "status": "No forward walking direction (in place, sideways or transfer). Needs D-GT23-C01-1."
+    },
+    "overground_forward": {
+      "activities": [
+        "curb_down",
+        "curb_up",
+        "stairs",
+        "start_stop",
+        "step_ups",
+        "tire_run"
+      ],
+      "status": "Facing equals travel while walking forward; heading measured per stride from markers. CORE-04 stair strides: CoP progression and braking/propulsion checks were \"unknown\"."
+    },
+    "treadmill_forward": {
+      "activities": [
+        "dynamic_walk",
+        "incline_walk",
+        "normal_walk",
+        "obstacle_walk",
+        "weighted_walk"
+      ],
+      "status": "Fixed heading on the treadmill; facing equals travel. +x derivable from markers (CORE-04 v2 pelvis facing: braking/propulsion and CoP progression pass on level, incline and decline in AB01/AB06/AB13). Not stated by the publisher."
+    }
+  },
+  "activities": [
+    {
+      "activity": "ball_toss",
+      "readme_description": {
+        "line": 152,
+        "text": "ball_toss: Tossing 15 lbs medicine ball"
+      },
+      "setting_stated": "not stated",
+      "recordings": 12,
+      "subjects_with_recordings": 12,
+      "recordings_with_parsing": 12,
+      "publisher_groups": {
+        "ball_toss": 37
+      },
+      "events": {
+        "segmented_by_publisher": true,
+        "definition": "Pelvis velocity crossing 0.5 m/s, debounced and manually verified. Task window, not a leg event.",
+        "readme_line": 277,
+        "event_source": "markers",
+        "parsing_files": 37,
+        "parsing_subjects": 12,
+        "empty_parsing_files": [],
+        "interval_fields": {
+          "left": 37,
+          "right": 37
+        },
+        "intervals_left": 183,
+        "intervals_right": 183,
+        "files_with_unequal_left_right_counts": 0,
+        "files_with_one_leg_only": 0,
+        "toe_off_in_source_files": "no (parsing intervals hold start/end only); derivable from the 20 N plate threshold only where that leg has plate data (probe P2)",
+        "proposed_observation_type": "transfer",
+        "valid_status": "source_defined_unverified"
+      },
+      "phase_converter_interval_use": {
+        "kept": 183,
+        "dropped_other_leg": 183
+      },
+      "time_converter_windows": 37,
+      "frames": {
+        "vertical_grf": "supported: GroundFrame_GRFs Y up (README line 30); positive support (GT23-C02 force-plate body mass matches README in 5/5 subjects)",
+        "horizontal_grf_and_cop": {
+          "class": "no_forward_travel",
+          "status": "No forward walking direction (in place, sideways or transfer). Needs D-GT23-C01-1."
+        },
+        "virtual_insoles": "calcn_l/calcn_r body frames (README line 38; paper Methods, Virtual insoles); +x toward the toe supported in walking only (GT23-C02: CoP moves forward in 253/254 stances)",
+        "joint_sagittal": "source-supported for all activities (same OpenSim coordinates: author Plot_3x3_plots.m 155-160 with paper Fig. 5 caption; model +Z axes); data-reproduced only in CORE-04 gait conditions, not in this activity",
+        "joint_non_sagittal": "not adopted by the data reference; keep source sign (hip adduction/rotation, subtalar)",
+        "segment_angles": "unsupported: no publisher pelvis/segment angle; Link_Angle.csv is locally generated",
+        "kinetics": "N*m/kg and W/kg as published (GT23-C02); divisor not the own mass in 9 of 12 subjects (GT23-C03); per-trial rescale only for matched trials, D-GT23-C04-1 open"
+      },
+      "notes": []
+    },
+    {
+      "activity": "curb_down",
+      "readme_description": {
+        "line": 157,
+        "text": "curb_down: Stepping down from a street curb"
+      },
+      "setting_stated": "not stated",
+      "recordings": 12,
+      "subjects_with_recordings": 12,
+      "recordings_with_parsing": 12,
+      "publisher_groups": {
+        "curb": 14
+      },
+      "events": {
+        "segmented_by_publisher": true,
+        "definition": "Pelvis velocity crossing 0.5 m/s, debounced and manually verified. Task window, not a leg event.",
+        "readme_line": 277,
+        "event_source": "markers",
+        "parsing_files": 14,
+        "parsing_subjects": 12,
+        "empty_parsing_files": [],
+        "interval_fields": {
+          "left_left": 13,
+          "left_right": 13,
+          "right_left": 13,
+          "right_right": 13
+        },
+        "intervals_left": 135,
+        "intervals_right": 135,
+        "files_with_unequal_left_right_counts": 0,
+        "files_with_one_leg_only": 0,
+        "toe_off_in_source_files": "no (parsing intervals hold start/end only); derivable from the 20 N plate threshold only where that leg has plate data (probe P2)",
+        "proposed_observation_type": "transfer",
+        "valid_status": "source_defined_unverified"
+      },
+      "phase_converter_interval_use": {
+        "kept": 135,
+        "dropped_other_leg": 135
+      },
+      "time_converter_windows": 14,
+      "frames": {
+        "vertical_grf": "supported: GroundFrame_GRFs Y up (README line 30); positive support (GT23-C02 force-plate body mass matches README in 5/5 subjects)",
+        "horizontal_grf_and_cop": {
+          "class": "overground_forward",
+          "status": "Facing equals travel while walking forward; heading measured per stride from markers. CORE-04 stair strides: CoP progression and braking/propulsion checks were \"unknown\"."
+        },
+        "virtual_insoles": "calcn_l/calcn_r body frames (README line 38; paper Methods, Virtual insoles); +x toward the toe supported in walking only (GT23-C02: CoP moves forward in 253/254 stances)",
+        "joint_sagittal": "source-supported for all activities (same OpenSim coordinates: author Plot_3x3_plots.m 155-160 with paper Fig. 5 caption; model +Z axes); data-reproduced only in CORE-04 gait conditions, not in this activity",
+        "joint_non_sagittal": "not adopted by the data reference; keep source sign (hip adduction/rotation, subtalar)",
+        "segment_angles": "unsupported: no publisher pelvis/segment angle; Link_Angle.csv is locally generated",
+        "kinetics": "N*m/kg and W/kg as published (GT23-C02); divisor not the own mass in 9 of 12 subjects (GT23-C03); per-trial rescale only for matched trials, D-GT23-C04-1 open"
+      },
+      "notes": [
+        "AB02 has split files: curb_down_1_left_parsing.mat holds <leg>_right fields and _right holds <leg>_left fields (filename suffix and field type disagree; unresolved)."
+      ]
+    },
+    {
+      "activity": "curb_up",
+      "readme_description": {
+        "line": 159,
+        "text": "curb_up: Stepping up onto a street curb"
+      },
+      "setting_stated": "not stated",
+      "recordings": 12,
+      "subjects_with_recordings": 12,
+      "recordings_with_parsing": 12,
+      "publisher_groups": {
+        "curb": 14
+      },
+      "events": {
+        "segmented_by_publisher": true,
+        "definition": "Pelvis velocity crossing 0.5 m/s, debounced and manually verified. Task window, not a leg event.",
+        "readme_line": 277,
+        "event_source": "markers",
+        "parsing_files": 14,
+        "parsing_subjects": 12,
+        "empty_parsing_files": [],
+        "interval_fields": {
+          "left_left": 13,
+          "left_right": 13,
+          "right_left": 13,
+          "right_right": 13
+        },
+        "intervals_left": 129,
+        "intervals_right": 129,
+        "files_with_unequal_left_right_counts": 0,
+        "files_with_one_leg_only": 0,
+        "toe_off_in_source_files": "no (parsing intervals hold start/end only); derivable from the 20 N plate threshold only where that leg has plate data (probe P2)",
+        "proposed_observation_type": "transfer",
+        "valid_status": "source_defined_unverified"
+      },
+      "phase_converter_interval_use": {
+        "kept": 129,
+        "dropped_other_leg": 129
+      },
+      "time_converter_windows": 14,
+      "frames": {
+        "vertical_grf": "supported: GroundFrame_GRFs Y up (README line 30); positive support (GT23-C02 force-plate body mass matches README in 5/5 subjects)",
+        "horizontal_grf_and_cop": {
+          "class": "overground_forward",
+          "status": "Facing equals travel while walking forward; heading measured per stride from markers. CORE-04 stair strides: CoP progression and braking/propulsion checks were \"unknown\"."
+        },
+        "virtual_insoles": "calcn_l/calcn_r body frames (README line 38; paper Methods, Virtual insoles); +x toward the toe supported in walking only (GT23-C02: CoP moves forward in 253/254 stances)",
+        "joint_sagittal": "source-supported for all activities (same OpenSim coordinates: author Plot_3x3_plots.m 155-160 with paper Fig. 5 caption; model +Z axes); data-reproduced only in CORE-04 gait conditions, not in this activity",
+        "joint_non_sagittal": "not adopted by the data reference; keep source sign (hip adduction/rotation, subtalar)",
+        "segment_angles": "unsupported: no publisher pelvis/segment angle; Link_Angle.csv is locally generated",
+        "kinetics": "N*m/kg and W/kg as published (GT23-C02); divisor not the own mass in 9 of 12 subjects (GT23-C03); per-trial rescale only for matched trials, D-GT23-C04-1 open"
+      },
+      "notes": [
+        "AB02 split files as for curb_down."
+      ]
+    },
+    {
+      "activity": "cutting",
+      "readme_description": {
+        "line": 161,
+        "text": "cutting: Jog/Run into sharp turn"
+      },
+      "setting_stated": "not stated (jog/run into a sharp turn)",
+      "recordings": 12,
+      "subjects_with_recordings": 12,
+      "recordings_with_parsing": 12,
+      "publisher_groups": {
+        "cutting": 48
+      },
+      "events": {
+        "segmented_by_publisher": true,
+        "definition": "Toe-off of the step before the force plates to heel strike of the first step off them; automatic marker-velocity check, then manual adjustment. Phase 0 is a toe-off, not a heel strike.",
+        "readme_line": 276,
+        "event_source": "markers, manual",
+        "parsing_files": 48,
+        "parsing_subjects": 12,
+        "empty_parsing_files": [],
+        "interval_fields": {
+          "left": 48,
+          "right": 48
+        },
+        "intervals_left": 248,
+        "intervals_right": 248,
+        "files_with_unequal_left_right_counts": 0,
+        "files_with_one_leg_only": 0,
+        "toe_off_in_source_files": "no (parsing intervals hold start/end only); derivable from the 20 N plate threshold only where that leg has plate data (probe P2)",
+        "proposed_observation_type": "transfer",
+        "valid_status": "source_defined_unverified"
+      },
+      "phase_converter_interval_use": {
+        "kept": 248,
+        "dropped_other_leg": 248
+      },
+      "time_converter_windows": 48,
+      "frames": {
+        "vertical_grf": "supported: GroundFrame_GRFs Y up (README line 30); positive support (GT23-C02 force-plate body mass matches README in 5/5 subjects)",
+        "horizontal_grf_and_cop": {
+          "class": "heading_changes",
+          "status": "The pelvis heading turns within the window; one forward axis per window is undefined. Needs D-GT23-C01-1."
+        },
+        "virtual_insoles": "calcn_l/calcn_r body frames (README line 38; paper Methods, Virtual insoles); +x toward the toe supported in walking only (GT23-C02: CoP moves forward in 253/254 stances)",
+        "joint_sagittal": "source-supported for all activities (same OpenSim coordinates: author Plot_3x3_plots.m 155-160 with paper Fig. 5 caption; model +Z axes); data-reproduced only in CORE-04 gait conditions, not in this activity",
+        "joint_non_sagittal": "not adopted by the data reference; keep source sign (hip adduction/rotation, subtalar)",
+        "segment_angles": "unsupported: no publisher pelvis/segment angle; Link_Angle.csv is locally generated",
+        "kinetics": "N*m/kg and W/kg as published (GT23-C02); divisor not the own mass in 9 of 12 subjects (GT23-C03); per-trial rescale only for matched trials, D-GT23-C04-1 open"
+      },
+      "notes": []
+    },
+    {
+      "activity": "dynamic_walk",
+      "readme_description": {
+        "line": 167,
+        "text": "dynamic_walk: Treadmill calisthenics"
+      },
+      "setting_stated": "treadmill",
+      "recordings": 12,
+      "subjects_with_recordings": 12,
+      "recordings_with_parsing": 11,
+      "publisher_groups": {
+        "calisthenics": 22,
+        "misc": 22
+      },
+      "events": {
+        "segmented_by_publisher": true,
+        "definition": "Consecutive heel strikes of one leg; heel strike = 20 N rising threshold on the force plates (paper: 50 N for treadmill running). Interval = one stride of that leg.",
+        "readme_line": 272,
+        "event_source": "force plate",
+        "parsing_files": 44,
+        "parsing_subjects": 11,
+        "empty_parsing_files": [],
+        "interval_fields": {
+          "left": 44
+        },
+        "intervals_left": 749,
+        "intervals_right": 0,
+        "files_with_unequal_left_right_counts": 44,
+        "files_with_one_leg_only": 44,
+        "toe_off_in_source_files": "no (parsing intervals hold start/end only); derivable from the 20 N plate threshold only where that leg has plate data (probe P2)",
+        "proposed_observation_type": "individual_cycle",
+        "valid_status": "source_defined_unverified"
+      },
+      "phase_converter_interval_use": {
+        "kept": 749,
+        "dropped_other_leg": 0
+      },
+      "time_converter_windows": 44,
+      "frames": {
+        "vertical_grf": "supported: GroundFrame_GRFs Y up (README line 30); positive support (GT23-C02 force-plate body mass matches README in 5/5 subjects)",
+        "horizontal_grf_and_cop": {
+          "class": "treadmill_forward",
+          "status": "Fixed heading on the treadmill; facing equals travel. +x derivable from markers (CORE-04 v2 pelvis facing: braking/propulsion and CoP progression pass on level, incline and decline in AB01/AB06/AB13). Not stated by the publisher."
+        },
+        "virtual_insoles": "calcn_l/calcn_r body frames (README line 38; paper Methods, Virtual insoles); +x toward the toe supported in walking only (GT23-C02: CoP moves forward in 253/254 stances)",
+        "joint_sagittal": "source-supported for all activities (same OpenSim coordinates: author Plot_3x3_plots.m 155-160 with paper Fig. 5 caption; model +Z axes); data-reproduced only in CORE-04 gait conditions, not in this activity",
+        "joint_non_sagittal": "not adopted by the data reference; keep source sign (hip adduction/rotation, subtalar)",
+        "segment_angles": "unsupported: no publisher pelvis/segment angle; Link_Angle.csv is locally generated",
+        "kinetics": "N*m/kg and W/kg as published (GT23-C02); divisor not the own mass in 9 of 12 subjects (GT23-C03); per-trial rescale only for matched trials, D-GT23-C04-1 open"
+      },
+      "notes": [
+        "Heel walk and toe walk are publisher group \"misc\"; butt kicks and high knees \"calisthenics\"."
+      ]
+    },
+    {
+      "activity": "incline_walk",
+      "readme_description": {
+        "line": 173,
+        "text": "incline_walk: Treadmill incline/decline walking at 1.2 m/s"
+      },
+      "setting_stated": "treadmill",
+      "recordings": 24,
+      "subjects_with_recordings": 12,
+      "recordings_with_parsing": 22,
+      "publisher_groups": {
+        "decline": 22,
+        "incline": 22
+      },
+      "events": {
+        "segmented_by_publisher": true,
+        "definition": "Consecutive heel strikes of one leg; heel strike = 20 N rising threshold on the force plates (paper: 50 N for treadmill running). Interval = one stride of that leg.",
+        "readme_line": 272,
+        "event_source": "force plate",
+        "parsing_files": 44,
+        "parsing_subjects": 11,
+        "empty_parsing_files": [],
+        "interval_fields": {
+          "left": 22,
+          "right": 22
+        },
+        "intervals_left": 355,
+        "intervals_right": 389,
+        "files_with_unequal_left_right_counts": 44,
+        "files_with_one_leg_only": 44,
+        "toe_off_in_source_files": "no (parsing intervals hold start/end only); derivable from the 20 N plate threshold only where that leg has plate data (probe P2)",
+        "proposed_observation_type": "individual_cycle",
+        "valid_status": "source_defined_unverified"
+      },
+      "phase_converter_interval_use": {
+        "kept": 744,
+        "dropped_other_leg": 0
+      },
+      "time_converter_windows": 44,
+      "frames": {
+        "vertical_grf": "supported: GroundFrame_GRFs Y up (README line 30); positive support (GT23-C02 force-plate body mass matches README in 5/5 subjects)",
+        "horizontal_grf_and_cop": {
+          "class": "treadmill_forward",
+          "status": "Fixed heading on the treadmill; facing equals travel. +x derivable from markers (CORE-04 v2 pelvis facing: braking/propulsion and CoP progression pass on level, incline and decline in AB01/AB06/AB13). Not stated by the publisher."
+        },
+        "virtual_insoles": "calcn_l/calcn_r body frames (README line 38; paper Methods, Virtual insoles); +x toward the toe supported in walking only (GT23-C02: CoP moves forward in 253/254 stances)",
+        "joint_sagittal": "source-supported for all activities (same OpenSim coordinates: author Plot_3x3_plots.m 155-160 with paper Fig. 5 caption; model +Z axes); data-reproduced only in CORE-04 conditions: incline 5/10 deg, decline 5/10 deg",
+        "joint_non_sagittal": "not adopted by the data reference; keep source sign (hip adduction/rotation, subtalar)",
+        "segment_angles": "unsupported: no publisher pelvis/segment angle; Link_Angle.csv is locally generated",
+        "kinetics": "N*m/kg and W/kg as published (GT23-C02); divisor not the own mass in 9 of 12 subjects (GT23-C03); per-trial rescale only for matched trials, D-GT23-C04-1 open"
+      },
+      "notes": [
+        "Inclines carry left-leg intervals only, declines right-leg only (field inventory). README line 93 says the right plate is missing except for declines; that the left plate is missing in declines is inferred, not stated."
+      ]
+    },
+    {
+      "activity": "jump",
+      "readme_description": {
+        "line": 179,
+        "text": "jump: Jumping trials"
+      },
+      "setting_stated": "not stated",
+      "recordings": 33,
+      "subjects_with_recordings": 12,
+      "recordings_with_parsing": 31,
+      "publisher_groups": {
+        "jump_across": 24,
+        "jump_in_place": 56
+      },
+      "events": {
+        "segmented_by_publisher": true,
+        "definition": "Pelvis velocity crossing 0.5 m/s, debounced and manually verified. Task window, not a leg event.",
+        "readme_line": 277,
+        "event_source": "markers",
+        "parsing_files": 80,
+        "parsing_subjects": 12,
+        "empty_parsing_files": [],
+        "interval_fields": {
+          "left": 48,
+          "left_backward": 21,
+          "left_forward": 21,
+          "left_left": 11,
+          "left_right": 11,
+          "right": 48,
+          "right_backward": 21,
+          "right_forward": 21,
+          "right_left": 11,
+          "right_right": 11
+        },
+        "intervals_left": 920,
+        "intervals_right": 920,
+        "files_with_unequal_left_right_counts": 2,
+        "files_with_one_leg_only": 0,
+        "toe_off_in_source_files": "no (parsing intervals hold start/end only); derivable from the 20 N plate threshold only where that leg has plate data (probe P2)",
+        "proposed_observation_type": "transfer",
+        "valid_status": "source_defined_unverified"
+      },
+      "phase_converter_interval_use": {
+        "kept": 921,
+        "dropped_other_leg": 919
+      },
+      "time_converter_windows": 80,
+      "frames": {
+        "vertical_grf": "supported: GroundFrame_GRFs Y up (README line 30); positive support (GT23-C02 force-plate body mass matches README in 5/5 subjects)",
+        "horizontal_grf_and_cop": {
+          "class": "no_forward_travel",
+          "status": "No forward walking direction (in place, sideways or transfer). Needs D-GT23-C01-1."
+        },
+        "virtual_insoles": "calcn_l/calcn_r body frames (README line 38; paper Methods, Virtual insoles); +x toward the toe supported in walking only (GT23-C02: CoP moves forward in 253/254 stances)",
+        "joint_sagittal": "source-supported for all activities (same OpenSim coordinates: author Plot_3x3_plots.m 155-160 with paper Fig. 5 caption; model +Z axes); data-reproduced only in CORE-04 gait conditions, not in this activity",
+        "joint_non_sagittal": "not adopted by the data reference; keep source sign (hip adduction/rotation, subtalar)",
+        "segment_angles": "unsupported: no publisher pelvis/segment angle; Link_Angle.csv is locally generated",
+        "kinetics": "N*m/kg and W/kg as published (GT23-C02); divisor not the own mass in 9 of 12 subjects (GT23-C03); per-trial rescale only for matched trials, D-GT23-C04-1 open"
+      },
+      "notes": [
+        "jump_1_hop uses the 20 N contact rule (README 274); all other jumps pelvis velocity.",
+        "90 and 180 deg jumps turn within the window (heading_changes)."
+      ]
+    },
+    {
+      "activity": "lift_weight",
+      "readme_description": {
+        "line": 188,
+        "text": "lift_weight: lifting weighted/unweighted bag"
+      },
+      "setting_stated": "not stated",
+      "recordings": 24,
+      "subjects_with_recordings": 12,
+      "recordings_with_parsing": 24,
+      "publisher_groups": {
+        "lift_weight": 96
+      },
+      "events": {
+        "segmented_by_publisher": true,
+        "definition": "Trunk velocity crossing 0.5 m/s, debounced and manually verified. Task window, not a leg event.",
+        "readme_line": 275,
+        "event_source": "markers",
+        "parsing_files": 96,
+        "parsing_subjects": 12,
+        "empty_parsing_files": [],
+        "interval_fields": {
+          "left": 96,
+          "right": 96
+        },
+        "intervals_left": 570,
+        "intervals_right": 570,
+        "files_with_unequal_left_right_counts": 0,
+        "files_with_one_leg_only": 0,
+        "toe_off_in_source_files": "no (parsing intervals hold start/end only); derivable from the 20 N plate threshold only where that leg has plate data (probe P2)",
+        "proposed_observation_type": "transfer",
+        "valid_status": "source_defined_unverified"
+      },
+      "phase_converter_interval_use": {
+        "kept": 570,
+        "dropped_other_leg": 570
+      },
+      "time_converter_windows": 96,
+      "frames": {
+        "vertical_grf": "supported: GroundFrame_GRFs Y up (README line 30); positive support (GT23-C02 force-plate body mass matches README in 5/5 subjects)",
+        "horizontal_grf_and_cop": {
+          "class": "no_forward_travel",
+          "status": "No forward walking direction (in place, sideways or transfer). Needs D-GT23-C01-1."
+        },
+        "virtual_insoles": "calcn_l/calcn_r body frames (README line 38; paper Methods, Virtual insoles); +x toward the toe supported in walking only (GT23-C02: CoP moves forward in 253/254 stances)",
+        "joint_sagittal": "source-supported for all activities (same OpenSim coordinates: author Plot_3x3_plots.m 155-160 with paper Fig. 5 caption; model +Z axes); data-reproduced only in CORE-04 gait conditions, not in this activity",
+        "joint_non_sagittal": "not adopted by the data reference; keep source sign (hip adduction/rotation, subtalar)",
+        "segment_angles": "unsupported: no publisher pelvis/segment angle; Link_Angle.csv is locally generated",
+        "kinetics": "N*m/kg and W/kg as published (GT23-C02); divisor not the own mass in 9 of 12 subjects (GT23-C03); per-trial rescale only for matched trials, D-GT23-C04-1 open"
+      },
+      "notes": []
+    },
+    {
+      "activity": "lunges",
+      "readme_description": {
+        "line": 198,
+        "text": "lunges: lunging forward and backward with left and right legs"
+      },
+      "setting_stated": "not stated",
+      "recordings": 24,
+      "subjects_with_recordings": 12,
+      "recordings_with_parsing": 24,
+      "publisher_groups": {
+        "lunge": 36
+      },
+      "events": {
+        "segmented_by_publisher": true,
+        "definition": "Pelvis velocity crossing 0.5 m/s, debounced and manually verified. Task window, not a leg event.",
+        "readme_line": 277,
+        "event_source": "markers",
+        "parsing_files": 36,
+        "parsing_subjects": 12,
+        "empty_parsing_files": [],
+        "interval_fields": {
+          "left": 24,
+          "left_backward_left": 12,
+          "left_backward_right": 12,
+          "left_forward_left": 12,
+          "left_forward_right": 12,
+          "right": 24,
+          "right_backward_left": 12,
+          "right_backward_right": 12,
+          "right_forward_left": 12,
+          "right_forward_right": 12
+        },
+        "intervals_left": 368,
+        "intervals_right": 368,
+        "files_with_unequal_left_right_counts": 0,
+        "files_with_one_leg_only": 0,
+        "toe_off_in_source_files": "no (parsing intervals hold start/end only); derivable from the 20 N plate threshold only where that leg has plate data (probe P2)",
+        "proposed_observation_type": "transfer",
+        "valid_status": "source_defined_unverified"
+      },
+      "phase_converter_interval_use": {
+        "kept": 368,
+        "dropped_other_leg": 368
+      },
+      "time_converter_windows": 36,
+      "frames": {
+        "vertical_grf": "supported: GroundFrame_GRFs Y up (README line 30); positive support (GT23-C02 force-plate body mass matches README in 5/5 subjects)",
+        "horizontal_grf_and_cop": {
+          "class": "no_forward_travel",
+          "status": "No forward walking direction (in place, sideways or transfer). Needs D-GT23-C01-1."
+        },
+        "virtual_insoles": "calcn_l/calcn_r body frames (README line 38; paper Methods, Virtual insoles); +x toward the toe supported in walking only (GT23-C02: CoP moves forward in 253/254 stances)",
+        "joint_sagittal": "source-supported for all activities (same OpenSim coordinates: author Plot_3x3_plots.m 155-160 with paper Fig. 5 caption; model +Z axes); data-reproduced only in CORE-04 gait conditions, not in this activity",
+        "joint_non_sagittal": "not adopted by the data reference; keep source sign (hip adduction/rotation, subtalar)",
+        "segment_angles": "unsupported: no publisher pelvis/segment angle; Link_Angle.csv is locally generated",
+        "kinetics": "N*m/kg and W/kg as published (GT23-C02); divisor not the own mass in 9 of 12 subjects (GT23-C03); per-trial rescale only for matched trials, D-GT23-C04-1 open"
+      },
+      "notes": []
+    },
+    {
+      "activity": "meander",
+      "readme_description": {
+        "line": 207,
+        "text": "meander: freeform, slow walking overground"
+      },
+      "setting_stated": "overground",
+      "recordings": 12,
+      "subjects_with_recordings": 12,
+      "recordings_with_parsing": 0,
+      "publisher_groups": {
+        "meander": 1
+      },
+      "events": {
+        "segmented_by_publisher": false,
+        "definition": "Not segmented by the publisher.",
+        "readme_line": 278,
+        "event_source": "none",
+        "parsing_files": 0,
+        "parsing_subjects": 0,
+        "empty_parsing_files": [],
+        "interval_fields": {},
+        "intervals_left": 0,
+        "intervals_right": 0,
+        "files_with_unequal_left_right_counts": 0,
+        "files_with_one_leg_only": 0,
+        "toe_off_in_source_files": "no (parsing intervals hold start/end only); derivable from the 20 N plate threshold only where that leg has plate data (probe P2)",
+        "proposed_observation_type": "continuous_recording",
+        "valid_status": "no_source_events"
+      },
+      "phase_converter_interval_use": null,
+      "time_converter_windows": 0,
+      "frames": {
+        "vertical_grf": "supported: GroundFrame_GRFs Y up (README line 30); positive support (GT23-C02 force-plate body mass matches README in 5/5 subjects)",
+        "horizontal_grf_and_cop": {
+          "class": "heading_changes",
+          "status": "The pelvis heading turns within the window; one forward axis per window is undefined. Needs D-GT23-C01-1."
+        },
+        "virtual_insoles": "calcn_l/calcn_r body frames (README line 38; paper Methods, Virtual insoles); +x toward the toe supported in walking only (GT23-C02: CoP moves forward in 253/254 stances)",
+        "joint_sagittal": "source-supported for all activities (same OpenSim coordinates: author Plot_3x3_plots.m 155-160 with paper Fig. 5 caption; model +Z axes); data-reproduced only in CORE-04 gait conditions, not in this activity",
+        "joint_non_sagittal": "not adopted by the data reference; keep source sign (hip adduction/rotation, subtalar)",
+        "segment_angles": "unsupported: no publisher pelvis/segment angle; Link_Angle.csv is locally generated",
+        "kinetics": "N*m/kg and W/kg as published (GT23-C02); divisor not the own mass in 9 of 12 subjects (GT23-C03); per-trial rescale only for matched trials, D-GT23-C04-1 open"
+      },
+      "notes": []
+    },
+    {
+      "activity": "normal_walk",
+      "readme_description": {
+        "line": 209,
+        "text": "normal_walk: ambulating at different speeds on a level treadmill"
+      },
+      "setting_stated": "treadmill",
+      "recordings": 12,
+      "subjects_with_recordings": 12,
+      "recordings_with_parsing": 11,
+      "publisher_groups": {
+        "walk": 44,
+        "run": 22,
+        "calisthenics": 11
+      },
+      "events": {
+        "segmented_by_publisher": true,
+        "definition": "Consecutive heel strikes of one leg; heel strike = 20 N rising threshold on the force plates (paper: 50 N for treadmill running). Interval = one stride of that leg.",
+        "readme_line": 272,
+        "event_source": "force plate",
+        "parsing_files": 77,
+        "parsing_subjects": 11,
+        "empty_parsing_files": [
+          "AB05/normal_walk_1_2-0_parsing.mat",
+          "AB05/normal_walk_1_2-5_parsing.mat",
+          "AB10/normal_walk_1_2-0_parsing.mat",
+          "AB10/normal_walk_1_2-5_parsing.mat"
+        ],
+        "interval_fields": {
+          "left": 73,
+          "right": 14
+        },
+        "intervals_left": 1242,
+        "intervals_right": 353,
+        "files_with_unequal_left_right_counts": 67,
+        "files_with_one_leg_only": 59,
+        "toe_off_in_source_files": "no (parsing intervals hold start/end only); derivable from the 20 N plate threshold only where that leg has plate data (probe P2)",
+        "proposed_observation_type": "individual_cycle",
+        "valid_status": "source_defined_unverified"
+      },
+      "phase_converter_interval_use": {
+        "kept": 1246,
+        "dropped_other_leg": 349
+      },
+      "time_converter_windows": 73,
+      "frames": {
+        "vertical_grf": "supported: GroundFrame_GRFs Y up (README line 30); positive support (GT23-C02 force-plate body mass matches README in 5/5 subjects)",
+        "horizontal_grf_and_cop": {
+          "class": "treadmill_forward",
+          "status": "Fixed heading on the treadmill; facing equals travel. +x derivable from markers (CORE-04 v2 pelvis facing: braking/propulsion and CoP progression pass on level, incline and decline in AB01/AB06/AB13). Not stated by the publisher."
+        },
+        "virtual_insoles": "calcn_l/calcn_r body frames (README line 38; paper Methods, Virtual insoles); +x toward the toe supported in walking only (GT23-C02: CoP moves forward in 253/254 stances)",
+        "joint_sagittal": "source-supported for all activities (same OpenSim coordinates: author Plot_3x3_plots.m 155-160 with paper Fig. 5 caption; model +Z axes); data-reproduced only in CORE-04 conditions: level 1.2 m/s",
+        "joint_non_sagittal": "not adopted by the data reference; keep source sign (hip adduction/rotation, subtalar)",
+        "segment_angles": "unsupported: no publisher pelvis/segment angle; Link_Angle.csv is locally generated",
+        "kinetics": "N*m/kg and W/kg as published (GT23-C02); divisor not the own mass in 9 of 12 subjects (GT23-C03); per-trial rescale only for matched trials, D-GT23-C04-1 open"
+      },
+      "notes": [
+        "2-0 and 2-5 are running: GroupTasks \"run\", plotting script titles \"Running 2.0/2.5 m/s\", paper Table 1 run 2.0-2.5 m/s, 50 N threshold. LocoHub labels them level_walking.",
+        "skip uses the skip rule (README 273), publisher group \"calisthenics\"; LocoHub labels it level_walking.",
+        "README line 272 lists \"shuffling\" among heel-strike tasks without saying which: read here as normal_walk_1_shuffle (0.4 m/s, GroupTasks \"walk\", left-leg intervals only), not side_shuffle.",
+        "AB05 and AB10 2-0/2-5 parsing files are empty; README lines 108 and 139: no valid running trials.",
+        "Running files carry both legs (24-27 intervals each) although README line 93 says the right treadmill plate is missing; the right-leg event source is unchecked."
+      ]
+    },
+    {
+      "activity": "obstacle_walk",
+      "readme_description": {
+        "line": 218,
+        "text": "obstacle_walk: walking while foam block is placed on treadmill to disturb normal walking at 1.0 m/s"
+      },
+      "setting_stated": "treadmill",
+      "recordings": 12,
+      "subjects_with_recordings": 12,
+      "recordings_with_parsing": 0,
+      "publisher_groups": {
+        "step_over": 1
+      },
+      "events": {
+        "segmented_by_publisher": false,
+        "definition": "Not segmented by the publisher.",
+        "readme_line": 278,
+        "event_source": "none",
+        "parsing_files": 0,
+        "parsing_subjects": 0,
+        "empty_parsing_files": [],
+        "interval_fields": {},
+        "intervals_left": 0,
+        "intervals_right": 0,
+        "files_with_unequal_left_right_counts": 0,
+        "files_with_one_leg_only": 0,
+        "toe_off_in_source_files": "no (parsing intervals hold start/end only); derivable from the 20 N plate threshold only where that leg has plate data (probe P2)",
+        "proposed_observation_type": "continuous_recording",
+        "valid_status": "no_source_events"
+      },
+      "phase_converter_interval_use": null,
+      "time_converter_windows": 0,
+      "frames": {
+        "vertical_grf": "supported: GroundFrame_GRFs Y up (README line 30); positive support (GT23-C02 force-plate body mass matches README in 5/5 subjects)",
+        "horizontal_grf_and_cop": {
+          "class": "treadmill_forward",
+          "status": "Fixed heading on the treadmill; facing equals travel. +x derivable from markers (CORE-04 v2 pelvis facing: braking/propulsion and CoP progression pass on level, incline and decline in AB01/AB06/AB13). Not stated by the publisher."
+        },
+        "virtual_insoles": "calcn_l/calcn_r body frames (README line 38; paper Methods, Virtual insoles); +x toward the toe supported in walking only (GT23-C02: CoP moves forward in 253/254 stances)",
+        "joint_sagittal": "source-supported for all activities (same OpenSim coordinates: author Plot_3x3_plots.m 155-160 with paper Fig. 5 caption; model +Z axes); data-reproduced only in CORE-04 gait conditions, not in this activity",
+        "joint_non_sagittal": "not adopted by the data reference; keep source sign (hip adduction/rotation, subtalar)",
+        "segment_angles": "unsupported: no publisher pelvis/segment angle; Link_Angle.csv is locally generated",
+        "kinetics": "N*m/kg and W/kg as published (GT23-C02); divisor not the own mass in 9 of 12 subjects (GT23-C03); per-trial rescale only for matched trials, D-GT23-C04-1 open"
+      },
+      "notes": []
+    },
+    {
+      "activity": "poses",
+      "readme_description": {
+        "line": 220,
+        "text": "poses: standing in static postures (normal standing, feet double shoulder width apart, left foot forward, right foot forward, squat, balance on left foot, balance on right foot, stand on toes, hips to left, hips to right, hips forward, hips backward, point toes in, point toes out, normal stand with 25 lbs weight held to left, normal stand with 25 lbs weight held to right, wide stance standing, wide stance standing w/ left foot forward, wide stance standing w/ right foot forward, normal standing but squeeze legs together)"
+      },
+      "setting_stated": "not stated",
+      "recordings": 12,
+      "subjects_with_recordings": 12,
+      "recordings_with_parsing": 0,
+      "publisher_groups": {
+        "stand": 1
+      },
+      "events": {
+        "segmented_by_publisher": false,
+        "definition": "Not segmented by the publisher.",
+        "readme_line": 278,
+        "event_source": "none",
+        "parsing_files": 0,
+        "parsing_subjects": 0,
+        "empty_parsing_files": [],
+        "interval_fields": {},
+        "intervals_left": 0,
+        "intervals_right": 0,
+        "files_with_unequal_left_right_counts": 0,
+        "files_with_one_leg_only": 0,
+        "toe_off_in_source_files": "no (parsing intervals hold start/end only); derivable from the 20 N plate threshold only where that leg has plate data (probe P2)",
+        "proposed_observation_type": "continuous_recording",
+        "valid_status": "no_source_events"
+      },
+      "phase_converter_interval_use": null,
+      "time_converter_windows": 0,
+      "frames": {
+        "vertical_grf": "supported: GroundFrame_GRFs Y up (README line 30); positive support (GT23-C02 force-plate body mass matches README in 5/5 subjects)",
+        "horizontal_grf_and_cop": {
+          "class": "no_forward_travel",
+          "status": "No forward walking direction (in place, sideways or transfer). Needs D-GT23-C01-1."
+        },
+        "virtual_insoles": "calcn_l/calcn_r body frames (README line 38; paper Methods, Virtual insoles); +x toward the toe supported in walking only (GT23-C02: CoP moves forward in 253/254 stances)",
+        "joint_sagittal": "source-supported for all activities (same OpenSim coordinates: author Plot_3x3_plots.m 155-160 with paper Fig. 5 caption; model +Z axes); data-reproduced only in CORE-04 gait conditions, not in this activity",
+        "joint_non_sagittal": "not adopted by the data reference; keep source sign (hip adduction/rotation, subtalar)",
+        "segment_angles": "unsupported: no publisher pelvis/segment angle; Link_Angle.csv is locally generated",
+        "kinetics": "N*m/kg and W/kg as published (GT23-C02); divisor not the own mass in 9 of 12 subjects (GT23-C03); per-trial rescale only for matched trials, D-GT23-C04-1 open"
+      },
+      "notes": []
+    },
+    {
+      "activity": "push",
+      "readme_description": {
+        "line": 222,
+        "text": "push: experimenter pushes and pulls subject by torso/shoulders"
+      },
+      "setting_stated": "not stated",
+      "recordings": 12,
+      "subjects_with_recordings": 12,
+      "recordings_with_parsing": 0,
+      "publisher_groups": {
+        "push_pull": 1
+      },
+      "events": {
+        "segmented_by_publisher": false,
+        "definition": "Not segmented by the publisher.",
+        "readme_line": 278,
+        "event_source": "none",
+        "parsing_files": 0,
+        "parsing_subjects": 0,
+        "empty_parsing_files": [],
+        "interval_fields": {},
+        "intervals_left": 0,
+        "intervals_right": 0,
+        "files_with_unequal_left_right_counts": 0,
+        "files_with_one_leg_only": 0,
+        "toe_off_in_source_files": "no (parsing intervals hold start/end only); derivable from the 20 N plate threshold only where that leg has plate data (probe P2)",
+        "proposed_observation_type": "continuous_recording",
+        "valid_status": "no_source_events"
+      },
+      "phase_converter_interval_use": null,
+      "time_converter_windows": 0,
+      "frames": {
+        "vertical_grf": "supported: GroundFrame_GRFs Y up (README line 30); positive support (GT23-C02 force-plate body mass matches README in 5/5 subjects)",
+        "horizontal_grf_and_cop": {
+          "class": "no_forward_travel",
+          "status": "No forward walking direction (in place, sideways or transfer). Needs D-GT23-C01-1."
+        },
+        "virtual_insoles": "calcn_l/calcn_r body frames (README line 38; paper Methods, Virtual insoles); +x toward the toe supported in walking only (GT23-C02: CoP moves forward in 253/254 stances)",
+        "joint_sagittal": "source-supported for all activities (same OpenSim coordinates: author Plot_3x3_plots.m 155-160 with paper Fig. 5 caption; model +Z axes); data-reproduced only in CORE-04 gait conditions, not in this activity",
+        "joint_non_sagittal": "not adopted by the data reference; keep source sign (hip adduction/rotation, subtalar)",
+        "segment_angles": "unsupported: no publisher pelvis/segment angle; Link_Angle.csv is locally generated",
+        "kinetics": "N*m/kg and W/kg as published (GT23-C02); divisor not the own mass in 9 of 12 subjects (GT23-C03); per-trial rescale only for matched trials, D-GT23-C04-1 open"
+      },
+      "notes": []
+    },
+    {
+      "activity": "side_shuffle",
+      "readme_description": {
+        "line": 224,
+        "text": "side_shuffle: lateral shuffling to left and right"
+      },
+      "setting_stated": "not stated",
+      "recordings": 12,
+      "subjects_with_recordings": 12,
+      "recordings_with_parsing": 12,
+      "publisher_groups": {
+        "jump_across": 12
+      },
+      "events": {
+        "segmented_by_publisher": true,
+        "definition": "Pelvis velocity crossing 0.5 m/s, debounced and manually verified. Task window, not a leg event.",
+        "readme_line": 277,
+        "event_source": "markers",
+        "parsing_files": 12,
+        "parsing_subjects": 12,
+        "empty_parsing_files": [],
+        "interval_fields": {
+          "left_left": 12,
+          "left_right": 12,
+          "right_left": 12,
+          "right_right": 12
+        },
+        "intervals_left": 150,
+        "intervals_right": 150,
+        "files_with_unequal_left_right_counts": 0,
+        "files_with_one_leg_only": 0,
+        "toe_off_in_source_files": "no (parsing intervals hold start/end only); derivable from the 20 N plate threshold only where that leg has plate data (probe P2)",
+        "proposed_observation_type": "transfer",
+        "valid_status": "source_defined_unverified"
+      },
+      "phase_converter_interval_use": {
+        "kept": 150,
+        "dropped_other_leg": 150
+      },
+      "time_converter_windows": 12,
+      "frames": {
+        "vertical_grf": "supported: GroundFrame_GRFs Y up (README line 30); positive support (GT23-C02 force-plate body mass matches README in 5/5 subjects)",
+        "horizontal_grf_and_cop": {
+          "class": "no_forward_travel",
+          "status": "No forward walking direction (in place, sideways or transfer). Needs D-GT23-C01-1."
+        },
+        "virtual_insoles": "calcn_l/calcn_r body frames (README line 38; paper Methods, Virtual insoles); +x toward the toe supported in walking only (GT23-C02: CoP moves forward in 253/254 stances)",
+        "joint_sagittal": "source-supported for all activities (same OpenSim coordinates: author Plot_3x3_plots.m 155-160 with paper Fig. 5 caption; model +Z axes); data-reproduced only in CORE-04 gait conditions, not in this activity",
+        "joint_non_sagittal": "not adopted by the data reference; keep source sign (hip adduction/rotation, subtalar)",
+        "segment_angles": "unsupported: no publisher pelvis/segment angle; Link_Angle.csv is locally generated",
+        "kinetics": "N*m/kg and W/kg as published (GT23-C02); divisor not the own mass in 9 of 12 subjects (GT23-C03); per-trial rescale only for matched trials, D-GT23-C04-1 open"
+      },
+      "notes": [
+        "Travel is sideways.",
+        "README line 272 \"shuffling\" (heel-strike rule) is read as normal_walk shuffle; side_shuffle files hold identical left/right typed window counts (150/150), consistent with pelvis-velocity windows (README 277). Ambiguity unresolved until probe P1."
+      ]
+    },
+    {
+      "activity": "sit_to_stand",
+      "readme_description": {
+        "line": 226,
+        "text": "sit_to_stand: sit down and stand up from chair"
+      },
+      "setting_stated": "not stated",
+      "recordings": 26,
+      "subjects_with_recordings": 12,
+      "recordings_with_parsing": 26,
+      "publisher_groups": {
+        "sit_stand": 36
+      },
+      "events": {
+        "segmented_by_publisher": true,
+        "definition": "Pelvis velocity crossing 0.5 m/s, debounced and manually verified. Task window, not a leg event.",
+        "readme_line": 277,
+        "event_source": "markers",
+        "parsing_files": 36,
+        "parsing_subjects": 12,
+        "empty_parsing_files": [],
+        "interval_fields": {
+          "left_sitting": 36,
+          "left_standing": 36,
+          "right_sitting": 36,
+          "right_standing": 36
+        },
+        "intervals_left": 1199,
+        "intervals_right": 1199,
+        "files_with_unequal_left_right_counts": 0,
+        "files_with_one_leg_only": 0,
+        "toe_off_in_source_files": "no (parsing intervals hold start/end only); derivable from the 20 N plate threshold only where that leg has plate data (probe P2)",
+        "proposed_observation_type": "transfer",
+        "valid_status": "source_defined_unverified"
+      },
+      "phase_converter_interval_use": {
+        "kept": 1199,
+        "dropped_other_leg": 1199
+      },
+      "time_converter_windows": 36,
+      "frames": {
+        "vertical_grf": "supported: GroundFrame_GRFs Y up (README line 30); positive support (GT23-C02 force-plate body mass matches README in 5/5 subjects)",
+        "horizontal_grf_and_cop": {
+          "class": "no_forward_travel",
+          "status": "No forward walking direction (in place, sideways or transfer). Needs D-GT23-C01-1."
+        },
+        "virtual_insoles": "calcn_l/calcn_r body frames (README line 38; paper Methods, Virtual insoles); +x toward the toe supported in walking only (GT23-C02: CoP moves forward in 253/254 stances)",
+        "joint_sagittal": "source-supported for all activities (same OpenSim coordinates: author Plot_3x3_plots.m 155-160 with paper Fig. 5 caption; model +Z axes); data-reproduced only in CORE-04 gait conditions, not in this activity",
+        "joint_non_sagittal": "not adopted by the data reference; keep source sign (hip adduction/rotation, subtalar)",
+        "segment_angles": "unsupported: no publisher pelvis/segment angle; Link_Angle.csv is locally generated",
+        "kinetics": "N*m/kg and W/kg as published (GT23-C02); divisor not the own mass in 9 of 12 subjects (GT23-C03); per-trial rescale only for matched trials, D-GT23-C04-1 open"
+      },
+      "notes": [
+        "Fields <leg>_sitting / <leg>_standing name the destination posture (types per README line 51)."
+      ]
+    },
+    {
+      "activity": "squats",
+      "readme_description": {
+        "line": 231,
+        "text": "squats: squatting w/ and w/o added weight"
+      },
+      "setting_stated": "not stated",
+      "recordings": 13,
+      "subjects_with_recordings": 12,
+      "recordings_with_parsing": 13,
+      "publisher_groups": {
+        "squats": 24
+      },
+      "events": {
+        "segmented_by_publisher": true,
+        "definition": "Pelvis velocity crossing 0.5 m/s, debounced and manually verified. Task window, not a leg event.",
+        "readme_line": 277,
+        "event_source": "markers",
+        "parsing_files": 24,
+        "parsing_subjects": 12,
+        "empty_parsing_files": [],
+        "interval_fields": {
+          "left": 24,
+          "right": 24
+        },
+        "intervals_left": 130,
+        "intervals_right": 130,
+        "files_with_unequal_left_right_counts": 0,
+        "files_with_one_leg_only": 0,
+        "toe_off_in_source_files": "no (parsing intervals hold start/end only); derivable from the 20 N plate threshold only where that leg has plate data (probe P2)",
+        "proposed_observation_type": "transfer",
+        "valid_status": "source_defined_unverified"
+      },
+      "phase_converter_interval_use": {
+        "kept": 130,
+        "dropped_other_leg": 130
+      },
+      "time_converter_windows": 24,
+      "frames": {
+        "vertical_grf": "supported: GroundFrame_GRFs Y up (README line 30); positive support (GT23-C02 force-plate body mass matches README in 5/5 subjects)",
+        "horizontal_grf_and_cop": {
+          "class": "no_forward_travel",
+          "status": "No forward walking direction (in place, sideways or transfer). Needs D-GT23-C01-1."
+        },
+        "virtual_insoles": "calcn_l/calcn_r body frames (README line 38; paper Methods, Virtual insoles); +x toward the toe supported in walking only (GT23-C02: CoP moves forward in 253/254 stances)",
+        "joint_sagittal": "source-supported for all activities (same OpenSim coordinates: author Plot_3x3_plots.m 155-160 with paper Fig. 5 caption; model +Z axes); data-reproduced only in CORE-04 gait conditions, not in this activity",
+        "joint_non_sagittal": "not adopted by the data reference; keep source sign (hip adduction/rotation, subtalar)",
+        "segment_angles": "unsupported: no publisher pelvis/segment angle; Link_Angle.csv is locally generated",
+        "kinetics": "N*m/kg and W/kg as published (GT23-C02); divisor not the own mass in 9 of 12 subjects (GT23-C03); per-trial rescale only for matched trials, D-GT23-C04-1 open"
+      },
+      "notes": []
+    },
+    {
+      "activity": "stairs",
+      "readme_description": {
+        "line": 235,
+        "text": "stairs: walking up and down stairs"
+      },
+      "setting_stated": "not stated",
+      "recordings": 124,
+      "subjects_with_recordings": 12,
+      "recordings_with_parsing": 119,
+      "publisher_groups": {
+        "stair_descent": 62,
+        "stair_ascent": 62
+      },
+      "events": {
+        "segmented_by_publisher": true,
+        "definition": "Consecutive heel strikes of one leg; heel strike = 20 N rising threshold on the force plates (paper: 50 N for treadmill running). Interval = one stride of that leg.",
+        "readme_line": 272,
+        "event_source": "force plate",
+        "parsing_files": 124,
+        "parsing_subjects": 12,
+        "empty_parsing_files": [
+          "AB01/stairs_1_10_down_parsing.mat",
+          "AB01/stairs_1_2_down_parsing.mat",
+          "AB01/stairs_1_4_down_parsing.mat",
+          "AB01/stairs_1_6_down_parsing.mat",
+          "AB01/stairs_1_8_down_parsing.mat"
+        ],
+        "interval_fields": {
+          "left": 112,
+          "right": 118
+        },
+        "intervals_left": 163,
+        "intervals_right": 180,
+        "files_with_unequal_left_right_counts": 45,
+        "files_with_one_leg_only": 8,
+        "toe_off_in_source_files": "no (parsing intervals hold start/end only); derivable from the 20 N plate threshold only where that leg has plate data (probe P2)",
+        "proposed_observation_type": "individual_cycle",
+        "valid_status": "source_defined_unverified"
+      },
+      "phase_converter_interval_use": {
+        "kept": 194,
+        "dropped_other_leg": 149
+      },
+      "time_converter_windows": 119,
+      "frames": {
+        "vertical_grf": "supported: GroundFrame_GRFs Y up (README line 30); positive support (GT23-C02 force-plate body mass matches README in 5/5 subjects)",
+        "horizontal_grf_and_cop": {
+          "class": "overground_forward",
+          "status": "Facing equals travel while walking forward; heading measured per stride from markers. CORE-04 stair strides: CoP progression and braking/propulsion checks were \"unknown\"."
+        },
+        "virtual_insoles": "calcn_l/calcn_r body frames (README line 38; paper Methods, Virtual insoles); +x toward the toe supported in walking only (GT23-C02: CoP moves forward in 253/254 stances)",
+        "joint_sagittal": "source-supported for all activities (same OpenSim coordinates: author Plot_3x3_plots.m 155-160 with paper Fig. 5 caption; model +Z axes); data-reproduced only in CORE-04 conditions: stair ascent, stair descent",
+        "joint_non_sagittal": "not adopted by the data reference; keep source sign (hip adduction/rotation, subtalar)",
+        "segment_angles": "unsupported: no publisher pelvis/segment angle; Link_Angle.csv is locally generated",
+        "kinetics": "N*m/kg and W/kg as published (GT23-C02); divisor not the own mass in 9 of 12 subjects (GT23-C03); per-trial rescale only for matched trials, D-GT23-C04-1 open"
+      },
+      "notes": [
+        "One interval per leg per pass (plate-captured strides only).",
+        "AB01 stair-descent parsing files (5) are empty; no README explanation.",
+        "Paper Table 1: stair rise 152 mm. LocoHub writes height_m 0.15 and calls the pass index step_number."
+      ]
+    },
+    {
+      "activity": "start_stop",
+      "readme_description": {
+        "line": 247,
+        "text": "start_stop: starting and stopping walking on overground force plates"
+      },
+      "setting_stated": "overground force plates",
+      "recordings": 4,
+      "subjects_with_recordings": 4,
+      "recordings_with_parsing": 0,
+      "publisher_groups": {
+        "start_stop": 1
+      },
+      "events": {
+        "segmented_by_publisher": false,
+        "definition": "Not segmented by the publisher.",
+        "readme_line": 278,
+        "event_source": "none",
+        "parsing_files": 0,
+        "parsing_subjects": 0,
+        "empty_parsing_files": [],
+        "interval_fields": {},
+        "intervals_left": 0,
+        "intervals_right": 0,
+        "files_with_unequal_left_right_counts": 0,
+        "files_with_one_leg_only": 0,
+        "toe_off_in_source_files": "no (parsing intervals hold start/end only); derivable from the 20 N plate threshold only where that leg has plate data (probe P2)",
+        "proposed_observation_type": "continuous_recording",
+        "valid_status": "no_source_events"
+      },
+      "phase_converter_interval_use": null,
+      "time_converter_windows": 0,
+      "frames": {
+        "vertical_grf": "supported: GroundFrame_GRFs Y up (README line 30); positive support (GT23-C02 force-plate body mass matches README in 5/5 subjects)",
+        "horizontal_grf_and_cop": {
+          "class": "overground_forward",
+          "status": "Facing equals travel while walking forward; heading measured per stride from markers. CORE-04 stair strides: CoP progression and braking/propulsion checks were \"unknown\"."
+        },
+        "virtual_insoles": "calcn_l/calcn_r body frames (README line 38; paper Methods, Virtual insoles); +x toward the toe supported in walking only (GT23-C02: CoP moves forward in 253/254 stances)",
+        "joint_sagittal": "source-supported for all activities (same OpenSim coordinates: author Plot_3x3_plots.m 155-160 with paper Fig. 5 caption; model +Z axes); data-reproduced only in CORE-04 gait conditions, not in this activity",
+        "joint_non_sagittal": "not adopted by the data reference; keep source sign (hip adduction/rotation, subtalar)",
+        "segment_angles": "unsupported: no publisher pelvis/segment angle; Link_Angle.csv is locally generated",
+        "kinetics": "N*m/kg and W/kg as published (GT23-C02); divisor not the own mass in 9 of 12 subjects (GT23-C03); per-trial rescale only for matched trials, D-GT23-C04-1 open"
+      },
+      "notes": [
+        "Only AB10-AB13 (README line 91)."
+      ]
+    },
+    {
+      "activity": "step_ups",
+      "readme_description": {
+        "line": 249,
+        "text": "step_ups: stepping up onto tall object"
+      },
+      "setting_stated": "not stated",
+      "recordings": 12,
+      "subjects_with_recordings": 12,
+      "recordings_with_parsing": 11,
+      "publisher_groups": {
+        "step_ups": 22
+      },
+      "events": {
+        "segmented_by_publisher": true,
+        "definition": "Pelvis velocity crossing 0.5 m/s, debounced and manually verified. Task window, not a leg event.",
+        "readme_line": 277,
+        "event_source": "markers",
+        "parsing_files": 22,
+        "parsing_subjects": 11,
+        "empty_parsing_files": [],
+        "interval_fields": {
+          "left_down": 22,
+          "left_up": 22,
+          "right_down": 22,
+          "right_up": 22
+        },
+        "intervals_left": 224,
+        "intervals_right": 224,
+        "files_with_unequal_left_right_counts": 0,
+        "files_with_one_leg_only": 0,
+        "toe_off_in_source_files": "no (parsing intervals hold start/end only); derivable from the 20 N plate threshold only where that leg has plate data (probe P2)",
+        "proposed_observation_type": "transfer",
+        "valid_status": "source_defined_unverified"
+      },
+      "phase_converter_interval_use": {
+        "kept": 224,
+        "dropped_other_leg": 224
+      },
+      "time_converter_windows": 22,
+      "frames": {
+        "vertical_grf": "supported: GroundFrame_GRFs Y up (README line 30); positive support (GT23-C02 force-plate body mass matches README in 5/5 subjects)",
+        "horizontal_grf_and_cop": {
+          "class": "overground_forward",
+          "status": "Facing equals travel while walking forward; heading measured per stride from markers. CORE-04 stair strides: CoP progression and braking/propulsion checks were \"unknown\"."
+        },
+        "virtual_insoles": "calcn_l/calcn_r body frames (README line 38; paper Methods, Virtual insoles); +x toward the toe supported in walking only (GT23-C02: CoP moves forward in 253/254 stances)",
+        "joint_sagittal": "source-supported for all activities (same OpenSim coordinates: author Plot_3x3_plots.m 155-160 with paper Fig. 5 caption; model +Z axes); data-reproduced only in CORE-04 gait conditions, not in this activity",
+        "joint_non_sagittal": "not adopted by the data reference; keep source sign (hip adduction/rotation, subtalar)",
+        "segment_angles": "unsupported: no publisher pelvis/segment angle; Link_Angle.csv is locally generated",
+        "kinetics": "N*m/kg and W/kg as published (GT23-C02); divisor not the own mass in 9 of 12 subjects (GT23-C03); per-trial rescale only for matched trials, D-GT23-C04-1 open"
+      },
+      "notes": [
+        "AB02 step_ups deleted (README line 99). LocoHub writes height_m 0.20 (not found in local sources)."
+      ]
+    },
+    {
+      "activity": "tire_run",
+      "readme_description": {
+        "line": 253,
+        "text": "tire_run: jogging on toes overground with high knees (as if running through tires)"
+      },
+      "setting_stated": "overground",
+      "recordings": 12,
+      "subjects_with_recordings": 12,
+      "recordings_with_parsing": 12,
+      "publisher_groups": {
+        "calisthenics": 12
+      },
+      "events": {
+        "segmented_by_publisher": true,
+        "definition": "Toe-off of the step before the force plates to heel strike of the first step off them; automatic marker-velocity check, then manual adjustment. Phase 0 is a toe-off, not a heel strike.",
+        "readme_line": 276,
+        "event_source": "markers, manual",
+        "parsing_files": 12,
+        "parsing_subjects": 12,
+        "empty_parsing_files": [],
+        "interval_fields": {
+          "left_left": 12,
+          "left_right": 12,
+          "right_left": 12,
+          "right_right": 12
+        },
+        "intervals_left": 123,
+        "intervals_right": 123,
+        "files_with_unequal_left_right_counts": 0,
+        "files_with_one_leg_only": 0,
+        "toe_off_in_source_files": "no (parsing intervals hold start/end only); derivable from the 20 N plate threshold only where that leg has plate data (probe P2)",
+        "proposed_observation_type": "transfer",
+        "valid_status": "source_defined_unverified"
+      },
+      "phase_converter_interval_use": {
+        "kept": 123,
+        "dropped_other_leg": 123
+      },
+      "time_converter_windows": 12,
+      "frames": {
+        "vertical_grf": "supported: GroundFrame_GRFs Y up (README line 30); positive support (GT23-C02 force-plate body mass matches README in 5/5 subjects)",
+        "horizontal_grf_and_cop": {
+          "class": "overground_forward",
+          "status": "Facing equals travel while walking forward; heading measured per stride from markers. CORE-04 stair strides: CoP progression and braking/propulsion checks were \"unknown\"."
+        },
+        "virtual_insoles": "calcn_l/calcn_r body frames (README line 38; paper Methods, Virtual insoles); +x toward the toe supported in walking only (GT23-C02: CoP moves forward in 253/254 stances)",
+        "joint_sagittal": "source-supported for all activities (same OpenSim coordinates: author Plot_3x3_plots.m 155-160 with paper Fig. 5 caption; model +Z axes); data-reproduced only in CORE-04 gait conditions, not in this activity",
+        "joint_non_sagittal": "not adopted by the data reference; keep source sign (hip adduction/rotation, subtalar)",
+        "segment_angles": "unsupported: no publisher pelvis/segment angle; Link_Angle.csv is locally generated",
+        "kinetics": "N*m/kg and W/kg as published (GT23-C02); divisor not the own mass in 9 of 12 subjects (GT23-C03); per-trial rescale only for matched trials, D-GT23-C04-1 open"
+      },
+      "notes": []
+    },
+    {
+      "activity": "tug_of_war",
+      "readme_description": {
+        "line": 255,
+        "text": "tug_of_war: pushing and pulling broomstick between subject and experimenter"
+      },
+      "setting_stated": "not stated",
+      "recordings": 12,
+      "subjects_with_recordings": 12,
+      "recordings_with_parsing": 0,
+      "publisher_groups": {
+        "tug_of_war": 1
+      },
+      "events": {
+        "segmented_by_publisher": false,
+        "definition": "Not segmented by the publisher.",
+        "readme_line": 278,
+        "event_source": "none",
+        "parsing_files": 0,
+        "parsing_subjects": 0,
+        "empty_parsing_files": [],
+        "interval_fields": {},
+        "intervals_left": 0,
+        "intervals_right": 0,
+        "files_with_unequal_left_right_counts": 0,
+        "files_with_one_leg_only": 0,
+        "toe_off_in_source_files": "no (parsing intervals hold start/end only); derivable from the 20 N plate threshold only where that leg has plate data (probe P2)",
+        "proposed_observation_type": "continuous_recording",
+        "valid_status": "no_source_events"
+      },
+      "phase_converter_interval_use": null,
+      "time_converter_windows": 0,
+      "frames": {
+        "vertical_grf": "supported: GroundFrame_GRFs Y up (README line 30); positive support (GT23-C02 force-plate body mass matches README in 5/5 subjects)",
+        "horizontal_grf_and_cop": {
+          "class": "no_forward_travel",
+          "status": "No forward walking direction (in place, sideways or transfer). Needs D-GT23-C01-1."
+        },
+        "virtual_insoles": "calcn_l/calcn_r body frames (README line 38; paper Methods, Virtual insoles); +x toward the toe supported in walking only (GT23-C02: CoP moves forward in 253/254 stances)",
+        "joint_sagittal": "source-supported for all activities (same OpenSim coordinates: author Plot_3x3_plots.m 155-160 with paper Fig. 5 caption; model +Z axes); data-reproduced only in CORE-04 gait conditions, not in this activity",
+        "joint_non_sagittal": "not adopted by the data reference; keep source sign (hip adduction/rotation, subtalar)",
+        "segment_angles": "unsupported: no publisher pelvis/segment angle; Link_Angle.csv is locally generated",
+        "kinetics": "N*m/kg and W/kg as published (GT23-C02); divisor not the own mass in 9 of 12 subjects (GT23-C03); per-trial rescale only for matched trials, D-GT23-C04-1 open"
+      },
+      "notes": []
+    },
+    {
+      "activity": "turn_and_step",
+      "readme_description": {
+        "line": 257,
+        "text": "turn_and_step: from standing, turn to left or right and start walking"
+      },
+      "setting_stated": "not stated",
+      "recordings": 12,
+      "subjects_with_recordings": 12,
+      "recordings_with_parsing": 12,
+      "publisher_groups": {
+        "turn": 24
+      },
+      "events": {
+        "segmented_by_publisher": true,
+        "definition": "Pelvis velocity crossing 0.5 m/s, debounced and manually verified. Task window, not a leg event.",
+        "readme_line": 277,
+        "event_source": "markers",
+        "parsing_files": 24,
+        "parsing_subjects": 12,
+        "empty_parsing_files": [],
+        "interval_fields": {
+          "left": 22,
+          "right": 23
+        },
+        "intervals_left": 95,
+        "intervals_right": 97,
+        "files_with_unequal_left_right_counts": 15,
+        "files_with_one_leg_only": 3,
+        "toe_off_in_source_files": "no (parsing intervals hold start/end only); derivable from the 20 N plate threshold only where that leg has plate data (probe P2)",
+        "proposed_observation_type": "transfer",
+        "valid_status": "conflicting_definition"
+      },
+      "phase_converter_interval_use": {
+        "kept": 120,
+        "dropped_other_leg": 72
+      },
+      "time_converter_windows": 24,
+      "frames": {
+        "vertical_grf": "supported: GroundFrame_GRFs Y up (README line 30); positive support (GT23-C02 force-plate body mass matches README in 5/5 subjects)",
+        "horizontal_grf_and_cop": {
+          "class": "heading_changes",
+          "status": "The pelvis heading turns within the window; one forward axis per window is undefined. Needs D-GT23-C01-1."
+        },
+        "virtual_insoles": "calcn_l/calcn_r body frames (README line 38; paper Methods, Virtual insoles); +x toward the toe supported in walking only (GT23-C02: CoP moves forward in 253/254 stances)",
+        "joint_sagittal": "source-supported for all activities (same OpenSim coordinates: author Plot_3x3_plots.m 155-160 with paper Fig. 5 caption; model +Z axes); data-reproduced only in CORE-04 gait conditions, not in this activity",
+        "joint_non_sagittal": "not adopted by the data reference; keep source sign (hip adduction/rotation, subtalar)",
+        "segment_angles": "unsupported: no publisher pelvis/segment angle; Link_Angle.csv is locally generated",
+        "kinetics": "N*m/kg and W/kg as published (GT23-C02); divisor not the own mass in 9 of 12 subjects (GT23-C03); per-trial rescale only for matched trials, D-GT23-C04-1 open"
+      },
+      "notes": [
+        "Conflict: README line 277 implies pelvis-velocity windows; publisher plotting script lines 113-114 title the curves \"segmented by toe off\". Left/right interval counts differ within files (see counts), which whole-body pelvis windows would not produce. Event definition unresolved."
+      ]
+    },
+    {
+      "activity": "twister",
+      "readme_description": {
+        "line": 261,
+        "text": "twister: experimenter calls out feet locations for subject to place feet"
+      },
+      "setting_stated": "not stated",
+      "recordings": 12,
+      "subjects_with_recordings": 12,
+      "recordings_with_parsing": 0,
+      "publisher_groups": {
+        "twister": 1
+      },
+      "events": {
+        "segmented_by_publisher": false,
+        "definition": "Not segmented by the publisher.",
+        "readme_line": 278,
+        "event_source": "none",
+        "parsing_files": 0,
+        "parsing_subjects": 0,
+        "empty_parsing_files": [],
+        "interval_fields": {},
+        "intervals_left": 0,
+        "intervals_right": 0,
+        "files_with_unequal_left_right_counts": 0,
+        "files_with_one_leg_only": 0,
+        "toe_off_in_source_files": "no (parsing intervals hold start/end only); derivable from the 20 N plate threshold only where that leg has plate data (probe P2)",
+        "proposed_observation_type": "continuous_recording",
+        "valid_status": "no_source_events"
+      },
+      "phase_converter_interval_use": null,
+      "time_converter_windows": 0,
+      "frames": {
+        "vertical_grf": "supported: GroundFrame_GRFs Y up (README line 30); positive support (GT23-C02 force-plate body mass matches README in 5/5 subjects)",
+        "horizontal_grf_and_cop": {
+          "class": "no_forward_travel",
+          "status": "No forward walking direction (in place, sideways or transfer). Needs D-GT23-C01-1."
+        },
+        "virtual_insoles": "calcn_l/calcn_r body frames (README line 38; paper Methods, Virtual insoles); +x toward the toe supported in walking only (GT23-C02: CoP moves forward in 253/254 stances)",
+        "joint_sagittal": "source-supported for all activities (same OpenSim coordinates: author Plot_3x3_plots.m 155-160 with paper Fig. 5 caption; model +Z axes); data-reproduced only in CORE-04 gait conditions, not in this activity",
+        "joint_non_sagittal": "not adopted by the data reference; keep source sign (hip adduction/rotation, subtalar)",
+        "segment_angles": "unsupported: no publisher pelvis/segment angle; Link_Angle.csv is locally generated",
+        "kinetics": "N*m/kg and W/kg as published (GT23-C02); divisor not the own mass in 9 of 12 subjects (GT23-C03); per-trial rescale only for matched trials, D-GT23-C04-1 open"
+      },
+      "notes": []
+    },
+    {
+      "activity": "walk_backward",
+      "readme_description": {
+        "line": 263,
+        "text": "walk_backward: walking backward on treadmill"
+      },
+      "setting_stated": "treadmill",
+      "recordings": 13,
+      "subjects_with_recordings": 12,
+      "recordings_with_parsing": 12,
+      "publisher_groups": {
+        "walk_backwards": 33
+      },
+      "events": {
+        "segmented_by_publisher": true,
+        "definition": "Consecutive heel strikes of one leg; heel strike = 20 N rising threshold on the force plates (paper: 50 N for treadmill running). Interval = one stride of that leg.",
+        "readme_line": 272,
+        "event_source": "force plate",
+        "parsing_files": 33,
+        "parsing_subjects": 11,
+        "empty_parsing_files": [],
+        "interval_fields": {
+          "left": 33
+        },
+        "intervals_left": 572,
+        "intervals_right": 0,
+        "files_with_unequal_left_right_counts": 33,
+        "files_with_one_leg_only": 33,
+        "toe_off_in_source_files": "no (parsing intervals hold start/end only); derivable from the 20 N plate threshold only where that leg has plate data (probe P2)",
+        "proposed_observation_type": "individual_cycle",
+        "valid_status": "source_defined_unverified"
+      },
+      "phase_converter_interval_use": {
+        "kept": 572,
+        "dropped_other_leg": 0
+      },
+      "time_converter_windows": 33,
+      "frames": {
+        "vertical_grf": "supported: GroundFrame_GRFs Y up (README line 30); positive support (GT23-C02 force-plate body mass matches README in 5/5 subjects)",
+        "horizontal_grf_and_cop": {
+          "class": "backward_travel",
+          "status": "Facing is opposite to travel; the data reference defines +x as \"the walking direction\" while viewing the person \"facing right\". Needs D-GT23-C01-1."
+        },
+        "virtual_insoles": "calcn_l/calcn_r body frames (README line 38; paper Methods, Virtual insoles); +x toward the toe supported in walking only (GT23-C02: CoP moves forward in 253/254 stances)",
+        "joint_sagittal": "source-supported for all activities (same OpenSim coordinates: author Plot_3x3_plots.m 155-160 with paper Fig. 5 caption; model +Z axes); data-reproduced only in CORE-04 gait conditions, not in this activity",
+        "joint_non_sagittal": "not adopted by the data reference; keep source sign (hip adduction/rotation, subtalar)",
+        "segment_angles": "unsupported: no publisher pelvis/segment angle; Link_Angle.csv is locally generated",
+        "kinetics": "N*m/kg and W/kg as published (GT23-C02); divisor not the own mass in 9 of 12 subjects (GT23-C03); per-trial rescale only for matched trials, D-GT23-C04-1 open"
+      },
+      "notes": []
+    },
+    {
+      "activity": "weighted_walk",
+      "readme_description": {
+        "line": 268,
+        "text": "weighted_walk: walking on treadmill at 1.0 m/s with weight"
+      },
+      "setting_stated": "treadmill",
+      "recordings": 11,
+      "subjects_with_recordings": 11,
+      "recordings_with_parsing": 10,
+      "publisher_groups": {
+        "weighted_walk": 10
+      },
+      "events": {
+        "segmented_by_publisher": true,
+        "definition": "Consecutive heel strikes of one leg; heel strike = 20 N rising threshold on the force plates (paper: 50 N for treadmill running). Interval = one stride of that leg.",
+        "readme_line": 272,
+        "event_source": "force plate",
+        "parsing_files": 10,
+        "parsing_subjects": 10,
+        "empty_parsing_files": [],
+        "interval_fields": {
+          "left": 10
+        },
+        "intervals_left": 166,
+        "intervals_right": 0,
+        "files_with_unequal_left_right_counts": 10,
+        "files_with_one_leg_only": 10,
+        "toe_off_in_source_files": "no (parsing intervals hold start/end only); derivable from the 20 N plate threshold only where that leg has plate data (probe P2)",
+        "proposed_observation_type": "individual_cycle",
+        "valid_status": "source_defined_unverified"
+      },
+      "phase_converter_interval_use": {
+        "kept": 166,
+        "dropped_other_leg": 0
+      },
+      "time_converter_windows": 10,
+      "frames": {
+        "vertical_grf": "supported: GroundFrame_GRFs Y up (README line 30); positive support (GT23-C02 force-plate body mass matches README in 5/5 subjects)",
+        "horizontal_grf_and_cop": {
+          "class": "treadmill_forward",
+          "status": "Fixed heading on the treadmill; facing equals travel. +x derivable from markers (CORE-04 v2 pelvis facing: braking/propulsion and CoP progression pass on level, incline and decline in AB01/AB06/AB13). Not stated by the publisher."
+        },
+        "virtual_insoles": "calcn_l/calcn_r body frames (README line 38; paper Methods, Virtual insoles); +x toward the toe supported in walking only (GT23-C02: CoP moves forward in 253/254 stances)",
+        "joint_sagittal": "source-supported for all activities (same OpenSim coordinates: author Plot_3x3_plots.m 155-160 with paper Fig. 5 caption; model +Z axes); data-reproduced only in CORE-04 gait conditions, not in this activity",
+        "joint_non_sagittal": "not adopted by the data reference; keep source sign (hip adduction/rotation, subtalar)",
+        "segment_angles": "unsupported: no publisher pelvis/segment angle; Link_Angle.csv is locally generated",
+        "kinetics": "N*m/kg and W/kg as published (GT23-C02); divisor not the own mass in 9 of 12 subjects (GT23-C03); per-trial rescale only for matched trials, D-GT23-C04-1 open"
+      },
+      "notes": [
+        "README line 268: 1.0 m/s; publisher plotting script line 8 titles it \"1.25 m/s\". Speed unresolved."
+      ]
+    }
+  ],
+  "established": [
+    "Activity definitions and segmentation rules: README lines 144-278; paper Methods (Ground reaction forces: 20 N steps, 50 N for treadmill running, feet assigned by marker/CoP matching; inverse dynamics NaN off plates).",
+    "Parsing file layout: README line 51 (rows = cycles, columns start/end time; optional types -> right_<type>, left_<type>). Field inventory confirms <leg>[_<type>] fields in all 778 non-empty files; 9 files are empty (AB05/AB10 running: README 108, 139; AB01 five stair descents: unexplained).",
+    "Activity_Flag.csv: per-sample on/off for left and right (paper Table 3; README line 29). Neither converter reads it.",
+    "Vertical GRF: Y up, positive support (README line 30; GT23-C02).",
+    "Horizontal GRF and global CoP: OpenSim global X/Z, which turn with the person (paper Table 3; gt23-source-frame-review). Converters assign ForceX/ForceZ directly to anterior/lateral (time converter lines 501-506; phase converter 794-835): unsupported.",
+    "Sideways sign: outward per leg (data reference, Signs and frames; D-GT21-C01-1 = B), once +x is known.",
+    "Converter CoP: calcn body frame with calcn origin (gt23-cop-and-joint-coordinate-review). The data reference defines CoP in the ground frame (+x forward, +y up); a foot-fixed frame rotates with the foot, so the current cop_* mapping is a frame mismatch, not only an origin note.",
+    "Joint sagittal signs under rule B: hip +1, knee -1, ankle +1 for angle, velocity and moment; powers +1 (sign survey; gt23-joint-sign-and-segment-evidence; CORE-04 GT23 pilot 0 wrong of 141 applied/suggested, independent rerun AB10/AB11 0 wrong).",
+    "Units and mass: GT23-C02, GT23-C03, GT23-C04 (kinetics blocked by D-GT23-C04-1)."
+  ],
+  "converter_findings": [
+    {
+      "id": "F1",
+      "where": "convert_gtech_phase_to_parquet.m lines 452-490",
+      "finding": "Keeps only the leg with more intervals per condition (tie: earlier start) and drops the other leg: 4948 of 13119 intervals, of which 498 are per-leg gait cycles (running, stairs) and 127 are hop contact intervals (README 274, 20 N contact; jump is classed as task windows, so these are not in the gait-cycle count). The rest are task-window activities whose left/right windows may be identical (probe P1); there ipsi is arbitrary.",
+      "fix": "Emit each leg's source intervals with its reference_side; for whole-body windows identical on both legs (probe P1) emit reference_side none (contract: ipsi/contra name roles)."
+    },
+    {
+      "id": "F2",
+      "where": "convert_gtech_2023_time_to_parquet.m lines 320-357",
+      "finding": "One window per parsing file = envelope [min start, max end] over every interval field, so conditions in one file (sitting/standing, forward/backward, left/right-lead) are merged into one window; reference leg = first start. 90 recordings carry no source intervals (85 without parsing files, 5 with only empty ones) and are never exported.",
+      "fix": "One observation per source interval (or per contiguous cycle chain), labelled by its field; continuous_recording for recordings without source intervals (after exclusion review)."
+    },
+    {
+      "id": "F3",
+      "where": "convert_gtech_phase_to_parquet.m lines 217-233, 498-579; utilities/segment_*",
+      "finding": "Fallback sit/stand and jump segmentation with LocoHub thresholds (600/400 N absolute, 25 deg/s) replaces source events when a file lacks left/right fields. Every sit_to_stand and jump file has source fields, so it should never fire; any output it produced is not source-defined.",
+      "fix": "Remove the fallback; fail closed."
+    },
+    {
+      "id": "F4",
+      "where": "parse_gtech_activity_matlab.m lines 22-39",
+      "finding": "normal_walk 2-0/2-5 (running per GroupTasks, plotting script and paper) and skip are labelled level_walking.",
+      "fix": "Label from the publisher grouping (run; skip as its own variant family)."
+    },
+    {
+      "id": "F5",
+      "where": "parse_gtech_activity_matlab.m lines 96-105, 240, 245, 250",
+      "finding": "Invented task_info: stairs height_m 0.15 (paper Table 1: 152 mm), step_number is the pass index, curb 0.15 m and step-up 0.20 m not found in local sources.",
+      "fix": "Stair rise 0.152 m citing paper Table 1; rename pass index; drop curb/step-up heights unless Supplementary Table 1 states them."
+    },
+    {
+      "id": "F6",
+      "where": "time converter 501-506; phase converter 794-835",
+      "finding": "Global ForceX/ForceZ written as anterior/lateral (known; correction prepared, not run).",
+      "fix": "Heading-projected +x per forward class; other classes per D-GT23-C01-1."
+    }
+  ],
+  "unsupported_mappings_left_explicit": [
+    "Horizontal GRF and CoP for backward_travel, heading_changes and no_forward_travel activities (D-GT23-C01-1).",
+    "Horizontal GRF and CoP for forward classes until heading is measured per stride/window and checked (probe P2 covers contact only; heading reuse of the CORE-04 adapter is planned).",
+    "cop_* in the converter's calcn body frame (frame mismatch with the data reference).",
+    "Segment and pelvis angles (no publisher channel; local Link_Angle Euler YZX with a +pi/2 pelvis offset; seven AB02 normal_walk windows have oversized Transforms).",
+    "Non-sagittal joint coordinates (no adopted rule).",
+    "Moments and powers until D-GT23-C04-1 is answered and rescaling is reviewed.",
+    "turn_and_step event definition (README vs plotting script).",
+    "AB02 curb filename vs field type; weighted_walk speed (README 1.0 vs plotting 1.25 m/s).",
+    "AB07 treadmill recordings (dynamic_walk, incline_walk, normal_walk, walk_backward, weighted_walk, obstacle_walk) exist in RawData without parsing files; README lines 115-136 say these trials were removed (zero A/P force). Exclusion disposition needed before any continuous export."
+  ],
+  "probe_plan": {
+    "seed": 20261031,
+    "per_activity": 2,
+    "selection": [
+      {
+        "activity": "ball_toss",
+        "subject": "AB07",
+        "parsing": "ball_toss_1_right_parsing.mat",
+        "recording": "ball_toss_1"
+      },
+      {
+        "activity": "ball_toss",
+        "subject": "AB08",
+        "parsing": "ball_toss_1_left_parsing.mat",
+        "recording": "ball_toss_1"
+      },
+      {
+        "activity": "curb_down",
+        "subject": "AB07",
+        "parsing": "curb_down_1_parsing.mat",
+        "recording": "curb_down_1"
+      },
+      {
+        "activity": "curb_down",
+        "subject": "AB09",
+        "parsing": "curb_down_1_parsing.mat",
+        "recording": "curb_down_1"
+      },
+      {
+        "activity": "curb_up",
+        "subject": "AB02",
+        "parsing": "curb_up_1_left_parsing.mat",
+        "recording": "curb_up_1"
+      },
+      {
+        "activity": "curb_up",
+        "subject": "AB02",
+        "parsing": "curb_up_1_right_parsing.mat",
+        "recording": "curb_up_1"
+      },
+      {
+        "activity": "cutting",
+        "subject": "AB09",
+        "parsing": "cutting_1_right-slow_parsing.mat",
+        "recording": "cutting_1"
+      },
+      {
+        "activity": "cutting",
+        "subject": "AB12",
+        "parsing": "cutting_1_left-fast_parsing.mat",
+        "recording": "cutting_1"
+      },
+      {
+        "activity": "dynamic_walk",
+        "subject": "AB05",
+        "parsing": "dynamic_walk_1_butt-kicks_parsing.mat",
+        "recording": "dynamic_walk_1"
+      },
+      {
+        "activity": "dynamic_walk",
+        "subject": "AB10",
+        "parsing": "dynamic_walk_1_toe-walk_parsing.mat",
+        "recording": "dynamic_walk_1"
+      },
+      {
+        "activity": "incline_walk",
+        "subject": "AB03",
+        "parsing": "incline_walk_1_down5_parsing.mat",
+        "recording": "incline_walk_1"
+      },
+      {
+        "activity": "incline_walk",
+        "subject": "AB10",
+        "parsing": "incline_walk_1_up5_parsing.mat",
+        "recording": "incline_walk_1"
+      },
+      {
+        "activity": "jump",
+        "subject": "AB03",
+        "parsing": "jump_2_180_parsing.mat",
+        "recording": "jump_2"
+      },
+      {
+        "activity": "jump",
+        "subject": "AB05",
+        "parsing": "jump_1_2_vertical_parsing.mat",
+        "recording": "jump_1_2"
+      },
+      {
+        "activity": "lift_weight",
+        "subject": "AB10",
+        "parsing": "lift_weight_1_25lbs-l-c_parsing.mat",
+        "recording": "lift_weight_1"
+      },
+      {
+        "activity": "lift_weight",
+        "subject": "AB12",
+        "parsing": "lift_weight_1_25lbs-l-l_parsing.mat",
+        "recording": "lift_weight_1"
+      },
+      {
+        "activity": "lunges",
+        "subject": "AB08",
+        "parsing": "lunges_2_right_parsing.mat",
+        "recording": "lunges_2"
+      },
+      {
+        "activity": "lunges",
+        "subject": "AB09",
+        "parsing": "lunges_2_right_parsing.mat",
+        "recording": "lunges_2"
+      },
+      {
+        "activity": "normal_walk",
+        "subject": "AB02",
+        "parsing": "normal_walk_1_2-5_parsing.mat",
+        "recording": "normal_walk_1"
+      },
+      {
+        "activity": "normal_walk",
+        "subject": "AB10",
+        "parsing": "normal_walk_1_1-2_parsing.mat",
+        "recording": "normal_walk_1"
+      },
+      {
+        "activity": "side_shuffle",
+        "subject": "AB01",
+        "parsing": "side_shuffle_1_parsing.mat",
+        "recording": "side_shuffle_1"
+      },
+      {
+        "activity": "side_shuffle",
+        "subject": "AB09",
+        "parsing": "side_shuffle_1_parsing.mat",
+        "recording": "side_shuffle_1"
+      },
+      {
+        "activity": "sit_to_stand",
+        "subject": "AB03",
+        "parsing": "sit_to_stand_1_2_short-arm_parsing.mat",
+        "recording": "sit_to_stand_1_2"
+      },
+      {
+        "activity": "sit_to_stand",
+        "subject": "AB05",
+        "parsing": "sit_to_stand_1_short-noarm_parsing.mat",
+        "recording": "sit_to_stand_1"
+      },
+      {
+        "activity": "squats",
+        "subject": "AB01",
+        "parsing": "squats_1_25lbs_parsing.mat",
+        "recording": "squats_1"
+      },
+      {
+        "activity": "squats",
+        "subject": "AB05",
+        "parsing": "squats_2_0lbs_parsing.mat",
+        "recording": "squats_2"
+      },
+      {
+        "activity": "stairs",
+        "subject": "AB01",
+        "parsing": "stairs_1_5_up_parsing.mat",
+        "recording": "stairs_1_5"
+      },
+      {
+        "activity": "stairs",
+        "subject": "AB06",
+        "parsing": "stairs_1_10_down_parsing.mat",
+        "recording": "stairs_1_10"
+      },
+      {
+        "activity": "step_ups",
+        "subject": "AB09",
+        "parsing": "step_ups_1_left_parsing.mat",
+        "recording": "step_ups"
+      },
+      {
+        "activity": "step_ups",
+        "subject": "AB11",
+        "parsing": "step_ups_1_right_parsing.mat",
+        "recording": "step_ups"
+      },
+      {
+        "activity": "tire_run",
+        "subject": "AB03",
+        "parsing": "tire_run_1_parsing.mat",
+        "recording": "tire_run_1"
+      },
+      {
+        "activity": "tire_run",
+        "subject": "AB10",
+        "parsing": "tire_run_1_parsing.mat",
+        "recording": "tire_run_1"
+      },
+      {
+        "activity": "turn_and_step",
+        "subject": "AB01",
+        "parsing": "turn_and_step_1_right-turn_parsing.mat",
+        "recording": "turn_and_step_1"
+      },
+      {
+        "activity": "turn_and_step",
+        "subject": "AB10",
+        "parsing": "turn_and_step_1_left-turn_parsing.mat",
+        "recording": "turn_and_step_1"
+      },
+      {
+        "activity": "walk_backward",
+        "subject": "AB10",
+        "parsing": "walk_backward_1_0-6_parsing.mat",
+        "recording": "walk_backward_1"
+      },
+      {
+        "activity": "walk_backward",
+        "subject": "AB12",
+        "parsing": "walk_backward_1_1-0_parsing.mat",
+        "recording": "walk_backward_1"
+      },
+      {
+        "activity": "weighted_walk",
+        "subject": "AB02",
+        "parsing": "weighted_walk_1_25lbs_parsing.mat",
+        "recording": "weighted_walk_1"
+      },
+      {
+        "activity": "weighted_walk",
+        "subject": "AB10",
+        "parsing": "weighted_walk_1_25lbs_parsing.mat",
+        "recording": "weighted_walk_1"
+      },
+      {
+        "activity": "jump",
+        "subject": "AB07",
+        "parsing": "jump_1_hop_parsing.mat",
+        "recording": "jump_1",
+        "extra": "hop"
+      },
+      {
+        "activity": "normal_walk",
+        "subject": "AB01",
+        "parsing": "normal_walk_1_2-0_parsing.mat",
+        "recording": "normal_walk_1",
+        "extra": "running"
+      }
+    ],
+    "P1": "All 787 parsing files (708 KiB total): per condition, left vs right windows identical (max |diff| <= 0.0025 s), consecutive-interval contiguity, duration median; types cell contents.",
+    "P2": "Selected recordings, GroundFrame_GRFs.csv columns time, LForceY_Vertical, RForceY_Vertical only: NaN fraction per leg inside the parsing envelope; for heel_strike and skip activities and every jump hop file, rising 20 N (50 N for normal_walk 2-0/2-5) crossing within 1 sample of each interval start, and a falling crossing inside it. One extra seeded hop file and one extra running file are always included.",
+    "P3": "Selected recordings, Activity_Flag.csv: fraction of flag-on samples inside vs outside the parsing envelope, per leg.",
+    "bounds": "One process, one thread, RLIMIT_AS 768 MiB, CSV files > 64 MiB refused (recorded not_checked), csv module, each file read whole into memory under the 64 MiB cap (not streamed), no writes outside docs/quality/audits/gt23-c01-probe.json.",
+    "launch": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m contributor_tools.guarded_launcher run <spec running this file with \"probe\">; needs the serial numerical slot.",
+    "executed": false
+  },
+  "native_pilot": {
+    "prepared": "gt23-known-pose-preparation.json: 13 AB01 model poses (neutral, +/-1 deg hip/knee/ankle each side), OpenSim marker/body stations; checker contributor_tools/check_gt23_known_pose.py.",
+    "status": "not executed. The reviewed guarded launcher refuses MATLAB/native jobs until a reviewed native extension exists (guarded_launcher.py docstring).",
+    "what_it_adds": "Model-level direction of hip/knee/ankle coordinates independent of the author plot code. CORE-04 marker tests already reproduced the signs from data in 7 gait conditions, so the native pilot is corroborating, not blocking for sagittal signs."
+  },
+  "verification_plan": [
+    "Contact missingness: per activity and leg, fraction of NaN vertical GRF inside parsing envelopes (P2); treadmill one-plate rule (README 93) incl. the running both-leg intervals and the decline left plate.",
+    "Non-gait activities: whether left/right windows are identical (P1) and whether Activity_Flag on-periods bound the parsing windows (P3) for squats, sit_to_stand, lift_weight, ball_toss, jumps, lunges, cutting, tire_run.",
+    "Heel-strike intervals: interval start equals a 20 N (50 N running) rising crossing on that leg within 1 sample, and a falling crossing (toe-off) exists inside each interval (P2).",
+    "Second agent re-derives the activity table from README lines 144-278, GroupTasks.m and source_coverage.json without importing this builder."
+  ],
+  "limitations": [
+    "No source arrays read: event validity is \"source_defined_unverified\" until probes P1-P3 run.",
+    "Paper Supplementary Table 1 (task protocol) is not available locally.",
+    "Prior CORE-04 pilot covered 3 subjects and gait conditions only."
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "task": "UM21-T05",
+  "package": "converted_datasets/reconversion_v2/um21_r01_package_v5",
+  "counts": {
+    "full": {
+      "observations": 7589,
+      "phase": 7545,
+      "time": 44,
+      "phase_rows": 1131750,
+      "time_rows": 772821
+    },
+    "filtered": {
+      "observations": 7566,
+      "phase": 7523,
+      "time": 43,
+      "phase_rows": 1128450,
+      "time_rows": 755206
+    },
+    "failed_observations": 23,
+    "exclusions_total": 40,
+    "exclusions_note": "17 upstream stride exclusions (as v4) + 23 failed observations (22 phase failures as in Q01 v3: L5 21, L1 1; plus 1 time failure L2)"
+  },
+  "results_R1_R7": {
+    "R1": "manifest and file hashes, no unlisted files: pass",
+    "R2": "phase tables equal v4 in every data column, full and filtered (only lineage_id and assessment_id excluded): pass",
+    "R3": "one observation per recording, time_s = k/100, no infinity; R3b held names equal all-missing columns: pass",
+    "R4": "time at stride windows vs v4 phase, 7,545 strides: angles 37,725 series-strides all within 2.3e-16 rad; pelvis and hip 15,090 within 4.4e-16 (AB04/i0 pelvis sign exact, max 2.8e-17); moments 22,635 exact (0.0); limb velocity 99.9 percent of strides within NRMS 0.03 pooled (R4c, per family 1025/1025 thigh, 1024/1025 shank, 1024/1025 foot); CoP all 60 published legs within median 1 mm / p99 5 mm except AB04/i10 right (see T05-H); finite-sample differences between tables counted (158 series-strides) not gated",
+    "R5": "force sanity pass; R5b independent recompute at 200 seeded frames per leg for AB02/i5 and AB03/i0: max difference 0.0 BW (third seeded recording AB10/d5 is held so unchecked)",
+    "R6": "clock source_start_time_s = (a-1)/100: 0 mismatches in 7,545 strides",
+    "R7": "filtered time = full minus failed; every failed time observation once in exclusions.csv: pass"
+  },
+  "time_L2": "1 of 44 recordings (2.3 percent), far below the 25 percent switch point, so the whole-recording L2 rule T05-D stays",
+  "readback": "converted_datasets/reconversion_v2/um21_t05_readback_full_a7/readback.json",
+  "assessment": "converted_datasets/reconversion_v2/um21_t05_assess_full_v2/time_assessment.json"
+}

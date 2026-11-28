@@ -48,9 +48,13 @@ Installation:
 
 import sys
 import copy
+import hashlib
+import json
+import os
 import re
 from collections import defaultdict
 from datetime import datetime
+from functools import wraps
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any
 
@@ -64,11 +68,13 @@ DISPLAY_AVAILABLE = False
 
 try:
     import tkinter as tk
-    from tkinter import filedialog, messagebox, ttk
+    from tkinter import filedialog, messagebox, simpledialog, ttk
     TKINTER_AVAILABLE = True
     
     # Test if display is available
     try:
+        if os.environ.get("LOCOHUB_HEADLESS") == "1":
+            raise RuntimeError("Headless operation requested")
         test_root = tk.Tk()
         test_root.destroy()
         DISPLAY_AVAILABLE = True
@@ -93,7 +99,7 @@ from matplotlib.ticker import FuncFormatter, FixedLocator
 from matplotlib.collections import LineCollection
 import matplotlib.animation as animation
 
-# Ensure repository root and src/ are importable so `import locohub` works
+# Ensure internal contributor tools are importable from a direct script invocation
 project_root = Path(__file__).parent.parent
 src_dir = project_root / "src"
 if str(project_root) not in sys.path:
@@ -102,11 +108,11 @@ if src_dir.exists() and str(src_dir) not in sys.path:
     sys.path.insert(0, str(src_dir))
 
 # Import existing modules
-from locohub import LocomotionData
-from locohub.feature_constants import get_feature_list
+from contributor_tools.common.dataset_table import DatasetTable
+from contributor_tools.common.feature_constants import get_feature_list
 from contributor_tools.common.config_manager import ValidationConfigManager
 from contributor_tools.common.validation import Validator
-from locohub import task_registry
+from contributor_tools.common import task_registry
 from contributor_tools.common.plotting import get_task_classification
 
 
@@ -597,12 +603,30 @@ class DraggableBox:
         # Event callbacks are centrally managed; nothing to disconnect here
 
 
+def record_profile_edit(method):
+    """Keep small range/metadata snapshots; never copy loaded signal arrays."""
+    @wraps(method)
+    def wrapped(self, *args, **kwargs):
+        before = self._profile_snapshot()
+        try:
+            return method(self, *args, **kwargs)
+        finally:
+            # Even a later rendering error must leave an undoable, dirty edit.
+            if before != self._profile_snapshot():
+                self._undo_stack.append(before)
+                self._undo_stack = self._undo_stack[-20:]
+                self._redo_stack.clear()
+                self.full_validation_data = copy.deepcopy(self.validation_data)
+                self.modified = self._profile_snapshot() != self._saved_snapshot
+    return wrapped
+
+
 class InteractiveValidationTuner:
     """
     Main GUI application for interactive validation range tuning.
     """
     
-    def __init__(self):
+    def __init__(self, headless: bool = False):
         """Initialize the interactive validation tuner."""
         self.validation_data = {}  # Active validation ranges (ipsi + contra)
         self.full_validation_data = {}  # Mirror of validation_data for validation routines
@@ -620,6 +644,13 @@ class InteractiveValidationTuner:
         self.phase_template = np.linspace(0, 100, 150)
         self.max_traces_per_axis = 350
         self.modified = False
+        self.task_metadata = {}
+        self._loaded_profile_document = {}
+        self.profile_path = None
+        self.source_profile_sha256 = None
+        self._undo_stack = []
+        self._redo_stack = []
+        self._saved_snapshot = self._profile_snapshot()
         self.unknown_tasks = set()
         self.dataset_tasks = set()  # Track which tasks exist in the loaded dataset
         self._missing_task_notice = None  # Message shown when YAML task lacks dataset support
@@ -635,10 +666,85 @@ class InteractiveValidationTuner:
         self.debug = False
         
         # Setup the GUI
-        self.setup_gui()
-        
-        # Auto-load default files
-        self.auto_load_defaults()
+        if not headless:
+            self.setup_gui()
+            # Auto-load default files
+            self.auto_load_defaults()
+
+    def _profile_snapshot(self):
+        return copy.deepcopy({
+            "ranges": self.validation_data, "task_metadata": self.task_metadata,
+        })
+
+    def _profile_tasks(self, snapshot=None):
+        snapshot = snapshot if snapshot is not None else self._profile_snapshot()
+        return {
+            task: {"metadata": copy.deepcopy(snapshot["task_metadata"].get(task, {})),
+                   "phases": copy.deepcopy(phases)}
+            for task, phases in snapshot["ranges"].items()
+        }
+
+    def _load_profile(self, path):
+        """Load into temporary objects first so a failed load preserves edits."""
+        path = Path(path)
+        raw = path.read_bytes()
+        document = yaml.safe_load(raw)
+        manager = ValidationConfigManager(path)
+        ranges = {task: manager.get_task_data(task) for task in manager.get_tasks()}
+        metadata = {task: manager.get_task_metadata(task) for task in manager.get_tasks()}
+        self.config_manager = manager
+        self.validation_data = copy.deepcopy(ranges)
+        self.full_validation_data = copy.deepcopy(ranges)
+        self.original_validation_data = copy.deepcopy(ranges)
+        self.original_full_validation_data = copy.deepcopy(ranges)
+        self.task_metadata = metadata
+        self._loaded_profile_document = document
+        self.profile_path = path
+        self.source_profile_sha256 = hashlib.sha256(raw).hexdigest()
+        self._saved_snapshot = self._profile_snapshot()
+        self._undo_stack.clear()
+        self._redo_stack.clear()
+        self.modified = False
+
+    def _restore_profile_snapshot(self, snapshot):
+        self.validation_data = copy.deepcopy(snapshot["ranges"])
+        self.task_metadata = copy.deepcopy(snapshot["task_metadata"])
+        self.full_validation_data = copy.deepcopy(self.validation_data)
+        if self.config_manager is not None:
+            self.config_manager.set_data(self._profile_tasks())
+        self.modified = self._profile_snapshot() != self._saved_snapshot
+        if hasattr(self, "task_dropdown"):
+            self._refresh_task_dropdown()
+        if hasattr(self, "canvas"):
+            self.update_plot(force_redraw=True)
+        self._set_status("Draft edits restored; Validate to refresh decisions.")
+
+    def undo(self, event=None):
+        if self._undo_stack:
+            self._redo_stack.append(self._profile_snapshot())
+            self._restore_profile_snapshot(self._undo_stack.pop())
+        return "break"
+
+    def redo(self, event=None):
+        if self._redo_stack:
+            self._undo_stack.append(self._profile_snapshot())
+            self._restore_profile_snapshot(self._redo_stack.pop())
+        return "break"
+
+    def _confirm_unsaved(self):
+        if not self.modified:
+            return True
+        choice = messagebox.askyesnocancel(
+            "Unsaved draft", "Save your draft and rationale before continuing?",
+            parent=self.root,
+        )
+        if choice is None:
+            return False
+        return bool(self.save_validation_ranges()) if choice else True
+
+    def on_close(self):
+        if self._confirm_unsaved():
+            self.root.destroy()
     
     def invalidate_all_backgrounds(self):
         """Invalidate background cache for all draggable boxes when plot changes."""
@@ -722,17 +828,14 @@ class InteractiveValidationTuner:
         
         print(f"Prepared backgrounds for {len(self.draggable_boxes)} interactive elements")
         
-        # Setup the GUI
-        self.setup_gui()
-        
-        # Auto-load default files
-        self.auto_load_defaults()
-    
     def setup_gui(self):
         """Setup the main GUI window."""
         # Create main window
         self.root = tk.Tk()
         self.root.title("Interactive Validation Range Tuner")
+        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
+        self.root.bind("<Control-z>", self.undo)
+        self.root.bind("<Control-y>", self.redo)
         
         # Start maximized
         try:
@@ -760,9 +863,13 @@ class InteractiveValidationTuner:
         file_menu.add_command(label="Load Validation Ranges (YAML)...", command=self.load_validation_ranges)
         file_menu.add_command(label="Load Dataset (Parquet)...", command=self.load_dataset)
         file_menu.add_separator()
-        file_menu.add_command(label="Save Validation Ranges...", command=self.save_validation_ranges)
+        file_menu.add_command(label="Save Draft Profile...", command=self.save_validation_ranges)
         file_menu.add_separator()
-        file_menu.add_command(label="Exit", command=self.root.quit)
+        file_menu.add_command(label="Exit", command=self.on_close)
+        edit_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Edit", menu=edit_menu)
+        edit_menu.add_command(label="Undo", accelerator="Ctrl+Z", command=self.undo)
+        edit_menu.add_command(label="Redo", accelerator="Ctrl+Y", command=self.redo)
         
         # Create toolbar frame
         toolbar_frame = ttk.Frame(self.root)
@@ -824,21 +931,7 @@ class InteractiveValidationTuner:
         default_ranges_path = project_root / "contributor_tools" / "validation_ranges" / "default_ranges.yaml"
         if default_ranges_path.exists():
             try:
-                # Use ValidationConfigManager for consistency
-                self.config_manager = ValidationConfigManager(default_ranges_path)
-                
-                # Extract validation data (explicit ipsi + contra)
-                self.validation_data = {}
-                self.full_validation_data = {}
-                self.original_validation_data = {}
-                self.original_full_validation_data = {}
-                
-                for task_name in self.config_manager.get_tasks():
-                    full_task_data = self.config_manager.get_task_data(task_name)
-                    self.validation_data[task_name] = copy.deepcopy(full_task_data)
-                    self.full_validation_data[task_name] = copy.deepcopy(full_task_data)
-                    self.original_validation_data[task_name] = copy.deepcopy(full_task_data)
-                    self.original_full_validation_data[task_name] = copy.deepcopy(full_task_data)
+                self._load_profile(default_ranges_path)
 
                 yaml_tasks = list(self.validation_data.keys())
                 self._note_unknown_tasks(yaml_tasks, source="validation ranges")
@@ -1080,6 +1173,7 @@ class InteractiveValidationTuner:
         if hasattr(self, 'status_bar'):
             self.status_bar.config(text=warning)
 
+    @record_profile_edit
     def _initialize_task_from_dataset(self, task_name: str) -> bool:
         """Generate placeholder validation ranges for a dataset-only task."""
 
@@ -1107,7 +1201,7 @@ class InteractiveValidationTuner:
             except Exception:
                 continue
 
-            if cycles_data.size == 0:
+            if cycles_data is None or cycles_data.size == 0:
                 continue
 
             all_data.append(cycles_data)
@@ -1152,21 +1246,22 @@ class InteractiveValidationTuner:
         if not phase_ranges:
             return False
 
-        if not phase_ranges:
-            return False
-
         self.validation_data[task_name] = {
             phase: {var: copy.deepcopy(rng) for var, rng in variables.items()}
             for phase, variables in phase_ranges.items()
         }
         self.full_validation_data[task_name] = copy.deepcopy(self.validation_data[task_name])
-        self.original_validation_data[task_name] = copy.deepcopy(self.validation_data[task_name])
-        self.original_full_validation_data[task_name] = copy.deepcopy(self.validation_data[task_name])
+        self.task_metadata[task_name] = {
+            "review_status": "draft",
+            "range_origin": "dataset_min_max_placeholder",
+            "derived_from_dataset": str(self.dataset_path) if self.dataset_path else None,
+            "review_required": True,
+        }
 
         if self.config_manager is not None:
             config_snapshot = copy.deepcopy(self.config_manager.get_data())
             config_snapshot[task_name] = {
-                'metadata': {},
+                'metadata': copy.deepcopy(self.task_metadata[task_name]),
                 'phases': copy.deepcopy(self.validation_data[task_name])
             }
             self.config_manager.set_data(config_snapshot)
@@ -1545,6 +1640,8 @@ class InteractiveValidationTuner:
     
     def load_validation_ranges(self):
         """Load validation ranges from YAML file."""
+        if not self._confirm_unsaved():
+            return
         file_path = filedialog.askopenfilename(
             title="Select Validation Ranges YAML",
             filetypes=[("YAML files", "*.yaml *.yml"), ("All files", "*.*")],
@@ -1555,22 +1652,8 @@ class InteractiveValidationTuner:
             return
         
         try:
-            # Use ValidationConfigManager for consistency
-            self.config_manager = ValidationConfigManager(Path(file_path))
+            self._load_profile(file_path)
 
-            # Extract validation data (ipsi + contra stored explicitly)
-            self.validation_data = {}
-            self.full_validation_data = {}
-            self.original_validation_data = {}
-            self.original_full_validation_data = {}
-            
-            for task_name in self.config_manager.get_tasks():
-                full_task_data = self.config_manager.get_task_data(task_name)
-                self.validation_data[task_name] = copy.deepcopy(full_task_data)
-                self.full_validation_data[task_name] = copy.deepcopy(full_task_data)
-                self.original_validation_data[task_name] = copy.deepcopy(full_task_data)
-                self.original_full_validation_data[task_name] = copy.deepcopy(full_task_data)
-            
             yaml_tasks = list(self.validation_data.keys())
             self._note_unknown_tasks(yaml_tasks, source="validation ranges")
             self._refresh_task_dropdown()
@@ -1608,11 +1691,11 @@ class InteractiveValidationTuner:
             # Try loading with different phase column names
             try:
                 # Try with 'phase' column first
-                self.locomotion_data = LocomotionData(str(self.dataset_path))
+                self.locomotion_data = DatasetTable(str(self.dataset_path))
             except ValueError as e:
                 if "Missing required columns: ['phase']" in str(e):
                     # Try with 'phase_ipsi' column
-                    self.locomotion_data = LocomotionData(
+                    self.locomotion_data = DatasetTable(
                         str(self.dataset_path),
                         phase_col='phase_ipsi'
                     )
@@ -2236,7 +2319,7 @@ class InteractiveValidationTuner:
             return failing_strides
 
         # Sync validator config with current in-memory ranges
-        self.validator.config_manager.set_data(copy.deepcopy(self.full_validation_data))
+        self.validator.config_manager.set_data(self._profile_tasks())
 
         validation_result = self.validator.validate_dataset(
             locomotion_data=self.locomotion_data,
@@ -2523,7 +2606,7 @@ class InteractiveValidationTuner:
                             features=None
                         )
                         
-                        if cycles_data.size == 0:
+                        if cycles_data is None or cycles_data.size == 0:
                             continue
                         
                         # Find variable index
@@ -2550,6 +2633,7 @@ class InteractiveValidationTuner:
             mean_pattern = np.mean(all_data, axis=0)
             ax.plot(phase_ipsi, mean_pattern, color='black', linewidth=2, zorder=5)
     
+    @record_profile_edit
     def on_box_changed(self, box):
         """Handle changes to a draggable box."""
         # First, handle phase changes if the box was moved horizontally
@@ -2609,6 +2693,61 @@ class InteractiveValidationTuner:
     
     
     
+    @record_profile_edit
+    def set_numeric_range(self, task, variable, old_phase, phase, lower, upper):
+        """Apply one validated edit in canonical units, with undo support."""
+        if not np.isfinite([phase, lower, upper]).all():
+            raise ValueError("Phase and bounds must be finite numbers.")
+        if phase != int(phase) or not 0 <= phase <= 100:
+            raise ValueError("Phase must be a whole percentage from 0 to 100.")
+        if lower > upper:
+            raise ValueError("The lower bound must not exceed the upper bound.")
+        phases = self.validation_data[task]
+        if old_phase not in phases or variable not in phases[old_phase]:
+            raise ValueError("The selected range no longer exists.")
+        phase = int(phase)
+        if phase != old_phase and variable in phases.get(phase, {}):
+            raise ValueError("This variable already has a range at the requested phase.")
+        del phases[old_phase][variable]
+        if not phases[old_phase]:
+            del phases[old_phase]
+        phases.setdefault(phase, {})[variable] = {"min": float(lower), "max": float(upper)}
+
+    def edit_box_numerically(self, box):
+        """Prompt in displayed units and store in the canonical feature units."""
+        phase = simpledialog.askinteger(
+            "Edit range", "Phase (%)", initialvalue=box.phase,
+            minvalue=0, maxvalue=100, parent=self.root,
+        )
+        if phase is None:
+            return
+        unit = self.get_display_unit(box.var_name)
+        lower = simpledialog.askfloat(
+            "Edit range", f"Lower bound ({unit})",
+            initialvalue=self.convert_value_for_display(box.var_name, box.min_val),
+            parent=self.root,
+        )
+        if lower is None:
+            return
+        upper = simpledialog.askfloat(
+            "Edit range", f"Upper bound ({unit})",
+            initialvalue=self.convert_value_for_display(box.var_name, box.max_val),
+            parent=self.root,
+        )
+        if upper is None:
+            return
+        if box.var_name.endswith(("_rad", "_rad_s")):
+            lower, upper = np.deg2rad([lower, upper])
+        try:
+            self.set_numeric_range(
+                self.current_task, box.var_name, box.phase, phase, lower, upper,
+            )
+        except ValueError as exc:
+            messagebox.showerror("Invalid range", str(exc), parent=self.root)
+            return
+        self.update_plot(force_redraw=True)
+        self._set_status("Draft numeric edit applied. Save with a rationale when ready.")
+
     def on_plot_click(self, event):
         """Handle right-click events for adding/deleting boxes."""
         if event.button == 3 and event.inaxes:  # Right-click
@@ -2627,8 +2766,11 @@ class InteractiveValidationTuner:
             target_var = None
 
             if clicked_box:
-                # Right-clicked on a box - show delete option
                 target_var = clicked_box.var_name
+                menu.add_command(
+                    label="Edit phase and bounds numerically...",
+                    command=lambda: self.edit_box_numerically(clicked_box),
+                )
                 menu.add_command(
                     label=f"Delete box at {clicked_box.phase}%",
                     command=lambda: self.delete_box(clicked_box)
@@ -2701,6 +2843,7 @@ class InteractiveValidationTuner:
             finally:
                 menu.grab_release()
     
+    @record_profile_edit
     def delete_box(self, box):
         """Delete a validation box and its paired box."""
         print(f"Deleting box at phase {box.phase} for {box.var_name}")
@@ -2831,6 +2974,7 @@ class InteractiveValidationTuner:
                     return True
         return False
 
+    @record_profile_edit
     def reset_current_task_to_original(self):
         """Reset every variable in the current task to the YAML defaults."""
         if not self.current_task:
@@ -2878,6 +3022,7 @@ class InteractiveValidationTuner:
                 text=f"Reset all validation ranges for {self.current_task} to YAML defaults."
             )
 
+    @record_profile_edit
     def reset_variable_to_original(self, var_name: str):
         """Reset all validation ranges for a variable to the loaded YAML defaults."""
         if not self.current_task or not var_name:
@@ -3027,6 +3172,7 @@ class InteractiveValidationTuner:
         if hasattr(self, 'status_bar'):
             self.status_bar.config(text=f"Reset {var_name} to YAML defaults for {self.current_task}.")
 
+    @record_profile_edit
     def copy_variable_to_counterpart(self, var_name: str, to_contra: bool, phase_offset: int = 0) -> None:
         """Copy validation ranges between ipsilateral and contralateral versions of a variable.
 
@@ -3121,6 +3267,7 @@ class InteractiveValidationTuner:
 
         # Defer full validation until the user explicitly requests it.
 
+    @record_profile_edit
     def add_box(self, phase, var_name, click_value):
         """Add a new validation box at the specified phase."""
         # Create default range around click position
@@ -3195,7 +3342,7 @@ class InteractiveValidationTuner:
         """Generate comprehensive summary title with validation stats."""
         # Main title components
         task_title = self.current_task.replace("_", " ").title() if self.current_task else "No Task"
-        dataset_name = self.dataset_path.name if hasattr(self, 'dataset_path') else "No Dataset"
+        dataset_name = self.dataset_path.name if self.dataset_path else "No Dataset"
         
         # Stats line (if validation has been run)
         if self._missing_task_notice:
@@ -3209,7 +3356,14 @@ class InteractiveValidationTuner:
         else:
             stats_line = "\nNo validation run yet - click Validate to analyze"
         
-        return f"{task_title} - {dataset_name}{stats_line}"
+        task_metadata = self.task_metadata.get(self.current_task, {})
+        if task_metadata.get("range_origin") == "dataset_min_max_placeholder":
+            review_line = "\nDRAFT — dataset min/max placeholders; independent review required"
+        elif self.modified or self._loaded_profile_document.get("review_status") == "draft":
+            review_line = "\nDRAFT — independent review required"
+        else:
+            review_line = "\nRange decisions do not establish scientific review or release approval"
+        return f"{task_title} - {dataset_name}{stats_line}{review_line}"
     
     def run_validation_update(self):
         """Run validation using the 4-step algorithm for optimal performance.
@@ -3610,51 +3764,163 @@ class InteractiveValidationTuner:
         self.update_plot(force_redraw=True)
     
     
+    def _decision_counts(self, snapshot):
+        """Assess only the already loaded table; no implicit dataset reads."""
+        if self.locomotion_data is None:
+            return {"status": "not_evaluated", "reason": "No dataset loaded"}
+        manager = ValidationConfigManager()
+        manager.set_data(self._profile_tasks(snapshot))
+        for key, value in self._loaded_profile_document.items():
+            if key != "tasks":
+                manager.set_metadata(key, copy.deepcopy(value))
+        validator = Validator()
+        validator.config_manager = manager
+        result = validator.validate_dataset(self.locomotion_data)
+        assessment = result.get("assessment")
+        if assessment is not None:
+            counts = copy.deepcopy(assessment["counts"])
+            kind = "observation_decisions"
+        else:
+            stats = result["stats"]
+            counts = {key: stats[key] for key in (
+                "total_strides", "total_passing_strides", "total_failing_strides",
+                "total_unassessed_strides",
+            )}
+            kind = "legacy_stride_summary"
+        return {
+            "status": "evaluated", "kind": kind,
+            "schema_passed": bool(result["schema_passed"]), "counts": counts,
+            "dataset": str(self.dataset_path) if self.dataset_path else None,
+            "dataset_rows": len(self.locomotion_data.df),
+            "tasks": {
+                task: {
+                    "total": details["total_strides"],
+                    "passing": len(details["global_passing_strides"]),
+                    "unassessed": len(details.get("unassessed_strides", [])),
+                }
+                for task, details in result["tasks"].items()
+            },
+        }
+
+    @staticmethod
+    def _range_diff(before, after):
+        def flatten(snapshot):
+            return {(task, phase, variable): bounds
+                    for task, phases in snapshot["ranges"].items()
+                    for phase, variables in phases.items()
+                    for variable, bounds in variables.items()}
+        old, new = flatten(before), flatten(after)
+        return [
+            {"task": task, "phase": phase, "feature": variable,
+             "before": old.get((task, phase, variable)),
+             "after": new.get((task, phase, variable))}
+            for task, phase, variable in sorted(old.keys() | new.keys())
+            if old.get((task, phase, variable)) != new.get((task, phase, variable))
+        ]
+
+    def save_profile(self, path, rationale):
+        """Save an explicitly unreviewed draft and its before/after audit."""
+        if not isinstance(rationale, str) or not rationale.strip():
+            raise ValueError("A nonempty rationale is required to save a draft.")
+        if not self.validation_data:
+            raise ValueError("No validation ranges to save.")
+        path = Path(path)
+        snapshot = self._profile_snapshot()
+        document = copy.deepcopy(self._loaded_profile_document)
+        tasks = self._profile_tasks(snapshot)
+        # Validate all bounds before writing either artifact.
+        manager = ValidationConfigManager()
+        manager.set_data(tasks)
+        original_tasks = document.get("tasks", {})
+        document["tasks"] = {}
+        for task, values in tasks.items():
+            section = copy.deepcopy(original_tasks.get(task, {}))
+            section.update(values)
+            document["tasks"][task] = section
+        if document.get("review"):
+            document.setdefault("review_history", []).append(copy.deepcopy(document["review"]))
+        document["review_status"] = "draft"
+        document["review"] = {
+            "rationale": rationale.strip(),
+            "saved_at": datetime.now().astimezone().isoformat(),
+            "saved_by_tool": "Interactive Validation Tuner",
+            "parent_profile": str(self.profile_path) if self.profile_path else None,
+            "parent_profile_sha256": self.source_profile_sha256,
+        }
+        document = self._convert_numpy_to_python(document)
+        encoded = yaml.safe_dump(document, sort_keys=False, allow_unicode=True).encode("utf-8")
+        digest = hashlib.sha256(encoded).hexdigest()
+        audit = {
+            "review_status": "draft", "profile_sha256": digest,
+            "review": document["review"],
+            "range_changes": self._range_diff(self._saved_snapshot, snapshot),
+            "task_metadata_before": self._saved_snapshot["task_metadata"],
+            "task_metadata_after": snapshot["task_metadata"],
+            "before": self._decision_counts(self._saved_snapshot),
+            "after": self._decision_counts(snapshot),
+        }
+        audit_path = path.with_suffix(path.suffix + ".audit.json")
+        # Keep a failed save from truncating an existing profile. The audit hash
+        # also makes a profile/audit mismatch detectable after an interrupted save.
+        audit_tmp = audit_path.with_suffix(audit_path.suffix + ".tmp")
+        profile_tmp = path.with_suffix(path.suffix + ".tmp")
+        try:
+            audit_tmp.write_text(json.dumps(self._convert_numpy_to_python(audit), indent=2, allow_nan=False) + "\n")
+            profile_tmp.write_bytes(encoded)
+            audit_tmp.replace(audit_path)
+            profile_tmp.replace(path)
+        finally:
+            audit_tmp.unlink(missing_ok=True)
+            profile_tmp.unlink(missing_ok=True)
+        self._loaded_profile_document = document
+        self.profile_path = path
+        self.source_profile_sha256 = digest
+        self._saved_snapshot = snapshot
+        self.original_validation_data = copy.deepcopy(self.validation_data)
+        self.original_full_validation_data = copy.deepcopy(self.validation_data)
+        for key, value in document.items():
+            if key != "tasks":
+                manager.set_metadata(key, copy.deepcopy(value))
+        self.config_manager = manager
+        self.modified = False
+        return audit_path
+
     def save_validation_ranges(self):
-        """Save current validation ranges to YAML file."""
+        """Save as a draft; a separate review is required for release use."""
         if not self.validation_data:
             messagebox.showwarning("Warning", "No validation ranges to save.")
-            return
-        
+            return False
+        rationale = simpledialog.askstring(
+            "Draft rationale", "Why were these ranges changed? A rationale is required.",
+            parent=self.root,
+        )
+        if rationale is None:
+            return False
+        if not rationale.strip():
+            messagebox.showwarning("Rationale required", "Enter a rationale before saving.")
+            return False
         file_path = filedialog.asksaveasfilename(
-            title="Save Validation Ranges",
+            title="Save Draft Validation Profile",
+            initialfile="validation_ranges_draft.yaml",
             defaultextension=".yaml",
             filetypes=[("YAML files", "*.yaml"), ("All files", "*.*")],
-            initialdir=str(project_root / "contributor_tools" / "validation_ranges")
+            initialdir=str(project_root / "contributor_tools" / "validation_ranges"),
         )
-        
         if not file_path:
-            return
-        
+            return False
         try:
-            # Create config manager and set data
-            config_manager = ValidationConfigManager()
-            
-            # Convert numpy types to Python native types and ensure integer phases
-            clean_data = {}
-            for task_name, task_data in self.validation_data.items():
-                clean_data[task_name] = {}
-                for phase, variables in task_data.items():
-                    # Ensure phase is an integer
-                    phase = int(phase) if not isinstance(phase, int) else phase
-                    clean_data[task_name][phase] = self._convert_numpy_to_python(variables)
-            
-            # Set data and metadata
-            config_manager.set_data(clean_data)
-            config_manager.set_metadata('source', 'Interactive Validation Tuner')
-            config_manager.set_metadata('description', 'Interactively tuned validation ranges for all features')
-            
-            # Save to file
-            config_manager.save(Path(file_path))
-            
-            self.modified = False
-            self.status_bar.config(text=f"Saved validation ranges to: {Path(file_path).name}")
-            messagebox.showinfo("Success", f"Validation ranges saved to:\n{Path(file_path).name}")
-            
-        except Exception as e:
-            print(f"ERROR: Failed to save validation ranges: {str(e)}")
-            messagebox.showerror("Error", f"Failed to save validation ranges:\n{str(e)}")
-    
+            audit_path = self.save_profile(file_path, rationale)
+            self._set_status(f"Saved DRAFT: {Path(file_path).name}; separate review required.")
+            messagebox.showinfo(
+                "Draft saved",
+                f"Draft profile: {Path(file_path).name}\nAudit: {audit_path.name}\n"
+                "This profile requires review before release use.",
+            )
+            return True
+        except Exception as exc:
+            messagebox.showerror("Error", f"Failed to save draft:\n{exc}")
+            return False
+
     def run(self):
         """Run the GUI application."""
         self.root.mainloop()

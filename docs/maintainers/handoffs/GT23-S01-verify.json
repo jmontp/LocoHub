@@ -1,0 +1,57 @@
+{
+  "task_id": "GT23-S01",
+  "verifier": "independent verifier agent (did not write the work; worker code not imported)",
+  "verdict": "pass",
+  "scientific_approval": false,
+  "checked_at_utc": "2026-11-24T00:45:00+00:00",
+  "receipts": "All 17 receipts (4 pilots, 12 batches, 1 summary): status completed, clean_success true, cleanup_proof proven, exit 0, no launcher/finalisation errors or orphans, bindings before and after match, and every code binding sha256 equals the current file (so pilots and batches ran the same code, i.e. no parameter edits between pilot and full run).",
+  "recount_from_per_recording_outputs": {
+    "recordings": 488,
+    "authors_windows": 13119,
+    "left": 7721,
+    "right": 5398,
+    "matched": 9378,
+    "missed": 3741,
+    "missed_without_reason": 0,
+    "no_window_recordings": 90,
+    "no_window_split": "64 continuous, 23 gait, 3 window",
+    "segments": "13,958 accepted + 1,415 excluded = 15,373; excluded without reason: 0",
+    "normal_walk_matched": "1590 of 1595 (5 missed: force not a number inside our stride)",
+    "dynamic_walk_matched": "747 of 749",
+    "stairs_matched": "136 of 343"
+  },
+  "labels": "6,747 segments carry an authors file; every one has an authors window start within 250 ms in its own recording. 0 labelled segments without a match; 0 unknown segments that have a match or file. No label invented outside the authors windows.",
+  "independent_sample": {
+    "seed": 20261124,
+    "method": "Own code written from the handoff text: 20 N rising crossing, same-leg heel-to-heel, 0.3 to 5 s limits; speed of the mean marker position by central difference over 50 ms at 0.5 m/s with 0.25 s bridging and minimum span. Force from step-1 parquet (4096-row batches), markers from the source .trc, authors windows from the source .mat files.",
+    "recordings": ["AB03 normal_walk_1", "AB13 dynamic_walk_1", "AB01 incline_walk_1", "AB02 stairs_1_1", "AB12 side_shuffle_1", "AB13 curb_down_1", "AB03 curb_up_1", "AB11 cutting_1", "AB08 jump_2", "AB08 sit_to_stand_2", "AB03 lift_weight_2", "AB07 obstacle_walk_1 (no windows)", "AB02 step_ups (no windows)", "AB08 poses_1 (no windows, continuous)"],
+    "gait_result": "Accepted stride start and end indices identical to the worker's for both legs in all 6 gait recordings (including the no-window obstacle_walk); excluded counts and reasons identical. Authors starts match ours at 0 ms in normal_walk (128/128 L, 49/49 R), dynamic_walk (74/74), incline_walk (16/16 L, 19/19 R).",
+    "window_result": "Spans of 0.25 s or longer: same start indices as the worker in cutting_1, sit_to_stand_2, step_ups and agree up to the missing-marker boundary exclusion (which my simple rule does not implement) in curb_down_1, curb_up_1, jump_2, lift_weight_2.",
+    "continuous": "poses_1 has zero segments, as stated."
+  },
+  "stated_reasons_checked": {
+    "stairs": "Holds. AB02 stairs_1_1: authors start equals the 20 N rise (0 to 10 ms), authors window is about 1.1 s, stance ends about 0.4 s before the window end, and there is no next contact on the plate, so heel-to-heel gives no stride. Minor wording issue: windows are longer than one stance (about 1.1 s versus 0.7 s), so 'one plate contact' is loose.",
+    "side_shuffle": "Holds. AB12 side_shuffle_1: authors windows last about 0.95 s with starts 260 to 350 ms away from the nearest 20 N rise and ends 260 to 380 ms from the nearest fall or rise; our contacts are about 0.55 s apart. Not heel-to-heel strides. Authors keys here are cross types (left_left, left_right, ...), identical times on both legs.",
+    "curb_and_cutting": "The handoff gives no mechanism, only 'agree poorly'; no wrong reason stated. Data show why: in curb_down_1, curb_up_1 and cutting_1 every authors window lies inside one of our spans (34/34, 22/22, 40/40 overlap) but our speed rule merges continuous walking (0.9 m/s typical) into spans of 8 to 33 s (curb) or 3 to 4 s (cutting) against authors windows of 1.5 to 3.8 s, so starts rarely fall within 250 ms. Cutting_1: 0 of 40 starts within 250 ms."
+  },
+  "anomalies_for_the_record": [
+    "The handoff summary says gait tasks match with 'start and end offset 0 ms for every matched window'. Starts are 0 ms for all 3,819 matched gait windows, but 134 normal_walk matched windows have end offsets of 50 ms to 1.35 s (the authors' window ends differ from our next heel contact). Start claim is right, end claim is an overstatement; the findings text only claims start offsets.",
+    "My glob for authors files missed some files (side_shuffle, curb) in my first pass; re-read through the events root file list, counts then equal the worker's.",
+    "Window-rule agreement is poor for curb, cutting and side_shuffle and ends differ by about 1 s elsewhere; reported honestly, not tuned. Windows from our rule are not claimed equal to the authors'."
+  ],
+  "checks_run": [
+    "pytest tests/test_gt23_s01.py: 11 passed (peak 205 MiB)",
+    "python3 contributor_tools/build_backlog_page.py --check: Backlog valid; HTML current (120 tasks)"
+  ],
+  "resources": {
+    "probe_peak_rss_mib": 268,
+    "limit_mib": 300,
+    "wrote_under_converted_datasets": false,
+    "scratch": "/tmp/v23 (verify scripts only)",
+    "nothing_left_running": true
+  },
+  "limits": [
+    "Sample of 14 recordings plus full recount from the worker's own outputs; the per-recording outputs were not recomputed for all 488.",
+    "Task completion is not scientific approval of the dataset; side_shuffle, curb, cutting and window-rule ends remain unreproduced against the authors for GT23-C06 to handle."
+  ]
+}

@@ -1,0 +1,161 @@
+{
+  "dataset": "GT24",
+  "status": "source_documented_negation_proposed_pending_bounded_pilot",
+  "scientific_approval": false,
+  "supersedes_decision_in": "docs/quality/audits/gt24-ankle-convention-review.json",
+  "correction_to_prior_review": "Withholding every ankle canonical field imposed an unnecessary requirement for the historical model. The reviewed source evidence contains an explicit released convention and no contradictory authoritative definition. Generic model expectations and unregistered gyro/posture diagnostics do not outrank the released documentation.",
+  "readme": {
+    "path": "/mnt/s/locomotion_data/GaTech_2024_TaskAgnostic/readme.txt",
+    "sha256": "e896c6b424c45f50f261ade2e40c5f5832065fbcd745c593b7cd72fdeb84026f",
+    "url": "https://doi.org/10.35090/gatech/75759",
+    "definition_lines": [
+      90,
+      94
+    ],
+    "definition": "Biological joint DOFs are hip flexion positive, knee extension positive and ankle plantarflexion positive; exo coordinate conventions are defined separately.",
+    "field_scope": [
+      {
+        "lines": [
+          483,
+          500
+        ],
+        "files": [
+          "angle.csv",
+          "angle_filt.csv"
+        ],
+        "field": "ankle_angle_<side>",
+        "units": "deg"
+      },
+      {
+        "lines": [
+          502,
+          518
+        ],
+        "files": [
+          "moment.csv",
+          "moment_filt.csv"
+        ],
+        "field": "ankle_angle_<side>_moment",
+        "units": "Nm/kg"
+      },
+      {
+        "lines": [
+          520,
+          527
+        ],
+        "files": [
+          "moment_filt_bio.csv"
+        ],
+        "field": "ankle_angle_<side>_moment",
+        "meaning": "Biological moment from net moment minus exo interaction torque, in the biological joint coordinate"
+      },
+      {
+        "lines": [
+          529,
+          536
+        ],
+        "files": [
+          "velocity.csv"
+        ],
+        "field": "ankle_angle_<side>_velocity",
+        "meaning": "Central finite difference of angle_filt, deg/s"
+      },
+      {
+        "lines": [
+          538,
+          554
+        ],
+        "files": [
+          "power.csv",
+          "power_bio.csv"
+        ],
+        "meaning": "Moment times velocity in the biological coordinate"
+      },
+      {
+        "lines": [
+          556,
+          563
+        ],
+        "files": [
+          "power_exo.csv"
+        ],
+        "meaning": "Exo interaction torque is aligned to biological conventions before multiplying by biological velocity"
+      }
+    ],
+    "complete_parsed_correspondence": {
+      "lines": [
+        12,
+        46
+      ],
+      "claim": "The source directory description calls Parsed the same Complete contents split into conditions with transitions removed, and separately specifies the same OpenSim units for both layouts. This is direct documentary evidence of scope, not an assumption from filenames."
+    }
+  },
+  "alleged_counterevidence": [
+    {
+      "kind": "Local simulated gyro subtraction",
+      "authoritative_contradiction": false,
+      "reason": "The probe subtracts foot gyro z minus shank gyro z without transforming both local frames into a common anatomical frame. README639 identifies body segment frames, not a shared ankle axis. Positive correlation does not independently label dorsiflexion."
+    },
+    {
+      "kind": "Heel/toe trial median comparison",
+      "authoritative_contradiction": false,
+      "reason": "Task names are not independently measured joint poses or calibrated neutral references. First5000-sample medians do not establish the sign of the anatomical DOF."
+    },
+    {
+      "kind": "Generic OpenSim defaults",
+      "authoritative_contradiction": false,
+      "reason": "Neither a generic model expectation nor the word OpenSim overrides the explicit released plantarflexion-positive declaration."
+    },
+    {
+      "kind": "Supplementary Figure2C",
+      "authoritative_contradiction": false,
+      "reason": "The plot labels ankle angle without naming its positive direction. No sign is inferred from curve shape."
+    }
+  ],
+  "probe_review": {
+    "path": "contributor_tools/audit_probes/2026_10_20/check_gt24_ankle_convention_evidence.py",
+    "sha256": "83d6477f87c1a08d9b91a5169aab1e4672a2988579093a368a4e2350bcbdba5e",
+    "executed": false
+  },
+  "proposed_mapping": {
+    "angle_both_sides": "canonical dorsiflexion radians = -source ankle_angle_<side> degrees * pi/180 before existing interpolation/derivative workflow",
+    "derived_velocity_and_acceleration_both_sides": "Derive from the negated angle with existing timing; therefore each is the negative of its old counterpart. Do not independently flip again.",
+    "net_moment_both_sides": "canonical dorsiflexion moment = -source ankle_angle_<side>_moment from moment_filt, retaining Nm per source model kg",
+    "biological_moment_both_sides": "canonical dorsiflexion biological moment = -source ankle_angle_<side>_moment from moment_filt_bio; preserve missingness",
+    "assistance_both_sides": "No measured ankle actuator channel exists. Existing NaNs or explicitly structural no-exoskeleton zero remain unchanged; no blanket suppression required.",
+    "power": "A coherent reversal of moment and velocity leaves their product invariant; never reverse joint power merely because its coordinate changes.",
+    "aliases": "Retain source-coordinate aliases with unchanged sign and explicit source field, unit, anatomical side and interpolation provenance. Derived velocity/acceleration must be identified as derived, not original measurements.",
+    "approval_scope": "Source-documented canonical convention, not independent experimental verification of anatomical posture."
+  },
+  "bounded_pilot_proposal": {
+    "execute_now": false,
+    "classification": "serial numerical worker, coordinator scheduled only",
+    "maximum_rows_per_table": 5000,
+    "memory_admission_mib": 256,
+    "selection": "One existing short Phase1And2 recording and one Phase3 recording with complete angle_filt, moment_filt, moment_filt_bio, velocity and power counterparts. Select from existing manifests before admitting scientific arrays; do not infer membership from names alone.",
+    "native_comparison": "For a selected record, match the corresponding Complete archive member to Parsed using recorded phase, subject, trial, exact field names and time. Stream only a bounded prefix from individually admitted members; no full archive extraction or bulk loading.",
+    "checks": [
+      "Bind README hash, parsed file hashes and source archive/member provenance. Assert both l/r headers and strict matching timestamps.",
+      "Verify Complete Joint_Angles_Filt and Joint_Moments_Filt correspond to Parsed angle_filt and moment_filt without hidden sign reversal. Verify biological moments against Bio_Joint_Moments when available.",
+      "Verify source velocity is consistent with the documented finite difference of filtered angles on interior rows; account explicitly for documented differentiation and filtering boundaries rather than tune tolerance from aggregate passing.",
+      "Verify source power matches source moment times velocity converted to radians per second where finite, including biological counterpart. This tests coherent generalized-coordinate use, not anatomical direction.",
+      "In an isolated patched converter, compare canonical angle and moments to independently negated source interpolation for both sides; test derived velocity/acceleration against the old values with a single negation.",
+      "Source aliases must preserve prior signs/values and missingness. All non-ankle fields, observation identity, reference sides, boundaries and mass metadata must match the baseline.",
+      "Include synthetic known-sign fixture and explicit missing-moment/structural-assistance-zero cases before a real pilot.",
+      "If Complete versus Parsed unexpectedly reverses signs or documentation scope fails to match an exact field, stop and retain source-only values for that affected channel pending explanation."
+    ],
+    "remaining_anatomical_caveat": "A native-to-parsed comparison verifies provenance and convention application, not direct physical posture. Exact subject model or corrected author statement is stronger optional corroboration, not an automatic prerequisite when the released definition is uncontradicted.",
+    "native_member_mapping": {
+      "angle_filt": "Joint_Angles_Filt.csv",
+      "moment_filt": "Joint_Moments_Filt.csv",
+      "moment_filt_bio": "Bio_Joint_Moments.csv",
+      "velocity": "Joint_Velocities.csv",
+      "power": "Net_Joint_Power.csv",
+      "power_bio": "Bio_Joint_Power.csv"
+    },
+    "alignment_caution": "Parsed recordings have conditions split and transitions removed. Never compare the first N rows directly or assume identical trial names. Match known source trial/condition provenance and time intervals; if bounded streaming cannot locate the segment within the admission budget, report alignment deferred instead of raising limits or guessing an offset.",
+    "segment_dependency_review": "process_stride derives foot/thigh/shank segments independently from virtual IMU inputs. The helpers do not read ankle_ipsi_rad, ankle_contra_rad or the source angle_df. Their internal gyro-integrated ankle_angle variable is a different quantity. All helper ASTs are preserved; no segment flip is warranted by this coordinate correction.",
+    "native_filename_discrepancy": "README says Net_Joint_Powers.csv, but exact central-directory members in both released archives are Net_Joint_Power.csv. Use the singular member; data correspondence still requires the bounded clock/value check."
+  },
+  "changes_applied": "Evidence only. No converter, frozen queue binding or scientific output changed."
+}

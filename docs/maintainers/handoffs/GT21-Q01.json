@@ -1,0 +1,318 @@
+{
+  "task_id": "GT21-Q01",
+  "status": "ready_for_independent_review",
+  "scientific_approval": false,
+  "last_checked_at_utc": "2026-11-25T22:50:00+00:00",
+  "summary": "Structure and coarse physical limits (same numbers as UM21 and GT23) on all 84,793 GT21-RB07 observations of the 22 participants (81,647 phase cycles, 3,146 continuous time recordings). 83,547 have no failure found, 1,246 failed: L2 jump 1,134 (time table, mapped to phase cycles), L1 joint range 186 (almost all ankle angle), S5 side check 16, L5 pressure point 4. S1-S3 pass everywhere. P1 plane glitch is unchecked for every observation (no per-frame plane in the export). Missing data is never a pass: every observation has some missing sample (L4), the side check is missing in 40,800 cycles (force masked in stance). The AB24 ramp_1 wraps (5.8-7.8 rad) and the AB07 segment angle of about 2.2 rad are NOT present in this export: no angle beyond 180 degrees anywhere; AB24 ramp_1 maximum 89 degrees, AB07 cw slow 01_03 maximum 76 degrees. Plate dropout (vertical force 0 with |ankle moment| > 0.3 N*m/kg): 689 observations, 33,465 samples, flagged only. 22 listed short left stances: 18 flagged in the export, 2 flagged as having no toe-off (stance fields empty), 2 excluded by the authors rule and accounted. No scientific approval.",
+  "decisions_made_for_jose": [
+    {
+      "decision": "Limits: apply D-UM21-Q01-1 = B (coarse limits, blatant errors only) to GT21 unchanged.",
+      "alternative": "Literature or population ranges for GT21; not done (no reviewed range, would tune to a pass rate).",
+      "reversible": "yes, re-run"
+    },
+    {
+      "decision": "L2 only on the 200 Hz time table, mapped to the phase cycles whose span contains the jump (as GT23 v2).",
+      "alternative": "Test the 150-sample phase grid directly; rejected (GT23 showed it is a resampling artifact).",
+      "reversible": "yes"
+    },
+    {
+      "decision": "Plate dropout is a reported check and a flag; it does not change status or remove anything.",
+      "alternative": "Treat it as failing (drops 689 observations from filtered) or null the moment targets as in the training pipeline.",
+      "reversible": "yes"
+    },
+    {
+      "decision": "P1 plane glitch stays unchecked (not computable from the export); held bad-fit frames are counted instead.",
+      "alternative": "Recompute from markers with a new native or MATLAB job; not done.",
+      "reversible": "yes"
+    },
+    {
+      "decision": "Angle samples beyond 180 degrees are flagged as possible wraps (none found); no unwrapping.",
+      "alternative": "Unwrap; nothing to unwrap here.",
+      "reversible": "yes"
+    },
+    {
+      "decision": "Short-stance (early heel strike) strides and the 2 without toe-off stay in the export, flagged; failures from limits do not depend on them.",
+      "alternative": "Drop them (20 strides); not done, keep published values.",
+      "reversible": "yes"
+    },
+    {
+      "decision": "The export README does not state units; units come from the column suffix (contract). Logged as a finding, not blocking.",
+      "alternative": "Add units to the README at the next export.",
+      "reversible": "yes"
+    }
+  ],
+  "findings": {
+    "counts_by_check": {
+      "L1": {
+        "failed": 186,
+        "missing": 140,
+        "passed": 84467
+      },
+      "L2": {
+        "failed": 1134,
+        "missing": 2,
+        "passed": 83657
+      },
+      "L4": {
+        "missing": 84793
+      },
+      "L5": {
+        "failed": 4,
+        "missing": 6913,
+        "passed": 77876
+      },
+      "P1": {
+        "unchecked": 84793
+      },
+      "PD": {
+        "failed": 689,
+        "passed": 84104
+      },
+      "S1": {
+        "passed": 84793
+      },
+      "S2": {
+        "passed": 84793
+      },
+      "S3": {
+        "passed": 84793
+      },
+      "S4": {
+        "passed": 81647,
+        "unchecked": 3146
+      },
+      "S5": {
+        "failed": 16,
+        "missing": 40800,
+        "passed": 40831,
+        "unchecked": 3146
+      }
+    },
+    "status": {
+      "failed": 1246,
+      "no_failure_found": 83547
+    },
+    "failed_observations_by_limit": {
+      "L1": 186,
+      "L2": 1134,
+      "L5": 4
+    },
+    "top_failing_participants": [
+      [
+        96,
+        "AB21",
+        {
+          "L1": 14,
+          "L2": 94
+        }
+      ],
+      [
+        88,
+        "AB25",
+        {
+          "L1": 5,
+          "L2": 88
+        }
+      ],
+      [
+        84,
+        "AB11",
+        {
+          "L1": 2,
+          "L2": 84
+        }
+      ],
+      [
+        77,
+        "AB17",
+        {
+          "L1": 44,
+          "L2": 36
+        }
+      ],
+      [
+        73,
+        "AB12",
+        {
+          "L1": 3,
+          "L2": 66
+        }
+      ],
+      [
+        73,
+        "AB10",
+        {
+          "L1": 18,
+          "L2": 59
+        }
+      ]
+    ],
+    "l1_by_channel": {
+      "phase:L1:ankle_dorsiflexion_angle_contra_rad": 179,
+      "phase:L1:ankle_dorsiflexion_angle_ipsi_rad": 171,
+      "phase:L1:hip_flexion_angle_ipsi_rad": 1,
+      "time:L1:ankle_dorsiflexion_angle_left_rad": 242,
+      "time:L1:ankle_dorsiflexion_angle_right_rad": 323,
+      "time:L1:hip_flexion_angle_left_rad": 11,
+      "time:L1:hip_flexion_angle_right_rad": 2,
+      "time:L1:knee_flexion_angle_left_rad": 27,
+      "time:L1:knee_flexion_angle_right_rad": 101
+    },
+    "l5_failures": "4 observations (AB13 1, AB30 3), pressure point vertical beyond 0.3 m",
+    "s5": "16 cycles fail the side check; 40,800 are missing (force masked in stance, mostly ramps and transitions); 3,146 time recordings are unchecked (not applicable)",
+    "cases": {
+      "AB07_levelground_cw_slow_01_03": {
+        "recordings": 1,
+        "phase_observations": 25,
+        "max_abs_angle_deg": 76.171,
+        "angle_samples_beyond_180_deg": 0,
+        "failed_time_recordings": {}
+      },
+      "AB24_ramp_1": {
+        "recordings": 10,
+        "phase_observations": 137,
+        "max_abs_angle_deg": 89.063,
+        "angle_samples_beyond_180_deg": 0,
+        "failed_time_recordings": {
+          "AB24/ramp/ramp_1_r_01_01": {
+            "ankle_dorsiflexion_angle_left_rad": {
+              "L1": 1,
+              "L2": 2
+            },
+            "foot_sagittal_angle_left_rad": {
+              "L2": 2
+            }
+          },
+          "AB24/ramp/ramp_1_r_01_02": {
+            "ankle_dorsiflexion_angle_right_rad": {
+              "L2": 1
+            }
+          }
+        }
+      }
+    },
+    "plate_dropout": {
+      "observations": 689,
+      "samples": 33465,
+      "top_participants": [
+        [
+          5296,
+          "AB21"
+        ],
+        [
+          5262,
+          "AB12"
+        ],
+        [
+          4943,
+          "AB30"
+        ],
+        [
+          3216,
+          "AB07"
+        ]
+      ]
+    },
+    "held_frames": {
+      "rows_with_a_missing_angle": {
+        "phase": 520406,
+        "time": 1012525
+      },
+      "rows": {
+        "phase": 12247050,
+        "time": 14415683
+      },
+      "observations_with_held_frames": 35959
+    },
+    "short_left_stances": {
+      "excluded_in_export": {
+        "AB08/treadmill/treadmill_07_01/left/0101": "authors_rule_discard: more than 2 distinct treadmill speeds inside the step",
+        "AB23/treadmill/treadmill_02_01/left/0053": "authors_rule_discard: more than 2 distinct treadmill speeds inside the step"
+      },
+      "flagged_in_phase_table": 20,
+      "flagged_not_in_audit": [],
+      "listed_in_audit": 22,
+      "unaccounted": []
+    },
+    "limitations_counts": {
+      "ab27_right_thigh_held_frames": 3570,
+      "ab28_pelvis_angle_offset": 4137,
+      "authors_rule_extended_to_left_leg": 39868,
+      "early_source_heel_strike_short_left_stance": 18,
+      "held_frames_in_angles": 35959,
+      "incomplete_stance_force": 27260,
+      "left_stance_unavailable_no_toe_off": 2,
+      "left_treadmill_stance_from_belt_force": 18667,
+      "plate_dropout_samples": 689
+    }
+  },
+  "source_limitations_not_conversion": [
+    "Ankle angle zero is the D-REF-1 segment-angle difference, unreviewed: ankle L1 failures (about 900 time and phase samples) may reflect offset, not error.",
+    "Stance force is masked to missing where no plate carries 20 N: moments, powers, forces and pressure point are missing in many cycles; this is a source measurement limit.",
+    "AB27 right thigh and AB28 pelvis limits carried from the export (flagged)."
+  ],
+  "not_checked": [
+    "Velocities, moments, powers, ground reaction forces, segment-frame values have no limit (unchecked, never pass).",
+    "P1 plane glitch.",
+    "Left-treadmill stance and heel-strike timing are flagged, not judged.",
+    "Phase L2 on held frames: jumps across a missing gap are not tested."
+  ],
+  "code": {
+    "runner": "contributor_tools/run_gt21_q01_assessment.py",
+    "runner_sha256": "3d1772c48e639a62ba8892927af60d694fa5bdfe3d9433c7bc513dbb5bb794dc",
+    "base_module_sha256": "daab846faa1e15423b3b4156dabd39f075b564c5cef4c7dd97fc40be2a0c717e",
+    "readback": "contributor_tools/readback_gt21_q01.py",
+    "readback_sha256": "9b9c67ecb121cdc6134c9c9c2187676f937bac5f67fca0f6127ad55b4b23ad86",
+    "tests": "tests/test_gt21_q01_assessment.py + tests/test_gt21_q01_readback.py (15 synthetic tests pass)",
+    "freeze": "pilot_v2 and all 6 batches and the summary bind the same runner hash"
+  },
+  "jobs": {
+    "history": "pilot v1 and batch b1 v1 (superseded, kept as evidence): the audit lists 22 short stances, 2 of them excluded by the authors rule, and the first code called that a problem; the code now accounts exclusions. readback_v2 receipt not clean only because my own wait loop counted as a new worker; readback_v3 is the clean rerun of the same code.",
+    "final": [
+      "gt21-q01-pilot_v2",
+      "gt21-q01-batch_b1_v2",
+      "gt21-q01-batch_b2_v2",
+      "gt21-q01-batch_b3_v2",
+      "gt21-q01-batch_b4_v2",
+      "gt21-q01-batch_b5_v2",
+      "gt21-q01-batch_b6_v2",
+      "gt21-q01-summary",
+      "gt21-q01-readback_v3"
+    ],
+    "batches": {
+      "b1": "AB06-AB09",
+      "b2": "AB10-AB13",
+      "b3": "AB14-AB17",
+      "b4": "AB18-AB21",
+      "b5": "AB23,AB24,AB25,AB27",
+      "b6": "AB28,AB30"
+    },
+    "peak_rss_mib_largest_process": {
+      "pilot": 165.2,
+      "batches": "164-185",
+      "summary": 45.9,
+      "readback": 404.9
+    },
+    "wall_seconds": "pilot 12, batches 28-54, readback 262",
+    "limits": "768 MiB address space, 3600 s, one at a time, all receipts clean, cleanup proven"
+  },
+  "roots": {
+    "assessment": "converted_datasets/reconversion_v2/gt21_q01_batch_b<1..6>_v2/<ABxx>/(assessment.jsonl, failures.jsonl, assessment.json)",
+    "pilot": "converted_datasets/reconversion_v2/gt21_q01_pilot_v2",
+    "summary_root": "converted_datasets/reconversion_v2/gt21_q01_summary/summary.json",
+    "readback": "converted_datasets/reconversion_v2/gt21_q01_readback_v3/readback.json",
+    "summary": "docs/quality/audits/gt21-q01-summary.json",
+    "readback_copy": "docs/quality/audits/gt21-q01-readback.json",
+    "receipts": "docs/quality/audits/gt21-q01-<job>-launcher-receipt.json"
+  },
+  "readback": {
+    "status": "passed",
+    "method": "independent code (no import of the runner); seeded sample (20261202) of 177 phase observations (about 20 failed and 20 other per participant) and 15 time recordings of AB07, AB17, AB21, AB24, AB25 recomputed from the export tables: L1, L5, L2 and mapping, missing counts, dropout, side check, grid; plus a recount of all 84,793 assessment lines against the summary; 0 mismatches"
+  },
+  "input_identity": "each participant's export hashes equal its RB07 run summary and the RB07 readback (c1-c5, status passed) lists the participant; bound in every job spec",
+  "remaining": [
+    "Independent verifier (second agent).",
+    "Release step R01 for GT21 decides filtering using assessment.jsonl; ankle offset and the plate-dropout rule are José's scientific calls."
+  ],
+  "next_action": "Independent review of GT21-Q01."
+}

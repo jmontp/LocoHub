@@ -1,0 +1,156 @@
+{
+  "task_id": "HIST-04",
+  "title": "Acquire Falisse and both Tan studies from AddBiomechanics with metadata reconstruction",
+  "status": "review",
+  "scientific_approval": false,
+  "last_checked_at_utc": "2026-10-31T20:55:00Z",
+  "decision_context": {
+    "id": "D-HIST-03-1",
+    "answer": "C",
+    "note": "José: make sure we can reconstruct the metadata columns."
+  },
+  "summary": "Headers only (15 of 36 B3D files: all 11 Falisse, 2 Tan running, 2 Tan walking; 88 MB, no frame bytes). Reconstructable from the B3D header or archive path for all three: subject, recording and observation identity (segment), both reference sides, observation type (continuous_recording), mass, height, sex, age, 'healthy' tag, per-trial timestep, model, force-plate count and per-frame GRF flags. task_id comes from trial names. Missing (left missing, never filled): speed for all three, incline for all three, source clock offsets; Tan running speed values and strike-pattern/footwear meaning of the tokens (abstract only; full text needs library access); Tan walking per-segment speed and modification level (one AddBiomechanics trial per modification versus 9 protocol trials). Two new findings: (1) Falisse: exactly one of the 35 four-man/four-woman subsets of the 11 AddBiomechanics subjects (subjects 0, 2, 3, 4, 5, 6, 9, 10) reproduces all six TBME 2017 cohort statistics (age 29.8 ± 3.9 y, height 176 ± 6.6 cm, mass 69.6 ± 6.0 kg), so the folder is very likely the paper's 8 volunteers plus 3 extra men (subjects 1, 7, 8); still unresolved are those 3 and the trials (Gait/STS/StairUp versus the paper's six motions), so Falisse task and protocol facts stay unresolved; (2) the dynamics-pass model total mass differs from the entered mass (Falisse 0.71x to 1.80x; one subject 118.0 versus 65.5 kg; Tan 1.00x to 1.09x), a normalization-mass convention for the later mapping step. All trials read have passes kinematics, lowPassFilter, dynamics; legacy index 1 is the low-pass pass. Proposed one row per frame from the dynamics pass: D-HIST-04-1. 36 plan-only acquisition specs (archive zip member route, stream-inflate, CRC32 + SHA-256, Drive header hash cross-check) pass validate_spec in-process; acquisition script not written (placeholder hash); nothing launched. Transient disk is one expanded B3D at a time, up to 2.22 GB (6 of 8 Tan running files exceed 2.0 GB); D-HIST-03-1's 'under 2 GB' used the compressed size.",
+  "changed_files": [
+    "contributor_tools/review_hist04_addbiomechanics_metadata.py",
+    "docs/quality/audits/hist04-addbiomechanics-metadata.json",
+    "docs/quality/audits/source_evidence/hist04/b3d-header-summaries.json",
+    "docs/quality/audits/source_evidence/hist04/fetch-receipts.json",
+    "docs/maintainers/handoffs/HIST-04.json"
+  ],
+  "local_artifacts": [
+    "converted_datasets/reconversion_v2/hist04_addbiomechanics_20261031/headers/ (15 header byte files + receipts, 88 MB)",
+    "converted_datasets/reconversion_v2/hist04_addbiomechanics_20261031/plans/ (36 specs + 36 expected-member files)",
+    "review_sheets/HIST-04/index.html",
+    "review_sheets/D-HIST-04-1/index.html"
+  ],
+  "not_changed": [
+    "docs/maintainers/backlog.json",
+    "docs/maintainers/backlog.html",
+    "AGENTS.md",
+    "contributor_tools/conversion_scripts/",
+    "converted_datasets outside reconversion_v2/hist04_addbiomechanics_20261031"
+  ],
+  "checks": [
+    "Drive tree: six No_Arm folders (train/test for Falisse2017, Tan2021, Tan2022) listed from public pages: 36 B3D files, same 36 member paths as the archive central directory (sha256 88d494cc...ce09, verified in the builder).",
+    "Header fetch: per file bytes 0-7 then one single-range request for the header (206 each). Header length 3.17-19.87 MB. Every receipt records Content-Range and header SHA-256; the builder re-hashes the saved bytes.",
+    "Layout: 8 + header + sum(trial length x (sensor frame + passes x pass frame)) equals the file size for 15 of 15; Drive file size equals archive expanded size for 15 of 15.",
+    "Fields absent in every trial header: trial_type, trial_tag, detected_trial_feature, original start/end frame and time, marker_names_guessed; data_quality absent in every header. These are reported as absent, not as proto3 defaults (treadmill/pilotData).",
+    "Falisse paper text: KU Leuven accepted manuscript (pypdf extraction), section II.A quotes in audit publications.fa16.",
+    "Tan running: PubMed abstract only (E-utilities); paper-fetch (Unpaywall, publisher) and SSRN failed. Tan walking: TII abstract (Semantic Scholar), author README, and a 2025 PLOS One article describing the same 17-subject dataset (secondary; protocol quotes re-checked in saved HTML).",
+    "Masses: <mass> of the 14 bodies in each pass's model text; kinematics-model sum = entered mass + 0.13 kg in all 15; dynamics-model sum differs (audit mass_check).",
+    "Specs: 36 written, guarded_launcher.validate_spec passed in-process for each; 3600 s timeout, 256 MiB address space, PM-01 memory reserves, disk floor 15 GiB + 2x expanded size on /mnt/s/locomotion_data (free about 153 GiB), receipts outside output roots. Not launched.",
+    "Sheets built with common/review_sheet.py from the committed builder; rendered at 1280 px and at 390 px (via a 390 px iframe because headless Chrome's minimum viewport is 500 px); phone layout stacks chips, figures and the options table without clipping.",
+    "Rework 2026-10-31 (HIST-04-verify.json round 1): subset test reproduced in the builder (falisse_subsets): 35 subsets, one 6/6 match (subjects 0, 2, 3, 4, 5, 6, 9, 10), next best 3/6. Mass-ratio range recomputed from the audit (Falisse 0.706-1.801). No new downloads."
+  ],
+  "test_runs": [
+    {
+      "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_backlog_workflow.py",
+      "result": "71 passed (rework run)"
+    },
+    {
+      "command": "python3 contributor_tools/build_backlog_page.py --check",
+      "result": "Backlog valid; HTML current (101 tasks) (rework run)"
+    },
+    {
+      "command": "validate_backlog on an in-memory copy with D-HIST-04-1 and D-HIST-04-2 inserted",
+      "result": "passed; with D-GT23-C04-1 that makes 3 open decisions (the cap)"
+    }
+  ],
+  "acceptance_coverage": {
+    "every_metadata_column_cited_or_missing": "audit metadata_columns: 21 rows x 3 studies, each with status (from_b3d_header, from_archive_path, from_trial_name, from_publication, partial, missing, unresolved, not_applicable) and source; missing ones name what would be needed.",
+    "no_full_download": "Only header ranges (88 MB total) and public listings/abstracts; no frame bytes, no member download.",
+    "independent_verification": "Pending (second agent)."
+  },
+  "remaining": [
+    "D-HIST-04-1 (José): rows per frame and pass. Conversion design waits on it; acquisition does not.",
+    "Falisse attribution: 8 of 11 subjects very likely are the TBME volunteers (unique subset match); the 3 extra men (subjects 1, 7, 8) and the trial protocol are unexplained. D-HIST-04-2 (José, yes/no): contact the AddBiomechanics team or KU Leuven authors. Until answered, Falisse task and protocol facts stay unresolved and Falisse is not releasable; acquisition (0.24 GB) is not blocked.",
+    "Normalization mass (entered versus dynamics-tuned model mass) is a José convention for the canonical-mapping step; both values are reconstructable.",
+    "Tan running speeds and token meanings need the J Biomech full text (UM library) or the authors; Tan walking per-segment speed/level needs the authors' condition table (SimTK HDF5 fields not checked).",
+    "Tell José in one line: transient disk peaks at 2.22 GB (one Tan running file), not under 2 GB as D-HIST-03-1 stated; free disk is about 153 GiB. Logged as an agent resource decision.",
+    "Write and review contributor_tools/acquire_addbiomechanics_member.py to audit acquisition_plan.script_requirements; then bind its hash into the specs (rerun build) and pilot on the smallest Falisse member.",
+    "Not checked: frame values; 21 headers (frames estimated); whether the low-pass pass carries moments/GRF; nimblephysics availability; conversion throughput; compressed output size."
+  ],
+  "next_action": "Independent reviewer: recheck the rework (falisse_attribution, mass range, option A wording, D-HIST-04-2 schema and neutrality) against HIST-04-verify.json. Coordinator: after verification copy D-HIST-04-1 and D-HIST-04-2 into backlog decisions. Worker after that: write the acquisition script (task to be created), then pilot one Falisse member through the guarded launcher.",
+  "evidence_paths": [
+    "docs/quality/audits/hist04-addbiomechanics-metadata.json",
+    "docs/quality/audits/source_evidence/hist04/b3d-header-summaries.json",
+    "docs/quality/audits/source_evidence/hist04/fetch-receipts.json",
+    "contributor_tools/review_hist04_addbiomechanics_metadata.py",
+    "converted_datasets/reconversion_v2/hist04_addbiomechanics_20261031/headers/",
+    "converted_datasets/reconversion_v2/hist04_addbiomechanics_20261031/plans/"
+  ],
+  "output_sha256": {
+    "contributor_tools/review_hist04_addbiomechanics_metadata.py": "c65a2ea4195292a954a0ae177dd8973cd6aeee90073b464e5f8726e222a3f2ac",
+    "docs/quality/audits/hist04-addbiomechanics-metadata.json": "a3814454a48df67031e8c28701463e01fbdde5546bb570d556cfad0159731c4e",
+    "docs/quality/audits/source_evidence/hist04/b3d-header-summaries.json": "b5a86fd9adcab50ff1a965faeb417130602f6da2e0d5cd1f3fc8f8f2425a4c0e",
+    "docs/quality/audits/source_evidence/hist04/fetch-receipts.json": "8f14a8db42b23de49d78d2bf87e6ef288cda912178f2cb2b01d5c0e4993cb203"
+  },
+  "reproduce": [
+    "python3 contributor_tools/review_hist04_addbiomechanics_metadata.py fetch HEADERS_DIR <member path> ...   (network; header bytes only)",
+    "python3 contributor_tools/review_hist04_addbiomechanics_metadata.py build converted_datasets/reconversion_v2/hist04_addbiomechanics_20261031/headers"
+  ],
+  "decisions": [
+    {
+      "id": "D-HIST-04-1",
+      "task_id": "HIST-04",
+      "question": "Each AddBiomechanics frame holds the raw sensor data plus three processed versions of the motion (marker fit, filtered, and force-matched). The current converter writes all four as separate rows. How many rows per frame should LocoHub write for Falisse and both Tan studies?",
+      "options": [
+        {
+          "key": "A",
+          "label": "One row per frame from the force-matched (dynamics) result",
+          "consequence": "About 3.7 million rows (about 4 GB before compression); the other two versions, raw markers and raw plate readings are left out. Each file is deleted after conversion, so they return only by re-downloading from the archive while it serves the same hash-checked bytes and reconverting. Values will differ from the old files, which used the filtered version."
+        },
+        {
+          "key": "B",
+          "label": "One row per frame for each of the three processed versions",
+          "consequence": "About 11.0 million rows (about 11 GB before compression) with a version column users must filter on; raw markers and plate readings left out. Reversible."
+        },
+        {
+          "key": "C",
+          "label": "Keep the current converter: raw row plus one row per version",
+          "consequence": "About 14.6 million rows, every field stored as text; nothing left out; size not estimated; no converter change. Reversible."
+        }
+      ],
+      "options_order": "By row count: about 3.7, 11.0 and 14.6 million.",
+      "cost_of_waiting": "Acquisition can still be planned and piloted; conversion of the three studies waits; their pages stay legacy; no active dataset is affected.",
+      "recommended": "A",
+      "confidence": "medium",
+      "why": "A follows José's preference for fewer rows, keeps every frame with its force-quality flag, and uses AddBiomechanics' final force-matched result. Left-out data can be rebuilt only by re-downloading from the archive while it serves the same hash-checked bytes and reconverting. Cost: values will not match the old files, and a separate convention is still needed for which body mass normalizes moments.",
+      "check": "Decision sheet figure: option C's bar (14.6 million rows) is four times option A's (3.7 million).",
+      "decide_before_recommendation": true,
+      "status": "open"
+    },
+    {
+      "id": "D-HIST-04-2",
+      "task_id": "HIST-04",
+      "question": "Eight of the eleven AddBiomechanics Falisse participants very likely are the volunteers of the cited 2017 paper, but three extra men are unexplained, and the files hold only 3 of the paper's 6 motions (gait, sit-to-stand, stair ascent; squat, stair descent and squat jump are absent). Should LocoHub contact the AddBiomechanics team or the KU Leuven authors to ask which participants are the paper's volunteers, who the other three are, and which protocol the trials followed?",
+      "options": [
+        {
+          "key": "A",
+          "label": "No, do not contact",
+          "consequence": "Falisse stays unreleasable with task and protocol unresolved; acquisition and demographics are unaffected; no outward contact. Reversible."
+        },
+        {
+          "key": "B",
+          "label": "Yes, contact them",
+          "consequence": "One email from José; if answered, Falisse task, protocol and citation could be resolved for all eleven; no data or download change. Reversible until sent."
+        }
+      ],
+      "options_order": "By outward action: none, then one email.",
+      "cost_of_waiting": "Falisse stays unreleasable; Tan running and Tan walking are unaffected; acquisition can proceed.",
+      "recommended": "B",
+      "confidence": "medium",
+      "why": "Only the source team can confirm the trial protocol and the three extra participants; without it the Falisse task mapping cannot be sourced, and the request costs one email.",
+      "check": "HIST-04 sheet figure: exactly one subset (blue bar at 6) reproduces all six statistics the paper reports.",
+      "decide_before_recommendation": false,
+      "status": "open"
+    }
+  ],
+  "rework": {
+    "verifier_report": "docs/maintainers/handoffs/HIST-04-verify.json (back_to_worker)",
+    "F1_falisse": "Audit falisse_attribution rewritten around the unique subset match; the mean ± SD-as-range argument removed; unresolved items are the 3 extra men and the trials. task/treadmill rows and forbidden_inventions reworded. HIST-04 sheet: chip now 'pass: 8 Falisse subjects reproduce the paper's cohort' plus 'not checked: 3 extra Falisse men; trials differ from paper'; the age figure is replaced by a subsets-by-statistics-matched figure; headline says trial protocol, not study.",
+    "F2_mass_ratio": "Falisse range 0.71x-1.80x in the handoff and sheet details; audit mass_check.range is computed.",
+    "F3_option_A": "Option A consequence and why (handoff and decision sheet), audit row_design.recoverable: B3D deleted after conversion; left-out data only by re-downloading while the archive serves the same hash-checked bytes, then reconverting.",
+    "F4_author_contact": "D-HIST-04-2 added (yes/no, backlog schema)."
+  }
+}

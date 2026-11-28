@@ -1,0 +1,109 @@
+{
+  "task_id": "UM21-P01",
+  "verifier_role": "independent second agent (own probe code; worker functions not imported); sole numerical worker under the AGENTS.md read-only probe exception",
+  "verdict": "done",
+  "decision_ready_to_copy": true,
+  "last_checked_at_utc": "2026-10-31T08:10:00Z",
+  "summary": "The census reproduces. On 7 recordings, using my own marker frame and fixed 100-frame windows instead of gait events, AB04/i0 is the only reversed recording: heading -179.77 / +179.77 deg, published tilt sign in 0/171 windows on both sides, flipped residual 0.13 deg against 0.03-0.16 deg in normal recordings, obliquity flipped in 170/171. The 5 isolated flipped strides are an end-of-trial turn, not a heading change. Around frames 17,200+ the stored pelvis rotation reaches about +-90 deg and the fixed-forward marker tilt reaches 60-70 deg, so both hypotheses err by more than 120 deg. Sagittal moments and powers in AB04/i0 are unaffected: my independent CORE-04 v2 run checked them against force-plate physics. A 180 deg reversal of the Plug-in Gait progression frame is an exact re-expression for the tilt-first Cardan order, so option C is an exact, logged correction, not a new estimate. The decision is still needed. D-CORE-04-1 allows automatic application only with two agreeing families, the pelvis has one, and exclusion (option A) is José's call. The decision validates against the backlog schema, is ordered neutrally and does not leak the recommendation. Done means the census meets its acceptance criteria; it is not scientific approval.",
+  "checks": [
+    {
+      "id": 1,
+      "name": "Own classification of 7 recordings",
+      "result": "pass",
+      "method": "Scratch verify_p01.py. Up axis = lab axis of the median pelvis-minus-heel vector (data-derived; +z in 7/7). Forward = mean horizontal PSIS->ASIS facing. Marker tilt is anterior positive (ASIS below PSIS); obliquity is right side up. Windows are fixed 100 frames, not heel-strike events. Votes: offset-free error comparison and de-meaned correlation sign.",
+      "evidence": [
+        {
+          "recording": "AB04/i0",
+          "type": "level, reversed",
+          "heading_deg": "-179.77 R / +179.77 L",
+          "tilt_votes": "0/171 published by error, 0/171 by correlation",
+          "tilt_error_median_deg": "published 3.58, flipped 0.13",
+          "obliquity": "1/171 positive (flipped)"
+        },
+        {"recording": "AB02/i0", "type": "level", "heading_deg": -1.74, "tilt_votes": "173/173", "tilt_error_median_deg": 0.16},
+        {"recording": "AB06/d10", "type": "decline", "heading_deg": 0.56, "tilt_votes": "175/177", "tilt_error_median_deg": 0.03},
+        {"recording": "AB09/i10", "type": "incline", "heading_deg": -1.47, "tilt_votes": "159/159", "tilt_error_median_deg": 0.11},
+        {
+          "recording": "AB05/d10",
+          "type": "isolated flipped stride",
+          "heading_deg": 1.25,
+          "tilt_votes": "172/176",
+          "note": "4 flipped windows, each with both errors above 40 deg"
+        },
+        {"recording": "AB08/d10", "type": "isolated flipped stride", "heading_deg": 2.62, "tilt_votes": "169/171"},
+        {"recording": "AB06/i10", "type": "isolated flipped stride", "heading_deg": 1.97, "tilt_votes": "172/174"}
+      ],
+      "isolated_strides_explained": "In AB05/d10 (from frame 17,256, 351 frames) and AB06/i10 (from frame 17,209, 200 frames), the stored pelvis rotation is +92 / -84 deg and the marker tilt in the fixed forward frame is 60-74 deg. The participant is turning at the end of the trial, so the stored-versus-flipped vote there is uninformative, not a heading reversal. These end-of-trial turning strides may deserve a separate UM21 stride-QC look; that is outside P01.",
+      "recount_from_audit": "11,710 of 11,715 normal-recording strides vote the published sign. Normal headings range from -4.75 to +4.75 deg. AB04/i0: 114/114 flipped per side, residual 3.05/3.01 deg published against 0.15 deg flipped, 165 scope observations. The isolated flipped strides are AB05/d10 R and L, AB06/i10 L, and AB08/d10 R and L. All of this matches the handoff."
+    },
+    {
+      "id": 2,
+      "name": "Other channels in AB04/i0 (heading reversal effects)",
+      "result": "pass",
+      "evidence": [
+        "Plug-in Gait computes absolute angles (pelvis; foot progression) relative to its progression frame. Joint angles are relative between segments, and kinetics are expressed in segment frames, so neither depends on that frame.",
+        "Reversing the progression frame turns the reference 180 deg about vertical. For the tilt-obliquity-rotation Cardan order, Rz(180)*Ry(a)*Rx(b)*Rz(c) = Ry(-a)*Rx(-b)*Rz(c+180), which gives (-tilt, -obliquity, rotation + 180) exactly.",
+        "The data match this. Tilt is flipped with a 0.13-0.15 deg residual, the same as normal recordings. Obliquity is flipped in 228/228 strides (worker) and 170/171 windows (mine). Rotation is shifted by 180 deg with its oscillation sign kept. Hip flexion and adduction are unchanged in 228/228 strides. Foot progression is about 180 deg off, but it is not a release column.",
+        "Sagittal moments and powers: my CORE-04 pilot-v2 verifier run (detector fb174cf2, rule B) checked AB04/i0 against force-plate physics. Ankle moment applied +1 in both legs (lever arm plus late stance). Knee and hip moments suggested +1 (lever arm; stance timing). Ankle power applied -1 (layout-1 slot, matching the known storage). Hip, knee and ankle angles were applied or suggested with the right sign. So the release-relevant sagittal moments and powers are unaffected, as the segment-frame argument predicts.",
+        "Not checked: frontal and transverse moment components, which are expected unaffected for the same reason."
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Blind/final protocol",
+      "result": "pass, with a stated limitation",
+      "evidence": [
+        "The probe file (sha256 41be0393...) is the same in both runs. The blind report withholds every AB04/i0 field except identifiers and release status.",
+        "The final run's blind_check confirms that the other 49 records, the expected signs and the contrast pick are all identical. blind_check names the file 'um21-p01-blind.json'; the repository copy is 'um21-p01-pelvis-heading-blind.json'. Its sha256 5a79a875... matches, so the file was renamed after the check.",
+        "Limitation: the rule was written knowing that AB04/i0 was reversed. Its thresholds (90 deg heading, 0.9 vote agreement, 20 strides) are generic, and the margins are very large (normal |H| <= 4.75 deg against 179.77; V >= 0.99 against 0). No outcome depends on where a threshold sits, so the protocol is sound for this question."
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Decision D-UM21-P01-1",
+      "result": "pass",
+      "evidence": [
+        "Copied as-is into a temp backlog copy, it passes validate_backlog. It would be the second open decision (with D-GT23-C03-1), within the limit of three.",
+        "Options are ordered by how much of the recording is released (nothing / partial / everything), and the order is stated.",
+        "decide_before_recommendation is true. The recommendation sits only in the click-to-reveal fold. No chip, label or reply hint names an option, and none of the visible words 'recommend', 'Agent' or 'C is' appears outside the fold.",
+        "Option C is exact, not an estimate: see check 2 for the identity. The per-recording flip is decided by the source's own 180 deg rotation together with independent marker evidence, and thigh and shank follow algebraically from the corrected tilt.",
+        "A decision is still needed. The pelvis has only one detector family (marker geometry), so D-CORE-04-1 does not allow automatic application. A per-recording sign and frame handling and an exclusion (option A) are José's calls under AGENTS.md.",
+        "Minor: the 'check' field contains a file path (review_sheets/.../index.html). AGENTS.md bans paths only in the question, but 'Sheet D-UM21-P01-1, second figure' would read better in backlog.html. This does not block the copy."
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Sheet rendered at 1100 px and in a 390 px iframe",
+      "result": "pass",
+      "evidence": [
+        "Order: ask, headline, 8 chips (pass, failed-as-finding, not checked), 3 figures each titled as a question, decision table, not shown (3), reply line, folded details.",
+        "The table has fixed columns with 'Left out' first, a defer line with its cost, and the recommendation fold.",
+        "Figures are 4.10-4.19 in wide at 160 dpi.",
+        "The figures show the claims: the census marks AB04 i0 at 180 deg against all others near 0 with the 90 deg rule dashed; the AB04 i0 stride shows the stored tilt mirroring the markers and the flipped trace overlaying them; the seeded normal contrast (AB02 i10) shows the stored trace overlaying the markers.",
+        "No horizontal scroll at 390 px, and the table stacks into cards. The only identifiers outside the details are the decision ID in the ask and reply, which is the expected reply format.",
+        "Minor: in the AB04 i0 figure the legend overlaps the start of the marker line."
+      ]
+    }
+  ],
+  "test_runs": [
+    {
+      "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_sign_offset_detector.py tests/test_sign_offset_detector_verify.py tests/test_backlog_workflow.py",
+      "result": "176 passed in 5.38s (no UM21-P01-specific test file exists)"
+    },
+    {
+      "command": "same prefix: python3 contributor_tools/build_backlog_page.py --check",
+      "result": "Backlog valid; HTML current (93 tasks)."
+    }
+  ],
+  "recommendations": [
+    "Move the 5 isolated strides from not_checked to explained: they are an end-of-trial turn (stored rotation about +-90 deg), not a heading change. Open a UM21 stride-QC item if those strides fall inside the release scope.",
+    "Replace the sheet's 'Moments and powers' not-shown item, or footnote it in the details, with the verifier's CORE-04 v2 evidence that AB04/i0 sagittal moments and powers match force-plate physics.",
+    "Optional: remove the file path from the decision's check field; move the AB04 i0 figure legend off the data."
+  ],
+  "resources": {
+    "mode": "AGENTS.md read-only probe exception: one recording at a time, h5py read-only, RLIMIT_AS 1 GiB, nice 19 / ionice idle, single-threaded env vars, no other numerical job running",
+    "peak_rss_mib": {"7-recording census (verify_p01.py)": 53.5, "turning-frame check (2 recordings)": 44.4},
+    "source_unchanged": true,
+    "written": "Only this handoff; scratch outputs in the verifier scratchpad (verify_p01.py, p01_out.json, p01_1100.png, p01_if390.png). Nothing under converted_datasets/ or source folders."
+  }
+}

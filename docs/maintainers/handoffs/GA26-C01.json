@@ -1,0 +1,93 @@
+{
+ "task_id": "GA26-C01",
+ "title": "Resolve Gait120 model, mass and load conventions",
+ "status": "review",
+ "scientific_approval": false,
+ "last_checked_at_utc": "2026-11-01T00:30:00Z",
+ "summary": "Knee: the stored right knee (knee_angle_r) is extension-positive (paper p. 7, Fig. 4 caption; the publisher's dataVisualizer.m negates .mot column 11 = knee_angle_r before labelling it Knee Flexion). The converter's negation gives flexion-positive, as rule B requires. The bundled rajagopal_gait120.osim (range 0 to 2.09 rad) is the lab's modified copy of Rajagopal2016, written by setup_opensim_model.py with --lock-secondary-knee-dofs and re-saved by OpenSim 4.6: knee_angle_*_beta are locked there and unlocked in rajagopal_original.osim. Its walker-knee joint XML and 0 to 2.0944 rad knee range are identical to rajagopal_original.osim, so the conclusion holds. The authors' modified one-DOF-knee model is unpublished (paper p. 5), so that range says nothing about the stored values. Left knee: no source statement. The converter negates it too. A bounded probe and synthetic tests are written but not run. Separate code-level finding: in the optional --run-ik path, the angle is passed through unchanged (correct for flexion-positive Rajagopal), but common/opensim_inverse_dynamics.py negates knee_angle_*_moment. With Rajagopal, that makes knee_flexion_moment positive for an extensor moment, which breaks rule B. Sibling finding: the opt-in --enable-id path runs ID on the publisher's extension-positive angles with the flexion-positive Rajagopal model (converter line 1046), then applies the same negation. Both paths are off by default (line 121); neither was checked on data. The negation is correct only for gait2392 (flexion-negative knee), so any fix must depend on the model. Masses: the YG sheet (first sheet, 120 rows, S001-S120) equals the separate publisher Subject_Demographics.xlsx for all 120 masses and heights. Both files match figshare MD5. There are no 75 kg entries, and the current converter has no 75 kg fallback (missing mass gives NaN or an error). The 'OG' sheet holds two rows labelled S001/S002 that match no participant. It is unused and its meaning is unexplained. Records: the current source listing equals the inventory (6,882 JointAngle files). Per-task counts equal the paper's seven counts exactly. TRC files pair 1:1 with JointAngle. Force .mot files number exactly 1,998, which is every S011-S120 level-walking, sit-to-stand and stand-to-sit record, with none in S001-S010 and none for the other tasks. Trial gaps (24 subject-task pairs), absent transfers (S076 both, S077 stand-to-sit) and S015's empty static folder are source-side; the paper (p. 7) says such trials were removed. Converter fragility: JointAngle files are named step##.mot while force/TRC files are Step##.*. Pairing works only because /mnt/s is case-insensitive. On a case-sensitive file system, force would be silently dropped. No José decision: rule B already decides every sign question here, and the remaining items need evidence, not a choice.",
+ "changed_files": [
+  "contributor_tools/review_ga26_c01_conventions.py",
+  "contributor_tools/probe_ga26_knee_sign.py",
+  "tests/test_ga26_knee_sign_probe.py",
+  "docs/quality/audits/ga26-c01-conventions.json",
+  "docs/maintainers/handoffs/GA26-C01.json"
+ ],
+ "local_artifacts": [
+  "converted_datasets/reconversion_v2/ga26_c01_20261031/publisher/Subject_Demographics.xlsx (figshare file 53167799, MD5 4a110fc296bb0cc726dd858bc342c009)",
+  "converted_datasets/reconversion_v2/ga26_c01_20261031/publisher/Matlab_Codes_for_Processing.zip (figshare file 53172812, MD5 8964047e6686be9083766e4ba0483d23)"
+ ],
+ "not_changed": [
+  "docs/maintainers/backlog.json",
+  "docs/maintainers/backlog.html",
+  "AGENTS.md",
+  "contributor_tools/conversion_scripts/",
+  "contributor_tools/common/",
+  "converted_datasets/*.parquet (legacy files not opened)"
+ ],
+ "checks": [
+  "Paper text (sha256 fcda70ab...6b5, extracted from PDF sha256 8b1c62a9...af7): Fig. 4 caption p. 7 'Positive values indicate ... knee extension'; p. 5 modified Rajagopal with one knee rotational DOF, OpenSim axes X anterior / Y up / Z right; p. 6 force only for level walking and both transfers, absent for S001-S010 (misaligned plate coordinate system), N / Nm / m; p. 2 cohort 74.1 +/- 12.5 kg, 173.2 +/- 5.6 cm; p. 2 per-task cycle counts; p. 7 trials with missing markers or abnormal sEMG removed. Figure curves were not viewed (no PDF renderer on host); only the caption text was used.",
+  "Publisher code zip re-downloaded; MD5 matches figshare; dataVisualizer.m sha256 9ccc4451...b3c (same as the earlier gait120-source-conventions audit). Lines 34, 103-104 and 112 quoted in the audit.",
+  "One JointAngle header (S001 LevelWalking Trial01 step01.mot): inDegrees=yes, column 11 = knee_angle_r, knee_angle_r_beta/knee_angle_l_beta columns present. One force header (S011 LevelWalking Trial01 Step01.mot): ground_force1_*/ground_force2_*, no body names. No sample rows read.",
+  "Both .osim files parsed with ElementTree: model name Rajagopal2016, walker_knee_r/l knee range [0, 2.0944] rad, walker-knee joint XML hashes identical. Rework: rajagopal_gait120.osim has knee_angle_r_beta/knee_angle_l_beta locked=true (false in the original) and OpenSimDocument Version 40600 (original 40000).",
+  "Spreadsheets read with openpyxl: anthropometrics sheets [YG, OG]; YG 120 unique IDs S001-S120, no missing or non-positive values, mass 74.19 +/- 12.52 kg (48.2 to 118), height 1732.3 +/- 56.0 mm; 0 mass and 0 height mismatches against Subject_Demographics.xlsx (120 rows, all M, age 35.36 +/- 12.90).",
+  "Source tree names listed under nice/ionice (no contents): JointAngle 6,882 = inventory; TRC 6,882 = JointAngle case-insensitively; force 1,998 = expected set exactly.",
+  "Converter lines cited by search (not hard-coded) in the audit: knee negation 785-786; plate channels kept raw 253-255; GRF path 300-302; missing mass to NaN 720/1302 and error 725; no 75 kg / 1.70 m literals."
+ ],
+ "test_runs": [
+  {
+   "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_backlog_workflow.py tests/test_ga26_knee_sign_probe.py",
+   "result": "79 passed (71 backlog workflow + 8 synthetic probe fixtures)"
+  },
+  {
+   "command": "python3 contributor_tools/build_backlog_page.py --check",
+   "result": "Backlog valid; HTML current (103 tasks)."
+  },
+  {
+   "command": "nice -n 19 ionice -c 3 python3 contributor_tools/review_ga26_c01_conventions.py --output docs/quality/audits/ga26-c01-conventions.json",
+   "result": "wrote audit; all three publisher MD5 checks true"
+  }
+ ],
+ "acceptance_coverage": {
+  "source_model_axes_and_external_load_application": "Partly met. Axes, rotation order, units and per-task force availability are documented from the paper. External-load application is not published: plate-to-foot assignment and application frame are recorded as not checked, and the converter keeps plate channels raw (force_mapping_status unverified).",
+  "source_id_anomalies_vs_converter_error": "Met for identity and coverage. Counts, absences and trial gaps are source-side, matching the paper. One converter fragility found: step/Step filename case.",
+  "120_masses_and_uniform_75kg": "Met. 120 masses come from the YG sheet, which is independently equal to the publisher demographics file. The 75 kg legacy finding is cited from remaining.json, and that parquet stays legacy/quarantined. The legacy parquet was not reopened here.",
+  "right_leg_evidence_not_left": "Met. Left knee, left hip/ankle and global segment orientation are listed as unresolved. The probe tests the left knee only.",
+  "independent_verification": "Round 1 (GA26-C01-verify.json): core finding confirmed; returned for two text corrections, applied 2026-11-01. Re-verification pending."
+ },
+ "remaining": [
+  "Run contributor_tools/probe_ga26_knee_sign.py once (21 files, about 1.5 MB, seed 20261031) through the guarded launcher when the numerical slot is free. If the left side is flexion-positive, the converter's left negation breaks rule B (mechanical fix, no José decision).",
+  "Converter fixes, queued as a GA26-F01 prerequisite: (a) make the knee-moment sign model-dependent for --run-ik and --enable-id (common/opensim_inverse_dynamics.py 226/228 negate unconditionally; correct only for gait2392), or disable both paths; (b) name the YG sheet explicitly; (c) pair force/TRC files case-insensitively; (d) drop the left-knee negation only if the probe shows flexion-positive. Rule B decides the signs, so this needs no José decision.",
+  "Not checked: left hip/ankle signs; plate-to-foot assignment; COP/free-torque reference; meaning of the OG sheet; whether JointAngle time columns are native clocks (one header shows nRows=100 for a 100 Hz step, which F01 should check); Fig. 4 curves themselves."
+ ],
+ "next_action": "Independent reviewer: recheck the two text corrections against GA26-C01-verify.json. Coordinator: add the converter-fix task (model-dependent knee-moment sign for --run-ik/--enable-id, explicit YG sheet, case-insensitive force/TRC pairing, left knee if the probe requires it) and the one-shot knee-sign probe as GA26-F01 prerequisites.",
+ "evidence_paths": [
+  "docs/quality/audits/ga26-c01-conventions.json",
+  "docs/quality/audits/gait120-source-conventions.json",
+  "docs/quality/audits/remaining.json",
+  "contributor_tools/conversion_scripts/Gait120/s41597-025-05391-0.pdf",
+  "contributor_tools/conversion_scripts/Gait120/Anthropometric_Data_Participants.xlsx",
+  "contributor_tools/conversion_scripts/Gait120/rajagopal_gait120.osim",
+  "converted_datasets/reconversion_v2/gait120_full_batch_20261020/source_inventory.json"
+ ],
+ "output_sha256": {
+  "contributor_tools/review_ga26_c01_conventions.py": "d0a518593f6b76aefc500802cddc6f73e27598cbe56ca8f7c8759873fd86014f",
+  "contributor_tools/probe_ga26_knee_sign.py": "aa729daaaafc48e2468f0f731d35053d1189b2558b672c50cc632278a83530e5",
+  "tests/test_ga26_knee_sign_probe.py": "00b9bf8e510b0da6b7fb8dfe7c66971248f5f58feb27bf96bd683b2e6daa19e9",
+  "docs/quality/audits/ga26-c01-conventions.json": "8b287e5a75a6ab7f02e47deb728522e7ef8fb2006c099be1dd0a872074bfa900"
+ },
+ "reproduce": "nice -n 19 ionice -c 3 python3 contributor_tools/review_ga26_c01_conventions.py --output <path>  (needs the two publisher files under converted_datasets/reconversion_v2/ga26_c01_20261031/publisher/ and read access to /mnt/s/locomotion_data/Gait120; generated_at_utc differs between runs)",
+ "decisions": [],
+ "rework": [
+  {
+   "round": 1,
+   "source": "docs/maintainers/handoffs/GA26-C01-verify.json",
+   "changes": [
+    "Bundled .osim described as lab-modified (beta coordinates locked, OpenSim 4.6 re-save); joint XML and knee range identity retained as the basis of the conclusion.",
+    "Added the --enable-id sibling finding, off-by-default status for both paths, and the model-dependent fix requirement.",
+    "Converter fixes listed as the GA26-F01 prerequisite."
+   ],
+   "data_read": "none (text only; .osim lock flags and converter line numbers read from source code/model files)",
+   "builder_rerun": false
+  }
+ ]
+}

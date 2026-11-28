@@ -1,0 +1,134 @@
+{
+  "task_id": "CORE-07",
+  "verifier_role": "independent second agent; sign rows chosen and derived independently from the YAML range values; only range files, the rule text and handoffs were read; no data",
+  "verdict": "done",
+  "decision_ready_to_copy": false,
+  "last_checked_at_utc": "2026-10-31T14:20:00Z",
+  "round_3": {
+    "verdict": "done",
+    "last_checked_at_utc": "2026-10-31T14:20:00Z",
+    "summary": "The round-2 required fixes are in. The run pelvis mirror remains only in the two active profiles. The 20 snapshots are byte-identical to 569ee8f and recorded as legacy, and the tests pin both. Done covers the range-file sign conversion only; it is not scientific approval of any dataset.",
+    "checks": [
+      {"area": "git status and diff (22 files)", "result": "pass", "evidence": "git status lists only default_ranges.yaml and gtech_2024_ranges.yaml as modified among the range files; strokepig_ranges.yaml is untracked and untouched. git diff --stat 569ee8f over validation_ranges and the 20 snapshots shows those 2 files only (round-2 content: 8 bound lines plus the note each)."},
+      {"area": "snapshot byte identity", "result": "pass", "evidence": "The SHA-256 of each of the 20 docs/datasets/*_validation_ranges.yaml files equals git show 569ee8f:<file>."},
+      {"area": "test narrowing", "result": "pass", "evidence": "SNAPSHOT_FILES globs the 20 snapshots and asserts the count. Each is pinned as raw bytes against the baseline, and a missing commit or file fails. MIRRORED holds only the two active profiles. The textual-diff test limits changes to the mirrored bound lines plus provenance."},
+      {"area": "handoff legacy_snapshots", "result": "pass with a wording note", "evidence": "The request to DOC-01 to label the snapshots as legacy, with pelvis tilt 'under the old sign (anterior tilt positive)', is right for the run, walking and stair pelvis entries. The sit_to_stand and stand_to_sit pelvis entries in the same snapshots read as rule B (round 1, check 1), so the label should say 'run, walking and stair pelvis entries' rather than all pelvis tilt. This is non-blocking; DOC-01 can apply the narrower wording."},
+      {"area": "test runs", "result": "pass", "evidence": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_validation_ranges_rule_b.py tests/test_validation_ranges_rule_b_verify.py tests/test_backlog_workflow.py -rs -> 191 passed. python3 docs/build.py --check -> Checked 40 HTML pages and 1677 referenced assets. python3 contributor_tools/build_backlog_page.py --check -> Backlog valid; HTML current (91 tasks)."}
+    ]
+  },
+  "round_2": {
+    "verdict": "back_to_worker",
+    "last_checked_at_utc": "2026-10-31T13:20:00Z",
+    "summary": "The run-band mirror is exact and confined to the 4 entries in all 22 files. The two active profiles (default_ranges.yaml, gtech_2024_ranges.yaml) are correct and can stay. The 20 docs/datasets snapshots should not have been edited. Each dataset page offers its snapshot as 'the YAML snapshot used for this validation', and that validation ran on legacy (pre-rule-B) files with the old band. After the edit the record no longer matches the plots and pass rates it documents. In the 11 snapshots from 2025-11-25, the edit also leaves the run entry rule-B while the walking and stair pelvis entries stay in the old convention. Those entries are not 'mixed': they read anterior-positive like the run band. Required: revert the 20 snapshots to 569ee8f and label them legacy instead. D-CORE-07-1 is correctly withdrawn.",
+    "checks": [
+      {"area": "diff scope, all 22 files", "result": "pass", "evidence": "Parsed against 569ee8f: the same entry set; only (run, 0/25/50/75, pelvis_sagittal_angle_rad) differ; every other top-level key and all task metadata are equal; the only added key is sign_rule_conversions. Textual git diff -U0 in each file: exactly 8 removed lines, all 'min:'/'max:' values, and 19 added lines (8 values plus the 11-line note)."},
+      {"area": "digit-for-digit values", "result": "pass", "evidence": "In each file [-0.05, 0.67] / [-0.05, 0.629] / [-0.05, 0.675] / [-0.05, 0.634] became [-0.67, 0.05] / [-0.629, 0.05] / [-0.675, 0.05] / [-0.634, 0.05]. The parsed values are exact negations with min and max swapped. The text shows the same digits with the sign moved (checked in default and gtech_2024 diffs)."},
+      {"area": "unchanged entries", "result": "pass", "evidence": "Sit/stand and transition entries are unchanged in all 22 files. strokepig_ranges.yaml is untouched (mtime 2026-02-05; only level_walking_stroke; no sign_rule_conversions)."},
+      {"area": "snapshot handling", "result": "failed", "evidence": [
+        "The docs/datasets/<code>_validation_ranges.yaml files are written by manage_dataset_documentation.py as per-dataset records. Each page links one as 'Download the YAML snapshot used for this validation' (for example gt21/index.html).",
+        "Those validations ran on legacy files, which the reference page says may use other signs, with the unflipped run band. Mirroring the snapshot makes the downloadable record differ from the ranges that produced the page's figures and pass rates.",
+        "AGENTS.md keeps historical artifacts explicitly legacy until reconverted, and acceptance item 3 says legacy files checked against old ranges remain labelled legacy.",
+        "The sign_rule_conversions note discloses the change, but the page still says the file is the snapshot used."
+      ]},
+      {"area": "2025-11-25 walking/stair pelvis entries", "result": "they read anterior-positive, not mixed", "evidence": [
+        "The 11 snapshots carry byte-identical entries: copies of the then default.",
+        "Centres: level -0.17..-0.01 (wide, near-symmetric bands, so the sign hardly matters); incline +0.07..+0.24; decline -0.32..-0.17; stair_ascent +0.19, +0.25; stair_descent +0.11, -0.11, -0.05.",
+        "Absolute level, the same argument as for run: incline and stair-ascent centres are positive, which under rule B would be posterior tilt from either documented zero. Uphill and stair climbing tilt the pelvis forward, so these read anterior-positive.",
+        "Cross-task order, which does not depend on the zero: incline and ascent are above level, and level is above decline. Rule B predicts the reverse, because forward tilt is more negative.",
+        "Decline, descent and level are individually ambiguous.",
+        "These snapshots were therefore coherent old-convention records, and the run-only edit made them internally mixed. If the snapshots were meant as rule-B guidance rather than records, all 17 walking/stair pelvis entries would need the same flip, and the page text would need to change. Reverting avoids both."
+      ]},
+      {"area": "worker tests", "result": "pass", "evidence": "A missing baseline commit or file now fails (pytest.fail in _baseline_text). The tests pin all 22 files plus the expected changed-line count. They will need updating for the snapshot revert."},
+      {"area": "test runs", "result": "pass", "evidence": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_validation_ranges_rule_b_verify.py tests/test_validation_ranges_rule_b.py tests/test_backlog_workflow.py -rs -> 171 passed. python3 docs/build.py --check -> Checked 40 HTML pages and 1667 referenced assets. python3 contributor_tools/build_backlog_page.py --check -> Backlog valid; HTML current (90 tasks)."}
+    ],
+    "required_fixes": [
+      "Restore the 20 docs/datasets/*_validation_ranges.yaml snapshots to their 569ee8f content. Keep the run flip and note in default_ranges.yaml and gtech_2024_ranges.yaml.",
+      "Record in the CORE-07 handoff, for DOC-01, that the snapshots are legacy pre-rule-B records. Their pelvis entries (run, walking and stair) read anterior-positive, and the sit/stand entries read as rule B. The dataset pages should label them legacy when DOC-01 next regenerates them.",
+      "Correct the handoff's 'mixed signs' wording for the 2025-11-25 walking/stair entries to 'read anterior-positive'.",
+      "Narrow the test pin to the two active profiles plus unchanged snapshots."
+    ],
+    "verifier_test_update": "tests/test_validation_ranges_rule_b_verify.py: the run-pelvis test now asserts the mirrored band (constant across phases, every centre below -0.17 rad). It reads only the two active profiles, so it is unaffected by the snapshot revert."
+  },
+  "research_data_read": false,
+  "summary": "The classification is right: joints, segments, GRF and CoP agree with rule B, and leaving every range value unchanged is supported. The pelvis analysis is right for the transfers but understates the run evidence. The proposed decision D-CORE-07-1 should not be copied yet: it omits the cheapest honest option (act only on the run band), has a tie in its stated neutral order, and has slightly value-laden wording. The worker's baseline pin skips silently if the pinned commit is missing. These are small text and test fixes; no range value needs to change.",
+  "checks": [
+    {
+      "id": 1,
+      "area": "independent sign derivations (10 rows plus pelvis, both default and gtech_2024)",
+      "result": "agree with every worker classification",
+      "evidence": [
+        "Knee swing, level 75: band [0.58, 1.78]; positive flexion. Run 75: centre +1.40. Agree.",
+        "Hip seated: sit_to_stand 0 [0.23, 2.11] and stand_to_sit 75 centre +1.19; positive flexion. Agree.",
+        "Foot after toe-off, run 50: [-1.65, -0.74]; toes down is clockwise, so negative. Agree. No walking task has foot/thigh/shank ranges; only run, sit/stand and transition do.",
+        "Ankle push-off moment, level 50: [-3.07, 0.18], centre -1.45; internal plantarflexor negative. Agree.",
+        "Decline knee moment, 15: [-2.53, 0.93], centre -0.80; internal extensor negative under flexor-positive. Agree.",
+        "Braking GRF: level 15 and run 15 centres negative; level 50 propulsion centre +0.16. Agree. Phase 0 is not diagnostic: the gtech_2024 band [-0.10, +0.14] centres positive because braking has not developed at heel strike. My first row used phase 0 and failed for that reason, so I replaced it.",
+        "Thigh at run initial contact: [-0.05, 0.64]; knee ahead of hip is counterclockwise, so positive. Agree.",
+        "Pelvis sit_to_stand: centre +0.33 seated, -0.22 mid-rise; stand_to_sit -0.02, then -0.36 while lowering. Rising and lowering tip the pelvis forward, and the centre goes negative. That reads as rule B whatever the zero, because it is a change, not a level. Agree.",
+        "Pelvis run: centre +0.29 to +0.31 at every phase, a constant band [-0.05, +0.63..0.68]. See check 2."
+      ]
+    },
+    {
+      "id": 2,
+      "area": "pelvis analysis, run zero, missing options",
+      "result": "mostly right; run evidence understated; one cheaper option missing",
+      "evidence": [
+        "Run band: the worker says it reads anterior-positive 'only if the zero is upright standing'. Under rule B, +0.3 rad is about 17 deg posterior tilt. That holds from the LocoHub zero (PSIS-ASIS forward horizontal; standing is then about -0.17 rad) and from a neutral-standing OpenSim pelvis_tilt zero. Running is anteriorly tilted. The band would be rule B only if its zero sat at least 0.3 rad anterior of posture; no documented zero in the repo does that. An OpenSim pelvis_tilt from a 180 deg heading also flips sign and gives the same anterior-positive reading. So the run band disagrees with rule B under every documented zero, unless its source was wrong in a way the files cannot show.",
+        "Can the zero be inferred from the ranges? Not reliably. The composition thigh - hip (centres) at run phase 0 gives -0.18 rad (ipsi) but +0.50 rad (contra), and sit/stand gives no correlation with the pelvis centres. Tuned band centres are not composable, so the range files cannot set the run zero. Older snapshots support the reading: the gt21 snapshot carries the same run band, and fr12 has incline centres positive and decline negative, which reads anterior-positive.",
+        "Transition: bands are nearly symmetric (centres -0.17 to +0.02, widths about 1.4 to 1.7 rad), so they work as magnitude checks. Flipping them changes almost nothing; they do not need to be withdrawn for sign reasons.",
+        "Missing option: keep the transfer and transition entries (they already read as rule B or are sign-insensitive) and withdraw only the 4 run entries per profile (or flip them, which is the bolder call given check 2). This is cheaper and more honest than withdrawing all 16. Flipping only the sit/stand entries would be wrong, because they already read as rule B.",
+        "Option C's handoff note says withdrawal needs a CORE-01 loader change. It does not: deleting a profile's pelvis entries makes the signal 'unchecked' (no applicable range), and an unchecked signal does not block eligibility in assess_observations. It is a scope change against acceptance item 1 ('only exact negation'), which is José's call anyway."
+      ]
+    },
+    {
+      "id": 3,
+      "area": "worker tests",
+      "result": "correct, with one hiding risk",
+      "evidence": [
+        "BASELINE_COMMIT 569ee8f4... is HEAD, and git diff of contributor_tools/validation_ranges is empty, so the pin matches the files.",
+        "Hiding risk: _baseline returns None for any git show failure, so a missing commit (shallow clone, rewritten history) skips every baseline test as 'not tracked at the baseline commit'. A missing commit should fail, or skip with a distinct reason. Confirmed by setting a nonexistent hash: _baseline returns None.",
+        "The pin compares phase bounds only, not top-level or task metadata (time_ranges, waveform_ranges, required_features, review_status). No range file currently has time_ranges or waveform_ranges, so nothing is hidden today; a future sign-bearing waveform_ranges entry would not be pinned.",
+        "strokepig_ranges.yaml is untracked, so it is skipped and unpinned (disclosed).",
+        "The 8 sign signatures are correct and each discriminates against an exact mirror. Independence across the two profiles is partial: 3 of the 8 rows (knee swing, run foot, braking GRF) are byte-identical in default and gtech_2024, so the parametrization over both files adds no evidence for those rows.",
+        "The loader claims hold. impaired_ranges.yaml fails with \"must contain a 'tasks' mapping\", and validation_ranges_with_adduction.yaml fails on non-finite incline_walking moment bounds. Range files are unchanged from HEAD, so both failures predate CORE-07."
+      ]
+    },
+    {
+      "id": 4,
+      "area": "decision schema, order, leakage",
+      "result": "schema valid; order and wording need fixes",
+      "evidence": [
+        "On an in-memory copy of backlog.json, build_backlog_page.validate_backlog passes with the decision appended as 'queued' and as 'open' (no open decisions exist).",
+        "The question has no hashes, PIDs or paths.",
+        "'why' renders inside the click-to-reveal fold (decide_before_recommendation true), so the recommendation is hidden.",
+        "Visible text leans: C's consequence ends 'no number is invented', a value-laden phrase favouring C. A's consequence ('for the wrong reason') is framed more negatively than C's.",
+        "Stated neutral order 'by how many entries change: none, all flipped, all withdrawn' ties B and C at 16, and the recommended option lands last by tie-break.",
+        "With a partial option the order by entries changed becomes strict (0, 4, 16). The backlog allows at most 3 options."
+      ]
+    },
+    {
+      "id": 5,
+      "area": "test runs",
+      "result": "pass",
+      "evidence": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_validation_ranges_rule_b_verify.py tests/test_validation_ranges_rule_b.py tests/test_backlog_workflow.py -rs -> 124 passed, 1 skipped (strokepig untracked). python3 contributor_tools/build_backlog_page.py --check -> Backlog valid; HTML current (89 tasks)."
+    }
+  ],
+  "required_fixes": [
+    "Revise D-CORE-07-1 to three options ordered strictly by range entries changed per profile, for example: keep all (0); keep transfers and transition, withdraw run only (4); withdraw all (16). If 'flip all' (the original backlog premise) is kept, say in a note why the partial flip was dropped, since flipping the transfers contradicts the evidence.",
+    "Neutralise the visible wording: remove 'no number is invented' and make each consequence state what changes, cost and reversibility in parallel form.",
+    "Correct the handoff: withdrawal needs no CORE-01 loader change (deleting entries makes pelvis 'unchecked'), but it is a scope change against acceptance item 1.",
+    "Strengthen the run-band text: it reads anterior-positive under every documented zero (LocoHub and neutral-standing OpenSim), not only an 'upright' zero. Composition from range centres cannot set the zero.",
+    "In tests/test_validation_ranges_rule_b.py, make a missing BASELINE_COMMIT fail (or skip with a distinct reason) instead of reporting 'not tracked'."
+  ],
+  "verifier_tests": {
+    "file": "tests/test_validation_ranges_rule_b_verify.py",
+    "count": "26 passing (10 sign rows x 2 profiles, pelvis sit_to_stand and stand_to_sit direction x 2, run pelvis constant-positive record x 2)",
+    "note": "The run-pelvis test records the band as written; it does not decide D-CORE-07-1 and must be updated with whatever option José chooses."
+  },
+  "not_checked": [
+    "Pelvis sign in any source or converted data (fixture-only task).",
+    "Which dataset each default_ranges task was tuned on (not recorded in the files).",
+    "A full classification of the 20 docs/datasets snapshots; I spot-checked fr12 and gt21 pelvis only."
+  ],
+  "next_action": "Worker: apply the required fixes to the CORE-07 handoff and test, then return to review. The coordinator copies D-CORE-07-1 only after the revised decision is verified."
+}

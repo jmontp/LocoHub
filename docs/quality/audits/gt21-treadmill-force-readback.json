@@ -1,0 +1,44 @@
+{
+  "scientific_approval": false,
+  "status": "restricted_reader_and_completed_treadmill_force_readback_passed",
+  "reader_validation": {
+    "tables": 8,
+    "finite_values_compared": 8368172,
+    "nan_values_compared": 209577,
+    "exact_native_matches": true,
+    "report_sha256": "e74907cd3aab8f36d670e0fb537a0d167e012a7632a963133527a7cd21491f8a",
+    "reader_sha256": "23f7b5a05a75464efd3d2f0ac3f767c927a31411af5941c339924fc5034a8917",
+    "supported_layout_sha256": "45c5f9c2192e455b7a191cddb503fd3455ccd2b6904bc516c6cdce8056c0d3a1",
+    "peak_rss_kib": 559300,
+    "limitations": [
+      "Four source recordings, both force and marker tables; not every GT21 file",
+      "Unknown layouts and nonnumeric tables are rejected",
+      "Exact source decoding does not verify force plate assignment or physical conventions"
+    ]
+  },
+  "treadmill_force_readback": {
+    "recordings": 8,
+    "subjects": [
+      "AB06"
+    ],
+    "observations": 935,
+    "finite_values_checked": 1329108,
+    "missing_values_checked": 353892,
+    "maximum_absolute_error": 1.6362397547986518e-12,
+    "report_sha256": "d3de0e8ed92b745e4158cbdea5e6fc49bda803854b60972022c8b40ae839dce1",
+    "probe_sha256": "c661cd9ef32af6d14275aa8ffe0e01763557cfb8083c0d49e8806a19c86d0ae3",
+    "limitations": [
+      "Completed treadmill recordings only; overground plate assignment remains separate",
+      "Checks declared laboratory-axis mapping, not a fully rotated anatomical frame",
+      "Missing direction or off-contact COP remains unavailable; range suitability is not established"
+    ]
+  },
+  "review_environment": {
+    "python": "3.12.3",
+    "numpy": "2.2.6",
+    "scipy": "1.15.3",
+    "pyarrow": "20.0.0",
+    "pandas": "2.2.3"
+  },
+  "scope": "Existing MATLAB exports validate decoding; original MAT force and marker tables independently check the reconstructed treadmill outputs. Reader uses a private SciPy MAT interface and rejects unknown layouts."
+}

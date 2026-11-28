@@ -1,0 +1,47 @@
+{
+ "task_id": "UM21-T02",
+ "part": "pilot runner for one aligned recording (written, NOT launched)",
+ "status": "pilot_ran_passed_independently_verified (UM21-T02-verify.json)",
+ "scientific_approval": false,
+ "last_checked_at_utc": "2026-11-02T00:00:00Z",
+ "summary": "The existing AB01/d10 pilot cannot be used (AB01/d10 is excluded by D-UM21-T02-1 = A). The producer can only take the first N records and editing it would break the bound producer of the 50-record recipe (restore_um21_tread_components.py binds its hash). New runner contributor_tools/run_um21_t02_pilot.py leaves every bound file unchanged and narrows the producer's input to AB04/d10 (aligned lag -2 frames, both legs, 180 exported cycles incl. 21 transition, 77 excluded pairs, source zero fill before frame 773): it stages a one-record base root (bit-identical copies of that record's phase.parquet and ledger, hash-checked against the baseline summary and readback; one-record summary and readback), runs the unchanged producer, then the accepted independent audit b3278c87 on the output against the staged base. Stdlib only, one guarded-launcher command. Nothing launched, no research data read by this runner.",
+ "selection_note": "AB04/d10 chosen by the agent as an aligned, both-sided, transition-bearing record that also has the source zero-fill missingness case; reversible, no convention involved. Another aligned record is a one-argument change.",
+ "changed_files": [
+  "contributor_tools/run_um21_t02_pilot.py (new)",
+  "tests/test_run_um21_t02_pilot.py (new, synthetic fixtures)"
+ ],
+ "checks": [
+  "pytest tests/test_run_um21_t02_pilot.py: 5 passed (synthetic baseline: one-record staging bit-identical, refusals on unknown record, tampered baseline, stale readback, existing stage, command wiring, step logging without overwrite)."
+ ],
+ "bound_hashes_verified_unchanged": {
+  "contributor_tools/extend_umich_tread_source.py": "a7c565ebe25d00effd81403b295638ba82b049632555bf154c404eb524367075",
+  "contributor_tools/reconvert_umich_running.py": "c3ef8f722ada6916474e630bbc333eea7a01d727c15c53509df4bff2adad419b",
+  "contributor_tools/reconvert_umich_streaming.py": "87484583032660fb020816fdcc51916de07305694f5a38e2998b7756509ee42e",
+  "contributor_tools/reconvert_recording.py": "5e2ee7dc6ff586d726b0444c4d66bbaeebaf37856b63cde0f0a5b3874b18bc6f",
+  "contributor_tools/audit_um21_tread_pilot.py": "b3278c876824662838894aae5724661d6cde7a3a5c560e2b4ff57f0c07951c59",
+  "contributor_tools/audit_probes/2026_10_20/check_um21_tread_source.py": "f340d4866a6d7c91b77be9bf5f3b526f780e59f31e7cf274c8f125357fa27d87"
+ },
+ "resource_estimate": "Producer one record: census pilot peak 88 MiB; v4 sign pilot 7 recordings about 160 MiB; probes 70-74 MiB. Audit self-guard 300 MiB. Steps run sequentially, each under the launcher's 768 MiB address-space cap; estimate peak RSS well under 300 MiB (below the 600 MiB split threshold). Two 2.2 GB source hashes (producer, audit) at idle I/O; timeout 3600 s.",
+ "sign_scope_note": "This pilot is source-sign staging (the audit requires source signs and fails a pilot column that already carries a sign rule). CORE-11 sign application (full-run gate, check_pilot_record) is not part of this job; it applies in the T03/R01 build. The assignment text asked to prepare through the CORE-11 gate in pilot mode, but the T02 acceptance criteria and the accepted audit define a pre-sign staging pilot; I did not invent a sign-applying converter. Flag for coordinator.",
+ "remaining": [
+  "Re-run the dry run when the Linux census is clear, redo PM-01 preconditions, launch once, verify-cleanup, summarize against T02 acceptance."
+ ],
+ "unresolved": [
+  "Whether PM-01 still authorizes the slot (task status not re-checked)."
+ ],
+ "record_choice": "AB04/d10 is a purposive choice (aligned per census, lag -2; both legs; 180 exported cycles incl. 21 transition; source zero fill frames 1-773), not a rule result. UM21-T01 and PM-01 name AB01/d10, which D-UM21-T02-1 = A now excludes.",
+ "spec": {
+  "path": "docs/quality/audits/um21-t02-pilot-spec.json",
+  "sha256": "d418318971153d35f50c1ed1c20c052cf0607c5470511be058b4c8a997ce149d",
+  "validated_in_process": true,
+  "output_hash_binding": "launcher hash_outputs hashes every output file into the receipt; expected_output_names require phase.parquet, candidate_ledger.jsonl, source_columns.json, run_summary.json, audit_report.json, conversion_summary.json; bindings (13 code/baseline files + source) are re-hashed after the run."
+ },
+ "tests_added": "tests/test_run_um21_t02_pilot.py now 8 tests (run/main with stubbed commands: pass, producer failure stops audit, non-empty/foreign root refused).",
+ "dry_run": "5 plain dry runs (initial, then retries after 2-minute waits; one retry was premature) all refused foreign_worker_linux; stopped at the 5-attempt limit. Not launched; no receipt. Other-agent processes not inspected.",
+ "launch": {
+  "receipt": "docs/quality/audits/um21-t02-pilot-launcher-receipt.json",
+  "status": "completed, exit 0, clean_success true, cleanup proven (verify-cleanup)",
+  "output_root": "converted_datasets/reconversion_v2/um21_tread_t02_pilot_AB04_d10_20261102",
+  "audit": "audit_report.json status pass, 53/53 checks, no flags"
+ }
+}

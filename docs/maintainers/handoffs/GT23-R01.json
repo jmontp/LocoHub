@@ -1,0 +1,186 @@
+{
+ "task_id": "GT23-R01",
+ "status": "review",
+ "scientific_approval": false,
+ "last_checked_at_utc": "2026-11-24T19:49:08Z",
+ "scope": "Local review package for the complete retained Georgia Tech 2023 export (12 participants, 488 recordings; E01 with the 13 E02 recordings substituted; Q01 v2 assessment). Decision D-GT23-R01-1 = B. Not scientific approval, not published, no documentation page yet.",
+ "bundle_root": "converted_datasets/reconversion_v2/gt23_r01_review_v10",
+ "layout": "one release-package layout for every dataset (contributor_tools/DATA_CONTRACT.md, section 'Release package'); shared streaming builder contributor_tools/common/release_package.py; GT23 adapter and launcher interface contributor_tools/run_gt23_r01_bundle.py",
+ "code": {
+  "runner_and_adapter": {
+   "path": "contributor_tools/run_gt23_r01_bundle.py",
+   "sha256": "c2b4dd541c74ac3d582ccac3c7b9e459807cd5993a1adb557e27bcffe22597de"
+  },
+  "shared_builder": {
+   "path": "contributor_tools/common/release_package.py",
+   "sha256": "45d9843ec30714b6a9f85b36cbe94c2dd73004abcc41f845fca946d730ba434d"
+  },
+  "tests": "tests/test_release_package.py (7 tests: tiny synthetic dataset through the builder, layout, replacement, exclusions, manifest hashes, binding, preview, refusals) and tests/test_gt23_r01_bundle.py (7 tests: adapter rules). 14 passed under prlimit 1 GiB. Existing release and UM21 tests were not touched and not rerun.",
+  "why_not_build_dataset_release": "build_dataset_release.py is in-memory (256 MiB / 500,000-row admission, not raised); this export has 9.26 million rows"
+ },
+ "jobs": [
+  {
+   "stage": "pilot v1-v9",
+   "result": "earlier pilots of a GT23-only runner, then of the shared builder: stopped on a failure-field list (v1), address space (v2, v5), passed but with memory growth (v3, v4, v6, v7, v8), builder readback out of memory (v9 full build, and v8 full build). Roots marked INVALID_DO_NOT_USE.txt or NOT_THE_FROZEN_CODE.txt. Lessons built into the code: 12,000-row row groups (each open writer keeps about 80 KB of metadata per group), table-major writing, dictionary-encoded string columns while batches wait, glibc arena and trim settings, shared module loaded by path (importing contributor_tools.common pulls in pandas, scipy, yaml: 86 MiB)."
+  },
+  {
+   "stage": "pilot v10 (frozen code)",
+   "spec": "docs/quality/audits/gt23-r01-pilot-spec-v10.json",
+   "receipt": "docs/quality/audits/gt23-r01-pilot-launcher-receipt-v10.json",
+   "result": "AB03 and AB13, exit 0, 16 checks pass, peak 231 MiB (launcher), 114 s, verify-cleanup proven"
+  },
+  {
+   "stage": "full v10",
+   "spec": "docs/quality/audits/gt23-r01-full-spec-v10.json",
+   "receipt": "docs/quality/audits/gt23-r01-full-launcher-receipt-v10.json",
+   "result": "12 participants, exit 0, 28 checks pass, peak 418 MiB in the job (428 MiB launcher largest process), 769 s, nice 19, address space 768 MiB, verify-cleanup proven; started after dry run, memory checks (Linux 8.6 GB, Windows 8.2 GB free), 65 GB disk free"
+  }
+ ],
+ "inputs": "hashes of every source file are recorded in manifest.json (inputs_sha256) and were checked against the producing launcher receipts before the build; chain GT23-M01, S01, X01, PL01 handoffs and verify files are bound by hash",
+ "hashes": {
+  "README.md": "abfc26ac2cc0c70259be6248fd7732e55e4664d934c8530302f0e838a74294b8",
+  "assessment.jsonl": "169e2912359cbc6b87601d13966718b5076e77e35d5455c5dc06cf81fa7df913",
+  "dataset_index.json": "5f3a7fc85510e8e1dbece4b785c499afcbc027219bcf7e81e09bb72d7e951304",
+  "evidence/assessment_failure_samples.csv": "c4d0ed7cc8f04496382e8178a10235d52f23971326976eab1f78123b3fd6bb67",
+  "evidence/authors_windows.csv": "5c1d15512a924c6ad08ef3307b1de2fdfbfa2a4f9b29f5e06b645548afdba57e",
+  "exclusions.csv": "463cdf6fbd1b18ee83fdb40ea174b22d5b044f59b58a4bcef9eaec3935df05ee",
+  "filtered_phase.parquet": "3cba810d7e34d5d8c0128f1e48e0842417a234fbda8fe64f32ebe889715223b8",
+  "filtered_time.parquet": "e8cf60b6000858bb29f079966ac3ab6311b82003eb2e5f85b2a7b187a5860278",
+  "full_phase.parquet": "c2a40c63052fcf51e01bef959efbc6a45fe6671404b4e0d9f1e076d1e716f787",
+  "full_time.parquet": "404e332c339e313a8023c00ace1932b65284da21ed7c327cc81727c28953e541",
+  "limitations.json": "cd44c1c97f684db49432db2e49a5980f782d89edbb962e6ee1ec5eb65f2e60cc",
+  "phase_preview.json": "6eb173227465d546837e8e08b7038abd642e49e215cdceee8d90866ad748e74d",
+  "test_summary.json": "47a1f58cb59ba379d08f060c481eae7d0a1f1afbc19f4b3387cfd16ad3e5d65d",
+  "manifest.json": "8f24665a19660547191867f5045163d7baeb84025ebb9a62abe90df342a0871c"
+ },
+ "binding": {
+  "full_phase.parquet": "c2a40c63052fcf51e01bef959efbc6a45fe6671404b4e0d9f1e076d1e716f787",
+  "full_time.parquet": "404e332c339e313a8023c00ace1932b65284da21ed7c327cc81727c28953e541",
+  "filtered_phase.parquet": "3cba810d7e34d5d8c0128f1e48e0842417a234fbda8fe64f32ebe889715223b8",
+  "filtered_time.parquet": "e8cf60b6000858bb29f079966ac3ab6311b82003eb2e5f85b2a7b187a5860278",
+  "exclusions_sha256": "463cdf6fbd1b18ee83fdb40ea174b22d5b044f59b58a4bcef9eaec3935df05ee",
+  "assessment_sha256": "169e2912359cbc6b87601d13966718b5076e77e35d5455c5dc06cf81fa7df913",
+  "counts": {
+   "observations_full": 19573,
+   "observations_filtered": 19448,
+   "failed_observations": 125,
+   "full_phase_rows": 2862750,
+   "full_time_rows": 6397787,
+   "filtered_phase_rows": 2847900,
+   "filtered_time_rows": 5724307,
+   "exclusions_total": 5281
+  },
+  "lineage_id": "f51fad0af3b27a2d87ece2a1d1c91f237afd9b04acbe4dceabd6e2c8fdedb659",
+  "assessment_id": "66737df4831346457862a8c123f6f49441b4e63209e73bda7824f605a53c7511"
+ },
+ "counts": {
+  "tables": [
+   "phase",
+   "time"
+  ],
+  "observations_full": 19573,
+  "observations_filtered": 19448,
+  "failed_observations": 125,
+  "full": {
+   "phase_rows": 2862750,
+   "time_rows": 6397787,
+   "phase_observations": 19085,
+   "time_observations": 488,
+   "observations_by_type": {
+    "continuous_recording": 488,
+    "transfer": 10254,
+    "individual_cycle": 8831
+   }
+  },
+  "filtered": {
+   "phase_rows": 2847900,
+   "time_rows": 5724307,
+   "phase_observations": 18986,
+   "time_observations": 462,
+   "observations_by_type": {
+    "continuous_recording": 462,
+    "transfer": 10242,
+    "individual_cycle": 8744
+   }
+  },
+  "exclusions_total": 5281,
+  "exclusions_by_stage": {
+   "upstream_not_released": 5156,
+   "filtered_variant_only": 125
+  },
+  "exclusions_by_kind": {
+   "export_exclusion": 1415,
+   "authors_window_not_exported": 3741,
+   "assessment_failed": 125
+  },
+  "exclusions_by_reason": {
+   "export_exclusion": {
+    "shorter_than_0.25_s": 593,
+    "span_boundary_next_to_missing_marker": 367,
+    "force_not_a_number_inside_stride": 44,
+    "last_contact_has_no_following_contact": 389,
+    "longer_than_5_s": 16,
+    "shorter_than_0.3_s": 6
+   },
+   "authors_window_not_exported": {
+    "nearest_record_excluded": 571,
+    "no_record_starts_within_tolerance": 3150,
+    "no_record_for_this_leg": 20
+   },
+   "assessment_failed": {
+    "L5": 106,
+    "S5_side_check": 8,
+    "L5+S5_side_check": 2,
+    "L1": 9
+   }
+  },
+  "assessment_failures_by_cause": {
+   "L5": 108,
+   "S5_side_check": 10,
+   "L1": 9
+  },
+  "assessment_failures_by_table": {
+   "time": 26,
+   "phase": 99
+  },
+  "observations_by_part_label": {
+   "GT23-E01": 18947,
+   "GT23-E02": 626
+  }
+ },
+ "exclusion_evidence": "exclusions.csv (5,281 rows): 1,415 export exclusions, 3,741 authors' windows not exported, 125 assessment failures (stage filtered_variant_only); evidence/authors_windows.csv (13,119 windows with fate), evidence/assessment_failure_samples.csv (4,887 samples); assessment.jsonl (19,573 lines)",
+ "readback": {
+  "script": "docs/quality/audits/gt23-r01-readback-script.py",
+  "output": "docs/quality/audits/gt23-r01-readback-output.txt",
+  "result": "31 checks pass, 0 failed: manifest.sha256, sha256 and bytes of every file, grid/order/contiguity in all four tables, same columns, full observations = assessed observations with assessed rows, full = filtered + 125 failures (keys and rows, phase and time), filtered column sums = full minus failed rows, full column sums = E01 (non-replaced) + E02 sources, exclusions equal the raw sources by id, assessment.jsonl equals the assessment, index/preview/tests/limitations/manifest bind the same hashes and counts. Probe peak 265 MiB under prlimit 600 MiB, nice 19.",
+  "own_code": "own script, imports nothing from the repo"
+ },
+ "limitations_with_counts": "limitations.json in the package (each with observations by type, recordings, participants, how many remain in filtered, how many failed)",
+ "flags": [
+  "AB03 side_shuffle_1 foot-frame pressure point is NOT held in the data: the values are present in full with the assessment failure recorded; 16 of its 19 observations failed L5 and are left out of filtered (3 remain); the limitation text says so.",
+  "Cycles labelled run (2.0 and 2.5 m/s): 706 of 795 show flight, not all.",
+  "Step-up and curb-up foot-frame pressure points are missing (held) in 506 and 268 observations; those observations stay in filtered (506 and 267).",
+  "The E01 and E02 batch READMEs still say 'forward along heel to toe'; they are unchanged evidence. The package README carries the 24 November wording and says the batch line is superseded. contributor_tools/run_gt23_e01.py line 349 still generates the old line; it is bound by the PL01 chain and was not edited.",
+  "Row groups are 12,000 rows, not 3,000: smaller groups cost about 80 KB of writer metadata each and ran the build out of address space.",
+  "Invalid partial roots from failed builds (v8 and v9 full, about 9 GB each) remain under converted_datasets/reconversion_v2 and are marked INVALID_DO_NOT_USE.txt; disk had 38 GB free after the build.",
+  "Dataset page, UM21 and GT21 migration to the package builder, and the UM21 review page update are not done."
+ ],
+ "still_unchecked": "moments, powers, velocities and forces have no limits (unchecked); limits are coarse and draft (gt23_q01_coarse_limits_v2); ankle offset unverified; AB07 right-foot offset and AB03 side_shuffle_1 cause unresolved",
+ "changed_files": [
+  "contributor_tools/common/release_package.py (new)",
+  "contributor_tools/run_gt23_r01_bundle.py (new)",
+  "contributor_tools/DATA_CONTRACT.md (section 'Release package' added)",
+  "tests/test_release_package.py (new)",
+  "tests/test_gt23_r01_bundle.py (new)",
+  "docs/quality/audits/gt23-r01-*-spec-v*.json, gt23-r01-*-launcher-receipt-v*.json/.log (new)",
+  "docs/quality/audits/gt23-r01-readback-script.py, gt23-r01-readback-output.txt (new)",
+  "docs/maintainers/handoffs/GT23-R01.json (new)",
+  "docs/maintainers/backlog.json and backlog.html (status)"
+ ],
+ "evidence_paths": [
+  "converted_datasets/reconversion_v2/gt23_r01_review_v10",
+  "docs/quality/audits/gt23-r01-full-launcher-receipt-v10.json",
+  "docs/quality/audits/gt23-r01-readback-output.txt"
+ ],
+ "next_action": "Independent second agent (verifier) re-checks acceptance against the package files and moves the task to done or back; then the Georgia Tech 2023 dataset page is built from the package's dataset_index.json and phase_preview.json."
+}

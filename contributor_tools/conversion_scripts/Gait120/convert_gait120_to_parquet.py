@@ -31,6 +31,16 @@ Data structure:
                 MOT/  # Force plate data (only for level walking, STS tasks)
         EMG/  # Not used in this conversion
 
+Processing modes:
+1. Pre-computed IK mode (default): Uses pre-computed .mot files from JointAngle/
+   - Fast, but uses the Gait120 authors' model (not publicly available)
+   - Cannot run ID accurately because we don't have their model
+
+2. Full pipeline mode (--run-ik): Runs Scale → IK → ID from TRC files
+   - Uses our Rajagopal model throughout for consistency
+   - Produces internally consistent kinematics and kinetics
+   - Slower but more accurate for inverse dynamics
+
 Sign conventions in source data:
 - Hip: flexion +, adduction +, internal rotation +
 - Knee: EXTENSION + (need to negate for flexion+ standard)
@@ -40,6 +50,7 @@ Output: Phase-normalized parquet file with 150 points per gait cycle.
 """
 
 import os
+import json
 import re
 import sys
 import numpy as np
@@ -51,18 +62,71 @@ from tqdm import tqdm
 
 # Add path for common utilities
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from common.derivatives import (
     compute_velocity_from_shifted_angle,
     compute_acceleration_from_velocity,
 )
-from common.force_plate import (
-    ForcePlateConfig,
-    process_force_plate_data,
+from common.opensim_inverse_dynamics import (
+    OPENSIM_AVAILABLE,
+    InverseDynamicsConfig,
+    compute_inverse_dynamics_for_stride,
+    interpolate_to_phase as id_interpolate_to_phase,
+)
+from common.opensim_pipeline import (
+    OpenSimPipeline,
+    PipelineConfig,
+    StrideResult,
+    extract_sagittal_kinematics,
+)
+from common.opensim_ik import IKConfig
+from common.opensim_scaling import ScalingConfig
+
+# Import local scale_model utilities for anthropometric data
+from contributor_tools.conversion_scripts.Gait120.scale_model import (
+    get_subject_anthropometrics,
+    get_subject_mass,
+    get_subject_height,
+    load_anthropometric_data,
+)
+from contributor_tools.conversion_scripts.Gait120.marker_mapping import (
+    GAIT120_TO_RAJAGOPAL,
+    IK_MARKER_WEIGHTS_GAIT120,
+    rename_markers_in_trc,
 )
 
 # Configuration
 NUM_POINTS = 150  # Target points per gait cycle (standard format)
 DEG2RAD = np.pi / 180.0
+
+# OpenSim model path for inverse dynamics / full pipeline.
+# Default preference is the original Rajagopal model. The legacy
+# `rajagopal_gait120.osim` variant can lock secondary knee DOFs, which may
+# over-constrain IK for some trials.
+_ORIGINAL_OPENSIM_MODEL_PATH = Path(__file__).parent / "rajagopal_original.osim"
+_GAIT120_OPENSIM_MODEL_PATH = Path(__file__).parent / "rajagopal_gait120.osim"
+
+
+def _get_opensim_model_path(model_choice: str = "original") -> Path:
+    if model_choice == "gait120":
+        return _GAIT120_OPENSIM_MODEL_PATH if _GAIT120_OPENSIM_MODEL_PATH.exists() else _ORIGINAL_OPENSIM_MODEL_PATH
+    return _ORIGINAL_OPENSIM_MODEL_PATH if _ORIGINAL_OPENSIM_MODEL_PATH.exists() else _GAIT120_OPENSIM_MODEL_PATH
+
+
+OPENSIM_MODEL_PATH = _get_opensim_model_path()
+
+# Global flag to control inverse dynamics computation
+# Disabled by default because the original model used for IK is not available,
+# making ID results inaccurate. Enable with --enable-id for experimentation.
+COMPUTE_INVERSE_DYNAMICS = False
+
+# Global flag to control whether to run IK from TRC files
+# When True, runs the full pipeline: Scale → IK → ID
+# When False (default), uses pre-computed .mot files from JointAngle/
+RUN_FULL_PIPELINE = False
+
+# Global OpenSim pipeline instance (initialized in main if needed)
+_opensim_pipeline: Optional[OpenSimPipeline] = None
 
 # Task mapping: source folder name -> (standard_task, task_id)
 TASK_MAPPING = {
@@ -89,6 +153,15 @@ EXPECTED_ANGLE_COLUMNS = [
     'ankle_angle_l',
     # May also have: lumbar, arm, subtalar, mtp coordinates
 ]
+
+
+# Marker-pair distances used for segment-specific geometric scaling.
+# Keys must match OpenSim body names in the model.
+GAIT120_SEGMENT_MARKER_PAIRS = {
+    "pelvis": ("LASI", "RASI"),
+    "calcn_r": ("RCAL", "RTOE"),
+    "calcn_l": ("LCAL", "LTOE"),
+}
 
 
 def load_mot_file(mot_path: Path) -> Optional[pd.DataFrame]:
@@ -148,39 +221,45 @@ def load_mot_file(mot_path: Path) -> Optional[pd.DataFrame]:
         return None
 
 
-def interpolate_to_phase(data: np.ndarray, num_points: int = NUM_POINTS) -> np.ndarray:
-    """
-    Interpolate time-series data to fixed number of phase points (0-100%).
-
-    Args:
-        data: Input data array
-        num_points: Number of output points (default 150)
-
-    Returns:
-        Interpolated data array of length num_points
-    """
-    if len(data) < 2:
+def interpolate_to_phase(data, num_points=NUM_POINTS, source_time=None):
+    """Interpolate on the observed clock, retaining missing sample gaps."""
+    values = np.asarray(data, dtype=float)
+    if len(values) < 2:
         return np.full(num_points, np.nan)
-
-    # Create interpolation function
-    x_original = np.linspace(0, 100, len(data))
-    x_target = np.linspace(0, 100, num_points)
-
-    # Handle NaN values
-    valid_mask = ~np.isnan(data)
-    if np.sum(valid_mask) < 2:
-        return np.full(num_points, np.nan)
-
-    try:
-        interp_func = interp1d(x_original[valid_mask], data[valid_mask],
-                               kind='linear', fill_value='extrapolate')
-        return interp_func(x_target)
-    except Exception:
-        return np.full(num_points, np.nan)
+    clock = np.arange(len(values)) if source_time is None else np.asarray(source_time)
+    if len(clock) != len(values) or not np.isfinite(clock).all() or not (np.diff(clock) > 0).all():
+        raise ValueError('Signal samples require a finite, increasing source clock')
+    return np.interp(np.linspace(clock[0], clock[-1], num_points), clock,
+                     np.where(np.isfinite(values), values, np.nan))
 
 
 # NOTE: compute_velocity_from_shifted_angle and compute_acceleration_from_velocity
 # are now imported from common.derivatives to handle discontinuities from phase shifts
+
+
+def resample_source_force_plates(frame, target_time):
+    """Retain measured plate axes on the IK clock without anatomical guesses."""
+    if frame is None:
+        return {}
+    if 'time' not in frame:
+        raise ValueError('Force plate data require original timestamps')
+    clock = frame.time.to_numpy(dtype=float)
+    if len(clock) < 2 or not np.isfinite(clock).all() or not (np.diff(clock) > 0).all():
+        raise ValueError('Force plate timestamps must be finite and strictly increasing')
+    result = {}
+    for plate in (1, 2):
+        for axis in 'xyz':
+            for source, output in [
+                (f'ground_force{plate}_v{axis}', f'source_plate{plate}_force_{axis}_N'),
+                (f'ground_force{plate}_p{axis}', f'source_plate{plate}_cop_{axis}_m'),
+                (f'ground_torque{plate}_{axis}', f'source_plate{plate}_torque_{axis}_Nm'),
+            ]:
+                if source not in frame:
+                    continue
+                values = frame[source].to_numpy(dtype=float)
+                result[output] = np.interp(target_time, clock,
+                    np.where(np.isfinite(values), values, np.nan), left=np.nan, right=np.nan)
+    return result
 
 
 def get_grf_mot_path(kinematics_mot_path: Path) -> Optional[Path]:
@@ -264,6 +343,124 @@ def get_trc_path(kinematics_mot_path: Path) -> Optional[Path]:
                 return trc_path
 
     return None
+
+
+def get_static_trc_path(subject_path: Path) -> Optional[Path]:
+    """
+    Get the static trial TRC file path for a subject.
+
+    Args:
+        subject_path: Path to subject folder (e.g., .../S011/)
+
+    Returns:
+        Path to static trial TRC file, or None if not found
+    """
+    # Static trial is at: .../S011/MotionCapture/Static/TRC/Trial01.trc
+    static_trc = subject_path / 'MotionCapture' / 'Static' / 'TRC' / 'Trial01.trc'
+    if static_trc.exists():
+        return static_trc
+
+    # Try alternate naming
+    static_folder = subject_path / 'MotionCapture' / 'Static' / 'TRC'
+    if static_folder.exists():
+        trc_files = list(static_folder.glob('*.trc'))
+        if trc_files:
+            return trc_files[0]
+
+    return None
+
+
+def get_stride_trc_path_from_mot(mot_path: Path) -> Optional[Path]:
+    """
+    Get the corresponding stride TRC file path from a .mot file path.
+
+    Args:
+        mot_path: Path to the .mot file (in JointAngle or elsewhere)
+
+    Returns:
+        Path to corresponding TRC file, or None if not found
+    """
+    # This is the same as get_trc_path but with a clearer name
+    return get_trc_path(mot_path)
+
+
+def process_stride_with_pipeline(
+    stride_trc_path: Path,
+    grf_mot_path: Optional[Path],
+    subject_id: str,
+    subject_path: Path,
+    subject_mass_kg: float,
+    subject_height_m: float,
+    ipsi_side: str,
+    task: str,
+    step_num: int,
+) -> Optional[Dict[str, np.ndarray]]:
+    """
+    Process a single stride using the full OpenSim pipeline (Scale → IK → ID).
+
+    Args:
+        stride_trc_path: Path to the stride TRC marker file
+        grf_mot_path: Path to the GRF MOT file (or None)
+        subject_id: Subject identifier
+        subject_path: Path to subject folder
+        subject_mass_kg: Subject mass in kg
+        subject_height_m: Subject height in meters
+        ipsi_side: Ipsilateral side ('r' or 'l')
+        task: Task name
+        step_num: Step number
+
+    Returns:
+        Dictionary with kinematics and moments, or None if failed
+    """
+    global _opensim_pipeline
+
+    if _opensim_pipeline is None or not OPENSIM_AVAILABLE:
+        return None
+
+    # Get static TRC for scaling
+    static_trc_path = get_static_trc_path(subject_path)
+    if static_trc_path is None:
+        print(f"  Warning: No static TRC found for {subject_id}")
+        return None
+
+    # Create unique key for this stride
+    stride_key = f"{subject_id}_{task}_{step_num:03d}"
+
+    try:
+        # Run the pipeline
+        result = _opensim_pipeline.process_stride(
+            subject_id=subject_id,
+            static_trc_path=static_trc_path,
+            stride_trc_path=stride_trc_path,
+            subject_mass_kg=subject_mass_kg,
+            ipsi_side=ipsi_side,
+            grf_mot_path=grf_mot_path,
+            subject_height_m=subject_height_m,
+            stride_key=stride_key,
+            phase_normalize=True,
+        )
+
+        if result.success:
+            # Combine kinematics and moments into single dict
+            output = {}
+
+            # Add kinematics
+            if result.kinematics_phase is not None:
+                output.update(result.kinematics_phase)
+
+            # Add moments
+            if result.moments_phase is not None:
+                output.update(result.moments_phase)
+
+            return output
+        else:
+            if result.error_message:
+                print(f"  Pipeline failed: {result.error_message}")
+            return None
+
+    except Exception as e:
+        print(f"  Pipeline error: {e}")
+        return None
 
 
 def load_trc_file(trc_path: Path) -> Optional[pd.DataFrame]:
@@ -419,25 +616,6 @@ def get_ankle_positions(
     )
 
 
-def circular_phase_shift(data: np.ndarray, shift_percent: float = 50.0) -> np.ndarray:
-    """
-    Circularly shift phase-normalized data by a percentage of the gait cycle.
-
-    In gait, the contralateral leg is approximately 50% out of phase with the
-    ipsilateral leg.
-
-    Args:
-        data: Phase-normalized data array
-        shift_percent: Percentage of gait cycle to shift (default 50%)
-
-    Returns:
-        Circularly shifted data array (same shape as input)
-    """
-    num_points = len(data)
-    shift_points = int(round(num_points * shift_percent / 100.0))
-    return np.roll(data, shift_points)
-
-
 def estimate_stride_duration_from_mot(df: pd.DataFrame) -> float:
     """
     Estimate stride duration from .mot file time column.
@@ -446,14 +624,13 @@ def estimate_stride_duration_from_mot(df: pd.DataFrame) -> float:
         df: DataFrame from .mot file with 'time' column
 
     Returns:
-        Duration in seconds (default 1.0 if cannot compute)
+        Observed duration in seconds, or NaN when the source clock is unavailable/invalid
     """
     if 'time' in df.columns and len(df) > 1:
-        time_vals = df['time'].values
-        duration = time_vals[-1] - time_vals[0]
-        if duration > 0:
-            return duration
-    return 1.0  # Default estimate
+        time_vals = df['time'].to_numpy(dtype=float)
+        if np.isfinite(time_vals).all() and (np.diff(time_vals) > 0).all():
+            return float(time_vals[-1] - time_vals[0])
+    return np.nan
 
 
 def get_column_mapping(df: pd.DataFrame) -> Dict[str, str]:
@@ -517,7 +694,9 @@ def process_step_file(
     task_id: str,
     step_num: int,
     leg_side: str = 'r',
-    subject_mass_kg: float = 70.0
+    subject_mass_kg: float = np.nan,
+    subject_height_m: float = np.nan,
+    subject_path: Optional[Path] = None,
 ) -> Optional[pd.DataFrame]:
     """
     Process a single step .mot file into standardized format.
@@ -530,10 +709,20 @@ def process_step_file(
         step_num: Step number for this subject/task
         leg_side: Which leg is ipsilateral ('r' or 'l')
         subject_mass_kg: Subject mass in kg
+        subject_height_m: Subject height in meters
+        subject_path: Path to subject folder (for pipeline mode)
 
     Returns:
         DataFrame with 150 rows (one per phase point) or None if invalid
     """
+    # Unknown metadata must not silently enter model scaling or normalization.
+    if not np.isfinite(subject_mass_kg) or subject_mass_kg <= 0:
+        subject_mass_kg = np.nan
+    if not np.isfinite(subject_height_m) or subject_height_m <= 0:
+        subject_height_m = np.nan
+    if (RUN_FULL_PIPELINE or COMPUTE_INVERSE_DYNAMICS) and not (
+            np.isfinite(subject_mass_kg) and np.isfinite(subject_height_m)):
+        raise ValueError('Measured mass and height are required for OpenSim reconstruction')
     # Load .mot file
     df = load_mot_file(mot_path)
     if df is None or len(df) < 10:
@@ -542,12 +731,14 @@ def process_step_file(
     # Get column mapping
     col_map = get_column_mapping(df)
 
-    # Check for required columns
-    # NOTE: Source files are segmented by contralateral heel strike (not ipsilateral)
-    # So we need to SWAP which leg maps to ipsi vs contra in the output
-    # When processing a "right leg" step file, the LEFT leg is actually ipsilateral
-    source_ipsi = 'l' if leg_side == 'r' else 'r'  # Swapped!
-    source_contra = leg_side  # Swapped!
+    # Source protocol: gait files span right heel strike to right heel strike.
+    # Scientific Data 12:1023, doi:10.1038/s41597-025-05391-0, Methods p. 5.
+    # Keep anatomical columns and sample order; no leg swap or half-cycle roll.
+    is_bilateral = task in ['sit_to_stand', 'stand_to_sit', 'squat']
+    if leg_side not in {'l', 'r'} or (not is_bilateral and leg_side != 'r'):
+        raise ValueError('Gait120 source gait cycles have a right-foot reference')
+    source_ipsi = leg_side
+    source_contra = 'l' if leg_side == 'r' else 'r'
 
     # Gait120 uses knee_angle and ankle_angle (not knee_flexion, ankle_dorsiflexion)
     required_ipsi = [f'hip_flexion_{source_ipsi}', f'knee_angle_{source_ipsi}', f'ankle_angle_{source_ipsi}']
@@ -561,6 +752,10 @@ def process_step_file(
 
     # Estimate stride duration
     stride_duration_s = estimate_stride_duration_from_mot(df)
+    if not np.isfinite(stride_duration_s) or stride_duration_s <= 0:
+        raise ValueError('Gait120 conversion requires the original increasing timestamps')
+    def resample(values):
+        return interpolate_to_phase(values, source_time=df.time.to_numpy(dtype=float))
 
     # Calculate body weight in Newtons for GRF normalization
     body_weight_N = subject_mass_kg * 9.81
@@ -574,206 +769,341 @@ def process_step_file(
         """Get column data directly from DataFrame."""
         if name in df.columns:
             return df[name].values
-        return np.zeros(len(df))
+        return np.full(len(df), np.nan)
 
     # Hip flexion (no sign change needed)
     # Use source_ipsi/source_contra to get data from correct source columns
     hip_ipsi_deg = get_col(f'hip_flexion_{source_ipsi}')
     hip_contra_deg = get_col(f'hip_flexion_{source_contra}') if has_contra else np.full_like(hip_ipsi_deg, np.nan)
-    hip_ipsi_rad = interpolate_to_phase(hip_ipsi_deg * DEG2RAD)
-    hip_contra_rad = interpolate_to_phase(hip_contra_deg * DEG2RAD)
+    hip_ipsi_rad = resample(hip_ipsi_deg * DEG2RAD)
+    hip_contra_rad = resample(hip_contra_deg * DEG2RAD)
 
     # Knee angle (NEGATE: source extension+ -> standard flexion+)
     # Gait120 uses 'knee_angle_r' and 'knee_angle_l'
     knee_ipsi_deg = get_col(f'knee_angle_{source_ipsi}')
     knee_contra_deg = get_col(f'knee_angle_{source_contra}') if has_contra else np.full_like(knee_ipsi_deg, np.nan)
-    knee_ipsi_rad = interpolate_to_phase(-knee_ipsi_deg * DEG2RAD)  # Negate for flexion+
-    knee_contra_rad = interpolate_to_phase(-knee_contra_deg * DEG2RAD)  # Negate for flexion+
+    knee_ipsi_rad = resample(-knee_ipsi_deg * DEG2RAD)  # Negate for flexion+
+    knee_contra_rad = resample(-knee_contra_deg * DEG2RAD)  # Negate for flexion+
 
     # Ankle dorsiflexion (no sign change needed)
     # Gait120 uses 'ankle_angle_r' and 'ankle_angle_l'
     ankle_ipsi_deg = get_col(f'ankle_angle_{source_ipsi}')
     ankle_contra_deg = get_col(f'ankle_angle_{source_contra}') if has_contra else np.full_like(ankle_ipsi_deg, np.nan)
-    ankle_ipsi_rad = interpolate_to_phase(ankle_ipsi_deg * DEG2RAD)
-    ankle_contra_rad = interpolate_to_phase(ankle_contra_deg * DEG2RAD)
-
-    # Phase alignment correction for Gait120 data
-    # The source .mot files are segmented starting at ~50% phase (around toe-off)
-    # We need to shift by 50% to align with heel strike at 0%
-    is_bilateral = task in ['sit_to_stand', 'stand_to_sit', 'squat']
-    if not is_bilateral:
-        # Shift ipsilateral data by 50% to align heel strike with phase 0%
-        hip_ipsi_rad = circular_phase_shift(hip_ipsi_rad, 50.0)
-        knee_ipsi_rad = circular_phase_shift(knee_ipsi_rad, 50.0)
-        ankle_ipsi_rad = circular_phase_shift(ankle_ipsi_rad, 50.0)
-
-        # Shift contralateral data by 50% as well (maintains ~50% offset from ipsi)
-        if has_contra:
-            hip_contra_rad = circular_phase_shift(hip_contra_rad, 50.0)
-            knee_contra_rad = circular_phase_shift(knee_contra_rad, 50.0)
-            ankle_contra_rad = circular_phase_shift(ankle_contra_rad, 50.0)
+    ankle_ipsi_rad = resample(ankle_ipsi_deg * DEG2RAD)
+    ankle_contra_rad = resample(ankle_contra_deg * DEG2RAD)
 
     # Pelvis tilt (global reference)
     pelvis_tilt_deg = get_col('pelvis_tilt')
-    pelvis_tilt_rad = interpolate_to_phase(pelvis_tilt_deg * DEG2RAD) if 'pelvis_tilt' in col_map else np.zeros(NUM_POINTS)
+    pelvis_tilt_rad = resample(pelvis_tilt_deg * DEG2RAD) if 'pelvis_tilt' in col_map else np.full(NUM_POINTS, np.nan)
 
-    # Apply same phase shift to pelvis for gait tasks
-    if not is_bilateral:
-        pelvis_tilt_rad = circular_phase_shift(pelvis_tilt_rad, 50.0)
+    def _compute_derived_kinematics(
+        hip_ipsi_arr: np.ndarray,
+        hip_contra_arr: np.ndarray,
+        knee_ipsi_arr: np.ndarray,
+        knee_contra_arr: np.ndarray,
+        ankle_ipsi_arr: np.ndarray,
+        ankle_contra_arr: np.ndarray,
+        pelvis_arr: np.ndarray,
+    ) -> Dict[str, np.ndarray]:
+        disc_idx = None  # Source sample order is continuous and is never rolled.
 
-    # Compute segment angles from kinematic chain
-    # thigh_angle = pelvis_tilt + hip_flexion
-    # shank_angle = thigh_angle - knee_flexion (knee is flexion-positive now)
-    # foot_angle = shank_angle + ankle_dorsiflexion
-    thigh_ipsi_rad = pelvis_tilt_rad + hip_ipsi_rad
-    thigh_contra_rad = pelvis_tilt_rad + hip_contra_rad
-    shank_ipsi_rad = thigh_ipsi_rad - knee_ipsi_rad
-    shank_contra_rad = thigh_contra_rad - knee_contra_rad
-    foot_ipsi_rad = shank_ipsi_rad + ankle_ipsi_rad
-    foot_contra_rad = shank_contra_rad + ankle_contra_rad
+        thigh_ipsi_arr = pelvis_arr + hip_ipsi_arr
+        thigh_contra_arr = pelvis_arr + hip_contra_arr
+        shank_ipsi_arr = thigh_ipsi_arr - knee_ipsi_arr
+        shank_contra_arr = thigh_contra_arr - knee_contra_arr
+        foot_ipsi_arr = shank_ipsi_arr + ankle_ipsi_arr
+        foot_contra_arr = shank_contra_arr + ankle_contra_arr
 
-    # Compute velocities
-    # For shifted data (gait tasks), use explicit discontinuity index at 50% phase (index 75)
-    # For non-shifted data (sit-stand), use standard gradient
-    is_shifted = not is_bilateral
-    disc_idx = NUM_POINTS // 2 if is_shifted else None  # 75 for 150 points
+        hip_vel_ipsi_arr = compute_velocity_from_shifted_angle(hip_ipsi_arr, stride_duration_s, discontinuity_idx=disc_idx)
+        hip_vel_contra_arr = compute_velocity_from_shifted_angle(hip_contra_arr, stride_duration_s, discontinuity_idx=disc_idx)
+        knee_vel_ipsi_arr = compute_velocity_from_shifted_angle(knee_ipsi_arr, stride_duration_s, discontinuity_idx=disc_idx)
+        knee_vel_contra_arr = compute_velocity_from_shifted_angle(knee_contra_arr, stride_duration_s, discontinuity_idx=disc_idx)
+        ankle_vel_ipsi_arr = compute_velocity_from_shifted_angle(ankle_ipsi_arr, stride_duration_s, discontinuity_idx=disc_idx)
+        ankle_vel_contra_arr = compute_velocity_from_shifted_angle(ankle_contra_arr, stride_duration_s, discontinuity_idx=disc_idx)
 
-    hip_vel_ipsi = compute_velocity_from_shifted_angle(hip_ipsi_rad, stride_duration_s, discontinuity_idx=disc_idx)
-    hip_vel_contra = compute_velocity_from_shifted_angle(hip_contra_rad, stride_duration_s, discontinuity_idx=disc_idx)
-    knee_vel_ipsi = compute_velocity_from_shifted_angle(knee_ipsi_rad, stride_duration_s, discontinuity_idx=disc_idx)
-    knee_vel_contra = compute_velocity_from_shifted_angle(knee_contra_rad, stride_duration_s, discontinuity_idx=disc_idx)
-    ankle_vel_ipsi = compute_velocity_from_shifted_angle(ankle_ipsi_rad, stride_duration_s, discontinuity_idx=disc_idx)
-    ankle_vel_contra = compute_velocity_from_shifted_angle(ankle_contra_rad, stride_duration_s, discontinuity_idx=disc_idx)
+        pelvis_vel_arr = compute_velocity_from_shifted_angle(pelvis_arr, stride_duration_s, discontinuity_idx=disc_idx)
+        thigh_vel_ipsi_arr = compute_velocity_from_shifted_angle(thigh_ipsi_arr, stride_duration_s, discontinuity_idx=disc_idx)
+        thigh_vel_contra_arr = compute_velocity_from_shifted_angle(thigh_contra_arr, stride_duration_s, discontinuity_idx=disc_idx)
+        shank_vel_ipsi_arr = compute_velocity_from_shifted_angle(shank_ipsi_arr, stride_duration_s, discontinuity_idx=disc_idx)
+        shank_vel_contra_arr = compute_velocity_from_shifted_angle(shank_contra_arr, stride_duration_s, discontinuity_idx=disc_idx)
+        foot_vel_ipsi_arr = compute_velocity_from_shifted_angle(foot_ipsi_arr, stride_duration_s, discontinuity_idx=disc_idx)
+        foot_vel_contra_arr = compute_velocity_from_shifted_angle(foot_contra_arr, stride_duration_s, discontinuity_idx=disc_idx)
 
-    # Segment velocities
-    pelvis_vel = compute_velocity_from_shifted_angle(pelvis_tilt_rad, stride_duration_s, discontinuity_idx=disc_idx)
-    thigh_vel_ipsi = compute_velocity_from_shifted_angle(thigh_ipsi_rad, stride_duration_s, discontinuity_idx=disc_idx)
-    thigh_vel_contra = compute_velocity_from_shifted_angle(thigh_contra_rad, stride_duration_s, discontinuity_idx=disc_idx)
-    shank_vel_ipsi = compute_velocity_from_shifted_angle(shank_ipsi_rad, stride_duration_s, discontinuity_idx=disc_idx)
-    shank_vel_contra = compute_velocity_from_shifted_angle(shank_contra_rad, stride_duration_s, discontinuity_idx=disc_idx)
-    foot_vel_ipsi = compute_velocity_from_shifted_angle(foot_ipsi_rad, stride_duration_s, discontinuity_idx=disc_idx)
-    foot_vel_contra = compute_velocity_from_shifted_angle(foot_contra_rad, stride_duration_s, discontinuity_idx=disc_idx)
+        hip_acc_ipsi_arr = compute_acceleration_from_velocity(hip_vel_ipsi_arr, stride_duration_s, discontinuity_idx=disc_idx)
+        hip_acc_contra_arr = compute_acceleration_from_velocity(hip_vel_contra_arr, stride_duration_s, discontinuity_idx=disc_idx)
+        knee_acc_ipsi_arr = compute_acceleration_from_velocity(knee_vel_ipsi_arr, stride_duration_s, discontinuity_idx=disc_idx)
+        knee_acc_contra_arr = compute_acceleration_from_velocity(knee_vel_contra_arr, stride_duration_s, discontinuity_idx=disc_idx)
+        ankle_acc_ipsi_arr = compute_acceleration_from_velocity(ankle_vel_ipsi_arr, stride_duration_s, discontinuity_idx=disc_idx)
+        ankle_acc_contra_arr = compute_acceleration_from_velocity(ankle_vel_contra_arr, stride_duration_s, discontinuity_idx=disc_idx)
 
-    # Compute accelerations
-    hip_acc_ipsi = compute_acceleration_from_velocity(hip_vel_ipsi, stride_duration_s, discontinuity_idx=disc_idx)
-    hip_acc_contra = compute_acceleration_from_velocity(hip_vel_contra, stride_duration_s, discontinuity_idx=disc_idx)
-    knee_acc_ipsi = compute_acceleration_from_velocity(knee_vel_ipsi, stride_duration_s, discontinuity_idx=disc_idx)
-    knee_acc_contra = compute_acceleration_from_velocity(knee_vel_contra, stride_duration_s, discontinuity_idx=disc_idx)
-    ankle_acc_ipsi = compute_acceleration_from_velocity(ankle_vel_ipsi, stride_duration_s, discontinuity_idx=disc_idx)
-    ankle_acc_contra = compute_acceleration_from_velocity(ankle_vel_contra, stride_duration_s, discontinuity_idx=disc_idx)
+        return {
+            'thigh_ipsi_rad': thigh_ipsi_arr,
+            'thigh_contra_rad': thigh_contra_arr,
+            'shank_ipsi_rad': shank_ipsi_arr,
+            'shank_contra_rad': shank_contra_arr,
+            'foot_ipsi_rad': foot_ipsi_arr,
+            'foot_contra_rad': foot_contra_arr,
+            'hip_vel_ipsi': hip_vel_ipsi_arr,
+            'hip_vel_contra': hip_vel_contra_arr,
+            'knee_vel_ipsi': knee_vel_ipsi_arr,
+            'knee_vel_contra': knee_vel_contra_arr,
+            'ankle_vel_ipsi': ankle_vel_ipsi_arr,
+            'ankle_vel_contra': ankle_vel_contra_arr,
+            'pelvis_vel': pelvis_vel_arr,
+            'thigh_vel_ipsi': thigh_vel_ipsi_arr,
+            'thigh_vel_contra': thigh_vel_contra_arr,
+            'shank_vel_ipsi': shank_vel_ipsi_arr,
+            'shank_vel_contra': shank_vel_contra_arr,
+            'foot_vel_ipsi': foot_vel_ipsi_arr,
+            'foot_vel_contra': foot_vel_contra_arr,
+            'hip_acc_ipsi': hip_acc_ipsi_arr,
+            'hip_acc_contra': hip_acc_contra_arr,
+            'knee_acc_ipsi': knee_acc_ipsi_arr,
+            'knee_acc_contra': knee_acc_contra_arr,
+            'ankle_acc_ipsi': ankle_acc_ipsi_arr,
+            'ankle_acc_contra': ankle_acc_contra_arr,
+        }
 
-    # Load GRF/COP data if available
-    # COP in Gait120 is in lab coordinates, so we need to subtract ankle position
-    # to get ankle-relative (foot-relative) COP
-    grf_data = None
-    grf_df = None
+    derived = _compute_derived_kinematics(
+        hip_ipsi_rad,
+        hip_contra_rad,
+        knee_ipsi_rad,
+        knee_contra_rad,
+        ankle_ipsi_rad,
+        ankle_contra_rad,
+        pelvis_tilt_rad,
+    )
+    thigh_ipsi_rad = derived['thigh_ipsi_rad']
+    thigh_contra_rad = derived['thigh_contra_rad']
+    shank_ipsi_rad = derived['shank_ipsi_rad']
+    shank_contra_rad = derived['shank_contra_rad']
+    foot_ipsi_rad = derived['foot_ipsi_rad']
+    foot_contra_rad = derived['foot_contra_rad']
+    hip_vel_ipsi = derived['hip_vel_ipsi']
+    hip_vel_contra = derived['hip_vel_contra']
+    knee_vel_ipsi = derived['knee_vel_ipsi']
+    knee_vel_contra = derived['knee_vel_contra']
+    ankle_vel_ipsi = derived['ankle_vel_ipsi']
+    ankle_vel_contra = derived['ankle_vel_contra']
+    pelvis_vel = derived['pelvis_vel']
+    thigh_vel_ipsi = derived['thigh_vel_ipsi']
+    thigh_vel_contra = derived['thigh_vel_contra']
+    shank_vel_ipsi = derived['shank_vel_ipsi']
+    shank_vel_contra = derived['shank_vel_contra']
+    foot_vel_ipsi = derived['foot_vel_ipsi']
+    foot_vel_contra = derived['foot_vel_contra']
+    hip_acc_ipsi = derived['hip_acc_ipsi']
+    hip_acc_contra = derived['hip_acc_contra']
+    knee_acc_ipsi = derived['knee_acc_ipsi']
+    knee_acc_contra = derived['knee_acc_contra']
+    ankle_acc_ipsi = derived['ankle_acc_ipsi']
+    ankle_acc_contra = derived['ankle_acc_contra']
+
+    # Plate identity is measured; anatomical assignment and frame transforms are
+    # not established by early/late loading, especially for bilateral transfers.
     grf_mot_path = get_grf_mot_path(mot_path)
-    if grf_mot_path is not None:
-        grf_df = load_mot_file(grf_mot_path)
-        if grf_df is not None and len(grf_df) > 10:
-            grf_data = process_force_plate_data(grf_df, num_points=NUM_POINTS)
+    grf_df = load_mot_file(grf_mot_path) if grf_mot_path is not None else None
+    source_force_channels = resample_source_force_plates(
+        grf_df, np.linspace(df.time.iloc[0], df.time.iloc[-1], NUM_POINTS))
+    grf_vertical_ipsi = np.full(NUM_POINTS, np.nan)
+    grf_vertical_contra = np.full(NUM_POINTS, np.nan)
+    grf_anterior_ipsi = np.full(NUM_POINTS, np.nan)
+    grf_anterior_contra = np.full(NUM_POINTS, np.nan)
+    grf_lateral_ipsi = np.full(NUM_POINTS, np.nan)
+    grf_lateral_contra = np.full(NUM_POINTS, np.nan)
+    cop_anterior_ipsi = np.full(NUM_POINTS, np.nan)
+    cop_lateral_ipsi = np.full(NUM_POINTS, np.nan)
+    cop_anterior_contra = np.full(NUM_POINTS, np.nan)
+    cop_lateral_contra = np.full(NUM_POINTS, np.nan)
 
-    # Initialize GRF/COP arrays (NaN if not available)
-    if grf_data is not None:
-        grf_vertical_ipsi = grf_data.grf_vertical_ipsi_N
-        grf_vertical_contra = grf_data.grf_vertical_contra_N
-        grf_anterior_ipsi = grf_data.grf_anterior_ipsi_N
-        grf_anterior_contra = grf_data.grf_anterior_contra_N
-        grf_lateral_ipsi = grf_data.grf_lateral_ipsi_N
-        grf_lateral_contra = grf_data.grf_lateral_contra_N
+    # Compute inverse dynamics if OpenSim is available and GRF data exists
+    hip_moment_ipsi = np.full(NUM_POINTS, np.nan)
+    hip_moment_contra = np.full(NUM_POINTS, np.nan)
+    knee_moment_ipsi = np.full(NUM_POINTS, np.nan)
+    knee_moment_contra = np.full(NUM_POINTS, np.nan)
+    ankle_moment_ipsi = np.full(NUM_POINTS, np.nan)
+    ankle_moment_contra = np.full(NUM_POINTS, np.nan)
+    kinematics_source = "jointangle_precomputed"
 
-        # Get lab-frame COP
-        cop_anterior_ipsi_lab = grf_data.cop_anterior_ipsi_m
-        cop_lateral_ipsi_lab = grf_data.cop_lateral_ipsi_m
-        cop_anterior_contra_lab = grf_data.cop_anterior_contra_m
-        cop_lateral_contra_lab = grf_data.cop_lateral_contra_m
+    # Use full pipeline mode if enabled
+    if RUN_FULL_PIPELINE and _opensim_pipeline is not None and subject_path is not None:
+        # Get stride TRC path
+        stride_trc_path = get_trc_path(mot_path)
+        if stride_trc_path is not None:
+            pipeline_result = process_stride_with_pipeline(
+                stride_trc_path=stride_trc_path,
+                grf_mot_path=grf_mot_path,
+                subject_id=subject_id,
+                subject_path=subject_path,
+                subject_mass_kg=subject_mass_kg,
+                subject_height_m=subject_height_m,
+                ipsi_side=source_ipsi,
+                task=task,
+                step_num=step_num,
+            )
 
-        # Transform COP from lab frame to ankle-relative frame
-        trc_path = get_trc_path(mot_path)
-        if trc_path is not None:
-            trc_df = load_trc_file(trc_path)
-            if trc_df is not None and grf_df is not None:
-                # Get ankle marker positions (resampled to phase)
-                # Coordinate mapping: TRC Z = anterior, TRC X = lateral
-                ankle_ant_ipsi, ankle_lat_ipsi, ankle_ant_contra, ankle_lat_contra = \
-                    get_ankle_positions(trc_df, grf_df, source_ipsi, NUM_POINTS)
+            if pipeline_result is not None:
+                def _phase_array(key: str) -> Optional[np.ndarray]:
+                    if key not in pipeline_result:
+                        return None
+                    arr = np.asarray(pipeline_result[key], dtype=float)
+                    if arr.ndim != 1 or arr.shape[0] != NUM_POINTS:
+                        return None
+                    return arr.copy()
 
-                # Subtract ankle position to get ankle-relative COP
-                # Only transform during stance (when GRF > threshold), set NaN during swing
-                grf_threshold = 20.0  # N
-                ipsi_stance = grf_vertical_ipsi > grf_threshold
-                contra_stance = grf_vertical_contra > grf_threshold
+                pipeline_kinematics_applied = False
 
-                cop_anterior_ipsi = np.where(
-                    ipsi_stance,
-                    cop_anterior_ipsi_lab - ankle_ant_ipsi,
-                    np.nan
-                )
-                cop_lateral_ipsi = np.where(
-                    ipsi_stance,
-                    cop_lateral_ipsi_lab - ankle_lat_ipsi,
-                    np.nan
-                )
-                cop_anterior_contra = np.where(
-                    contra_stance,
-                    cop_anterior_contra_lab - ankle_ant_contra,
-                    np.nan
-                )
-                cop_lateral_contra = np.where(
-                    contra_stance,
-                    cop_lateral_contra_lab - ankle_lat_contra,
-                    np.nan
-                )
-            else:
-                # TRC not available - keep lab frame COP
-                cop_anterior_ipsi = cop_anterior_ipsi_lab
-                cop_lateral_ipsi = cop_lateral_ipsi_lab
-                cop_anterior_contra = cop_anterior_contra_lab
-                cop_lateral_contra = cop_lateral_contra_lab
-        else:
-            # TRC not available - keep lab frame COP
-            cop_anterior_ipsi = cop_anterior_ipsi_lab
-            cop_lateral_ipsi = cop_lateral_ipsi_lab
-            cop_anterior_contra = cop_anterior_contra_lab
-            cop_lateral_contra = cop_lateral_contra_lab
-    else:
-        # No GRF data available - fill with NaN
-        grf_vertical_ipsi = np.full(NUM_POINTS, np.nan)
-        grf_vertical_contra = np.full(NUM_POINTS, np.nan)
-        grf_anterior_ipsi = np.full(NUM_POINTS, np.nan)
-        grf_anterior_contra = np.full(NUM_POINTS, np.nan)
-        grf_lateral_ipsi = np.full(NUM_POINTS, np.nan)
-        grf_lateral_contra = np.full(NUM_POINTS, np.nan)
-        cop_anterior_ipsi = np.full(NUM_POINTS, np.nan)
-        cop_lateral_ipsi = np.full(NUM_POINTS, np.nan)
-        cop_anterior_contra = np.full(NUM_POINTS, np.nan)
-        cop_lateral_contra = np.full(NUM_POINTS, np.nan)
+                hip_ipsi_pipe = _phase_array('hip_flexion_angle_ipsi_rad')
+                hip_contra_pipe = _phase_array('hip_flexion_angle_contra_rad')
+                knee_ipsi_pipe = _phase_array('knee_flexion_angle_ipsi_rad')
+                knee_contra_pipe = _phase_array('knee_flexion_angle_contra_rad')
+                ankle_ipsi_pipe = _phase_array('ankle_dorsiflexion_angle_ipsi_rad')
+                ankle_contra_pipe = _phase_array('ankle_dorsiflexion_angle_contra_rad')
+                pelvis_pipe = _phase_array('pelvis_sagittal_angle_rad')
 
-    # Apply phase shift to GRF and COP data (same as kinematics)
-    # The source data is segmented at ~50% phase, we shift to align with heel strike at 0%
-    if not is_bilateral:
-        grf_vertical_ipsi = circular_phase_shift(grf_vertical_ipsi, 50.0)
-        grf_vertical_contra = circular_phase_shift(grf_vertical_contra, 50.0)
-        grf_anterior_ipsi = circular_phase_shift(grf_anterior_ipsi, 50.0)
-        grf_anterior_contra = circular_phase_shift(grf_anterior_contra, 50.0)
-        grf_lateral_ipsi = circular_phase_shift(grf_lateral_ipsi, 50.0)
-        grf_lateral_contra = circular_phase_shift(grf_lateral_contra, 50.0)
-        cop_anterior_ipsi = circular_phase_shift(cop_anterior_ipsi, 50.0)
-        cop_lateral_ipsi = circular_phase_shift(cop_lateral_ipsi, 50.0)
-        cop_anterior_contra = circular_phase_shift(cop_anterior_contra, 50.0)
-        cop_lateral_contra = circular_phase_shift(cop_lateral_contra, 50.0)
+                if hip_ipsi_pipe is not None:
+                    hip_ipsi_rad = hip_ipsi_pipe
+                    pipeline_kinematics_applied = True
+                if hip_contra_pipe is not None:
+                    hip_contra_rad = hip_contra_pipe
+                    pipeline_kinematics_applied = True
+                if knee_ipsi_pipe is not None:
+                    knee_ipsi_rad = knee_ipsi_pipe
+                    pipeline_kinematics_applied = True
+                if knee_contra_pipe is not None:
+                    knee_contra_rad = knee_contra_pipe
+                    pipeline_kinematics_applied = True
+                if ankle_ipsi_pipe is not None:
+                    ankle_ipsi_rad = ankle_ipsi_pipe
+                    pipeline_kinematics_applied = True
+                if ankle_contra_pipe is not None:
+                    ankle_contra_rad = ankle_contra_pipe
+                    pipeline_kinematics_applied = True
+                if pelvis_pipe is not None:
+                    pelvis_tilt_rad = pelvis_pipe
+                    pipeline_kinematics_applied = True
+
+                if pipeline_kinematics_applied:
+                    kinematics_source = "opensim_ik"
+                    # Recompute all derived kinematics from the OpenSim IK angles.
+                    derived = _compute_derived_kinematics(
+                        hip_ipsi_rad,
+                        hip_contra_rad,
+                        knee_ipsi_rad,
+                        knee_contra_rad,
+                        ankle_ipsi_rad,
+                        ankle_contra_rad,
+                        pelvis_tilt_rad,
+                    )
+                    thigh_ipsi_rad = derived['thigh_ipsi_rad']
+                    thigh_contra_rad = derived['thigh_contra_rad']
+                    shank_ipsi_rad = derived['shank_ipsi_rad']
+                    shank_contra_rad = derived['shank_contra_rad']
+                    foot_ipsi_rad = derived['foot_ipsi_rad']
+                    foot_contra_rad = derived['foot_contra_rad']
+                    hip_vel_ipsi = derived['hip_vel_ipsi']
+                    hip_vel_contra = derived['hip_vel_contra']
+                    knee_vel_ipsi = derived['knee_vel_ipsi']
+                    knee_vel_contra = derived['knee_vel_contra']
+                    ankle_vel_ipsi = derived['ankle_vel_ipsi']
+                    ankle_vel_contra = derived['ankle_vel_contra']
+                    pelvis_vel = derived['pelvis_vel']
+                    thigh_vel_ipsi = derived['thigh_vel_ipsi']
+                    thigh_vel_contra = derived['thigh_vel_contra']
+                    shank_vel_ipsi = derived['shank_vel_ipsi']
+                    shank_vel_contra = derived['shank_vel_contra']
+                    foot_vel_ipsi = derived['foot_vel_ipsi']
+                    foot_vel_contra = derived['foot_vel_contra']
+                    hip_acc_ipsi = derived['hip_acc_ipsi']
+                    hip_acc_contra = derived['hip_acc_contra']
+                    knee_acc_ipsi = derived['knee_acc_ipsi']
+                    knee_acc_contra = derived['knee_acc_contra']
+                    ankle_acc_ipsi = derived['ankle_acc_ipsi']
+                    ankle_acc_contra = derived['ankle_acc_contra']
+
+                # Extract moments from pipeline results
+                # Pipeline produces phase-normalized data, so no need to interpolate
+                if 'hip_flexion_moment_ipsi_Nm_kg' in pipeline_result:
+                    hip_moment_ipsi = pipeline_result['hip_flexion_moment_ipsi_Nm_kg']
+                if 'hip_flexion_moment_contra_Nm_kg' in pipeline_result:
+                    hip_moment_contra = pipeline_result['hip_flexion_moment_contra_Nm_kg']
+                if 'knee_flexion_moment_ipsi_Nm_kg' in pipeline_result:
+                    knee_moment_ipsi = pipeline_result['knee_flexion_moment_ipsi_Nm_kg']
+                if 'knee_flexion_moment_contra_Nm_kg' in pipeline_result:
+                    knee_moment_contra = pipeline_result['knee_flexion_moment_contra_Nm_kg']
+                if 'ankle_dorsiflexion_moment_ipsi_Nm_kg' in pipeline_result:
+                    ankle_moment_ipsi = pipeline_result['ankle_dorsiflexion_moment_ipsi_Nm_kg']
+                if 'ankle_dorsiflexion_moment_contra_Nm_kg' in pipeline_result:
+                    ankle_moment_contra = pipeline_result['ankle_dorsiflexion_moment_contra_Nm_kg']
+
+    elif (COMPUTE_INVERSE_DYNAMICS and OPENSIM_AVAILABLE and
+            grf_mot_path is not None and OPENSIM_MODEL_PATH.exists()):
+        # Legacy mode: use pre-computed IK with our model for ID
+        try:
+            # Compute inverse dynamics using OpenSim
+            moments = compute_inverse_dynamics_for_stride(
+                model_path=OPENSIM_MODEL_PATH,
+                ik_mot_path=mot_path,
+                grf_mot_path=grf_mot_path,
+                ipsi_side=source_ipsi,
+                body_mass_kg=subject_mass_kg,
+            )
+
+            if moments is not None and 'time' in moments and len(moments['time']) > 0:
+                # Phase-normalize moments
+                time_arr = moments['time']
+
+                if len(moments.get('hip_flexion_moment_ipsi_Nm_kg', [])) > 0:
+                    hip_moment_ipsi = id_interpolate_to_phase(
+                        moments['hip_flexion_moment_ipsi_Nm_kg'], time_arr, NUM_POINTS
+                    )
+                if len(moments.get('knee_flexion_moment_ipsi_Nm_kg', [])) > 0:
+                    knee_moment_ipsi = id_interpolate_to_phase(
+                        moments['knee_flexion_moment_ipsi_Nm_kg'], time_arr, NUM_POINTS
+                    )
+                if len(moments.get('ankle_dorsiflexion_moment_ipsi_Nm_kg', [])) > 0:
+                    ankle_moment_ipsi = id_interpolate_to_phase(
+                        moments['ankle_dorsiflexion_moment_ipsi_Nm_kg'], time_arr, NUM_POINTS
+                    )
+                if len(moments.get('hip_flexion_moment_contra_Nm_kg', [])) > 0:
+                    hip_moment_contra = id_interpolate_to_phase(
+                        moments['hip_flexion_moment_contra_Nm_kg'], time_arr, NUM_POINTS
+                    )
+                if len(moments.get('knee_flexion_moment_contra_Nm_kg', [])) > 0:
+                    knee_moment_contra = id_interpolate_to_phase(
+                        moments['knee_flexion_moment_contra_Nm_kg'], time_arr, NUM_POINTS
+                    )
+                if len(moments.get('ankle_dorsiflexion_moment_contra_Nm_kg', [])) > 0:
+                    ankle_moment_contra = id_interpolate_to_phase(
+                        moments['ankle_dorsiflexion_moment_contra_Nm_kg'], time_arr, NUM_POINTS
+                    )
+
+        except Exception as e:
+            # ID computation failed - keep NaN values
+            pass
 
     # Phase values
     phase = np.linspace(0, 100, NUM_POINTS)
     phase_dot = np.full(NUM_POINTS, 100.0 / stride_duration_s)
 
-    # Build task_info string
-    # Note: source_ipsi is the actual ipsilateral leg in our output (after swap)
-    task_info_parts = [f"leg:{source_ipsi}", "exo_state:no_exo"]
-    task_info_str = ",".join(task_info_parts)
+    source_parts = mot_path.parts
+    relative_source = Path(*source_parts[source_parts.index('JointAngle'):]).as_posix() if 'JointAngle' in source_parts else mot_path.name
+    source_recording_id = f'gait120:{subject_id}/{relative_source}'
+    reference_side = 'right' if source_ipsi == 'r' else 'left'
+    task_info_str = json.dumps({
+        'leg': source_ipsi, 'exo_state': 'no_exo', 'kinematics_source': kinematics_source,
+        'phase_boundary_method': 'source_pelvis_shoulder_transfer_boundaries' if is_bilateral else 'source_right_heel_strike_boundaries',
+        'phase_boundary_evidence': 'doi:10.1038/s41597-025-05391-0',
+        'force_mapping_status': 'unverified_plate_to_anatomical_mapping' if grf_df is not None else 'source_force_file_unavailable',
+        'source_force_axes': 'original_MOT_axes',
+        'source_cop_frame': 'original_MOT_plate_positions_not_ankle_relative',
+    }, sort_keys=True)
 
     # Build subject metadata
-    subject_metadata = f"weight_kg:{subject_mass_kg:.1f},sex:M"
+    subject_metadata = json.dumps({
+        'weight_kg': subject_mass_kg if np.isfinite(subject_mass_kg) else None,
+        'height_m': subject_height_m if np.isfinite(subject_height_m) else None,
+    }, allow_nan=False)
 
     # Create stride DataFrame
     stride_df = pd.DataFrame({
@@ -783,6 +1113,15 @@ def process_step_file(
         'task_id': task_id,
         'task_info': task_info_str,
         'step': f"{step_num:03d}",
+        'source_recording_id': source_recording_id,
+        'observation_id': f'{source_recording_id}:{reference_side}',
+        'observation_type': 'transfer' if is_bilateral else 'individual_cycle',
+        'reference_side': reference_side,
+        'source_start_sample': 0,
+        'source_end_sample': len(df) - 1,
+        'source_start_time_s': float(df.time.iloc[0]),
+        'source_end_time_s': float(df.time.iloc[-1]),
+        **source_force_channels,
         'phase_ipsi': phase,
         'phase_ipsi_dot': phase_dot,
 
@@ -849,6 +1188,14 @@ def process_step_file(
         'cop_lateral_ipsi_m': cop_lateral_ipsi,
         'cop_anterior_contra_m': cop_anterior_contra,
         'cop_lateral_contra_m': cop_lateral_contra,
+
+        # Joint moments (Nm/kg) - computed via OpenSim inverse dynamics
+        'hip_flexion_moment_ipsi_Nm_kg': hip_moment_ipsi,
+        'hip_flexion_moment_contra_Nm_kg': hip_moment_contra,
+        'knee_flexion_moment_ipsi_Nm_kg': knee_moment_ipsi,
+        'knee_flexion_moment_contra_Nm_kg': knee_moment_contra,
+        'ankle_dorsiflexion_moment_ipsi_Nm_kg': ankle_moment_ipsi,
+        'ankle_dorsiflexion_moment_contra_Nm_kg': ankle_moment_contra,
     })
 
     return stride_df
@@ -860,7 +1207,9 @@ def process_task(
     task_name: str,
     task: str,
     task_id: str,
-    subject_mass_kg: float = 70.0,
+    subject_mass_kg: float = np.nan,
+    subject_height_m: float = np.nan,
+    subject_path: Optional[Path] = None,
     step_offset: int = 0
 ) -> Tuple[List[pd.DataFrame], int]:
     """
@@ -873,6 +1222,8 @@ def process_task(
         task: Standardized task name
         task_id: Task identifier
         subject_mass_kg: Subject mass
+        subject_height_m: Subject height in meters
+        subject_path: Path to subject folder (for pipeline mode)
         step_offset: Starting step number
 
     Returns:
@@ -901,7 +1252,7 @@ def process_task(
 
         for mot_file in mot_files:
             # Process once per file - source files contain bilateral data for one stride
-            # Using leg_side='r' with the ipsi/contra swap gives correct phase alignment
+            # The source protocol defines right-foot gait cycles.
             stride_df = process_step_file(
                 mot_path=mot_file,
                 subject_id=subject_id,
@@ -909,7 +1260,9 @@ def process_task(
                 task_id=task_id,
                 step_num=step_num,
                 leg_side='r',  # Fixed: don't loop over both legs
-                subject_mass_kg=subject_mass_kg
+                subject_mass_kg=subject_mass_kg,
+                subject_height_m=subject_height_m,
+                subject_path=subject_path,
             )
 
             if stride_df is not None:
@@ -922,6 +1275,7 @@ def process_task(
 def process_subject(
     subject_path: Path,
     subject_num: int,
+    gait120_path: Path,
     test_mode: bool = False
 ) -> pd.DataFrame:
     """
@@ -930,6 +1284,7 @@ def process_subject(
     Args:
         subject_path: Path to subject folder (e.g., .../S001/)
         subject_num: Subject number for ID generation
+        gait120_path: Root path to Gait120 dataset (for anthropometric lookup)
         test_mode: If True, only process first task
 
     Returns:
@@ -938,9 +1293,15 @@ def process_subject(
     subject_folder = subject_path.name
     subject_id = f"G120_{subject_folder}"
 
-    # Extract subject number for mass estimation (no individual mass data available)
-    # Using average male mass as estimate
-    subject_mass_kg = 75.0  # Approximate, can be updated if metadata available
+    # Get subject anthropometrics from official data
+    try:
+        anthro = get_subject_anthropometrics(subject_folder, gait120_path)
+        subject_mass_kg = anthro['mass_kg']
+        subject_height_m = anthro['height_m']
+    except (ValueError, KeyError, FileNotFoundError):
+        subject_mass_kg = np.nan
+        subject_height_m = np.nan
+        print(f"  Warning: Measured mass/height unavailable for {subject_folder}")
 
     all_strides = []
     step_offset = 0
@@ -974,7 +1335,9 @@ def process_subject(
             task=task,
             task_id=task_id,
             subject_mass_kg=subject_mass_kg,
-            step_offset=step_offset
+            subject_height_m=subject_height_m,
+            subject_path=subject_path,
+            step_offset=step_offset,
         )
 
         all_strides.extend(strides)
@@ -1059,8 +1422,40 @@ def main():
                         help='Test mode: process only first subject and first task')
     parser.add_argument('--explore', action='store_true',
                         help='Explore data structure and print report (no conversion)')
+    parser.add_argument('--no-id', action='store_true',
+                        help='Skip inverse dynamics computation (this is the default)')
+    parser.add_argument('--enable-id', action='store_true',
+                        help='Enable inverse dynamics (experimental, results may be inaccurate)')
+    parser.add_argument('--run-ik', action='store_true',
+                        help='Run full pipeline (Scale → IK → ID) from TRC files instead of using pre-computed IK')
+    parser.add_argument('--pipeline-cache', type=str, default=None,
+                        help='Directory for pipeline cache (scaled models, IK results)')
+    parser.add_argument('--opensim-rotate', action='store_true',
+                        help='Rotate TRC/GRF +90° about Y for OpenSim (+X forward); used only with --run-ik')
+    parser.add_argument('--opensim-model', type=str, default='original', choices=['original', 'gait120'],
+                        help='OpenSim model variant for --run-ik/ID (default: original)')
+    parser.add_argument('--opensim-id-correction', type=str, default='none',
+                        choices=['none', 'inertia_subtraction'],
+                        help=(
+                            "Moment post-processing in OpenSim ID. "
+                            "'none' outputs net generalized forces from OpenSim inverse dynamics. "
+                            "'inertia_subtraction' subtracts an inertia-only baseline (not recommended for net joint moments)."
+                        ))
 
     args = parser.parse_args()
+
+    # Set global flag for inverse dynamics computation
+    # ID is disabled by default because the original model is not available
+    global COMPUTE_INVERSE_DYNAMICS, RUN_FULL_PIPELINE, _opensim_pipeline, OPENSIM_MODEL_PATH
+    if args.enable_id and not args.no_id:
+        COMPUTE_INVERSE_DYNAMICS = True
+    else:
+        COMPUTE_INVERSE_DYNAMICS = False
+
+    OPENSIM_MODEL_PATH = _get_opensim_model_path(args.opensim_model)
+
+    # Set pipeline mode
+    RUN_FULL_PIPELINE = args.run_ik
 
     # Setup paths
     input_path = Path(args.input)
@@ -1103,13 +1498,75 @@ def main():
 
     print(f"Found {len(subject_folders)} subject folders")
 
+    # Initialize OpenSim pipeline if running full IK
+    if RUN_FULL_PIPELINE:
+        if OPENSIM_AVAILABLE and OPENSIM_MODEL_PATH.exists():
+            # Determine cache directory
+            cache_dir = Path(args.pipeline_cache) if args.pipeline_cache else output_dir / 'opensim_cache'
+
+            # Configure the pipeline with appropriate marker weights
+            pipeline_config = PipelineConfig(
+                scaling=ScalingConfig(
+                    preserve_mass_distribution=True,
+                ),
+                ik=IKConfig(
+                    marker_weights=IK_MARKER_WEIGHTS_GAIT120,
+                    accuracy=1e-5,
+                ),
+                id=InverseDynamicsConfig(
+                    lowpass_cutoff_hz=6.0,
+                    subtract_inertia_baseline=(args.opensim_id_correction == 'inertia_subtraction'),
+                ),
+                cache_scaled_models=True,
+                cache_ik_results=True,
+                cache_dir=cache_dir,
+                num_phase_points=NUM_POINTS,
+                rotate_y_90=args.opensim_rotate,
+                marker_map=GAIT120_TO_RAJAGOPAL,
+                segment_marker_pairs=GAIT120_SEGMENT_MARKER_PAIRS,
+            )
+
+            _opensim_pipeline = OpenSimPipeline(
+                generic_model_path=OPENSIM_MODEL_PATH,
+                output_dir=cache_dir,
+                config=pipeline_config,
+            )
+            print("Full pipeline mode: ENABLED (Scale → IK → ID)")
+            print(f"  Using model: {OPENSIM_MODEL_PATH.name}")
+            print(f"  Cache dir: {cache_dir}")
+            print(f"  ID correction: {args.opensim_id_correction}")
+            # Enable ID when running full pipeline
+            COMPUTE_INVERSE_DYNAMICS = True
+        else:
+            print("Warning: --run-ik requested but OpenSim not available or model not found")
+            print("  Falling back to pre-computed IK")
+            RUN_FULL_PIPELINE = False
+
+    # Print processing mode status
+    if not RUN_FULL_PIPELINE:
+        print("Processing mode: Using pre-computed IK from JointAngle/")
+        if COMPUTE_INVERSE_DYNAMICS:
+            if OPENSIM_AVAILABLE:
+                if OPENSIM_MODEL_PATH.exists():
+                    print("Inverse dynamics: ENABLED (EXPERIMENTAL - results may be inaccurate)")
+                    print("  Note: Original Gait120 model not available, using generic Rajagopal")
+                else:
+                    print(f"Inverse dynamics: DISABLED (model not found: {OPENSIM_MODEL_PATH})")
+                    print("  Run: python setup_opensim_model.py")
+            else:
+                print("Inverse dynamics: DISABLED (OpenSim not installed)")
+                print("  Install: conda install -c opensim-org opensim")
+        else:
+            print("Inverse dynamics: DISABLED (default, use --enable-id to enable)")
+            print("  Note: For accurate ID, use --run-ik to run full pipeline")
+
     # Process each subject
     all_data = []
 
     for i, subject_path in enumerate(tqdm(subject_folders, desc="Processing subjects")):
         print(f"\nProcessing {subject_path.name}...")
 
-        subject_data = process_subject(subject_path, i + 1, test_mode=args.test)
+        subject_data = process_subject(subject_path, i + 1, input_path, test_mode=args.test)
 
         if not subject_data.empty:
             all_data.append(subject_data)

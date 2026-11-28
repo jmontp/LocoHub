@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en" data-style="slate">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Browse locomotion datasets, preview signals, and download files for Python or MATLAB.">
+  <meta name="color-scheme" content="light dark">
+  <title>Datasets · LocoHub</title>
+  <link rel="stylesheet" href="../stylesheets/site.css">
+  <link rel="stylesheet" href="../stylesheets/data-preview.css">
+  <link rel="stylesheet" href="../stylesheets/aggregate-preview.css">
+  <link rel="stylesheet" href="../stylesheets/visual-styles.css">
+  <script src="../javascripts/visual-styles.js"></script>
+  <script src="../javascripts/extra.js" defer></script>
+  <script src="../javascripts/phase-chart.js" defer></script>
+  <script src="../javascripts/aggregate-preview.js" defer></script>
+  <script src="../javascripts/data-preview.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="wordmark" href="../index.html" aria-label="LocoHub home">LocoHub</a>
+      <nav class="primary-nav" aria-label="Main navigation"><a href="../index.html" aria-current="page">Data</a>
+<a href="../tutorials/index.html">Tutorials</a>
+<a href="../reference/index.html">File format</a>
+<a href="../quality/index.html">Testing &amp; data quality</a></nav>
+      <form class="header-search" role="search" aria-label="Site search" action="../search/index.html"><label class="visually-hidden" for="header-query">Search documentation</label><input id="header-query" type="search" name="q" placeholder="Search docs" required><button type="submit">Search</button></form>
+      <a class="repository-link" href="https://github.com/jmontp/LocoHub">GitHub</a>
+    </div>
+  </header>
+  <div class="page-layout wide-page data-page">
+    <main id="main" class="page-content" tabindex="-1">
+      <div class="data-heading">
+        <h1 id="dataset-catalog">Locomotion datasets</h1>
+        <details class="visual-style-picker" hidden>
+          <summary>Layout: <strong data-style-label>Clean</strong></summary>
+          <fieldset class="visual-style-options">
+            <legend class="visually-hidden">Layout details · Slate colors</legend>
+              <label class="visual-style-option" for="visual-style-clean"><input id="visual-style-clean" type="radio" name="visual-style" value="clean" checked><span class="visual-style-swatch" data-swatch="clean" aria-hidden="true"></span><span><strong>Clean</strong><small>Fine lines, balanced spacing</small></span></label>
+              <label class="visual-style-option" for="visual-style-ruled"><input id="visual-style-ruled" type="radio" name="visual-style" value="ruled"><span class="visual-style-swatch" data-swatch="ruled" aria-hidden="true"></span><span><strong>Ruled</strong><small>Square controls, table grid</small></span></label>
+              <label class="visual-style-option" for="visual-style-soft"><input id="visual-style-soft" type="radio" name="visual-style" value="soft"><span class="visual-style-swatch" data-swatch="soft" aria-hidden="true"></span><span><strong>Soft</strong><small>Rounded boxes, generous spacing</small></span></label>
+              <label class="visual-style-option" for="visual-style-compact"><input id="visual-style-compact" type="radio" name="visual-style" value="compact"><span class="visual-style-swatch" data-swatch="compact" aria-hidden="true"></span><span><strong>Compact</strong><small>Tighter rows and controls</small></span></label>
+              <label class="visual-style-option" for="visual-style-outline"><input id="visual-style-outline" type="radio" name="visual-style" value="outline"><span class="visual-style-swatch" data-swatch="outline" aria-hidden="true"></span><span><strong>Outline</strong><small>Clear borders, separate panels</small></span></label>
+          </fieldset>
+        </details>
+        <span id="visual-style-status" class="visually-hidden" role="status" aria-live="polite"></span>
+      </div>
+      <p class="data-intro">Parquet files for use with Python, MATLAB, and other data tools.</p>
+      <div class="catalog-note"><p><strong>This site shows the three datasets being rebuilt now. No dataset on this page is released or approved.</strong> The download links in the table are earlier conversions that have not been checked against the original files. Some datasets are being rebuilt; those rebuilt files stay on the maintainer's computer until they are released. <a href="../quality/index.html#dataset-status">Evidence for each dataset</a>.</p><details class="catalog-legend"><summary>What the status labels and counts mean</summary><ul><li><strong>Being rebuilt:</strong> the data is being rebuilt from the original files now. The page says which problems are known.</li><li><strong>Local review version (not released):</strong> a rebuilt version exists on the maintainer's computer and is being reviewed. It has no scientific approval.</li><li><strong>Historical count:</strong> 150-point curves in an earlier report, labeled with the file it counted. &ldquo;Full file&rdquo; means a file with the same name as the Full download; the bytes were not compared. Counts are not participants or verified cycles.</li></ul><p>Each label comes from the project task list, not from the page author. No label is scientific approval.</p></details></div>
+      <div class="catalog-toolbar">
+        <div class="catalog-controls" hidden id="catalog-controls">
+          <label for="catalog-search">Search <input id="catalog-search" placeholder="Dataset or task" type="search"></label>
+          <label for="catalog-task">Task <select id="catalog-task"><option value="">All tasks</option></select></label>
+          <label for="catalog-download">Download <select id="catalog-download"><option value="">Any availability</option><option value="full">Full download</option><option value="filtered">Filtered download</option><option value="time">Time data</option><option value="none">No download yet</option></select></label>
+          <button id="catalog-reset" type="button">Reset</button>
+        </div>
+        <p aria-live="polite" id="catalog-status" role="status">3 datasets</p>
+        <a class="compare-link" href="comparison/index.html">Compare datasets</a>
+      </div>
+      <div class="catalog-layout">
+      <div data-dataset-catalog>
+        <!-- DATASET_TABLE_START -->
+        <div class="table-scroll" role="region" aria-label="Datasets and downloads" tabindex="0">
+          <table class="dataset-table">
+            <thead><tr><th scope="col">Dataset</th><th scope="col">Tasks</th><th scope="col">Historical count</th><th scope="col">Legacy downloads</th><th scope="col">Preview</th></tr></thead>
+            <tbody>
+<tr id="gt21" data-dataset="gt21">
+<td><a href="gt21/index.html" data-dataset-notes>Gtech 2021</a><a class="evidence-status" data-status="review" href="../quality/index.html#status-gt21">Local review version (not released)</a></td>
+<td><details class="task-list"><summary>6 tasks</summary><span data-task-list>Decline Walking, Incline Walking, Level Walking, Stair Ascent, Stair Descent, Transition</span></details></td>
+<td>84,793<small class="count-source">observations, full version (phase + time tables, local review package; foot angle zeroed to foot-flat per person)</small></td>
+<td>Local review files, not published yet</td>
+<td>See the dataset page</td>
+</tr>
+<tr id="gt23" data-dataset="gt23">
+<td><a href="gt23/index.html" data-dataset-notes>Gtech 2023</a><a class="evidence-status" data-status="review" href="../quality/index.html#status-gt23">Local review version (not released)</a></td>
+<td><details class="task-list"><summary>21 tasks</summary><span data-task-list>Agility Drill, Cutting, Decline Walking, Dynamic Walk, Free Walk Episode, Functional Task, Hop, Incline Walking, Jump, Level Walking, Load Handling, Lunge, Run, Sit To Stand, Squat, Stair Ascent, Stair Descent, Step Down, Step Up, Walk Backward, Weighted Walk</span></details></td>
+<td>19,573<small class="count-source">observations, full version (phase + time tables, local review package; foot angle zeroed to foot-flat per person)</small></td>
+<td>Local review files, not published yet</td>
+<td>See the dataset page</td>
+</tr>
+<tr id="um21" data-dataset="um21">
+<td><a href="um21/index.html" data-dataset-notes>Umich 2021</a><a class="evidence-status" data-status="review" href="../quality/index.html#status-um21">Local review version (not released)</a></td>
+<td><details class="task-list"><summary>4 tasks</summary><span data-task-list>Decline Walking, Incline Walking, Level Walking, Transition</span></details></td>
+<td>7,589<small class="count-source">observations, full version (phase + time tables, local review package; foot angle zeroed to foot-flat per person)</small></td>
+<td>Local review files, not published yet</td>
+<td>See the dataset page</td>
+</tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- DATASET_TABLE_END -->
+      </div>
+      <section id="data-preview" data-aggregate-source="aggregate_previews/manifest.json" data-preview-source="preview_data.json" aria-labelledby="preview-title">
+        <h2 id="preview-title">Data preview</h2>
+        <p>Select Preview beside a dataset to inspect its available sample.</p>
+        <noscript><p>Enable JavaScript for the preview, or open a dataset's Details page to view its recorded plots.</p></noscript>
+      </section>
+      </div>
+      <p aria-live="polite" class="visually-hidden" id="preview-status"></p>
+      <!-- FUTURE_START --><details class="future-datasets"><summary>Coming later (19 datasets)</summary><p class="note">These datasets are not on this site yet. Their pages are not published.</p><ul><li><strong>Gait120</strong>: not yet checked.</li><li><strong>GaTech 2024 (TaskAgnostic)</strong>: not yet checked.</li><li><strong>GaTech 2025 (Domain Adaptation)</strong>: not yet checked.</li><li><strong>MBLUE Ankle Exoskeleton Study</strong>: partly rebuilt on the maintainer&#x27;s computer; not released.</li><li><strong>StrokePiG OpenSim Pipeline Dataset</strong>: not yet checked.</li><li><strong>UMich 2024 Knee Exoskeleton</strong>: not yet checked.</li><li><strong>AddBiomechanics</strong>: not yet checked.</li><li><strong>Fukuchi 2018 Walking</strong>: partly rebuilt on the maintainer&#x27;s computer; not released.</li><li><strong>Earlier studies (11)</strong>: not yet checked. Carter 2023, Falisse 2016, Fregly 2012, Hamner 2013, Han 2023 (GroundLink), Moore 2015, Tan 2021, Tan 2022, Tiziana 2019 (Lencioni), van der Zee 2022, Wang 2023.</li></ul></details><!-- FUTURE_END -->
+    </main>
+  </div>
+  <footer class="site-footer"><p>LocoHub</p><nav aria-label="Additional links"><a href="../contributing/index.html">Contribute data</a><a href="../maintainers/index.html">Maintainers</a><a href="../reference/index.html#release-evidence">Download notes</a><a href="https://github.com/jmontp/LocoHub/issues">Report an issue</a></nav></footer>
+</body>
+</html>
