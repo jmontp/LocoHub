@@ -14,6 +14,23 @@ Two comparisons
         vs LocoHub UM21 package v4 phase file (full_phase.parquet; phase only, no time table, no force; package v5 later added a time table with force).
         The training series is read at the source-time positions of every LocoHub stride (see Matching).
 
+Time-table mode (--package-dir; used for GT21 v2, GT23 v12 and UM21 v6; the default behaviour above is unchanged)
+  The LocoHub side is the package's continuous time table (full_time.parquet by default; one continuous 200 Hz recording per
+  source recording for GT21 and GT23, 100 Hz for UM21; left and right columns). The same recording fit as GT21 is used for all
+  three datasets (cross-correlation of the ankle moment on a 5 ms grid), so the UM21 comparison is time to time and includes
+  vertical force. Recording pairing per dataset:
+    gt21  by recording name, as above.
+    gt23  the training recording ids are numbers ("GT23_AB01|43") and carry no name. The training file's own task label
+          (it holds only sit_to_stand) is compared with the LocoHub recording name without its trailing number
+          ("sit_to_stand_2" -> "sit_to_stand"). The best-aligning candidate is the pair; alignment failures are listed.
+    um21  the training collection "Tread_<incline>_<speed>_segNN" pairs with LocoHub "um21:Streaming/<subject>/Tread/<incline>";
+          every speed segment is aligned to its own place inside the recording. Only the right leg is used (training convention).
+  --emit-strides also writes strides_<dataset>_<subject>.npz: for every LocoHub stride (filtered_phase.parquet individual cycles and
+  transfers of the paired leg) inside an aligned training recording, the training series read at the 150 inclusive phase times
+  of that stride (LocoHub source start and end time, minus the recording's time offset; a two-leg transfer such as GT23 sit_to_stand
+  has one observation whose ipsi columns are the left leg, so a right-leg training recording reads it with leg_role "contra"; NaN where the training samples are more
+  than 12.5 ms apart or missing). Report units as in comparison.csv (CoP is in the training origin, i.e. LocoHub + shift).
+
 Matching (nothing is assumed beyond what is written here; every choice is logged in alignment.csv)
   Participant: the AB<number> token of the subject name (the training files and LocoHub prefix names differently).
   Recording (gt21): a training recording_id is "<subject>|<collection_id>" or "<subject>|<first collection_id>+<k>" for cuts
@@ -97,7 +114,9 @@ HIS_DIR_DEFAULT = '/mnt/s/workspace_docs/energy shaping ml/esml_research/LocoHub
 LH_BASE_DEFAULT = 'converted_datasets/reconversion_v2'
 UM21_PHASE_DEFAULT = 'converted_datasets/reconversion_v2/um21_r01_package_v4/full_phase.parquet'
 UM21_MANIFEST_DEFAULT = 'converted_datasets/reconversion_v2/um21_r01_package_v4/manifest.json'
-HIS_FILES = {'gt21': 'gtech_2021_time.parquet', 'um21': 'umich_2021_time.parquet'}
+HIS_FILES = {'gt21': 'gtech_2021_time.parquet', 'um21': 'umich_2021_time.parquet', 'gt23': 'gtech_2023_time.parquet'}
+N_PHASE = 150
+GAP_MAX_S = 2.5 * DT
 CODE = ('contributor_tools/compare_training_vs_locohub.py',)
 
 # ------------------------------------------------------------------------------------------------ column mapping
@@ -759,7 +778,7 @@ def gt21_lh_columns(maps):
     return cols
 
 
-def fit_gt21(h, lrec, maps, cfg):
+def fit_gt21(h, lrec, maps, cfg, legs=('left', 'right')):
     """Best leg/offset of one training recording against one LocoHub recording, or a failure record."""
     mom = next(m for m in maps if m.name == 'ankle_moment')
     tL = lrec['time_s']
@@ -770,7 +789,9 @@ def fit_gt21(h, lrec, maps, cfg):
     nL = int(round((tL[-1] - tL[0]) / DT)) + 1
     gridL = tL[0] + np.arange(nL) * DT
     fits = {}
-    for leg in ('left', 'right'):
+    for leg in legs:
+        if lh_name(mom, leg) not in lrec:
+            continue
         yL = interp_nodes(tL, lrec[lh_name(mom, leg)] * mom.scale, gridL)
         fit = best_alignment(gx, yL, min_n)
         if fit is not None:
@@ -799,10 +820,138 @@ def gt21_pairs(h, lrec, fit, maps):
     return h['task_code'][inside], pairs
 
 
-def compare_gt21_subject(his_path, lh_path, subject, cfg, col, maps, root_label=''):
+def gt21_matcher(rid, h, name):
+    return name_match(rid.split('|', 1)[-1], name)
+
+
+def gt23_matcher(rid, h, name):
+    """GT23 training ids are numbers; pair by the training task label vs the LocoHub name without its trailing number."""
+    return re.sub(r'_\d+$', '', str(name)).lower() == modal_task(h).lower()
+
+
+def um21_time_matcher(rid, h, name):
+    m = CID_RE.match(rid.split('|', 1)[-1])
+    return bool(m) and m.group('inc') == str(name)
+
+
+MATCHERS = {'gt21': gt21_matcher, 'gt23': gt23_matcher, 'um21': um21_time_matcher}
+
+
+def read_stride_windows(phase_path, raw_subjects):
+    """{source_recording_id: [(observation_id, reference_side, start_s, end_s)]} from a phase table (first row of each observation)."""
+    cols = ['source_recording_id', 'observation_id', 'reference_side', 'source_start_time_s', 'source_end_time_s']
+    out, prev = {}, None
+    for b in read_batches(phase_path, cols, 'subject', raw_subjects):
+        oid = b['observation_id']
+        if len(oid) == 0:
+            continue
+        first = np.ones(len(oid), bool)
+        first[1:] = oid[1:] != oid[:-1]
+        if prev is not None and oid[0] == prev:
+            first[0] = False
+        prev = oid[-1]
+        for i in np.flatnonzero(first):
+            out.setdefault(str(b['source_recording_id'][i]), []).append(
+                (str(oid[i]), str(b['reference_side'][i]), float(b['source_start_time_s'][i]), float(b['source_end_time_s'][i])))
+    return out
+
+
+def windows_for_leg(windows, leg):
+    """[(observation_id, role, start, end)] for the paired leg. role 'ipsi': the observation's reference side is the leg.
+    role 'contra': a two-leg transfer ('/both/' in its id; one observation whose ipsi columns are the other leg and whose contra
+    columns cover the same absolute time span) read for this leg."""
+    out = []
+    for oid, side, a, b in windows:
+        if side == leg:
+            out.append((oid, 'ipsi', a, b))
+        elif side in ('left', 'right') and '/both/' in oid:
+            out.append((oid, 'contra', a, b))
+    return out
+
+
+def sample_strides(h, windows, offset, maps, lrec=None, leg=None):
+    """Training series at the 150 phase times of each LocoHub stride window (training time = LocoHub time - offset).
+    Windows not fully inside the training span, or with no finite value, are skipped. With lrec (the LocoHub recording) the LocoHub
+    series of leg `leg` is read at the same times (LocoHub frame: value x scale + lh_offset, exactly as in the comparison).
+    Returns (ids, roles, {column: (n, 150) float32}, {column: (n, 150)} LocoHub or None)."""
+    t = h['t']
+    ids, roles, cols, lhc = [], [], {m.name: [] for m in maps}, {m.name: [] for m in maps}
+    for oid, role, a, b in windows:
+        if not b > a:
+            continue
+        tq = a + np.arange(N_PHASE) * (b - a) / (N_PHASE - 1) - offset
+        if tq[0] < t[0] - 1e-6 or tq[-1] > t[-1] + 1e-6:
+            continue
+        j = np.clip(np.searchsorted(t, tq, side='right') - 1, 0, len(t) - 2)
+        wide = (t[j + 1] - t[j] > GAP_MAX_S) & (np.abs(tq - t[j]) > 1e-6)
+        rows = {}
+        for m in maps:
+            v = interp_nodes(t, h['vals'][m.name], tq)
+            rows[m.name] = np.where(wide, np.nan, v)
+        if not any(np.isfinite(v).any() for v in rows.values()):
+            continue
+        ids.append(oid)
+        roles.append(role)
+        for k, v in rows.items():
+            cols[k].append(v.astype(np.float32))
+        if lrec is not None:
+            for m in maps:
+                c = lh_name(m, leg)
+                v = (interp_nodes(lrec['time_s'], lrec[c] * m.scale + m.lh_offset, tq + offset) if c in lrec
+                     else np.full(N_PHASE, np.nan))
+                lhc[m.name].append(v.astype(np.float32))
+
+    def stack(d):
+        return {k: (np.stack(v) if v else np.zeros((0, N_PHASE), np.float32)) for k, v in d.items()}
+    return ids, roles, stack(cols), (stack(lhc) if lrec is not None else None)
+
+
+class StrideEmitter:
+    def __init__(self, phase_path, out_dir, dataset, maps):
+        self.phase_path, self.out_dir, self.dataset, self.maps = phase_path, Path(out_dir), dataset, maps
+        self.windows, self.ids, self.roles, self.cols, self.rid, self.lh = None, [], [], {m.name: [] for m in maps}, [], []
+        self.lhcols = {m.name: [] for m in maps}
+        self.n_by_rec = {}
+
+    def start(self, raw_subjects):
+        self.windows = read_stride_windows(self.phase_path, raw_subjects)
+        self.ids, self.roles, self.cols, self.rid, self.lh = [], [], {m.name: [] for m in self.maps}, [], []
+        self.lhcols = {m.name: [] for m in self.maps}
+
+    def sample(self, h, lrec, lh_key, fit):
+        """Strides of one (training recording, LocoHub recording) pair; kept until the pair is known to be the best one."""
+        win = windows_for_leg(self.windows.get(str(lh_key), []), fit['leg'])
+        ids, roles, cols, lhc = sample_strides(h, win, fit['offset'], self.maps, lrec, fit['leg'])
+        return {'n_windows': len(win), 'ids': ids, 'roles': roles, 'cols': cols, 'lh': lhc, 'key': str(lh_key)}
+
+    def add(self, rid, sampled):
+        ids = sampled['ids']
+        self.n_by_rec[rid] = (sampled['n_windows'], len(ids))
+        self.ids += ids
+        self.roles += sampled['roles']
+        self.rid += [rid] * len(ids)
+        self.lh += [sampled['key']] * len(ids)
+        for k, v in sampled['cols'].items():
+            self.cols[k].append(v)
+        for k, v in sampled['lh'].items():
+            self.lhcols[k].append(v)
+
+    def finish(self, subject):
+        if not self.ids:
+            return 0
+        d = self.out_dir / f'strides_{self.dataset}_{subject}.npz'
+        np.savez_compressed(d, observation_id=np.array(self.ids), leg_role=np.array(self.roles), training_recording=np.array(self.rid),
+                            locohub_recording=np.array(self.lh), **{k: np.concatenate(v) for k, v in self.cols.items()},
+                            **{'lh_' + k: np.concatenate(v) for k, v in self.lhcols.items()})
+        return len(self.ids)
+
+
+def compare_gt21_subject(his_path, lh_path, subject, cfg, col, maps, root_label='', *, dataset='gt21', matcher=None,
+                         legs=('left', 'right'), lh_subjects=None, strides=None):
+    matcher = matcher or gt21_matcher
     raw = {s for s in list_subjects(his_path) if norm_subject(s) == subject}
     if not raw:
-        col.unmatched.append({'dataset': 'gt21', 'subject': subject, 'side': 'training', 'recording': '', 'rows': 0,
+        col.unmatched.append({'dataset': dataset, 'subject': subject, 'side': 'training', 'recording': '', 'rows': 0,
                               'reason': 'participant not in the training file'})
         return
     hs = his_recordings(his_path, maps, raw, cfg.rss_cap_mib)
@@ -814,11 +963,14 @@ def compare_gt21_subject(his_path, lh_path, subject, cfg, col, maps, root_label=
     for m in maps:
         if lh_name(m, 'left') not in pf_cols:
             col.unavailable[m.name] = 'column absent from the LocoHub time table'
-    for key, lrec in iter_runs(read_batches(lh_path, lh_cols), 'source_recording_id'):
+    if strides is not None:
+        strides.start(lh_subjects)
+    lh_batches = read_batches(lh_path, lh_cols, 'subject', lh_subjects) if lh_subjects else read_batches(lh_path, lh_cols)
+    for key, lrec in iter_runs(lh_batches, 'source_recording_id'):
         name = str(key).split('/')[-1]
-        matched = [rid for rid in hs if name_match(rid.split('|', 1)[-1], name)]
+        matched = [rid for rid in hs if matcher(rid, hs[rid], name)]
         if not matched:
-            col.unmatched.append({'dataset': 'gt21', 'subject': subject, 'side': 'locohub', 'recording': str(key),
+            col.unmatched.append({'dataset': dataset, 'subject': subject, 'side': 'locohub', 'recording': str(key),
                                   'rows': len(lrec['time_s']), 'reason': 'no training recording with this name'})
             continue
         for rid in matched:
@@ -826,23 +978,25 @@ def compare_gt21_subject(his_path, lh_path, subject, cfg, col, maps, root_label=
             h = hs[rid]
             if not np.isfinite(h['vals']['ankle_moment']).any():
                 continue
-            fit = fit_gt21(h, lrec, maps, cfg)
+            fit = fit_gt21(h, lrec, maps, cfg, legs)
             if fit is None:
                 continue
             if rid in best and best[rid]['fit']['rms'] <= fit['rms']:
                 continue
             task, pairs = gt21_pairs(h, lrec, fit, maps)
             best[rid] = {'fit': fit, 'lh': str(key), 'task': task, 'pairs': pairs}
+            if strides is not None and fit['rms'] <= cfg.align_rms_tol:
+                best[rid]['strides'] = strides.sample(h, lrec, key, fit)
         check_rss(cfg.rss_cap_mib, f'locohub recording {key}')
     for rid, h in hs.items():
-        base = {'dataset': 'gt21', 'subject': subject, 'his_recording': rid, 'his_rows': len(h['t'])}
+        base = {'dataset': dataset, 'subject': subject, 'his_recording': rid, 'his_rows': len(h['t'])}
         b = best.get(rid)
         if b is None:
             why = ('no finite ankle moment in the training recording' if not np.isfinite(h['vals']['ankle_moment']).any()
                    else 'no LocoHub recording with this name' if not cands[rid]
                    else 'alignment impossible: too little overlapping moment')
             col.align.append({**base, 'status': 'no_candidate', 'note': why})
-            col.unmatched.append({'dataset': 'gt21', 'subject': subject, 'side': 'training', 'recording': rid,
+            col.unmatched.append({'dataset': dataset, 'subject': subject, 'side': 'training', 'recording': rid,
                                   'rows': len(h['t']), 'reason': why})
             continue
         fit = b['fit']
@@ -853,12 +1007,16 @@ def compare_gt21_subject(his_path, lh_path, subject, cfg, col, maps, root_label=
                           'other_leg_rms_Nm_kg': fit['other_rms'], 'align_overlap_n': fit['n'],
                           'rows_compared': len(b['task']), 'note': f'candidates {len(cands[rid])}; locohub root {root_label}'})
         if not ok:
-            col.unmatched.append({'dataset': 'gt21', 'subject': subject, 'side': 'training', 'recording': rid,
+            col.unmatched.append({'dataset': dataset, 'subject': subject, 'side': 'training', 'recording': rid,
                                   'rows': len(h['t']), 'reason': f'alignment failed (best moment RMS {fit["rms"]:.3f} Nm/kg)'})
             continue
         for code in np.unique(b['task']):
             sel = b['task'] == code
             col.add_pairs(subject, str(h['task_names'][code]), {k: (x[sel], y[sel]) for k, (x, y) in b['pairs'].items()}, rid)
+        if strides is not None:
+            strides.add(rid, b['strides'])
+    if strides is not None:
+        strides.finish(subject)
     col.flush_subject(subject)
 
 
@@ -1020,6 +1178,10 @@ class Cfg:
 
 def resolve_inputs(args):
     his = Path(args.his_file) if args.his_file else Path(args.his_dir) / args.partition / HIS_FILES[args.dataset]
+    if args.package_dir:
+        return his, {None: (ROOT / args.package_dir / f'{args.lh_table}.parquet', args.package_dir)}
+    if args.dataset == 'gt23':
+        raise SystemExit('gt23 is only compared in time-table mode (--package-dir)')
     if args.dataset == 'um21':
         lh = {None: (ROOT / args.um21_phase, 'um21_r01_package_v4')}
         return his, lh
@@ -1047,6 +1209,19 @@ def mapping_report(maps, his_schema, lh_names_by_role):
     }
 
 
+def check_package(rel_dir, names):
+    """Byte sizes of the used package files against the package manifest (content hashes are in the bound manifest.json)."""
+    man = json.loads((ROOT / rel_dir / 'manifest.json').read_text())
+    out = {}
+    for n in names:
+        want = man['files'][n]['bytes']
+        got = (ROOT / rel_dir / n).stat().st_size
+        if want != got:
+            raise SystemExit(f'{rel_dir}/{n}: {got} bytes on disk, manifest says {want}')
+        out[n] = {'bytes': got, 'manifest_sha256': man['files'][n]['sha256']}
+    return out
+
+
 def run(args):
     out = Path(args.out_dir)
     if out.exists() and any(out.iterdir()):
@@ -1061,12 +1236,29 @@ def run(args):
     col = Collector(args.dataset, maps, out)
     if cfg.wrap_analysis:
         col.wrap = WrapCollector(args.dataset, maps)
-    subjects = args.subject or (his_subjects if args.dataset == 'um21' else [])
+    subjects = args.subject or (his_subjects if (args.dataset in ('um21', 'gt23') or args.package_dir) else [])
     status, error, per_subject, lh_names = 'complete', None, {}, {}
+    package_files, emitter = None, None
+    if args.package_dir:
+        names = [f'{args.lh_table}.parquet'] + (['filtered_phase.parquet'] if args.emit_strides else [])
+        package_files = check_package(args.package_dir, names)
+        if args.emit_strides:
+            emitter = StrideEmitter(ROOT / args.package_dir / 'filtered_phase.parquet', out, args.dataset, maps)
     try:
         for s in subjects:
             t0 = time.time()
-            if args.dataset == 'gt21':
+            if args.package_dir:
+                path = lh[None][0]
+                lh_names.setdefault('left', pq.ParquetFile(str(path)).schema_arrow.names)
+                compare_gt21_subject(his, path, s, cfg, col, maps, args.package_dir, dataset=args.dataset,
+                                     matcher=MATCHERS[args.dataset], legs=(cfg.um21_side,) if args.dataset == 'um21' else ('left', 'right'),
+                                     lh_subjects={s, f'UM21_{s}'}, strides=emitter)
+                per_subject[s] = {'locohub_file': str(path.relative_to(ROOT))}
+                if emitter is not None:
+                    per_subject[s]['strides_by_training_recording'] = {k: {'windows_of_leg': v[0], 'strides_sampled': v[1]}
+                                                                       for k, v in emitter.n_by_rec.items()}
+                    emitter.n_by_rec = {}
+            elif args.dataset == 'gt21':
                 root, label = lh[s] if s in lh else gt21_root(ROOT / args.lh_base, s)
                 if root is None:
                     col.unmatched.append({'dataset': 'gt21', 'subject': s, 'side': 'locohub', 'recording': '', 'rows': 0, 'reason': label})
@@ -1099,6 +1291,8 @@ def run(args):
             'schema': SCHEMA_ID, 'status': status, 'error': error, 'scientific_approval': False, 'dataset': args.dataset,
             'partition': args.partition, 'training_file': str(his), 'training_file_bytes': his.stat().st_size,
             'locohub_inputs': {str(k): [str(v[0]), v[1]] for k, v in lh.items()},
+            'mode': 'time_table' if args.package_dir else 'legacy', 'package_files_checked': package_files,
+            'emit_strides': bool(args.emit_strides),
             'training_subjects': his_subjects, 'subjects_run': subjects, 'per_subject': per_subject,
             'unavailable_in_locohub': col.unavailable,
             'mapping': mapping_report(maps, his_names, lh_names),
@@ -1127,7 +1321,10 @@ def make_spec(args):
     his, lh = resolve_inputs(args)
     bindings = {c: gl.sha256_file(ROOT / c) for c in CODE + ('contributor_tools/guarded_launcher.py',)}
     bindings[str(his)] = gl.sha256_file(his)
-    if args.dataset == 'um21':
+    if args.package_dir:
+        for n in ('manifest.json', 'manifest.sha256'):          # the manifest holds the content hash of every package file
+            bindings[f'{args.package_dir}/{n}'] = gl.sha256_file(ROOT / args.package_dir / n)
+    elif args.dataset == 'um21':
         for rel in (args.um21_phase, UM21_MANIFEST_DEFAULT):
             bindings[rel] = gl.sha256_file(ROOT / rel)
     else:
@@ -1141,6 +1338,10 @@ def make_spec(args):
                '--cop-shift-m', str(args.cop_shift_m), '--align-rms-tol', str(args.align_rms_tol)]
     if args.wrap_analysis:
         command.append('--wrap-analysis')
+    if args.package_dir:
+        command += ['--package-dir', args.package_dir, '--lh-table', args.lh_table]
+        if args.emit_strides:
+            command.append('--emit-strides')
     for s in args.subject or []:
         command += ['--subject', s]
     spec = {'job_id': args.job_id, 'command': command, 'cwd': str(ROOT), 'output_root': args.out_dir, 'receipt_path': args.receipt,
@@ -1159,7 +1360,7 @@ def build_parser():
     sub = p.add_subparsers(dest='cmd', required=True)
     for name in ('run', 'spec'):
         s = sub.add_parser(name)
-        s.add_argument('--dataset', choices=('gt21', 'um21'), required=True)
+        s.add_argument('--dataset', choices=('gt21', 'gt23', 'um21'), required=True)
         s.add_argument('--partition', default='gate', help='es_prepared partition (CoP of um21 depends on it)')
         s.add_argument('--his-dir', default=HIS_DIR_DEFAULT)
         s.add_argument('--his-file', default=None, help='override the training parquet path')
@@ -1170,6 +1371,9 @@ def build_parser():
         s.add_argument('--cop-shift-m', type=float, default=0.100)
         s.add_argument('--align-rms-tol', type=float, default=0.10)
         s.add_argument('--out-dir', required=True)
+        s.add_argument('--package-dir', default=None, help='time-table mode: LocoHub package folder (relative to the repo), e.g. converted_datasets/reconversion_v2/gt21_r01_package_v2')
+        s.add_argument('--lh-table', choices=('full_time', 'filtered_time'), default='full_time')
+        s.add_argument('--emit-strides', action='store_true', help='time-table mode: also write strides_<dataset>_<subject>.npz (training series at LocoHub stride windows)')
         s.add_argument('--wrap-analysis', action='store_true', help='also split angle samples into wrapped / non-wrapped (see WRAP_RULE); default off')
         if name == 'run':
             s.add_argument('--rss-cap-mib', type=float, default=290.0)

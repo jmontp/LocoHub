@@ -421,3 +421,132 @@ def test_gt21_wrap_analysis_end_to_end_on_made_up_wraps(tmp_path):
     assert rec['median_all_offset_deg'] == pytest.approx(bias, abs=1e-6)       # 850 of 1000 samples are unwrapped
     assert rec['median_wrapped_offset_deg'] == pytest.approx(360 + bias, abs=1e-6)     # 100 whole-turn vs 50 half-turn samples
     assert [r['n_wrapped'] for r in recs if r['column'] == 'foot_angle'] == [0]
+
+
+# ------------------------------------------------------------------------------------------------ time-table mode (GT23, UM21 time, strides)
+# All inputs below are SYNTHETIC (seeded noise); they test pairing, offsets and stride sampling against known answers only.
+def test_gt23_matcher_pairs_by_task_label_not_by_number():
+    h = {'task_names': np.array(['sit_to_stand'], dtype=object), 'task_code': np.zeros(5, np.int16)}
+    assert cmp.gt23_matcher('GT23_AB01|43', h, 'sit_to_stand_1')
+    assert cmp.gt23_matcher('GT23_AB01|44', h, 'Sit_To_Stand_12')
+    assert not cmp.gt23_matcher('GT23_AB01|43', h, 'normal_walk_1')
+    assert not cmp.gt23_matcher('GT23_AB01|43', h, 'sit_to_stand_extra_1')
+    assert cmp.HIS_FILES['gt23'] == 'gtech_2023_time.parquet'
+    assert cmp.um21_time_matcher('UM21_AB01|Tread_i10_1.2_seg03', None, 'i10')
+    assert not cmp.um21_time_matcher('UM21_AB01|Run_1', None, 'i10') and not cmp.um21_time_matcher('UM21_AB01|Tread_i5_1_seg1', None, 'i10')
+
+
+def write_gt23_inputs(tmp_path, n_rec=2, with_training_extra_col=True):
+    """Two synthetic LocoHub sit_to_stand recordings (+ one walking recording) for AB01; training holds the sit-to-stand ones, shifted."""
+    n_lh, m = 2000, 900
+    lh = {k: [] for k in ('subject', 'source_recording_id', 'time_s')}
+    for mp in MAPS:
+        for leg in ('left', 'right'):
+            lh[mp.lh.format(R=leg)] = []
+    sig, offs = {}, {}
+    recs = [('AB01/sit_to_stand_1', 30.0), ('AB01/sit_to_stand_2', 50.0), ('AB01/normal_walk_1', 10.0)]
+    for r, (name, t0) in enumerate(recs):
+        lh['subject'] += ['AB01'] * n_lh
+        lh['source_recording_id'] += [name] * n_lh
+        lh['time_s'] += list(t0 + np.arange(n_lh) * 0.005)
+        for k, mp in enumerate(MAPS):
+            right, left = noise(n_lh, 100 * r + k), noise(n_lh, 100 * r + 40 + k)
+            sig[(name, mp.name)] = right
+            lh[mp.lh.format(R='right')] += list((right - mp.lh_offset) / mp.scale)
+            lh[mp.lh.format(R='left')] += list((left - mp.lh_offset) / mp.scale)
+    his = {k: [] for k in ('recording_id', 'subject', 'task', 'time_s', 'fz_measured', 'cop_ok')}
+    for mp in MAPS:
+        his[mp.his] = []
+    for j, (name, off) in enumerate(((recs[0][0], 250), (recs[1][0], 400))[:n_rec]):
+        his['recording_id'] += [f'GT23_AB01|{43 + j}'] * m
+        his['subject'] += ['GT23_AB01'] * m
+        his['task'] += ['sit_to_stand'] * m
+        his['time_s'] += list(np.arange(m) * 0.005)
+        his['fz_measured'] += [True] * m
+        his['cop_ok'] += [1.0] * m
+        for mp in MAPS:
+            his[mp.his] += list(sig[(name, mp.name)][off:off + m] / mp.scale)
+    hp, lp = tmp_path / 'his23.parquet', tmp_path / 'time23.parquet'
+    pq.write_table(pa.table(his), hp, row_group_size=300)
+    pq.write_table(pa.table(lh), lp, row_group_size=500)
+    return hp, lp, recs
+
+
+def test_gt23_time_table_pairs_each_training_recording_to_the_right_sit_to_stand(tmp_path):
+    hp, lp, recs = write_gt23_inputs(tmp_path)
+    col = cmp.Collector('gt23', MAPS, tmp_path)
+    cmp.compare_gt21_subject(hp, lp, 'AB01', cmp.Cfg(rss_cap_mib=1e6), col, MAPS, 'synthetic', dataset='gt23',
+                             matcher=cmp.MATCHERS['gt23'], lh_subjects={'AB01'})
+    al = {a['his_recording']: a for a in col.align}
+    assert al['GT23_AB01|43']['lh_recording'] == 'AB01/sit_to_stand_1' and al['GT23_AB01|44']['lh_recording'] == 'AB01/sit_to_stand_2'
+    assert al['GT23_AB01|43']['lag_samples'] == 250 and al['GT23_AB01|44']['lag_samples'] == 400
+    assert all(a['status'] == 'matched' and a['leg'] == 'right' and a['dataset'] == 'gt23' for a in al.values())
+    assert al['GT23_AB01|43']['time_offset_s'] == pytest.approx(30.0 + 250 * 0.005)
+    rows = {r['column']: r for r in col.overall_rows()}
+    assert rows['ankle_moment']['n_matched'] == 1800 and rows['ankle_moment']['rms'] < 1e-9
+    # the walking recording is a LocoHub recording no training recording pairs with: listed, not hidden
+    assert [(u['side'], u['recording']) for u in col.unmatched] == [('locohub', 'AB01/normal_walk_1')]
+
+
+def test_gt23_training_recording_without_a_matching_locohub_task_is_listed(tmp_path):
+    hp, lp, _ = write_gt23_inputs(tmp_path)
+    t = pq.read_table(hp).to_pydict()
+    t['task'] = ['level_walking'] * len(t['task'])          # a training task that has no LocoHub recording of that name
+    other = tmp_path / 'his23b.parquet'
+    pq.write_table(pa.table(t), other)
+    col = cmp.Collector('gt23', MAPS, tmp_path)
+    cmp.compare_gt21_subject(other, lp, 'AB01', cmp.Cfg(rss_cap_mib=1e6), col, MAPS, dataset='gt23', matcher=cmp.MATCHERS['gt23'],
+                             lh_subjects={'AB01'})
+    assert {a['status'] for a in col.align} == {'no_candidate'}
+    assert sum(u['side'] == 'training' for u in col.unmatched) == 2 and sum(u['side'] == 'locohub' for u in col.unmatched) == 3
+
+
+def test_sample_strides_reads_training_at_locohub_window_times_minus_offset():
+    t = np.arange(1000) * 0.005
+    h = {'t': t, 'vals': {m.name: np.where(np.arange(1000) == 500, np.nan, t * (k + 1)) for k, m in enumerate(MAPS)}}
+    win = [('a', 'ipsi', 100.0 + 1.0, 100.0 + 2.0), ('late', 'ipsi', 100.0 + 4.9, 100.0 + 5.5), ('gap', 'contra', 100.0 + 2.4, 100.0 + 2.6)]
+    ids, roles, cols, lhc = cmp.sample_strides(h, win, 100.0, MAPS)
+    assert lhc is None
+    assert ids == ['a', 'gap'] and roles == ['ipsi', 'contra']                              # the window past the training end is skipped
+    ph = np.linspace(1.0, 2.0, 150)
+    assert np.allclose(cols['ankle_angle'][0], ph * 1.0, atol=1e-4) and np.allclose(cols['ankle_moment'][0], ph * 5.0, atol=1e-3)
+    assert np.isnan(cols['ankle_angle'][1]).any() and np.isfinite(cols['ankle_angle'][1]).sum() > 100   # the NaN sample at t = 2.5 s
+
+
+def test_gt23_run_emits_strides_for_the_paired_leg_and_two_leg_transfers(tmp_path):
+    hp, lp, recs = write_gt23_inputs(tmp_path)
+    # a synthetic phase table: right-leg, left-leg, one out-of-span stride and one two-leg transfer in sit_to_stand_1, window times in LocoHub time
+    rows = {'subject': [], 'source_recording_id': [], 'observation_id': [], 'reference_side': [], 'source_start_time_s': [], 'source_end_time_s': []}
+    for oid, side, a, b in (('R1', 'right', 32.0, 33.0), ('L1', 'left', 32.0, 33.0), ('R2', 'right', 33.5, 34.5), ('R0', 'right', 30.5, 31.5),
+                            ('x/both/B1', 'left', 34.5, 35.5)):
+        for _ in range(150):
+            for k, v in zip(rows, ('AB01', 'AB01/sit_to_stand_1', oid, side, a, b)):
+                rows[k].append(v)
+    pp = tmp_path / 'phase.parquet'
+    pq.write_table(pa.table(rows), pp)
+    em = cmp.StrideEmitter(pp, tmp_path, 'gt23', MAPS)
+    col = cmp.Collector('gt23', MAPS, tmp_path)
+    cmp.compare_gt21_subject(hp, lp, 'AB01', cmp.Cfg(rss_cap_mib=1e6), col, MAPS, dataset='gt23', matcher=cmp.MATCHERS['gt23'],
+                             lh_subjects={'AB01'}, strides=em)
+    z = np.load(tmp_path / 'strides_gt23_AB01.npz')
+    assert list(z['observation_id']) == ['R1', 'R2', 'x/both/B1'] and list(z['leg_role']) == ['ipsi', 'ipsi', 'contra'] and set(z['training_recording']) == {'GT23_AB01|43'}
+    assert z['ankle_moment'].shape == (3, 150) and z['ankle_angle'].dtype == np.float32
+    # training = LocoHub right moment on the window: compare with the synthetic LocoHub signal at 31.0 + 0.005 k
+    lh_sig = noise(2000, 0 + MAPS.index(BY_NAME['ankle_moment']))
+    expect = np.interp(np.linspace(32.0, 33.0, 150), 30.0 + np.arange(2000) * 0.005, lh_sig)
+    assert np.allclose(z['ankle_moment'][0], expect, atol=1e-4)      # R0 (30.5-31.5 s) starts before the training recording: skipped
+
+
+def test_stride_emission_also_stores_locohub_values_at_the_same_times(tmp_path):
+    hp, lp, recs = write_gt23_inputs(tmp_path)
+    rows = {'subject': ['AB01'] * 150, 'source_recording_id': ['AB01/sit_to_stand_1'] * 150, 'observation_id': ['R1'] * 150,
+            'reference_side': ['right'] * 150, 'source_start_time_s': [32.0] * 150, 'source_end_time_s': [33.0] * 150}
+    pp = tmp_path / 'phase1.parquet'
+    pq.write_table(pa.table(rows), pp)
+    em = cmp.StrideEmitter(pp, tmp_path, 'gt23', MAPS)
+    cmp.compare_gt21_subject(hp, lp, 'AB01', cmp.Cfg(rss_cap_mib=1e6), cmp.Collector('gt23', MAPS, tmp_path), MAPS, dataset='gt23',
+                             matcher=cmp.MATCHERS['gt23'], lh_subjects={'AB01'}, strides=em)
+    z = np.load(tmp_path / 'strides_gt23_AB01.npz')
+    # synthetic training = LocoHub right leg exactly, so the two stored series agree (CoP in the shifted frame on both sides)
+    for m in MAPS:
+        assert np.allclose(z[m.name], z['lh_' + m.name], atol=1e-4, equal_nan=True), m.name
